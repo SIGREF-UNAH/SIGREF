@@ -1,0 +1,189 @@
+{
+  "realm": "fhir",
+  "displayName": "FHIR Realm",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 30,
+  "defaultRoles": ["default-roles-fhir", "offline_access", "uma_authorization"],
+  "requiredCredentials": ["password"],
+  "passwordPolicy": "hashIterations(27500)",
+  "otpPolicyType": "totp",
+  "otpPolicyAlgorithm": "HmacSHA1",
+  "otpPolicyInitialCounter": 0,
+  "otpPolicyDigits": 6,
+  "otpPolicyLookAheadWindow": 1,
+  "otpPolicyPeriod": 30,
+  "clients": [
+    {
+      "clientId": "fhir-client",
+      "name": "FHIR Client",
+      "description": "Cliente para aplicación FHIR",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "fhir-client-secret",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "redirectUris": [
+        "http://localhost:8080/*",
+        "http://localhost:3000/*",
+        "http://localhost:4200/*",
+        "http://127.0.0.1:8080/*",
+        "http://127.0.0.1:3000/*",
+        "http://127.0.0.1:4200/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8080",
+        "http://localhost:3000",
+        "http://localhost:4200",
+        "http://127.0.0.1:8080",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:4200"
+      ],
+      "attributes": {
+        "access.token.lifespan": "300",
+        "client.secret.creation.time": "1694764800"
+      }
+    },
+    {
+      "clientId": "fhir-admin",
+      "name": "FHIR Admin Client",
+      "description": "Cliente administrativo para FHIR",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "fhir-admin-secret",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "redirectUris": [
+        "http://localhost:8080/*",
+        "http://localhost:3000/*",
+        "http://localhost:4200/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8080",
+        "http://localhost:3000",
+        "http://localhost:4200"
+      ]
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "fhir-user",
+        "description": "Usuario FHIR estándar",
+        "composite": false
+      },
+      {
+        "name": "fhir-admin",
+        "description": "Administrador FHIR",
+        "composite": false
+      },
+      {
+        "name": "fhir-practitioner",
+        "description": "Profesional de la salud",
+        "composite": false
+      },
+      {
+        "name": "fhir-patient",
+        "description": "Paciente",
+        "composite": false
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "email": "admin@example.com",
+      "firstName": "Admin",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["fhir-admin", "fhir-user"],
+      "clientRoles": {}
+    },
+    {
+      "username": "practitioner",
+      "enabled": true,
+      "email": "practitioner@example.com",
+      "firstName": "Doctor",
+      "lastName": "Smith",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "practitioner123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["fhir-practitioner", "fhir-user"],
+      "clientRoles": {}
+    },
+    {
+      "username": "patient",
+      "enabled": true,
+      "email": "patient@example.com",
+      "firstName": "John",
+      "lastName": "Doe",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "patient123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["fhir-patient", "fhir-user"],
+      "clientRoles": {}
+    }
+  ],
+  "groups": [
+    {
+      "name": "Healthcare Providers",
+      "path": "/Healthcare Providers",
+      "realmRoles": ["fhir-practitioner"]
+    },
+    {
+      "name": "Patients",
+      "path": "/Patients", 
+      "realmRoles": ["fhir-patient"]
+    },
+    {
+      "name": "Administrators",
+      "path": "/Administrators",
+      "realmRoles": ["fhir-admin"]
+    }
+  ],
+  "scopeMappings": [
+    {
+      "client": "fhir-client",
+      "roles": ["fhir-user", "fhir-practitioner", "fhir-patient"]
+    },
+    {
+      "client": "fhir-admin",
+      "roles": ["fhir-admin", "fhir-user"]
+    }
+  ]
+}
