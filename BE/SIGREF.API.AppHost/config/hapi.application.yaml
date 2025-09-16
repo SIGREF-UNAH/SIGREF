@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: 'jdbc:postgresql://host.docker.internal:5432/fhir'
+    url: 'jdbc:postgresql://postgres:5432/hapi'
     username: hapi
     password: hapi
     driverClassName: org.postgresql.Driver
