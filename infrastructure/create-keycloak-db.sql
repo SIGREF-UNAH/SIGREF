@@ -1,3 +1,0 @@
-
-CREATE DATABASE hapi;
-CREATE DATABASE keycloak;

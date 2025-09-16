@@ -1,4 +1,6 @@
-﻿namespace SIGREF.API
+﻿using SIGREF.API.Database;
+
+namespace SIGREF.API
 {
     public class Startup
     {
@@ -15,6 +17,9 @@
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();
             services.AddHttpContextAccessor();
+
+            // Configuración de PostgreSQL con Aspire
+            services.AddNpgsql<SIGREFContext>("hapi");
 
             // CORS Configuration
             services.AddCors(opt =>
