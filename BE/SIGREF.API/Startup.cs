@@ -49,62 +49,8 @@ namespace SIGREF.API
 
             services.AddHttpContextAccessor();
 
-            // Configuración de PostgreSQL con Aspire
+       
             services.AddNpgsql<SIGREFContext>("hapi");
-
-            // Configuración de autenticación JWT con Keycloak
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(options =>
-                {
-                    var keycloakUrl = _configuration["Keycloak:Url"];
-                    var realm = _configuration["Keycloak:Realm"];
-                    var audience = _configuration["Keycloak:Audience"];
-
-                    options.Authority = $"{keycloakUrl}/realms/{realm}";
-                    options.Audience = audience;
-                    options.RequireHttpsMetadata = false; // Solo para desarrollo
-
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuer = true,
-                        ValidateAudience = true,
-                        ValidateLifetime = true,
-                        ValidateIssuerSigningKey = true,
-                        ValidIssuer = $"{keycloakUrl}/realms/{realm}",
-                        ValidAudience = audience,
-                        RoleClaimType = ClaimTypes.Role,
-                        NameClaimType = "preferred_username"
-                    };
-
-                    options.Events = new JwtBearerEvents
-                    {
-                        OnAuthenticationFailed = context =>
-                        {
-                            Console.WriteLine($"Authentication failed: {context.Exception.Message}");
-                            return Task.CompletedTask;
-                        },
-                        OnTokenValidated = context =>
-                        {
-                            Console.WriteLine("Token validated successfully");
-                            return Task.CompletedTask;
-                        }
-                    };
-                });
-
-            // Configuración de autorización
-            services.AddAuthorization(options =>
-            {
-                options.AddPolicy("RequireAuthenticatedUser", policy =>
-                {
-                    policy.RequireAuthenticatedUser();
-                });
-
-                // Ejemplo de política basada en roles
-                options.AddPolicy("AdminOnly", policy =>
-                {
-                    policy.RequireRole("admin");
-                });
-            });
 
             // CORS Configuration
             services.AddCors(opt =>
@@ -130,9 +76,8 @@ namespace SIGREF.API
             app.UseRouting();
             app.UseCors("CorsPolicy");
 
-            // Middleware de autenticación y autorización
-            app.UseAuthentication();
-            app.UseAuthorization();
+            app.UseAuthentication(); 
+            app.UseAuthorization(); 
 
             app.UseEndpoints(endpoints =>
             {
