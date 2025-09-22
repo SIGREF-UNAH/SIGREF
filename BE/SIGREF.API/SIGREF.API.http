@@ -1,6 +1,18 @@
-@SIGREF.API_HostAddress = http://localhost:5226
+@ApiUrl = http://localhost:5226
 
-GET {{SIGREF.API_HostAddress}}/weatherforecast/
+GET {{ApiUrl}}/api/Example
 Accept: application/json
 
+###
+
+GET {{ApiUrl}}/api/Locations
+Accept: application/json
+###
+POST {{ApiUrl}}/api/Locations/CreateLocation
+Content-Type: application/json
+
+{
+  "name": "New Location",
+  "description": "Description of the new location"
+}
 ###

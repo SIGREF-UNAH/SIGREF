@@ -1,4 +1,9 @@
-﻿using SIGREF.API.Database;
+﻿using System.Reflection;
+using SIGREF.API.Database;
+using SIGREF.API.Constants;
+using SIGREF.API.Services;
+using Hl7.Fhir.Rest;
+using Microsoft.EntityFrameworkCore.Diagnostics.Internal;
 
 namespace SIGREF.API
 {
@@ -13,6 +18,20 @@ namespace SIGREF.API
 
         public void ConfigureServices(IServiceCollection services)
         {
+            // Configurar las opciones de Env - inyectar la sección completa
+            services.Configure<Env>(_configuration);
+
+            // Registrar FhirClient directamente
+            services.AddScoped<FhirService>();
+            services.AddScoped<FhirClient>(serviceProvider =>
+            {
+                var fhirService = serviceProvider.GetRequiredService<FhirService>();
+                return fhirService.GetFhirClient();
+            });
+
+            // Registrar FhirService (opcional si aún lo necesitas)
+            services.AddScoped<LocationService>();
+            
             services.AddControllers();
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();
