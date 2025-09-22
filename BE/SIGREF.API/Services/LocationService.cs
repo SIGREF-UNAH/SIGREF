@@ -1,5 +1,6 @@
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Task = System.Threading.Tasks.Task;
 
 namespace SIGREF.API.Services;
@@ -22,6 +23,13 @@ public class LocationService(FhirClient fhirService)
 
     public async Task<Location> CreateLocationAsync(Location location)
     {
+        // Generar un ID si no tiene uno
+        if (string.IsNullOrEmpty(location.Id))
+        {
+            location.Id = Guid.NewGuid().ToString();
+        }
+
+        // Establecer metadatos
         location.Meta = new Meta
         {
             LastUpdated = DateTimeOffset.Now,

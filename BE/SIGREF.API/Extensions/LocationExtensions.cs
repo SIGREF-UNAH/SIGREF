@@ -100,11 +100,21 @@ public static class LocationExtensions
         return null;
     }
 
+    private static Location.LocationStatus? ParseLocationStatus(string? status)
+    {
+        return status?.ToLower() switch
+        {
+            "active" => Location.LocationStatus.Active,
+            "suspended" => Location.LocationStatus.Suspended,
+            "inactive" => Location.LocationStatus.Inactive,
+            _ => Location.LocationStatus.Active
+        };
+    }
 
     private static List<CodeableConcept> CreateCodeableConceptList(string? text)
     {
-        return string.IsNullOrEmpty(text)
-            ? new List<CodeableConcept>()
+        return string.IsNullOrEmpty(text) 
+            ? new List<CodeableConcept>() 
             : [new CodeableConcept { Text = text, }];
     }
 }
