@@ -1,13 +1,15 @@
-import { BrowserRouter } from 'react-router'
-import { AppRouter } from './routers'
+import { BrowserRouter } from "react-router";
+import { AppRouter } from "./routers";
+import { AntdConfig } from "./config";
 
 function App() {
-
   return (
-    <BrowserRouter>
-      <AppRouter/>
-    </BrowserRouter>
-  )
+    <AntdConfig>
+      <BrowserRouter>
+        <AppRouter />
+      </BrowserRouter>
+    </AntdConfig>
+  );
 }
 
-export default App
+export default App;
