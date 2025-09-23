@@ -1,7 +1,8 @@
 import { LoginForm, ProFormText } from '@ant-design/pro-components';
 import { Button, message, Typography  } from 'antd';
-import React from 'react';
+// @ts-ignore
 import '@ant-design/v5-patch-for-react-19';
+
 
 const { Title } = Typography;
 
