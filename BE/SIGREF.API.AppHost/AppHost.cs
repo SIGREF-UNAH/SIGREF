@@ -10,6 +10,8 @@ var postgres = builder.AddPostgres("postgres", username, password)
     .WithImage("postgres", "17")
     .WithEnvironment("POSTGRES_DB", "postgres")
     .WithBindMount("./config/init-db.sql", "/docker-entrypoint-initdb.d/init-db.sql")
+    .WithBindMount("./data/postgres", "/var/lib/postgresql/data") // Persist data
+
     .WithHostPort(5432)
     .WithArgs("postgres", "-c", "fsync=off");
 
