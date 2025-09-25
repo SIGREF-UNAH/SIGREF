@@ -22,9 +22,9 @@ public class CreateLocationDto
     public Location.LocationMode Mode { get; set; }
     
     public AddressDto? Address { get; set; }
-    
+
     public List<ContactPointDto> Telecom { get; set; } = new();
-    
+
     public string? Type { get; set; }
     public string? PartOfId { get; set; }
     public string? ManagingOrganizationIds { get; set; }
@@ -44,8 +44,8 @@ public class UpdateLocationDto
     public Location.LocationMode Mode { get; set; }
     
     public AddressDto? Address { get; set; }
-    
+
     public List<ContactPointDto>? Telecom { get; set; }
-    
+
     public string? Type { get; set; }
 }

@@ -1,6 +1,5 @@
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
-using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Task = System.Threading.Tasks.Task;
 
 namespace SIGREF.API.Services;
@@ -23,6 +22,7 @@ public class LocationService(FhirClient fhirService)
     /// </code>
     /// </example>
     public Task<Location> GetLocationByIdAsync(int id)
+
     {
         return fhirService.ReadAsync<Location>($"{ResourceType}/{id}");
     }

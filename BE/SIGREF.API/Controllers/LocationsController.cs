@@ -35,7 +35,7 @@ public class LocationsController(LocationService locationService) : ControllerBa
         var location = await locationService.GetLocationByIdAsync(id);
         if (location == null)
             return NotFound($"Location with id '{id}' not found.");
-            
+
         var locationDto = location.ToDto();
         return Ok(locationDto);
     }
@@ -48,7 +48,7 @@ public class LocationsController(LocationService locationService) : ControllerBa
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
-            
+
         var location = createLocationDto.ToFhirLocation();
         var createdLocation = await locationService.CreateLocationAsync(location);
         var createdLocationDto = createdLocation.ToDto();
@@ -71,10 +71,10 @@ public class LocationsController(LocationService locationService) : ControllerBa
 
         // Aplicar actualizaciones usando extension method
         existingLocation.ApplyUpdate(updateLocationDto);
-        
+
         var updatedLocation = await locationService.UpdateLocationAsync(existingLocation);
         var updatedLocationDto = updatedLocation.ToDto();
-        
+
         return Ok(updatedLocationDto);
     }
 
