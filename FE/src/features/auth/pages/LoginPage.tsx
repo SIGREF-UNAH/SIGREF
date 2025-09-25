@@ -1,143 +1,138 @@
-import { LoginForm, ProFormText } from '@ant-design/pro-components';
-import { Button, Typography } from 'antd';
-import React from 'react';
-import '@ant-design/v5-patch-for-react-19';
-import { Row, Col } from 'antd';
-import { useAuthLogin } from '../hooks/useAuthLogin';
+import { useKeycloak } from "@react-keycloak/web";
 
-const { Title } = Typography;
+export const LoginPage = () => {
+  const { keycloak, initialized } = useKeycloak();
 
-const LoginPage: React.FC = () => {
-  const { login, loading } = useAuthLogin();
+  if (!initialized) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          backgroundColor: "#f5f7fa",
+          fontSize: "18px",
+          color: "#555",
+        }}
+      >
+        Cargando autenticación...
+      </div>
+    );
+  }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', width: '100%' }}>
-      <Row style={{ flex: 1, margin: 0 }}>
-        <Col
-          span={12}
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+        background: "linear-gradient(135deg, #3A6EA5, #5A8BD7)",
+      }}
+    >
+      {!keycloak.authenticated ? (
+        <div
           style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '100vh',
+            backgroundColor: "#fff",
+            padding: "40px 35px",
+            borderRadius: "14px",
+            boxShadow: "0 6px 20px rgba(0, 0, 0, 0.1)",
+            width: "380px",
+            textAlign: "center",
           }}
         >
           <h1
             style={{
-              fontSize: '64px',
-              fontWeight: 'bold',
-              color: '#000',
+              fontSize: "28px",
+              fontWeight: "bold",
+              color: "#333",
+              marginBottom: "10px",
             }}
           >
-            SIGREF
+            Bienvenido a SIGREF
           </h1>
-        </Col>
-
-        <Col
-          span={12}
+          <p style={{ color: "#666", marginBottom: "25px", fontSize: "16px" }}>
+            Inicia sesión para continuar
+          </p>
+          <button
+            onClick={() =>
+              keycloak.login({ redirectUri: window.location.origin + "/" })
+            }
+            style={{
+              width: "100%",
+              padding: "12px",
+              backgroundColor: "#3A6EA5",
+              color: "#fff",
+              border: "none",
+              borderRadius: "8px",
+              fontSize: "16px",
+              fontWeight: 500,
+              cursor: "pointer",
+              transition: "background 0.3s ease",
+            }}
+            onMouseOver={(e) =>
+              (e.currentTarget.style.backgroundColor = "#2c5785")
+            }
+            onMouseOut={(e) =>
+              (e.currentTarget.style.backgroundColor = "#3A6EA5")
+            }
+          >
+            Iniciar sesión
+          </button>
+        </div>
+      ) : (
+        <div
           style={{
-            minHeight: '100vh',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: '#3A6EA5',
-            margin: 0,
-            padding: 0,
+            backgroundColor: "#fff",
+            padding: "40px 35px",
+            borderRadius: "14px",
+            boxShadow: "0 6px 20px rgba(0, 0, 0, 0.1)",
+            width: "400px",
+            textAlign: "center",
           }}
         >
-            <div style={{ marginBottom: 20 }}>
-              <Title
-                level={1}
-                style={{
-                textAlign: 'center',
-                marginBottom: 10,
-                color: '#FFFFFF',
-                fontWeight: 600,
-                letterSpacing: '0.5px',
-              }}
-            >
-              Inicia Sesión
-            </Title>
-          </div>
-        
-          <div
+          <h1
             style={{
-              backgroundColor: '#fff',
-              padding: '40px 35px',
-              borderRadius: '14px',
-              boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)',
-              width: 380,
-              maxWidth: '90%',
+              fontSize: "24px",
+              fontWeight: "bold",
+              color: "#333",
+              marginBottom: "15px",
             }}
           >
-            
-            <LoginForm
-              onFinish={login}
-              contentStyle={{
-                boxShadow: 'none',
-                padding: 0,
-                margin: 0,
-                minHeight: 'unset',
-                overflow: 'visible',
-                width: '100%',
-                minWidth: 'unset',
-              }}
-              style={{
-                margin: 0,
-                padding: 0,
-                width: '100%',
-              }}
-              submitter={{
-                searchConfig: {
-                  submitText: 'Ingresar',
-                },
-                render: () => (
-                  <Button
-                    type='primary'
-                    htmlType='submit'
-                    loading={loading}
-                    block
-                    style={{
-                      backgroundColor: '#3A6EA5',
-                      borderColor: '#3A6EA5',
-                      borderRadius: 8,
-                      height: 42,
-                      fontWeight: 500,
-                      fontSize: '15px',
-                      color: '#fff',
-                      marginTop: 10,
-                    }}
-                  >
-                    Inicia Sesión
-                  </Button>
-                ),
-              }}
-            >
-              <ProFormText
-                name='usuario'
-                placeholder='Nombre de usuario:'
-                rules={[{ required: true, message: 'Por favor ingrese su usuario' }]}
-                fieldProps={{
-                  style: { height: 42 },
-                }}
-              />
-
-              <ProFormText.Password
-                name='password'
-                placeholder='********'
-                rules={[{ required: true, message: 'Por favor ingrese su contraseña' }]}
-                fieldProps={{
-                  style: { height: 42 },
-                }}
-              />
-            </LoginForm>
-          </div>
-        </Col>
-      </Row>
+            Autenticación exitosa
+          </h1>
+          <p style={{ fontSize: "18px", color: "#444", marginBottom: "25px" }}>
+            Bienvenido{" "}
+            <span style={{ fontWeight: "bold" }}>
+              {keycloak.tokenParsed?.preferred_username}
+            </span>
+          </p>
+          <button
+            onClick={() => keycloak.logout()}
+            style={{
+              width: "100%",
+              padding: "12px",
+              backgroundColor: "#d9534f",
+              color: "#fff",
+              border: "none",
+              borderRadius: "8px",
+              fontSize: "16px",
+              fontWeight: 500,
+              cursor: "pointer",
+              transition: "background 0.3s ease",
+            }}
+            onMouseOver={(e) =>
+              (e.currentTarget.style.backgroundColor = "#b52b27")
+            }
+            onMouseOut={(e) =>
+              (e.currentTarget.style.backgroundColor = "#d9534f")
+            }
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      )}
     </div>
   );
 };
-
-export default LoginPage;
-
