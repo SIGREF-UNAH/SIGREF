@@ -29,10 +29,16 @@ public static class LocationExtensions
         {
             Name = createDto.Name,
             Description = createDto.Description,
-            Status = ParseLocationStatus(createDto.Status),
+            Status = createDto.Status,
             Type = CreateCodeableConceptList(createDto.Type),
+            Alias = createDto.Alias,
             Address = createDto.Address?.ToFhirAddress(),
-            Telecom = createDto.Telecom?.Select(t => t.ToFhirContactPoint()).ToList() ?? new List<ContactPoint>(),
+            Telecom = createDto.Telecom?.Select(t => t.ToFhirContactPoint()).ToList() ?? [],
+            //TODO: Revisar PartOf y ManagingOrganization si funciona la relación
+            PartOf = !string.IsNullOrEmpty(createDto.PartOfId) ? new ResourceReference( "Locations/" +createDto.PartOfId) : null,
+            ManagingOrganization = !string.IsNullOrEmpty(createDto.ManagingOrganizationIds)
+                ? new ResourceReference("Organization/"+createDto.ManagingOrganizationIds)
+                : null,
             Meta = new Meta
             {
                 LastUpdated = DateTimeOffset.Now,
@@ -50,8 +56,8 @@ public static class LocationExtensions
         if (updateDto.Description != null)
             existingLocation.Description = updateDto.Description;
 
-        if (!string.IsNullOrEmpty(updateDto.Status))
-            existingLocation.Status = ParseLocationStatus(updateDto.Status);
+        if (updateDto.Status != null)
+            existingLocation.Status = updateDto.Status;
 
         if (updateDto.Type != null)
             existingLocation.Type = CreateCodeableConceptList(updateDto.Type);
@@ -87,27 +93,19 @@ public static class LocationExtensions
             {
                 return firstType.Coding.First().Display ?? firstType.Coding.First().Code;
             }
+
             return firstType.Text;
         }
+
         return null;
     }
 
-    private static Location.LocationStatus? ParseLocationStatus(string? status)
-    {
-        return status?.ToLower() switch
-        {
-            "active" => Location.LocationStatus.Active,
-            "suspended" => Location.LocationStatus.Suspended,
-            "inactive" => Location.LocationStatus.Inactive,
-            _ => Location.LocationStatus.Active
-        };
-    }
 
     private static List<CodeableConcept> CreateCodeableConceptList(string? text)
     {
-        return string.IsNullOrEmpty(text) 
-            ? new List<CodeableConcept>() 
-            : new List<CodeableConcept> { new CodeableConcept { Text = text } };
+        return string.IsNullOrEmpty(text)
+            ? new List<CodeableConcept>()
+            : [new CodeableConcept { Text = text, }];
     }
 }
 
