@@ -1,6 +1,5 @@
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
-using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Task = System.Threading.Tasks.Task;
 
 namespace SIGREF.API.Services;
@@ -22,7 +21,7 @@ public class LocationService(FhirClient fhirService)
     /// Console.WriteLine(location.Name);
     /// </code>
     /// </example>
-    public Task<Location> GetLocationByIdAsync(string id)
+    public Task<Location> GetLocationByIdAsync(Guid id)
     {
         return fhirService.ReadAsync<Location>($"{ResourceType}/{id}");
     }
@@ -80,8 +79,8 @@ public class LocationService(FhirClient fhirService)
             VersionId = "1"
         };
 
-        var result = await fhirService.CreateAsync(location);
-        return result;
+         await fhirService.CreateAsync(location);
+        return location;
     }
     /// <summary>
     /// Actualiza un recurso <see cref="Location"/> existente en el servidor FHIR.
@@ -138,7 +137,7 @@ public class LocationService(FhirClient fhirService)
     /// await locationService.DeleteLocationAsync("loc-123");
     /// </code>
     /// </example>
-    public async Task DeleteLocationAsync(string id)
+    public async Task DeleteLocationAsync(Guid id)
     {
          await fhirService.DeleteAsync($"{ResourceType}/{id}");
     }

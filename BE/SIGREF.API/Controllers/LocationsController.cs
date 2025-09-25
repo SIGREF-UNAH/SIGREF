@@ -30,12 +30,12 @@ public class LocationsController(LocationService locationService) : ControllerBa
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Produces<LocationDto>()]
-    public async Task<IActionResult> GetById(string id)
+    public async Task<IActionResult> GetById(Guid id)
     {
         var location = await locationService.GetLocationByIdAsync(id);
         if (location == null)
             return NotFound($"Location with id '{id}' not found.");
-            
+
         var locationDto = location.ToDto();
         return Ok(locationDto);
     }
@@ -48,12 +48,12 @@ public class LocationsController(LocationService locationService) : ControllerBa
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
-            
+
         var location = createLocationDto.ToFhirLocation();
         var createdLocation = await locationService.CreateLocationAsync(location);
-        var createdLocationDto = createdLocation.ToDto();
-        
-        return CreatedAtAction(nameof(GetById), new { id = createdLocationDto.Id }, createdLocationDto);
+        // var createdLocationDto = createdLocation.ToDto();
+
+        return Ok(new { id = createdLocation.Id });
     }
 
     [HttpPut("{id}")]
@@ -61,7 +61,7 @@ public class LocationsController(LocationService locationService) : ControllerBa
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [Produces<LocationDto>()]
-    public async Task<IActionResult> UpdateLocation(string id, [FromBody] UpdateLocationDto updateLocationDto)
+    public async Task<IActionResult> UpdateLocation(Guid id, [FromBody] UpdateLocationDto updateLocationDto)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -72,17 +72,17 @@ public class LocationsController(LocationService locationService) : ControllerBa
 
         // Aplicar actualizaciones usando extension method
         existingLocation.ApplyUpdate(updateLocationDto);
-        
+
         var updatedLocation = await locationService.UpdateLocationAsync(existingLocation);
         var updatedLocationDto = updatedLocation.ToDto();
-        
+
         return Ok(updatedLocationDto);
     }
 
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteLocation(string id)
+    public async Task<IActionResult> DeleteLocation(Guid id)
     {
         var location = await locationService.GetLocationByIdAsync(id);
         if (location == null)
