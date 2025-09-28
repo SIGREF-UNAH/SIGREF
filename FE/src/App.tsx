@@ -1,12 +1,20 @@
 import { BrowserRouter } from "react-router";
 import { AppRouter } from "./routers";
 import { AntdConfig } from "./config";
+import { Navbar } from "./shared/components/layout/navbar/Navbar";
+import { Footer } from "./shared/components/layout/footer/Footer";
 
 function App() {
   return (
     <AntdConfig>
       <BrowserRouter>
-        <AppRouter />
+        <div className="min-h-screen flex flex-col">
+          <Navbar />
+          <main className="flex-1">
+            <AppRouter />
+          </main>
+          <Footer />
+        </div>
       </BrowserRouter>
     </AntdConfig>
   );
