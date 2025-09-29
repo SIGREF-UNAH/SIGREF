@@ -1,6 +1,6 @@
 import { Route, Routes } from "react-router";
-import AuthRouter from "../features/auth/routers/AuthRouter";
 import LocationsRouter from "../features/locations/routers/LocationsRouter";
+import { Home } from "../features/auth/pages";
 
 export const AppRouter = () => {
   return (
@@ -8,8 +8,7 @@ export const AppRouter = () => {
       {/* Rutas de locations */}
       <Route path="/locations/*" element={<LocationsRouter />} />
 
-      {/* Rutas de auth */}
-      <Route path="/*" element={<AuthRouter />} />
+      <Route path="*" element={<Home />} />
     </Routes>
   );
-};
+};  
