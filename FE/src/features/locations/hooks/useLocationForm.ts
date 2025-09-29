@@ -17,7 +17,7 @@ export default function useLocationForm(initial?: LocationFormData) {
 
   const reset = () => setFormData(defaultData);
 
-  const handleSubmit = async (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent): Promise<boolean> => {
     if (e && typeof e.preventDefault === "function") e.preventDefault();
     setIsSubmitting(true);
     setError(null);
@@ -27,11 +27,11 @@ export default function useLocationForm(initial?: LocationFormData) {
       // simular latencia
       await new Promise((r) => setTimeout(r, 300));
       setIsSubmitting(false);
-      return { ok: true };
+      return true;
     } catch (err: any) {
       setError(err?.message ?? "Error desconocido");
       setIsSubmitting(false);
-      return { ok: false, error };
+      return false;
     }
   };
 
