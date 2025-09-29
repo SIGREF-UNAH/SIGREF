@@ -8,7 +8,7 @@ public class LocationService(FhirClient fhirService)
 {
     private const string ResourceType = nameof(Location);
 
-    public Task<Location> GetLocationByIdAsync(Guid id)
+    public Task<Location> GetLocationByIdAsync(int id)
     {
         return fhirService.ReadAsync<Location>($"{ResourceType}/{id}");
     }
@@ -22,13 +22,6 @@ public class LocationService(FhirClient fhirService)
 
     public async Task<Location> CreateLocationAsync(Location location)
     {
-        // Generar un ID si no tiene uno
-        if (string.IsNullOrEmpty(location.Id))
-        {
-            location.Id = Guid.NewGuid().ToString();
-        }
-
-        // Establecer metadatos
         location.Meta = new Meta
         {
             LastUpdated = DateTimeOffset.Now,
@@ -63,7 +56,7 @@ public class LocationService(FhirClient fhirService)
         return result;
     }
 
-    public async Task DeleteLocationAsync(Guid id)
+    public async Task DeleteLocationAsync(int id)
     {
          await fhirService.DeleteAsync($"{ResourceType}/{id}");
     }
