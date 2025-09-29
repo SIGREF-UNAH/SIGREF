@@ -23,3 +23,4 @@ namespace SIGREF.API.Dtos.Patient;
         public List<AddressDto>? Address { get; set; }
         public List<IdentifierDto>? Identifier { get; set; }
     }
+}

@@ -107,6 +107,40 @@ namespace SIGREF.API;
         });
 
         services.AddHttpContextAccessor();
+            // --- Configuración de entorno (Env) ---
+            // Se mapea la configuración completa proveniente de appsettings.json o variables de entorno
+            // hacia la clase fuertemente tipada "Env". Esto permite acceder a parámetros de configuración,
+            // como la URL base de FHIR (Env.Phir.BaseUrl), mediante inyección de dependencias (IOptions<Env>).
+            services.Configure<Env>(_configuration);
+
+            // --- Registro de servicios FHIR ---
+            // Se registran los servicios necesarios para interactuar con un servidor FHIR:
+            //
+            // 1. FhirService:
+            //    - Registrado con ciclo de vida Scoped (una instancia por cada request HTTP).
+            //    - Encapsula la lógica de inicialización y configuración del cliente FHIR.
+            //
+            // 2. FhirClient:
+            //    - También Scoped, pero creado a través de una factoría (lambda).
+            //    - La factoría obtiene el FhirService desde el contenedor y utiliza su método
+            //      GetFhirClient() para devolver una instancia ya configurada.
+            //    - Esto garantiza que cualquier clase que requiera un FhirClient reciba
+            //      un cliente listo para consumir el servidor FHIR, utilizando la configuración definida.
+            services.AddScoped<FhirService>();
+            services.AddScoped<FhirClient>(serviceProvider =>
+            {
+                var fhirService = serviceProvider.GetRequiredService<FhirService>();
+                return fhirService.GetFhirClient();
+            });
+
+            // Registrar FhirService (opcional si aún lo necesitas)
+            services.AddScoped<LocationService>();
+            services.AddScoped<IPatientService, PatientService>();
+
+            services.AddControllers();
+            services.AddEndpointsApiExplorer();
+            services.AddSwaggerGen();
+            services.AddHttpContextAccessor();
 
 
         services.AddNpgsql<SIGREFContext>("hapi");

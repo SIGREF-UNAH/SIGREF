@@ -9,18 +9,18 @@ namespace SIGREF.API.Dtos;
 public class CreateLocationDto
 {
     [Required] [StringLength(255)] public string Name { get; set; } = string.Empty;
-    
+
     public string[] Alias { get; set; } = [];
 
     public string? Description { get; set; }
-    
+
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public Location.LocationStatus? Status { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
 
     public Location.LocationMode Mode { get; set; }
-    
+
     public AddressDto? Address { get; set; }
 
     public List<ContactPointDto> Telecom { get; set; } = new();
@@ -33,16 +33,16 @@ public class CreateLocationDto
 public class UpdateLocationDto
 {
     [StringLength(255)] public string? Name { get; set; }
-    
+
     public string? Description { get; set; }
-    
+
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public Location.LocationStatus? Status { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
 
     public Location.LocationMode Mode { get; set; }
-    
+
     public AddressDto? Address { get; set; }
 
     public List<ContactPointDto>? Telecom { get; set; }

@@ -40,9 +40,9 @@ namespace SIGREF.API.Extensions.Common
         // CONTACT POINT (Telecom)
         // ──────────────────────────────────────────────────
 
-       
 
-       
+
+
 
         // ──────────────────────────────────────────────────
         // IDENTIFIER
@@ -80,7 +80,7 @@ namespace SIGREF.API.Extensions.Common
             return null;
         }
 
-    
-      
+
+
     }
 }

@@ -103,8 +103,8 @@ public static class LocationExtensions
 
     private static List<CodeableConcept> CreateCodeableConceptList(string? text)
     {
-        return string.IsNullOrEmpty(text) 
-            ? new List<CodeableConcept>() 
+        return string.IsNullOrEmpty(text)
+            ? new List<CodeableConcept>()
             : [new CodeableConcept { Text = text, }];
     }
 }
