@@ -1,12 +1,8 @@
-using System.Reflection;
-using SIGREF.API.Database;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Security.Claims;
-using SIGREF.API.Constants;
-using SIGREF.API.Services;
 using Hl7.Fhir.Rest;
-using Microsoft.EntityFrameworkCore.Diagnostics.Internal;
+using Microsoft.OpenApi.Models;
+using SIGREF.API.Constants;
+using SIGREF.API.Database;
+using SIGREF.API.Services;
 
 namespace SIGREF.API;
 
@@ -40,24 +36,24 @@ public class Startup
         services.AddSwaggerGen(c =>
         {
             // Configuración de Swagger para JWT
-            c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Name = "Authorization",
-                Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+                Type = SecuritySchemeType.Http,
                 Scheme = "Bearer",
                 BearerFormat = "JWT",
-                In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+                In = ParameterLocation.Header,
                 Description = "Ingrese 'Bearer' seguido de un espacio y el token JWT"
             });
 
-            c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
             {
                 {
-                    new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                    new OpenApiSecurityScheme
                     {
-                        Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                        Reference = new OpenApiReference
                         {
-                            Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                            Type = ReferenceType.SecurityScheme,
                             Id = "Bearer"
                         }
                     },
