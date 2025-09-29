@@ -14,6 +14,8 @@ function App() {
     keycloak.login();
     return <div>Redirigiendo a la página de inicio de sesión...</div>;
   }
+
+
   return (
     <AntdConfig>
       <BrowserRouter>
