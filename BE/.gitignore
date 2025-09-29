@@ -5,6 +5,8 @@
 # Comando para omitir el archivo appsettings.Development.json
 SIGREF.API/appsettings.Development.json
 
+SIGREF.API.AppHost/data
+
 # Comando para omitir la carpeta de migraciones
 SIGREF.API/Migrations
 
