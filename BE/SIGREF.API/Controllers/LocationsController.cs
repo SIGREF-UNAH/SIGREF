@@ -30,7 +30,7 @@ public class LocationsController(LocationService locationService) : ControllerBa
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Produces<LocationDto>()]
-    public async Task<IActionResult> GetById(Guid id)
+    public async Task<IActionResult> GetById(int id)
     {
         var location = await locationService.GetLocationByIdAsync(id);
         if (location == null)
@@ -51,9 +51,8 @@ public class LocationsController(LocationService locationService) : ControllerBa
 
         var location = createLocationDto.ToFhirLocation();
         var createdLocation = await locationService.CreateLocationAsync(location);
-        // var createdLocationDto = createdLocation.ToDto();
-
-        return Ok(new { id = createdLocation.Id });
+        var createdLocationDto = createdLocation.ToDto();
+        return Ok(createdLocationDto);
     }
 
     [HttpPut("{id}")]
@@ -61,7 +60,7 @@ public class LocationsController(LocationService locationService) : ControllerBa
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [Produces<LocationDto>()]
-    public async Task<IActionResult> UpdateLocation(Guid id, [FromBody] UpdateLocationDto updateLocationDto)
+    public async Task<IActionResult> UpdateLocation(int id, [FromBody] UpdateLocationDto updateLocationDto)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -82,7 +81,7 @@ public class LocationsController(LocationService locationService) : ControllerBa
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteLocation(Guid id)
+    public async Task<IActionResult> DeleteLocation(int id)
     {
         var location = await locationService.GetLocationByIdAsync(id);
         if (location == null)

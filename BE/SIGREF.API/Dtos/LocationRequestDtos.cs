@@ -32,7 +32,6 @@ public class CreateLocationDto
 
 public class UpdateLocationDto
 {
-    public Guid Id { get; set; }
     [StringLength(255)] public string? Name { get; set; }
 
     public string? Description { get; set; }

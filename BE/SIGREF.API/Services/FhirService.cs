@@ -11,7 +11,7 @@ public class FhirService
     public FhirService(IOptions<Env> env)
     {
         var fhirEndpoint = env.Value;
-        _fhirClient = new FhirClient(fhirEndpoint.Phir.BaseUrl, new FhirClientSettings()
+        _fhirClient = new FhirClient(fhirEndpoint.Fhir.BaseUrl, new FhirClientSettings()
 
             {
                 Timeout = 10000,

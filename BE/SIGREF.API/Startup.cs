@@ -1,75 +1,121 @@
-﻿using SIGREF.API.Database;
+using SIGREF.API.Database;
 using SIGREF.API.Constants;
 using SIGREF.API.Services;
 using Hl7.Fhir.Rest;
+using Microsoft.OpenApi.Models;
 
-namespace SIGREF.API
+namespace SIGREF.API;
+
+public class Startup
 {
-    public class Startup
+    private readonly IConfiguration _configuration;
+
+    public Startup(IConfiguration configuration)
     {
-        private readonly IConfiguration _configuration;
+        this._configuration = configuration;
+    }
 
-        public Startup(IConfiguration configuration)
+    public void ConfigureServices(IServiceCollection services)
+    {
+        // Configurar las opciones de Env - inyectar la sección completa
+        services.Configure<Env>(_configuration);
+
+        // Registrar FhirClient directamente
+        services.AddScoped<FhirService>();
+        services.AddScoped<FhirClient>(serviceProvider =>
         {
-            this._configuration = configuration;
-        }
+            var fhirService = serviceProvider.GetRequiredService<FhirService>();
+            return fhirService.GetFhirClient();
+        });
 
-        public void ConfigureServices(IServiceCollection services)
+        // Registrar FhirService (opcional si aún lo necesitas)
+        services.AddScoped<LocationService>();
+
+        services.AddControllers();
+        services.AddEndpointsApiExplorer();
+
+        // Configurar las opciones de Env - inyectar la sección completa
+        services.Configure<Env>(_configuration);
+
+        // Registrar FhirClient directamente
+        services.AddScoped<FhirService>();
+        services.AddScoped<FhirClient>(serviceProvider =>
         {
-            // Configurar las opciones de Env - inyectar la sección completa
-            services.Configure<Env>(_configuration);
+            var fhirService = serviceProvider.GetRequiredService<FhirService>();
+            return fhirService.GetFhirClient();
+        });
 
-            // Registrar FhirClient directamente
-            services.AddScoped<FhirService>();
-            services.AddScoped<FhirClient>(serviceProvider =>
+        // Registrar FhirService (opcional si aún lo necesitas)
+        services.AddScoped<LocationService>();
+        services.AddScoped<HealthcareService>();
+
+        services.AddControllers();
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen();
+        services.AddHttpContextAccessor();
+
+        // Configuración de PostgreSQL con Aspire
+        services.AddNpgsql<SIGREFContext>("hapi");
+
+        // Configuración de Swagger para JWT
+        services.AddSwaggerGen(c =>
+        {
+            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
-                var fhirService = serviceProvider.GetRequiredService<FhirService>();
-                return fhirService.GetFhirClient();
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                Scheme = "Bearer",
+                BearerFormat = "JWT",
+                In = ParameterLocation.Header,
+                Description = "Ingrese 'Bearer' seguido de un espacio y el token JWT"
             });
 
-            // Registrar FhirService (opcional si aún lo necesitas)
-            services.AddScoped<LocationService>();
-            services.AddScoped<HealthcareService>();
-
-            services.AddControllers();
-            services.AddEndpointsApiExplorer();
-            services.AddSwaggerGen();
-            services.AddHttpContextAccessor();
-
-            // Configuración de PostgreSQL con Aspire
-            services.AddNpgsql<SIGREFContext>("hapi");
-
-            // CORS Configuration
-            services.AddCors(opt =>
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
             {
-                var allowURLS = _configuration.GetSection("AllowURLS").Get<string[]>();
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    new string[] { }
+                }
+            });
+        });
 
-                opt.AddPolicy("CorsPolicy", builder => builder
+        services.AddHttpContextAccessor();
+        services.AddNpgsql<SIGREFContext>("hapi");
+
+        // CORS Configuration
+        services.AddCors(opt =>
+        {
+            var allowURLS = _configuration.GetSection("AllowURLS").Get<string[]>();
+            opt.AddPolicy("CorsPolicy", builder => builder
                 .WithOrigins(allowURLS)
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .AllowCredentials());
-            });
-        }
+        });
+    }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        if (env.IsDevelopment())
         {
-            if (env.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
-
-            app.UseHttpsRedirection();
-
-            app.UseRouting();
-
-            app.UseCors("CorsPolicy");
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
+            app.UseSwagger();
+            app.UseSwaggerUI();
         }
+
+        app.UseHttpsRedirection();
+        app.UseRouting();
+        app.UseCors("CorsPolicy");
+
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
     }
 }
