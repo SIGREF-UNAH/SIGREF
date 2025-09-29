@@ -32,8 +32,8 @@ namespace SIGREF.API.Extensions
             return new Patient
             {
                 Active = dto.Active,
-                Name = dto.Name?.Select(n => n.ToFhirHumanName()).ToList() ?? new List<HumanName>(),
-                Gender = CommonExtensions.ParseGender(dto.Gender),
+                Name = dto.Name?.Select(n => n.ToFhirHumanName()).ToList() ?? [],
+                Gender = dto.Gender,
                 BirthDateElement = dto.BirthDate.ToFhirDate(),
                 Telecom = dto.Telecom?.Select(t => t.ToFhirContactPoint()).ToList() ?? new List<ContactPoint>(),
                 Address = dto.Address?.Select(a => a.ToFhirAddress()).ToList() ?? new List<Address>(),
@@ -50,7 +50,7 @@ namespace SIGREF.API.Extensions
         {
             if (update.Active.HasValue) existing.Active = update.Active.Value;
             if (update.Name != null) existing.Name = update.Name.Select(n => n.ToFhirHumanName()).ToList();
-            if (!string.IsNullOrEmpty(update.Gender)) existing.Gender = CommonExtensions.ParseGender(update.Gender);
+            if (!string.IsNullOrEmpty(update.Gender?.ToString())) existing.Gender = update.Gender;
             if (update.BirthDate.HasValue) existing.BirthDateElement = update.BirthDate.ToFhirDate();
             if (update.Telecom != null) existing.Telecom = update.Telecom.Select(t => t.ToFhirContactPoint()).ToList();
             if (update.Address != null) existing.Address = update.Address.Select(a => a.ToFhirAddress()).ToList();
