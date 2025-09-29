@@ -1,12 +1,10 @@
 import { Route, Routes } from "react-router";
-import AuthRouter from "../features/auth/routers/AuthRouter";
+import { Home } from "../features/auth/pages";
 
 export const AppRouter = () => {
   return (
     <Routes>
-      <Route>   
-        <Route path="/*" element={<AuthRouter />} />
-        </Route>  
+      <Route path="*" element={<Home />} />
     </Routes>
   );
 };  
