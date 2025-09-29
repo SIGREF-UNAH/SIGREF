@@ -1,9 +1,7 @@
-﻿using System.Reflection;
-using SIGREF.API.Database;
+﻿using SIGREF.API.Database;
 using SIGREF.API.Constants;
 using SIGREF.API.Services;
 using Hl7.Fhir.Rest;
-using Microsoft.EntityFrameworkCore.Diagnostics.Internal;
 
 namespace SIGREF.API
 {
@@ -31,7 +29,8 @@ namespace SIGREF.API
 
             // Registrar FhirService (opcional si aún lo necesitas)
             services.AddScoped<LocationService>();
-            
+            services.AddScoped<HealthcareService>();
+
             services.AddControllers();
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();

@@ -26,4 +26,11 @@
     <ProjectReference Include="..\SIGREF.API.ServiceDefaults\SIGREF.API.ServiceDefaults.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Database\Configuration\" />
+    <Folder Include="Database\Entities\" />
+    <Folder Include="Helpers\" />
+    <Folder Include="SeedData\" />
+  </ItemGroup>
+
 </Project>

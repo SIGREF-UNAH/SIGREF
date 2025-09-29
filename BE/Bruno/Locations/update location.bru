@@ -1,0 +1,11 @@
+meta {
+  name: update location
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{PATH}}/locations/{{id}}
+  body: json
+  auth: inherit
+}
