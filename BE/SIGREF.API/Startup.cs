@@ -1,5 +1,8 @@
-﻿using System.Reflection;
+using System.Reflection;
 using SIGREF.API.Database;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 using SIGREF.API.Constants;
 using SIGREF.API.Services;
 using Hl7.Fhir.Rest;
@@ -34,22 +37,49 @@ namespace SIGREF.API
             
             services.AddControllers();
             services.AddEndpointsApiExplorer();
-            services.AddSwaggerGen();
+            services.AddSwaggerGen(c =>
+            {
+                // Configuración de Swagger para JWT
+                c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+                    Description = "Ingrese 'Bearer' seguido de un espacio y el token JWT"
+                });
+
+                c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+                {
+                    {
+                        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                        {
+                            Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                            {
+                                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new string[] {}
+                    }
+                });
+            });
+
             services.AddHttpContextAccessor();
 
-            // Configuración de PostgreSQL con Aspire
+       
             services.AddNpgsql<SIGREFContext>("hapi");
 
             // CORS Configuration
             services.AddCors(opt =>
             {
                 var allowURLS = _configuration.GetSection("AllowURLS").Get<string[]>();
-
                 opt.AddPolicy("CorsPolicy", builder => builder
-                .WithOrigins(allowURLS)
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                .AllowCredentials());
+                    .WithOrigins(allowURLS)
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials());
             });
         }
 
@@ -62,10 +92,11 @@ namespace SIGREF.API
             }
 
             app.UseHttpsRedirection();
-
             app.UseRouting();
-
             app.UseCors("CorsPolicy");
+
+            app.UseAuthentication(); 
+            app.UseAuthorization(); 
 
             app.UseEndpoints(endpoints =>
             {
