@@ -52,7 +52,7 @@ public class LocationsController(LocationService locationService) : ControllerBa
         var location = createLocationDto.ToFhirLocation();
         var createdLocation = await locationService.CreateLocationAsync(location);
         var createdLocationDto = createdLocation.ToDto();
-        return CreatedAtAction(nameof(GetById), new { id = createdLocation.Id }, createdLocationDto);
+        return Ok(createdLocationDto);
     }
 
     [HttpPut("{id}")]
