@@ -19,8 +19,8 @@ namespace SIGREF.API.Services
         public async Task<IEnumerable<Healthcare>> GetAllHealthcaresAsync()
         {
             var searchResult = await fhirService.SearchAsync<Healthcare>();
-            return searchResult.Entry?.Select(e => e.Resource as Healthcare).Where(l => l != null) ??
-                   Enumerable.Empty<Healthcare>();
+            return searchResult.Entry?.Select(e => 
+                e.Resource as Healthcare).Where(l => l != null) ?? Enumerable.Empty<Healthcare>();
         }
 
         // Crear un servicio médico
@@ -33,8 +33,7 @@ namespace SIGREF.API.Services
                 VersionId = "1"
             };
 
-            await fhirService.CreateAsync(healthcare);
-            return healthcare;
+            return await fhirService.CreateAsync(healthcare);
         }
 
         // Editar un servicio médico
@@ -45,6 +44,7 @@ namespace SIGREF.API.Services
             {
                 healthcare.Meta = new Meta();
             }
+
             healthcare.Meta.LastUpdated = DateTimeOffset.Now;
 
             // Incrementar versión si ya existe
@@ -56,6 +56,7 @@ namespace SIGREF.API.Services
             {
                 healthcare.Meta.VersionId = "1";
             }
+
             return await fhirService.UpdateAsync(healthcare);
         }
 

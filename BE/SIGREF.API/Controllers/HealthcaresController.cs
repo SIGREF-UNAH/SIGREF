@@ -20,9 +20,9 @@ namespace SIGREF.API.Controllers
         {
             var healthcares = await healthcareService.GetAllHealthcaresAsync();
             var healthcareDtos = healthcares.Select(healthcare => healthcare.ToDto());
+            
             return Ok(healthcareDtos);
         }
-
 
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -32,10 +32,11 @@ namespace SIGREF.API.Controllers
         {
             var healthcare = await healthcareService.GetHealthcareByIdAsync(id);
             if (healthcare == null) return NotFound($"Healthcare with id '{id}' not found.");
+            
             var healthcareDto = healthcare.ToDto();
+            
             return Ok(healthcareDto);
         }
-
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
@@ -43,15 +44,17 @@ namespace SIGREF.API.Controllers
         [Produces<HealthcareDto>()]
         public async Task<IActionResult> Create([FromBody] CreateHealthcareDto createHealthcareDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var healthcare = createHealthcareDto.ToFhirHealthcare();
+
             var createdHealthcare = await healthcareService.CreateHealthcareAsync(healthcare);
+            var createdHealthcareDto = createdHealthcare.ToDto();
 
-            return Created();
+            // ERROR: No puedo retornar el recurso creado, por respuesta tardía del servicio de FHIR
+
+            return Ok(createdHealthcareDto);
         }
-
 
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -60,21 +63,19 @@ namespace SIGREF.API.Controllers
         [Produces<HealthcareDto>()]
         public async Task<IActionResult> Update(string id, [FromBody] UpdateHealthcareDto updateHealthcareDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var existingHealthcare = await healthcareService.GetHealthcareByIdAsync(id);
-            if (existingHealthcare == null)
-                return NotFound($"Healthcare with id '{id}' not found.");
+            if (existingHealthcare == null) return NotFound($"Healthcare with id '{id}' not found.");
 
             existingHealthcare.ApplyUpdate(updateHealthcareDto);
 
-            var updatedHealthcare = await healthcareService.UpdateHealthcareAsync(existingHealthcare);
-            var updatedHealthcareDto = updatedHealthcare.ToDto();
+            await healthcareService.UpdateHealthcareAsync(existingHealthcare);
 
-            return Ok(updatedHealthcareDto);
+            var updatedHealthcare = await healthcareService.GetHealthcareByIdAsync(id);
+
+            return Ok(updatedHealthcare.ToDto());
         }
-
 
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -82,10 +83,10 @@ namespace SIGREF.API.Controllers
         public async Task<IActionResult> Delete(string id)
         {
             var healthcare = await healthcareService.GetHealthcareByIdAsync(id);
-            if (healthcare == null)
-                return NotFound($"HealthcareSerivice with id '{id}' not found.");
+            if (healthcare == null) return NotFound($"HealthcareService with id '{id}' not found.");
 
             await healthcareService.DeleteHealthcareAsync(id);
+
             return NoContent();
         }
     }

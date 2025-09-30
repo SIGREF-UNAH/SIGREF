@@ -6,14 +6,14 @@ namespace SIGREF.API.Extensions
 {
     public static class HealthcareExtensions
     {
-        // URLs para las extensiones personalizadas
+        // URLs para los campos adicionales
         private const string AbbreviationExtensionUrl = "http://sigref.api/extensions/healthcare/abbreviation";
         private const string CostExtensionUrl = "http://sigref.api/extensions/healthcare/cost";
 
         // Convertir FHIR HealthcareService a HealthcareDto
         public static HealthcareDto ToDto(this HealthcareService healthcare)
         {
-            // Verificar si healthcare es null
+            // Respuesta por si healthcare es null
             if (healthcare == null)
             {
                 return new HealthcareDto
@@ -31,10 +31,8 @@ namespace SIGREF.API.Extensions
                 };
             }
 
-            // Obtener abbreviation de extensiones (maneja null)
+            // Obtener abbreviation y cost de extensiones
             var abbreviation = healthcare.GetStringExtension(AbbreviationExtensionUrl);
-            
-            // Obtener cost de extensiones (maneja null)
             var cost = healthcare.GetDecimalExtension(CostExtensionUrl) ?? 0;
 
             return new HealthcareDto
@@ -98,13 +96,13 @@ namespace SIGREF.API.Extensions
                     {
                         Value = createDto.ProvidedBy.Identifier
                     },
-                    Reference = createDto.ProvidedBy.Reference ?? string.Empty,
+                    Reference = createDto.ProvidedBy.Reference ?? string.Empty, // Ej: "Organization/{id}"
                     Display = createDto.ProvidedBy.Display ?? string.Empty,
                     Type = createDto.ProvidedBy.Type,
                 },
                 Location = createDto.Location?.Select(loc => new ResourceReference
                 {
-                    Reference = loc?.Reference ?? string.Empty,
+                    Reference = loc?.Reference ?? string.Empty, // Ej: "Location/{id}"
                     Display = loc?.Display ?? string.Empty,
                 }).ToList() ?? new List<ResourceReference>(),
                 Meta = new Meta
@@ -134,7 +132,7 @@ namespace SIGREF.API.Extensions
             if (updateDto == null)
                 return existingHealthcare;
 
-            if (updateDto.Active)
+            if (updateDto.Active != true || updateDto.Active != false)
                 existingHealthcare.Active = updateDto.Active;
 
             if (!string.IsNullOrEmpty(updateDto.Name))
@@ -142,6 +140,34 @@ namespace SIGREF.API.Extensions
 
             if (!string.IsNullOrEmpty(updateDto.Comment))
                 existingHealthcare.Comment = updateDto.Comment;
+
+            if (updateDto.Specialty != null)
+            {
+                existingHealthcare.Specialty = updateDto.Specialty.Select(s => new CodeableConcept
+                {
+                    Text = s?.Text ?? string.Empty,
+                    Coding = s?.Coding?.Select(c => new Coding
+                    {
+                        System = c?.System ?? string.Empty,
+                        Code = c?.Code ?? string.Empty,
+                        Display = c?.Display ?? string.Empty,
+                    }).ToList() ?? new List<Coding>(),
+                }).ToList();
+            }
+
+            if (updateDto.ProvidedBy != null)
+            {
+                existingHealthcare.ProvidedBy = new ResourceReference
+                {
+                    Identifier = updateDto.ProvidedBy.Identifier == null ? null : new Identifier
+                    {
+                        Value = updateDto.ProvidedBy.Identifier
+                    },
+                    Reference = updateDto.ProvidedBy.Reference ?? string.Empty,
+                    Display = updateDto.ProvidedBy.Display ?? string.Empty,
+                    Type = updateDto.ProvidedBy.Type,
+                };
+            }
 
             if (updateDto.Location != null)
             {
@@ -199,7 +225,7 @@ namespace SIGREF.API.Extensions
             return existingHealthcare;
         }
 
-        // Métodos helper
+        // helper methods para manejar extensiones
         private static string GetStringExtension(this HealthcareService healthcare, string url)
         {
             // Verificar si healthcare es null
@@ -236,26 +262,6 @@ namespace SIGREF.API.Extensions
             if (healthcare.Extension == null)
                 healthcare.Extension = new List<Extension>();
 
-            healthcare.Extension.Add(new Extension(url, value));
-        }
-
-        private static void SetExtension(this HealthcareService healthcare, string url, DataType value)
-        {
-            if (healthcare == null)
-                return;
-
-            // Inicializar la lista si es null
-            if (healthcare.Extension == null)
-                healthcare.Extension = new List<Extension>();
-
-            // Remover extensión existente si existe
-            var existingExtension = healthcare.Extension.FirstOrDefault(e => e?.Url == url);
-            if (existingExtension != null)
-            {
-                healthcare.Extension.Remove(existingExtension);
-            }
-            
-            // Agregar nueva extensión
             healthcare.Extension.Add(new Extension(url, value));
         }
     }
