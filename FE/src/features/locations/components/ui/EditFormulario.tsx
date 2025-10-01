@@ -1,71 +1,30 @@
-import { Form, Input, Select, Button, Card, Row, Col, Typography, Space, Divider, message, Spin } from "antd"
-import { EnvironmentOutlined, ContactsOutlined, TeamOutlined, SnippetsOutlined, CheckOutlined } from "@ant-design/icons"
-import { useParams } from "react-router"
-import { useQuery } from "@tanstack/react-query"
-import useEditLocationForm from "../../hooks/useEditLocationForm"
-import { type LocationDto, LocationStatus, LocationMode } from "../../../../api/models"
+import { Form, Input, Select, Button, Card, Row, Col, Typography, Space, Divider, Spin } from "antd";
+import { EnvironmentOutlined, ContactsOutlined, SnippetsOutlined, CheckOutlined } from "@ant-design/icons";
+import { useParams } from "react-router-dom";   
+import useEditLocationForm from "../../hooks/useEditLocationForm";
+import { LocationStatus, LocationMode } from "../../../../api/models";
 
-const { Title } = Typography
-const { TextArea } = Input
-const { Option } = Select
-
-// Crear un LocationDto válido con todas las propiedades requeridas
-const defaultLocationData: LocationDto = {
-  name: "",
-  status: LocationStatus.NUMBER_0,
-  mode: LocationMode.NUMBER_0,
-  description: null,
-  address: { 
-    line: [], 
-    city: null, 
-    state: null, 
-    postalCode: null, 
-    country: null 
-  },
-  telecom: [],
-  type: null,
-  // Agrega aquí cualquier otra propiedad requerida por LocationDto
-  id: 0, // Si es requerido
-  resourceType: "Location", // Si es requerido
-}
+const { Title } = Typography;
+const { TextArea } = Input;
+const { Option } = Select;
 
 export default function LocationManagementForm() {
   const [form] = Form.useForm();
   const { id } = useParams<{ id: string }>();
-  
-  // Query para obtener los datos de la ubicación
-  const { data: locationData, isLoading } = useQuery({
-    queryKey: ['location', id],
-    queryFn: async (): Promise<LocationDto> => {
-      // TODO: Reemplazar con tu llamada real a la API
-      // const response = await getLocationById(Number(id));
-      // return response.data;
-      
-      // Datos mock por ahora
-      return {
-        ...defaultLocationData,
-        name: "Ubicación de prueba",
-        id: Number(id),
-      };
-    },
-    enabled: !!id,
-  });
 
   const {
     formData,
     setField,
     handleSubmit,
-    isSubmitting,
+    isSubmitting,   
     error,
-  } = useEditLocationForm(locationData || defaultLocationData);
+  } = useEditLocationForm(id!); 
 
-  // Mapeo corregido basado en el hook
   const initialValues = {
     name: formData?.name || "",
     type: formData?.type || "",
     description: formData?.description || "",
     status: formData?.status?.toString() || LocationStatus.NUMBER_0.toString(),
-    mode: formData?.mode?.toString() || LocationMode.NUMBER_0.toString(),
     direccion: formData?.address?.line?.[0] || "",
     ciudad: formData?.address?.city || "",
     estadoProvincia: formData?.address?.state || "",
@@ -75,14 +34,13 @@ export default function LocationManagementForm() {
     email: formData?.telecom?.find(t => t.system === "email")?.value || "",
   };
 
-  if (isLoading) {
+  if (isSubmitting) {    
     return (
       <div className="flex justify-center items-center h-64">
         <Spin size="large" />
       </div>
     );
   }
-
   return (
     <div className="bg-[#FAFAFA] rounded-lg border-2 border-[#D9D9D9] p-6">
       <Card>  
