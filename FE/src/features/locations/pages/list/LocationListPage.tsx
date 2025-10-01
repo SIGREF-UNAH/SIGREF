@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import LocationForm from "../../components/ui/LocationForm";
+import LocationList from "../../components/ui/LocationsList";
 
 export default function Home() {
-  const [activeButton, setActiveButton] = useState<"listar" | "crear" | "editar" | null>("crear");
+  const [activeButton, setActiveButton] = useState<"listar" | "crear" | "editar" | null>("listar");
 
+  // Función para manejar el clic en un botón
   const handleButtonClick = (button: "listar" | "crear" | "editar") => {
     setActiveButton(button);
   };
@@ -61,7 +62,7 @@ export default function Home() {
         </div>
 
         {/* Location Form */}
-        <LocationForm />
+        <LocationList />
       </main>
     </div>
   );
