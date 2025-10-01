@@ -1,14 +1,15 @@
 import { Route, Routes } from "react-router";
-import AuthRouter from "../features/auth/routers/AuthRouter";
-import LocationRouter from "../features/locations/routers/LocationRouter";
-
+import LocationsRouter from "../features/locations/routers/LocationsRouter";
+import { Home } from "../features/auth/pages";
+ 
 export const AppRouter = () => {
   return (
     <Routes>
-      <Route>   
-        <Route path="/*" element={<AuthRouter />} />
-        <Route path="/locations/*" element={<LocationRouter/>} />
-        </Route>  
+      {/* Rutas de locations */}
+      <Route path="/locations/*" element={<LocationsRouter />} />
+
+      <Route path="*" element={<Home />} />
+ 
     </Routes>
   );
 };  

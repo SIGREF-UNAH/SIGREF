@@ -1,88 +1,99 @@
-﻿using SIGREF.API.Database;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Security.Claims;
+using Hl7.Fhir.Rest;
+using Microsoft.OpenApi.Models;
+using SIGREF.API.Constants;
+using SIGREF.API.Database;
+using SIGREF.API.Services;
 
-namespace SIGREF.API
+namespace SIGREF.API;
+
+public class Startup
 {
-    public class Startup
+    private readonly IConfiguration _configuration;
+
+    public Startup(IConfiguration configuration)
     {
-        private readonly IConfiguration _configuration;
+        this._configuration = configuration;
+    }
 
-        public Startup(IConfiguration configuration)
-        {
-            this._configuration = configuration;
-        }
+    public void ConfigureServices(IServiceCollection services)
+    {
+        // Configurar las opciones de Env - inyectar la sección completa
+        services.Configure<Env>(_configuration);
 
-        public void ConfigureServices(IServiceCollection services)
+        // Registrar FhirClient directamente
+        services.AddScoped<FhirService>();
+        services.AddScoped<FhirClient>(serviceProvider =>
         {
-            services.AddControllers();
-            services.AddEndpointsApiExplorer();
-            services.AddSwaggerGen(c =>
+            var fhirService = serviceProvider.GetRequiredService<FhirService>();
+            return fhirService.GetFhirClient();
+        });
+
+        // Registrar FhirService (opcional si aún lo necesitas)
+        services.AddScoped<LocationService>();
+
+        services.AddControllers();
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen(c =>
+        {
+            // Configuración de Swagger para JWT
+            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
-                // Configuración de Swagger para JWT
-                c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-                {
-                    Name = "Authorization",
-                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
-                    Scheme = "Bearer",
-                    BearerFormat = "JWT",
-                    In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-                    Description = "Ingrese 'Bearer' seguido de un espacio y el token JWT"
-                });
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                Scheme = "Bearer",
+                BearerFormat = "JWT",
+                In = ParameterLocation.Header,
+                Description = "Ingrese 'Bearer' seguido de un espacio y el token JWT"
+            });
 
-                c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
                 {
+                    new OpenApiSecurityScheme
                     {
-                        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                        Reference = new OpenApiReference
                         {
-                            Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                            {
-                                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            }
-                        },
-                        new string[] {}
-                    }
-                });
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    new string[] { }
+                }
             });
+        });
 
-            services.AddHttpContextAccessor();
+        services.AddHttpContextAccessor();
 
-       
-            services.AddNpgsql<SIGREFContext>("hapi");
 
-            // CORS Configuration
-            services.AddCors(opt =>
-            {
-                var allowURLS = _configuration.GetSection("AllowURLS").Get<string[]>();
-                opt.AddPolicy("CorsPolicy", builder => builder
-                    .WithOrigins(allowURLS)
-                    .AllowAnyMethod()
-                    .AllowAnyHeader()
-                    .AllowCredentials());
-            });
-        }
+        services.AddNpgsql<SIGREFContext>("hapi");
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        // CORS Configuration
+        services.AddCors(opt =>
         {
-            if (env.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+            var allowURLS = _configuration.GetSection("AllowURLS").Get<string[]>();
+            opt.AddPolicy("CorsPolicy", builder => builder
+                .WithOrigins(allowURLS)
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials());
+        });
+    }
 
-            app.UseHttpsRedirection();
-            app.UseRouting();
-            app.UseCors("CorsPolicy");
-
-            app.UseAuthentication(); 
-            app.UseAuthorization(); 
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        if (env.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
         }
+
+        app.UseHttpsRedirection();
+        app.UseRouting();
+        app.UseCors("CorsPolicy");
+
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
     }
 }
