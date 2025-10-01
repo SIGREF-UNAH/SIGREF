@@ -4,6 +4,9 @@ import { AntdConfig } from "./config";
 import { Navbar } from "./shared/components/layout/navbar/Navbar";
 import { Footer } from "./shared/components/layout/footer/Footer";
 import { useKeycloak } from "@react-keycloak/web";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
 
 function App() {
 
@@ -19,6 +22,7 @@ function App() {
 
 
   return (
+    <QueryClientProvider client={queryClient}>
     <AntdConfig>
       <BrowserRouter>
         <div className="min-h-screen flex flex-col">
@@ -30,6 +34,7 @@ function App() {
         </div>
       </BrowserRouter>
     </AntdConfig>
+    </QueryClientProvider>
   );
 }
 
