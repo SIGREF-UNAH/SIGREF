@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ProForm, ProFormText, ProFormSelect } from "@ant-design/pro-components";
-import { Table, Card, Button, Space, Tag, message, Modal } from "antd";
+import { Table, Card, Button, Space, Tag, message } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { FilterOutlined, EditOutlined, DeleteOutlined, BookOutlined, EyeOutlined } from "@ant-design/icons";
 import { useGetApiLocations, useDeleteApiLocationsId, getGetApiLocationsQueryKey } from "../../../../api/locations/locations";
@@ -8,6 +8,7 @@ import { type LocationDto, LocationMode, LocationStatus } from "../../../../api/
 import { BiChevronDown } from "react-icons/bi";
 import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import DeleteLocationModal from "../modals/DeleteLocationModal";
 
 const LocationList: React.FC = () => {
   const queryClient = useQueryClient();
@@ -24,9 +25,10 @@ const LocationList: React.FC = () => {
   const [searchName, setSearchName] = useState<string>("");
   const [searchMode, setSearchMode] = useState<LocationMode | undefined>(undefined);
   const [searchStatus, setSearchStatus] = useState<LocationStatus | undefined>(undefined);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<{ id: number; name: string } | null>(null);
 
   if (isError) {
-    message.error("Error al cargar las ubicaciones");
     return <div>Error al cargar datos</div>;
   }
 
@@ -54,16 +56,23 @@ const LocationList: React.FC = () => {
     return <Tag color={colorMap[status]}>{labelMap[status]}</Tag>;
   };
 
-  // Confirmación para eliminar
-  const handleDelete = (id: string) => {
-    Modal.confirm({
-      title: "¿Estás seguro de eliminar esta ubicación?",
-      content: "Esta acción no se puede deshacer.",
-      okText: "Eliminar",
-      okType: "danger",
-      cancelText: "Cancelar",
-      onOk: () => deleteLocation({ id: Number(id) }),
-    });
+  const handleDeleteClick = (id: number, name: string) => {
+    setSelectedLocation({ id, name });
+    setDeleteModalVisible(true);
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModalVisible(false);
+    setSelectedLocation(null);
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteLocation({ id });
+      return true;
+    } catch {
+      return false;
+    }
   };
 
   const columns: ColumnsType<LocationDto> = [
@@ -136,7 +145,7 @@ const LocationList: React.FC = () => {
             size="small"
             icon={<DeleteOutlined />}
             style={{ backgroundColor: "#f5222d", borderColor: "#f5222d" }}
-            onClick={() => handleDelete(record.id!)}
+            onClick={() => handleDeleteClick(Number(record.id!), record.name)}
           >
             Eliminar
           </Button>
@@ -234,6 +243,15 @@ const LocationList: React.FC = () => {
           bordered
         />
       </Card>
+
+      {/* Renderizar el modal de eliminar */}
+      <DeleteLocationModal
+        visible={deleteModalVisible}
+        onVisibleChange={setDeleteModalVisible}
+        locationId={selectedLocation?.id || null}
+        locationName={selectedLocation?.name}
+        onDelete={handleDelete}
+      />
     </div>
   );
 };
