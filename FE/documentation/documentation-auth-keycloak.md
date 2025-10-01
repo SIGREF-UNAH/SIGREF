@@ -35,8 +35,8 @@ Este documento describe paso a paso cómo configurar Keycloak para integrarlo co
 
 1. En la sección **Login Settings**, verás varios campos relacionados con URLs.  
 2. El campo que nos interesa es **Valid Redirect URIs**.  
-3. Coloca la URL correspondiente de tu frontend (FE). Ejemplo: http://localhost:5173/*
-4. El anterior campo es obligatorio, una vez hecho haz clic en guardar
+3. Coloca la URL correspondiente de tu frontend (FE): http://localhost:5173/*
+4. El anterior campo es obligatorio, una vez hecho haz clic en **guardar**
 
 ---
 
