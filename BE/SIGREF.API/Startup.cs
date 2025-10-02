@@ -4,6 +4,7 @@ using Microsoft.OpenApi.Models;
 using SIGREF.API.Constants;
 using SIGREF.API.Database;
 using SIGREF.API.Services;
+using SIGREF.API.Services.Location;
 using SIGREF.API.Services.Patient;
 using SIGREF.API.Services.Practitioner;
 using System.Reflection;

@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SIGREF.API.Services;
 using SIGREF.API.Dtos;
 using SIGREF.API.Extensions;
+using SIGREF.API.Services.Location;
 
 namespace SIGREF.API.Controllers;
 

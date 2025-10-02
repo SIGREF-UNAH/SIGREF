@@ -1,8 +1,10 @@
-using Hl7.Fhir.Model;
+using FhirLocation = Hl7.Fhir.Model.Location;
 using Hl7.Fhir.Rest;
 using Task = System.Threading.Tasks.Task;
+using Hl7.Fhir.Model;
 
-namespace SIGREF.API.Services;
+
+namespace SIGREF.API.Services.Location;
 
 public class LocationService(FhirClient fhirService)
 {
@@ -14,17 +16,17 @@ public class LocationService(FhirClient fhirService)
     /// <returns>Una tarea que representa la operación asíncrona. El resultado es el recurso <see cref="Location"/> solicitado.</returns>
     /// <exception cref="ArgumentNullException">Se lanza si <paramref name="id"/> es <c>null</c>.</exception>
     /// <exception cref="ArgumentException">Se lanza si <paramref name="id"/> es una cadena vacía o solo espacios en blanco.</exception>
-    /// <exception cref="Hl7.Fhir.Rest.FhirOperationException">Se lanza si el recurso no se encuentra o el servidor FHIR devuelve un error.</exception>
+    /// <exception cref="FhirOperationException">Se lanza si el recurso no se encuentra o el servidor FHIR devuelve un error.</exception>
     /// <example>
     /// <code>
     /// var location = await locationService.GetLocationByIdAsync("loc-123");
     /// Console.WriteLine(location.Name);
     /// </code>
     /// </example>
-    public Task<Location> GetLocationByIdAsync(int id)
+    public Task<FhirLocation> GetLocationByIdAsync(int id)
 
     {
-        return fhirService.ReadAsync<Location>($"{ResourceType}/{id}");
+        return fhirService.ReadAsync<FhirLocation>($"{ResourceType}/{id}");
     }
     /// <summary>
     /// Obtiene todos los recursos <see cref="Location"/> disponibles en el servidor FHIR.
@@ -33,7 +35,7 @@ public class LocationService(FhirClient fhirService)
     /// <remarks>
     /// Este método realiza una búsqueda sin filtros. En entornos con grandes volúmenes de datos, se recomienda paginar o filtrar.
     /// </remarks>
-    /// <exception cref="Hl7.Fhir.Rest.FhirOperationException">Se lanza si ocurre un error durante la búsqueda en el servidor FHIR.</exception>
+    /// <exception cref="FhirOperationException">Se lanza si ocurre un error durante la búsqueda en el servidor FHIR.</exception>
     /// <example>
     /// <code>
     /// var locations = await locationService.GetAllLocationsAsync();
@@ -43,11 +45,11 @@ public class LocationService(FhirClient fhirService)
     /// }
     /// </code>
     /// </example>
-    public async Task<IEnumerable<Location>> GetAllLocationsAsync()
+    public async Task<IEnumerable<FhirLocation>> GetAllLocationsAsync()
     {
-        var searchResult = await fhirService.SearchAsync<Location>();
-        return searchResult.Entry?.Select(e => e.Resource as Location).Where(l => l != null) ??
-               Enumerable.Empty<Location>();
+        var searchResult = await fhirService.SearchAsync<FhirLocation>();
+        return searchResult.Entry?.Select(e => e.Resource as FhirLocation).Where(l => l != null) ??
+               Enumerable.Empty<FhirLocation>();
     }
     /// <summary>
     /// Crea un nuevo recurso <see cref="Location"/> en el servidor FHIR.
@@ -57,7 +59,7 @@ public class LocationService(FhirClient fhirService)
     /// <param name="location">El recurso <see cref="Location"/> a crear. No debe ser nulo.</param>
     /// <returns>Una tarea que representa la operación asíncrona. El resultado es el recurso creado, con metadatos actualizados.</returns>
     /// <exception cref="ArgumentNullException">Se lanza si <paramref name="location"/> es <c>null</c>.</exception>
-    /// <exception cref="Hl7.Fhir.Rest.FhirOperationException">Se lanza si el servidor FHIR rechaza la creación (por ejemplo, ID duplicado).</exception>
+    /// <exception cref="FhirOperationException">Se lanza si el servidor FHIR rechaza la creación (por ejemplo, ID duplicado).</exception>
     /// <example>
     /// <code>
     /// var newLocation = new Location { Name = "Hospital Central" };
@@ -65,7 +67,7 @@ public class LocationService(FhirClient fhirService)
     /// Console.WriteLine($"Creado con ID: {createdLocation.Id}");
     /// </code>
     /// </example>
-    public async Task<Location> CreateLocationAsync(Location location)
+    public async Task<FhirLocation> CreateLocationAsync(FhirLocation location)
     {
         // Generar un ID si no tiene uno
         if (string.IsNullOrEmpty(location.Id))
@@ -92,7 +94,7 @@ public class LocationService(FhirClient fhirService)
     /// <returns>Una tarea que representa la operación asíncrona. El resultado es el recurso actualizado con metadatos renovados.</returns>
     /// <exception cref="ArgumentNullException">Se lanza si <paramref name="location"/> es <c>null</c>.</exception>
     /// <exception cref="ArgumentException">Se lanza si <paramref name="location"/> no tiene un ID asignado.</exception>
-    /// <exception cref="Hl7.Fhir.Rest.FhirOperationException">Se lanza si el recurso no existe o el servidor FHIR rechaza la actualización.</exception>
+    /// <exception cref="FhirOperationException">Se lanza si el recurso no existe o el servidor FHIR rechaza la actualización.</exception>
     /// <example>
     /// <code>
     /// var location = await locationService.GetLocationByIdAsync("loc-123");
@@ -101,7 +103,7 @@ public class LocationService(FhirClient fhirService)
     /// Console.WriteLine($"Versión: {updatedLocation.Meta.VersionId}");
     /// </code>
     /// </example>
-    public async Task<Location> UpdateLocationAsync(Location location)
+    public async Task<FhirLocation> UpdateLocationAsync(FhirLocation location)
     {
         // Actualizar metadatos
         if (location.Meta == null)
@@ -132,7 +134,7 @@ public class LocationService(FhirClient fhirService)
     /// <returns>Una tarea que representa la operación asíncrona.</returns>
     /// <exception cref="ArgumentNullException">Se lanza si <paramref name="id"/> es <c>null</c>.</exception>
     /// <exception cref="ArgumentException">Se lanza si <paramref name="id"/> es una cadena vacía o solo espacios en blanco.</exception>
-    /// <exception cref="Hl7.Fhir.Rest.FhirOperationException">Se lanza si el recurso no existe o no se puede eliminar.</exception>
+    /// <exception cref="FhirOperationException">Se lanza si el recurso no existe o no se puede eliminar.</exception>
     /// <example>
     /// <code>
     /// await locationService.DeleteLocationAsync("loc-123");

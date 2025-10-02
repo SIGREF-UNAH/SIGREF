@@ -1,6 +1,7 @@
 #nullable enable
 using Hl7.Fhir.Model;
-using SIGREF.API.Dtos;
+using SIGREF.API.Dtos.Common;
+using SIGREF.API.Dtos.Location;
 
 namespace SIGREF.API.Extensions;
 
@@ -15,12 +16,13 @@ public static class LocationExtensions
             Name = location.Name ?? string.Empty,
             Description = location.Description,
             Status = location.Status?.ToString() ?? "active",
-            Type = GetTypeText(location.Type),
+            Type = location.Type.ToString(),
             LastUpdated = location.Meta?.LastUpdated?.DateTime,
             Address = location.Address?.ToDto(),
             Telecom = location.Telecom?.Select(t => t.ToDto()).ToList() ?? new List<ContactPointDto>()
         };
     }
+
 
     // Extension method para convertir CreateLocationDto a FHIR Location
     public static Location ToFhirLocation(this CreateLocationDto createDto)
@@ -115,8 +117,8 @@ public static class AddressExtensions
     {
         return new AddressDto
         {
-            Use = address.Use?.ToString(),
-            Type = address.Type?.ToString(),
+            Use = address.Use,
+            Type = address.Type,
             Text = address.Text,
             Line = address.Line?.ToList() ?? new List<string>(),
             City = address.City,
@@ -131,8 +133,8 @@ public static class AddressExtensions
     {
         return new Address
         {
-            Use = ParseAddressUse(addressDto.Use),
-            Type = ParseAddressType(addressDto.Type),
+            Use = addressDto.Use,
+            Type = addressDto.Type,
             Text = addressDto.Text,
             Line = addressDto.Line,
             City = addressDto.City,
@@ -140,29 +142,6 @@ public static class AddressExtensions
             State = addressDto.State,
             PostalCode = addressDto.PostalCode,
             Country = addressDto.Country
-        };
-    }
-
-    private static Address.AddressUse? ParseAddressUse(string? use)
-    {
-        return use?.ToLower() switch
-        {
-            "home" => Address.AddressUse.Home,
-            "work" => Address.AddressUse.Work,
-            "temp" => Address.AddressUse.Temp,
-            "old" => Address.AddressUse.Old,
-            _ => null
-        };
-    }
-
-    private static Address.AddressType? ParseAddressType(string? type)
-    {
-        return type?.ToLower() switch
-        {
-            "postal" => Address.AddressType.Postal,
-            "physical" => Address.AddressType.Physical,
-            "both" => Address.AddressType.Both,
-            _ => null
         };
     }
 }
@@ -173,9 +152,9 @@ public static class ContactPointExtensions
     {
         return new ContactPointDto
         {
-            System = contactPoint.System?.ToString(),
+            System = contactPoint.System,
             Value = contactPoint.Value,
-            Use = contactPoint.Use?.ToString(),
+            Use = contactPoint.Use,
             Rank = contactPoint.Rank
         };
     }
@@ -184,38 +163,11 @@ public static class ContactPointExtensions
     {
         return new ContactPoint
         {
-            System = ParseContactPointSystem(contactPointDto.System),
+            System = contactPointDto.System,
             Value = contactPointDto.Value,
-            Use = ParseContactPointUse(contactPointDto.Use),
+            Use = contactPointDto.Use,
             Rank = contactPointDto.Rank
         };
     }
 
-    private static ContactPoint.ContactPointSystem? ParseContactPointSystem(string? system)
-    {
-        return system?.ToLower() switch
-        {
-            "phone" => ContactPoint.ContactPointSystem.Phone,
-            "fax" => ContactPoint.ContactPointSystem.Fax,
-            "email" => ContactPoint.ContactPointSystem.Email,
-            "pager" => ContactPoint.ContactPointSystem.Pager,
-            "url" => ContactPoint.ContactPointSystem.Url,
-            "sms" => ContactPoint.ContactPointSystem.Sms,
-            "other" => ContactPoint.ContactPointSystem.Other,
-            _ => null
-        };
-    }
-
-    private static ContactPoint.ContactPointUse? ParseContactPointUse(string? use)
-    {
-        return use?.ToLower() switch
-        {
-            "home" => ContactPoint.ContactPointUse.Home,
-            "work" => ContactPoint.ContactPointUse.Work,
-            "temp" => ContactPoint.ContactPointUse.Temp,
-            "old" => ContactPoint.ContactPointUse.Old,
-            "mobile" => ContactPoint.ContactPointUse.Mobile,
-            _ => null
-        };
-    }
 }
