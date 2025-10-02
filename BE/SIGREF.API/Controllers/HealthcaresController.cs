@@ -51,7 +51,8 @@ namespace SIGREF.API.Controllers
             var createdHealthcare = await healthcareService.CreateHealthcareAsync(healthcare);
             var createdHealthcareDto = createdHealthcare.ToDto();
 
-            // ERROR: No puedo retornar el recurso creado, por respuesta tardía del servicio de FHIR
+            // BUG: No puedo retornar el recurso creado, por respuesta tardía del servicio de hapi-fhir
+            // return CreatedAtAction(nameof(GetById), new { id = createdHealthcare.Id }, createdHealthcare);
 
             return Ok(createdHealthcareDto);
         }

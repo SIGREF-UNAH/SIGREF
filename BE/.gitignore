@@ -9,8 +9,8 @@ SIGREF.API/appsettings.Development.json
 SIGREF.API.AppHost/data
 
 # Ignorar las colecciones de Bruno
-/Bruno
-/bruno
+Bruno/
+bruno/
 
 # Ignorar la carpeta de migraciones
 SIGREF.API/Migrations
