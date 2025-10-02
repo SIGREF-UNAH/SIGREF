@@ -12,14 +12,19 @@ import { MdOutlineAddLocationAlt } from "react-icons/md";
 import { FaCheck } from "react-icons/fa";
 import { Button } from "antd";
 import { LocationStatus, LocationMode } from "../../../../api/models";
+import { useNavigate } from "react-router-dom";
 
 export default function LocationForm() {
-  const { formData, setField, handleSubmit, isSubmitting, error } = useLocationForm();
+  const navigate = useNavigate();
+  const { formData, setField, handleSubmit, isSubmitting, error } =
+    useLocationForm();
+    
 
   const onFinish = async () => {
     const success = await handleSubmit();
     if (success) {
       message.success("Ubicación creada exitosamente");
+      navigate("/locations/list");
     } else {
       message.error(error || "Error al crear la ubicación");
     }
@@ -49,9 +54,18 @@ export default function LocationForm() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8 md:gap-16 lg:gap-32 mb-2">
               <ProFormText
                 name="name"
-                label={<span className="text-[#616161] font-medium">Nombre de la ubicación</span>}
+                label={
+                  <span className="text-[#616161] font-medium">
+                    Nombre de la ubicación
+                  </span>
+                }
                 placeholder="Ej. Sala de emergencias"
-                rules={[{ required: true, message: "El nombre de la ubicación es obligatorio" }]}
+                rules={[
+                  {
+                    required: true,
+                    message: "El nombre de la ubicación es obligatorio",
+                  },
+                ]}
                 fieldProps={{
                   value: formData.name,
                   onChange: (e) => setField("name", e.target.value),
@@ -59,11 +73,21 @@ export default function LocationForm() {
               />
               <ProFormText
                 name="alias"
-                label={<span className="text-[#616161] font-medium">Alias</span>}
-                placeholder="Ej. Emergencias, ER"
+                label={
+                  <span className="text-[#616161] font-medium">Alias</span>
+                }
+                placeholder="Ej. Emergencias, ER (separados por comas)"
                 fieldProps={{
-                  value: formData.alias?.[0] || "",
-                  onChange: (e) => setField("alias", e.target.value),
+                  value: formData.alias?.join(", ") || "",
+                  onChange: (e) => {
+                    const aliases = e.target.value
+                      ? e.target.value
+                          .split(",")
+                          .map((item) => item.trim())
+                          .filter((item) => item)
+                      : [];
+                    setField("alias", aliases);
+                  },
                 }}
               />
             </div>
@@ -71,7 +95,9 @@ export default function LocationForm() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8 md:gap-16 lg:gap-32 mb-2">
               <ProFormSelect
                 name="status"
-                label={<span className="text-[#616161] font-medium">Estado</span>}
+                label={
+                  <span className="text-[#616161] font-medium">Estado</span>
+                }
                 options={[
                   { label: "Seleccionar estado", value: "" },
                   { label: "Activo", value: LocationStatus.NUMBER_0 },
@@ -81,7 +107,9 @@ export default function LocationForm() {
                 fieldProps={{
                   value: formData.status,
                   onChange: (value) => setField("status", value),
-                  suffixIcon: <BiChevronDown className="w-4 h-4 text-[#616161]" />,
+                  suffixIcon: (
+                    <BiChevronDown className="w-4 h-4 text-[#616161]" />
+                  ),
                 }}
               />
               <ProFormSelect
@@ -95,12 +123,18 @@ export default function LocationForm() {
                 fieldProps={{
                   value: formData.mode,
                   onChange: (value) => setField("mode", value),
-                  suffixIcon: <BiChevronDown className="w-4 h-4 text-[#616161]" />,
+                  suffixIcon: (
+                    <BiChevronDown className="w-4 h-4 text-[#616161]" />
+                  ),
                 }}
               />
               <ProFormText
                 name="type"
-                label={<span className="text-[#616161] font-medium">Tipo de función</span>}
+                label={
+                  <span className="text-[#616161] font-medium">
+                    Tipo de función
+                  </span>
+                }
                 placeholder="Ej. Cuarto de emergencias"
                 fieldProps={{
                   value: formData.type || "",
@@ -111,11 +145,14 @@ export default function LocationForm() {
 
             <ProFormTextArea
               name="description"
-              label={<span className="text-[#616161] font-medium">Descripción</span>}
+              label={
+                <span className="text-[#616161] font-medium">Descripción</span>
+              }
               placeholder="Descripción adicional de la ubicación"
               fieldProps={{
                 value: formData.description || "",
-                onChange: (e) => setField("description", e.target.value || null),
+                onChange: (e) =>
+                  setField("description", e.target.value || null),
                 rows: 2,
               }}
             />
@@ -134,9 +171,13 @@ export default function LocationForm() {
 
             <ProFormText
               name="address.line"
-              label={<span className="text-[#616161] font-medium">Dirección</span>}
+              label={
+                <span className="text-[#616161] font-medium">Dirección</span>
+              }
               placeholder="Ej. Avenida principal 123"
-              rules={[{ required: true, message: "La dirección es obligatoria" }]}
+              rules={[
+                { required: true, message: "La dirección es obligatoria" },
+              ]}
               fieldProps={{
                 value: formData.address?.line?.[0] || "",
                 onChange: (e) => setField("address.line", e.target.value),
@@ -146,7 +187,9 @@ export default function LocationForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 md:gap-16 lg:gap-32 mb-2">
               <ProFormText
                 name="address.city"
-                label={<span className="text-[#616161] font-medium">Ciudad</span>}
+                label={
+                  <span className="text-[#616161] font-medium">Ciudad</span>
+                }
                 placeholder="Ej. Ciudad"
                 fieldProps={{
                   value: formData.address?.city || "",
@@ -155,7 +198,11 @@ export default function LocationForm() {
               />
               <ProFormText
                 name="address.state"
-                label={<span className="text-[#616161] font-medium">Estado/Provincia</span>}
+                label={
+                  <span className="text-[#616161] font-medium">
+                    Estado/Provincia
+                  </span>
+                }
                 placeholder="Ej. Provincia"
                 fieldProps={{
                   value: formData.address?.state || "",
@@ -167,11 +214,16 @@ export default function LocationForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 md:gap-16 lg:gap-32">
               <ProFormText
                 name="address.postalCode"
-                label={<span className="text-[#616161] font-medium">Código Postal</span>}
+                label={
+                  <span className="text-[#616161] font-medium">
+                    Código Postal
+                  </span>
+                }
                 placeholder="Ej. 12345"
                 fieldProps={{
                   value: formData.address?.postalCode || "",
-                  onChange: (e) => setField("address.postalCode", e.target.value),
+                  onChange: (e) =>
+                    setField("address.postalCode", e.target.value),
                 }}
               />
               <ProFormText
@@ -200,30 +252,50 @@ export default function LocationForm() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8 md:gap-16 lg:gap-32">
               <ProFormText
                 name="managingOrganizationIds"
-                label={<span className="text-[#616161] font-medium">Nombre de contacto</span>}
+                label={
+                  <span className="text-[#616161] font-medium">
+                    Nombre de contacto
+                  </span>
+                }
                 placeholder="Ej. Dr. Juan"
                 fieldProps={{
                   value: formData.managingOrganizationIds || "",
-                  onChange: (e) => setField("managingOrganizationIds", e.target.value || null),
+                  onChange: (e) =>
+                    setField("managingOrganizationIds", e.target.value || null),
                 }}
               />
               <ProFormText
                 name="phone"
-                label={<span className="text-[#616161] font-medium">Teléfono</span>}
+                label={
+                  <span className="text-[#616161] font-medium">Teléfono</span>
+                }
                 placeholder="Ej. 9878-8967"
                 fieldProps={{
-                  value: (formData.telecom || []).find((t) => t.system === "phone")?.value || "",
+                  value:
+                    (formData.telecom || []).find((t) => t.system === "phone")
+                      ?.value || "",
                   onChange: (e) => setField("phone", e.target.value),
                 }}
               />
               <ProFormText
                 name="email"
-                label={<span className="text-[#616161] font-medium">Correo Electrónico</span>}
+                label={
+                  <span className="text-[#616161] font-medium">
+                    Correo Electrónico
+                  </span>
+                }
                 placeholder="Ej. ever@me.gmail"
-                rules={[{ type: "email", message: "Por favor, introduce un correo válido" }]}
+                rules={[
+                  {
+                    type: "email",
+                    message: "Por favor, introduce un correo válido",
+                  },
+                ]}
                 fieldProps={{
                   type: "email",
-                  value: (formData.telecom || []).find((t) => t.system === "email")?.value || "",
+                  value:
+                    (formData.telecom || []).find((t) => t.system === "email")
+                      ?.value || "",
                   onChange: (e) => setField("email", e.target.value),
                 }}
               />
@@ -244,16 +316,25 @@ export default function LocationForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 md:gap-16 lg:gap-32">
               <ProFormText
                 name="managingOrganizationIds"
-                label={<span className="text-[#616161] font-medium">Organización responsable</span>}
+                label={
+                  <span className="text-[#616161] font-medium">
+                    Organización responsable
+                  </span>
+                }
                 placeholder="Ej. Hospital nacional"
                 fieldProps={{
                   value: formData.managingOrganizationIds || "",
-                  onChange: (e) => setField("managingOrganizationIds", e.target.value || null),
+                  onChange: (e) =>
+                    setField("managingOrganizationIds", e.target.value || null),
                 }}
               />
               <ProFormText
                 name="partOfId"
-                label={<span className="text-[#616161] font-medium">Parte de (ubicación padre)</span>}
+                label={
+                  <span className="text-[#616161] font-medium">
+                    Parte de (ubicación padre)
+                  </span>
+                }
                 placeholder="Ej. Edificio principal"
                 fieldProps={{
                   value: formData.partOfId || "",

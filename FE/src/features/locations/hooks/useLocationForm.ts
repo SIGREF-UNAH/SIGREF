@@ -1,14 +1,25 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { usePostApiLocations, getGetApiLocationsQueryKey } from "../../../api/locations/locations";
-import { LocationMode, type CreateLocationDto, LocationStatus, type ContactPointDto, type AddressDto } from "../../../api/models/";
+import {
+  usePostApiLocations,
+  getGetApiLocationsQueryKey,
+} from "../../../api/locations/locations";
+import {
+  LocationMode,
+  type CreateLocationDto,
+  LocationStatus,
+  type ContactPointDto,
+  type AddressDto,
+} from "../../../api/models/";
 
 export default function useLocationForm(initial?: Partial<CreateLocationDto>) {
   const queryClient = useQueryClient();
   const { mutateAsync: createLocation } = usePostApiLocations({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetApiLocationsQueryKey() });
+        queryClient.invalidateQueries({
+          queryKey: getGetApiLocationsQueryKey(),
+        });
       },
     },
   });
@@ -19,8 +30,14 @@ export default function useLocationForm(initial?: Partial<CreateLocationDto>) {
     description: null,
     status: LocationStatus.NUMBER_0,
     mode: LocationMode.NUMBER_0,
-    address: { line: [], city: null, state: null, postalCode: null, country: null },
-    telecom: [], // Inicializamos como array vacío para evitar null/undefined
+    address: {
+      line: [],
+      city: null,
+      state: null,
+      postalCode: null,
+      country: null,
+    },
+    telecom: [],
     type: null,
     partOfId: null,
     managingOrganizationIds: null,
@@ -40,19 +57,27 @@ export default function useLocationForm(initial?: Partial<CreateLocationDto>) {
         const subField = field.split(".")[1] as keyof AddressDto;
         return {
           ...prev,
-          address: { ...prev.address, [subField]: subField === "line" ? [value] : value || null },
+          address: {
+            ...prev.address,
+            [subField]: subField === "line" ? [value] : value || null,
+          },
         };
       }
       // Manejo de telecom (phone -> {system: "phone"}, email -> {system: "email"})
       if (field === "phone" || field === "email") {
         const system = field === "phone" ? "phone" : "email";
-        const existingTelecom = (prev.telecom || []).filter((t) => t.system !== system); // Verificación de null/undefined
+        const existingTelecom = (prev.telecom || []).filter(
+          (t) => t.system !== system
+        );
         const newTelecom: ContactPointDto = { system, value, use: "work" };
-        return { ...prev, telecom: value ? [...existingTelecom, newTelecom] : existingTelecom };
+        return {
+          ...prev,
+          telecom: value ? [...existingTelecom, newTelecom] : existingTelecom,
+        };
       }
       // Manejo de alias como array
       if (field === "alias") {
-        return { ...prev, alias: value ? [value] : [] };
+        return { ...prev, alias: Array.isArray(value) ? value : [] };
       }
       return prev;
     });
@@ -65,7 +90,13 @@ export default function useLocationForm(initial?: Partial<CreateLocationDto>) {
       description: null,
       status: LocationStatus.NUMBER_0,
       mode: LocationMode.NUMBER_0,
-      address: { line: [], city: null, state: null, postalCode: null, country: null },
+      address: {
+        line: [],
+        city: null,
+        state: null,
+        postalCode: null,
+        country: null,
+      },
       telecom: [],
       type: null,
       partOfId: null,

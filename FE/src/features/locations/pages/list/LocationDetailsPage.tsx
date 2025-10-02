@@ -7,11 +7,19 @@ import {
   ProFormTextArea,
 } from "@ant-design/pro-components";
 import { Card, Spin, Typography, Space, Button, message } from "antd";
-import { EnvironmentOutlined, EditOutlined, DeleteOutlined, ArrowLeftOutlined } from "@ant-design/icons";
+import {
+  EnvironmentOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  ArrowLeftOutlined,
+} from "@ant-design/icons";
 import { useGetApiLocationsId } from "../../../../api/locations/locations";
 import { LocationMode, LocationStatus } from "../../../../api/models";
 import DeleteLocationModal from "../../components/modals/DeleteLocationModal";
-import { useDeleteApiLocationsId, getGetApiLocationsQueryKey } from "../../../../api/locations/locations";
+import {
+  useDeleteApiLocationsId,
+  getGetApiLocationsQueryKey,
+} from "../../../../api/locations/locations";
 import { useQueryClient } from "@tanstack/react-query";
 import { BsBuilding, BsGeoAltFill, BsPersonFill } from "react-icons/bs";
 import { BiChevronDown } from "react-icons/bi";
@@ -20,11 +28,17 @@ const LocationDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { data: location, isLoading, isError } = useGetApiLocationsId(Number(id));
+  const {
+    data: location,
+    isLoading,
+    isError,
+  } = useGetApiLocationsId(Number(id));
   const { mutate: deleteLocation } = useDeleteApiLocationsId({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetApiLocationsQueryKey() });
+        queryClient.invalidateQueries({
+          queryKey: getGetApiLocationsQueryKey(),
+        });
         message.success("Ubicación eliminada exitosamente");
         navigate("/locations/list");
       },
@@ -53,11 +67,10 @@ const LocationDetailsPage: React.FC = () => {
   if (isError) {
     return (
       <div className="min-h-screen bg-white p-6">
-        <Card
-          style={{ borderRadius: 8 }}
-          bodyStyle={{ padding: 24 }}
-        >
-          <Typography.Text type="danger">Error al cargar los detalles de la ubicación</Typography.Text>
+        <Card style={{ borderRadius: 8 }} bodyStyle={{ padding: 24 }}>
+          <Typography.Text type="danger">
+            Error al cargar los detalles de la ubicación
+          </Typography.Text>
         </Card>
       </div>
     );
@@ -66,10 +79,7 @@ const LocationDetailsPage: React.FC = () => {
   if (isLoading || !location) {
     return (
       <div className="min-h-screen bg-white p-6">
-        <Card
-          style={{ borderRadius: 8 }}
-          bodyStyle={{ padding: 24 }}
-        >
+        <Card style={{ borderRadius: 8 }} bodyStyle={{ padding: 24 }}>
           <Spin tip="Cargando detalles de la ubicación..." />
         </Card>
       </div>
@@ -83,15 +93,15 @@ const LocationDetailsPage: React.FC = () => {
     { label: "Suspendido", value: LocationStatus.NUMBER_2 },
   ];
 
-  const renderModeOptions = [
-    { label: "Seleccionar modo", value: "" },
-    { label: "Kind", value: LocationMode.NUMBER_0 },
-    { label: "Instance", value: LocationMode.NUMBER_1 },
-  ];
+  const getModeLabel = (mode: number | undefined) => {
+    if (mode === LocationMode.NUMBER_0) return "Kind";
+    if (mode === LocationMode.NUMBER_1) return "Instance";
+    return "";
+  };
 
   const initialValues = {
     name: location.name || "",
-    alias: location.alias?.[0] || "",
+    alias: location.alias?.join(", ") || "",
     description: location.description || "",
     status: location.status,
     mode: location.mode,
@@ -113,7 +123,9 @@ const LocationDetailsPage: React.FC = () => {
         {/* Header */}
         <div className="relative mb-6">
           <div className="flex justify-between items-center relative z-10">
-            <h1 className="text-3xl font-bold text-[#333333]">Detalles de la Ubicación</h1>
+            <h1 className="text-3xl font-bold text-[#333333]">
+              Detalles de la Ubicación
+            </h1>
           </div>
         </div>
 
@@ -140,7 +152,11 @@ const LocationDetailsPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8 md:gap-16 lg:gap-32 mb-2">
                   <ProFormText
                     name="name"
-                    label={<span className="text-[#616161] font-medium">Nombre de la ubicación</span>}
+                    label={
+                      <span className="text-[#616161] font-medium">
+                        Nombre de la ubicación
+                      </span>
+                    }
                     readonly
                     fieldProps={{
                       value: location.name || "",
@@ -148,10 +164,12 @@ const LocationDetailsPage: React.FC = () => {
                   />
                   <ProFormText
                     name="alias"
-                    label={<span className="text-[#616161] font-medium">Alias</span>}
+                    label={
+                      <span className="text-[#616161] font-medium">Alias</span>
+                    }
                     readonly
                     fieldProps={{
-                      value: location.alias?.[0] || "",
+                      value: location.alias?.join(", ") || "",
                     }}
                   />
                 </div>
@@ -159,27 +177,35 @@ const LocationDetailsPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8 md:gap-16 lg:gap-32 mb-2">
                   <ProFormSelect
                     name="status"
-                    label={<span className="text-[#616161] font-medium">Estado</span>}
+                    label={
+                      <span className="text-[#616161] font-medium">Estado</span>
+                    }
                     options={renderStatusOptions}
                     readonly
                     fieldProps={{
                       value: location.status,
-                      suffixIcon: <BiChevronDown className="w-4 h-4 text-[#616161]" />,
+                      suffixIcon: (
+                        <BiChevronDown className="w-4 h-4 text-[#616161]" />
+                      ),
                     }}
                   />
-                  <ProFormSelect
+                  <ProFormText
                     name="mode"
-                    label={<span className="text-[#616161] font-medium">Modo</span>}
-                    options={renderModeOptions}
+                    label={
+                      <span className="text-[#616161] font-medium">Modo</span>
+                    }
                     readonly
                     fieldProps={{
-                      value: location.mode,
-                      suffixIcon: <BiChevronDown className="w-4 h-4 text-[#616161]" />,
+                      value: getModeLabel(location.mode) || "",
                     }}
                   />
                   <ProFormText
                     name="type"
-                    label={<span className="text-[#616161] font-medium">Tipo de función</span>}
+                    label={
+                      <span className="text-[#616161] font-medium">
+                        Tipo de función
+                      </span>
+                    }
                     readonly
                     fieldProps={{
                       value: location.type || "",
@@ -189,7 +215,11 @@ const LocationDetailsPage: React.FC = () => {
 
                 <ProFormTextArea
                   name="description"
-                  label={<span className="text-[#616161] font-medium">Descripción</span>}
+                  label={
+                    <span className="text-[#616161] font-medium">
+                      Descripción
+                    </span>
+                  }
                   readonly
                   fieldProps={{
                     value: location.description || "",
@@ -211,7 +241,11 @@ const LocationDetailsPage: React.FC = () => {
 
                 <ProFormText
                   name="address.line"
-                  label={<span className="text-[#616161] font-medium">Dirección</span>}
+                  label={
+                    <span className="text-[#616161] font-medium">
+                      Dirección
+                    </span>
+                  }
                   readonly
                   fieldProps={{
                     value: location.address?.line?.[0] || "",
@@ -221,7 +255,9 @@ const LocationDetailsPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 md:gap-16 lg:gap-32 mb-2">
                   <ProFormText
                     name="address.city"
-                    label={<span className="text-[#616161] font-medium">Ciudad</span>}
+                    label={
+                      <span className="text-[#616161] font-medium">Ciudad</span>
+                    }
                     readonly
                     fieldProps={{
                       value: location.address?.city || "",
@@ -229,7 +265,11 @@ const LocationDetailsPage: React.FC = () => {
                   />
                   <ProFormText
                     name="address.state"
-                    label={<span className="text-[#616161] font-medium">Estado/Provincia</span>}
+                    label={
+                      <span className="text-[#616161] font-medium">
+                        Estado/Provincia
+                      </span>
+                    }
                     readonly
                     fieldProps={{
                       value: location.address?.state || "",
@@ -240,7 +280,11 @@ const LocationDetailsPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 md:gap-16 lg:gap-32">
                   <ProFormText
                     name="address.postalCode"
-                    label={<span className="text-[#616161] font-medium">Código Postal</span>}
+                    label={
+                      <span className="text-[#616161] font-medium">
+                        Código Postal
+                      </span>
+                    }
                     readonly
                     fieldProps={{
                       value: location.address?.postalCode || "",
@@ -248,7 +292,9 @@ const LocationDetailsPage: React.FC = () => {
                   />
                   <ProFormText
                     name="address.country"
-                    label={<span className="text-[#616161] font-medium">País</span>}
+                    label={
+                      <span className="text-[#616161] font-medium">País</span>
+                    }
                     readonly
                     fieldProps={{
                       value: location.address?.country || "",
@@ -271,7 +317,11 @@ const LocationDetailsPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8 md:gap-16 lg:gap-32">
                   <ProFormText
                     name="managingOrganizationIds"
-                    label={<span className="text-[#616161] font-medium">Nombre de contacto</span>}
+                    label={
+                      <span className="text-[#616161] font-medium">
+                        Nombre de contacto
+                      </span>
+                    }
                     readonly
                     fieldProps={{
                       value: location.managingOrganizationIds || "",
@@ -279,19 +329,33 @@ const LocationDetailsPage: React.FC = () => {
                   />
                   <ProFormText
                     name="phone"
-                    label={<span className="text-[#616161] font-medium">Teléfono</span>}
+                    label={
+                      <span className="text-[#616161] font-medium">
+                        Teléfono
+                      </span>
+                    }
                     readonly
                     fieldProps={{
-                      value: (location.telecom || []).find((t) => t.system === "phone")?.value || "",
+                      value:
+                        (location.telecom || []).find(
+                          (t) => t.system?.toLowerCase() === "phone"
+                        )?.value || "No disponible",
                     }}
                   />
                   <ProFormText
                     name="email"
-                    label={<span className="text-[#616161] font-medium">Correo Electrónico</span>}
+                    label={
+                      <span className="text-[#616161] font-medium">
+                        Correo Electrónico
+                      </span>
+                    }
                     readonly
                     fieldProps={{
                       type: "email",
-                      value: (location.telecom || []).find((t) => t.system === "email")?.value || "",
+                      value:
+                        (location.telecom || []).find(
+                          (t) => t.system?.toLowerCase() === "email"
+                        )?.value || "No disponible",
                     }}
                   />
                 </div>
@@ -311,7 +375,11 @@ const LocationDetailsPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 md:gap-16 lg:gap-32">
                   <ProFormText
                     name="managingOrganizationIds"
-                    label={<span className="text-[#616161] font-medium">Organización responsable</span>}
+                    label={
+                      <span className="text-[#616161] font-medium">
+                        Organización responsable
+                      </span>
+                    }
                     readonly
                     fieldProps={{
                       value: location.managingOrganizationIds || "",
@@ -319,7 +387,11 @@ const LocationDetailsPage: React.FC = () => {
                   />
                   <ProFormText
                     name="partOfId"
-                    label={<span className="text-[#616161] font-medium">Parte de (ubicación padre)</span>}
+                    label={
+                      <span className="text-[#616161] font-medium">
+                        Parte de (ubicación padre)
+                      </span>
+                    }
                     readonly
                     fieldProps={{
                       value: location.partOfId || "",
