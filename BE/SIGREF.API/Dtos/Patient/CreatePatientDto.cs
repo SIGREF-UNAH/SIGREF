@@ -7,22 +7,22 @@ using System.Text.Json.Serialization;
 
 namespace SIGREF.API.Dtos.Patient;
 
-    public class CreatePatientDto
-    {
-        [Required(ErrorMessage = "Al menos un nombre es obligatorio.")]
-        [AtLeastOneNameRequired]
-        public List<HumanNameDto> Name { get; set; } = new();
+public class CreatePatientDto
+{
+    [Required(ErrorMessage = "Al menos un nombre es obligatorio.")]
+    [AtLeastOneNameRequired]
+    public List<HumanNameDto> Name { get; set; } = new();
 
-        [Required(ErrorMessage = "El género es obligatorio.")]
+    [Required(ErrorMessage = "El género es obligatorio.")]
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public AdministrativeGender? Gender { get; set; }
 
-        [Required(ErrorMessage = "La fecha de nacimiento es obligatoria.")]
-        public DateTime? BirthDate { get; set; }
+    [Required(ErrorMessage = "La fecha de nacimiento es obligatoria.")]
+    public DateTime? BirthDate { get; set; }
 
-        public bool Active { get; set; } = true;
-        public List<ContactPointDto>? Telecom { get; set; }
-        public List<AddressDto>? Address { get; set; }
-        public List<IdentifierDto>? Identifier { get; set; }
-    }
+    public bool Active { get; set; } = true;
+    public List<ContactPointDto>? Telecom { get; set; }
+    public List<AddressDto>? Address { get; set; }
+    public List<IdentifierDto>? Identifier { get; set; }
+}
 
