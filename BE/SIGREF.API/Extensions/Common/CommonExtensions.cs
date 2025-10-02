@@ -53,6 +53,7 @@ namespace SIGREF.API.Extensions.Common
             return new IdentifierDto
             {
                 Use = identifier.Use,
+                // TODO: Mapear el tipo de CodeableConcept a un string simple
                 Type = GetTypeText(identifier.Type),
                 System = identifier.System,
                 Value = identifier.Value
@@ -72,6 +73,7 @@ namespace SIGREF.API.Extensions.Common
             };
         }
 
+        // TODO : Mejorar este método para manejar múltiples tipos y codificaciones
         private static string? GetTypeText(CodeableConcept? type)
         {
             if (type == null) return null;
