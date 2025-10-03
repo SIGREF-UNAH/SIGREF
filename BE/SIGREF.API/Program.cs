@@ -1,4 +1,5 @@
 using SIGREF.API;
+using Microsoft.OpenApi.Writers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,8 +11,16 @@ startup.ConfigureServices(builder.Services);
 
 builder.Services.AddAuthentication().AddJwtBearer(options =>
 {
-    options.Authority = "https://localhost:8081/realms/fhir";
-    options.Audience = "fhir-admin";
+options.Authority = "http://localhost:8081/realms/fhir";
+options.RequireHttpsMetadata = false;
+options.Audience = "SIGREF-Api";
+    options.TokenValidationParameters = new()
+    {
+        ValidateIssuer = false,
+        ValidAudience = "SIGREF-Api",
+        NameClaimType = "preferred_username",
+        RoleClaimType = "role"
+    };
 });
 builder.Services.AddAuthorizationBuilder();
 var app = builder.Build();

@@ -1,12 +1,16 @@
 using Hl7.Fhir.Rest;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore.Diagnostics.Internal;
 using Microsoft.OpenApi.Models;
+using Microsoft.IdentityModel.Tokens;
 using SIGREF.API.Constants;
 using SIGREF.API.Database;
 using SIGREF.API.Services;
 using SIGREF.API.Services.Patient;
 using SIGREF.API.Services.Practitioner;
 using System.Reflection;
+using System.Text;
 
 namespace SIGREF.API;
 /// <summary>
@@ -43,29 +47,15 @@ public class Startup
     ///   <item><description>Controladores y utilidades de API (Swagger, HttpContext).</description></item>
     ///   <item><description>Conexión a base de datos PostgreSQL (<c>SIGREFContext</c>).</description></item>
     ///   <item><description>Configuración de CORS (orígenes permitidos).</description></item>
+    ///   <item><description>Autenticación y autorización JWT.</description></item>
     /// </list>
     /// </remarks>
     public void ConfigureServices(IServiceCollection services)
     {
         // --- Configuración de entorno (Env) ---
-        // Se mapea la configuración completa proveniente de appsettings.json o variables de entorno
-        // hacia la clase fuertemente tipada "Env". Esto permite acceder a parámetros de configuración,
-        // como la URL base de FHIR (Env.Phir.BaseUrl), mediante inyección de dependencias (IOptions<Env>).
         services.Configure<Env>(_configuration);
 
         // --- Registro de servicios FHIR ---
-        // Se registran los servicios necesarios para interactuar con un servidor FHIR:
-        //
-        // 1. FhirService:
-        //    - Registrado con ciclo de vida Scoped (una instancia por cada request HTTP).
-        //    - Encapsula la lógica de inicialización y configuración del cliente FHIR.
-        //
-        // 2. FhirClient:
-        //    - También Scoped, pero creado a través de una factoría (lambda).
-        //    - La factoría obtiene el FhirService desde el contenedor y utiliza su método
-        //      GetFhirClient() para devolver una instancia ya configurada.
-        //    - Esto garantiza que cualquier clase que requiera un FhirClient reciba
-        //      un cliente listo para consumir el servidor FHIR, utilizando la configuración definida.
         services.AddScoped<FhirService>();
         services.AddScoped<FhirClient>(serviceProvider =>
         {
@@ -73,13 +63,23 @@ public class Startup
             return fhirService.GetFhirClient();
         });
 
-        // Registrar FhirService (opcional si aún lo necesitas)
+        // Registrar servicios de aplicación
         services.AddScoped<LocationService>();
+        services.AddScoped<IPatientService, PatientService>();
+        services.AddScoped<IPractitionerService, PractitionerService>();
 
         services.AddControllers();
         services.AddEndpointsApiExplorer();
+
+        // --- Configuración de Swagger ---
         services.AddSwaggerGen(c =>
         {
+            c.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title = "SIGREF API",
+                Version = "v1"
+            });
+
             // Configuración de Swagger para JWT
             c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
@@ -108,55 +108,88 @@ public class Startup
         });
 
         services.AddHttpContextAccessor();
-        // --- Configuración de entorno (Env) ---
-        // Se mapea la configuración completa proveniente de appsettings.json o variables de entorno
-        // hacia la clase fuertemente tipada "Env". Esto permite acceder a parámetros de configuración,
-        // como la URL base de FHIR (Env.Phir.BaseUrl), mediante inyección de dependencias (IOptions<Env>).
-        services.Configure<Env>(_configuration);
 
-        // --- Registro de servicios FHIR ---
-        // Se registran los servicios necesarios para interactuar con un servidor FHIR:
-        //
-        // 1. FhirService:
-        //    - Registrado con ciclo de vida Scoped (una instancia por cada request HTTP).
-        //    - Encapsula la lógica de inicialización y configuración del cliente FHIR.
-        //
-        // 2. FhirClient:
-        //    - También Scoped, pero creado a través de una factoría (lambda).
-        //    - La factoría obtiene el FhirService desde el contenedor y utiliza su método
-        //      GetFhirClient() para devolver una instancia ya configurada.
-        //    - Esto garantiza que cualquier clase que requiera un FhirClient reciba
-        //      un cliente listo para consumir el servidor FHIR, utilizando la configuración definida.
-        services.AddScoped<FhirService>();
-        services.AddScoped<FhirClient>(serviceProvider =>
-        {
-            var fhirService = serviceProvider.GetRequiredService<FhirService>();
-            return fhirService.GetFhirClient();
-        });
-
-        // Registrar FhirService (opcional si aún lo necesitas)
-        services.AddScoped<LocationService>();
-        services.AddScoped<IPatientService, PatientService>();
-        services.AddScoped<IPractitionerService, PractitionerService>();
-
-        services.AddControllers();
-        services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
-        services.AddHttpContextAccessor();
-
-
+        // --- Configuración de Base de Datos ---
         services.AddNpgsql<SIGREFContext>("hapi");
 
-        // CORS Configuration
+        // --- Configuración de CORS ---
         services.AddCors(opt =>
         {
             var allowURLS = _configuration.GetSection("AllowURLS").Get<string[]>();
             opt.AddPolicy("CorsPolicy", builder => builder
-                .WithOrigins(allowURLS)
+                .WithOrigins(allowURLS ?? new[] { "*" })
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .AllowCredentials());
         });
+
+        // --- CONFIGURACIÓN JWT ---
+        var jwtKey = _configuration["Jwt:Key"];
+        var jwtAudience = _configuration["Jwt:Audience"];
+        var jwtAuthority = _configuration["Jwt:Authority"];
+
+        // Solo configurar autenticación JWT si hay configuración disponible
+        if (!string.IsNullOrEmpty(jwtKey) || !string.IsNullOrEmpty(jwtAuthority))
+        {
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                if (!string.IsNullOrEmpty(jwtAuthority))
+                {
+                    // Configuración para Keycloak/OAuth
+                    options.Authority = jwtAuthority;
+                    options.Audience = jwtAudience;
+                    options.SaveToken = true;
+                    options.RequireHttpsMetadata = !_configuration.GetValue<bool>("Development:AllowHttp");
+
+                    // Configurar el claim type para roles si usas Keycloak
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        NameClaimType = "preferred_username",
+                        RoleClaimType = "role" // o "realm_access/roles" según tu configuración de Keycloak
+                    };
+                }
+                else if (!string.IsNullOrEmpty(jwtKey))
+                {
+                    // Configuración para JWT con clave simétrica
+                    options.SaveToken = true;
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+                        ClockSkew = TimeSpan.Zero,
+                        RoleClaimType = "role" // Define donde están los roles en tu token
+                    };
+                }
+            });
+
+            // --- CONFIGURACIÓN DE AUTORIZACIÓN ---
+            services.AddAuthorization(options =>
+            {
+                // Política básica para usuarios autenticados
+                options.AddPolicy("Bearer", policy => policy.RequireAuthenticatedUser());
+
+                // Políticas específicas por rol
+                options.AddPolicy("AdminOnly", policy =>
+                    policy.RequireAuthenticatedUser()
+                          .RequireRole("admin"));
+
+                options.AddPolicy("PatientOnly", policy =>
+                    policy.RequireAuthenticatedUser()
+                          .RequireRole("patient"));
+
+                options.AddPolicy("AdminOrPatient", policy =>
+                    policy.RequireAuthenticatedUser()
+                          .RequireRole("admin", "patient"));
+            });
+        }
     }
 
     /// <summary>
@@ -171,6 +204,7 @@ public class Startup
     ///   <item><description>Redirección HTTPS.</description></item>
     ///   <item><description>Ruteo (Routing).</description></item>
     ///   <item><description>Política de CORS aplicada.</description></item>
+    ///   <item><description>Autenticación y autorización JWT (si está configurada).</description></item>
     ///   <item><description>Mapeo de controladores (<c>endpoints.MapControllers()</c>).</description></item>
     /// </list>
     /// </remarks>
@@ -186,8 +220,13 @@ public class Startup
         app.UseRouting();
         app.UseCors("CorsPolicy");
 
-        app.UseAuthentication();
-        app.UseAuthorization();
+        // --- MIDDLEWARE DE AUTENTICACIÓN CONDICIONAL ---
+        // Solo usar autenticación si hay configuración JWT
+        if (_configuration.GetSection("Jwt").Exists())
+        {
+            app.UseAuthentication();
+            app.UseAuthorization();
+        }
 
         app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
     }
