@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Hl7.Fhir.Model;
+using SIGREF.API.Dtos.Common;
 
 namespace SIGREF.API.Dtos;
 

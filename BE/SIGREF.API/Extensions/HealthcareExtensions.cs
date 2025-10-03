@@ -1,5 +1,5 @@
 ﻿using Hl7.Fhir.Model;
-using SIGREF.API.Dtos;
+using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Healthcare;
 
 namespace SIGREF.API.Extensions

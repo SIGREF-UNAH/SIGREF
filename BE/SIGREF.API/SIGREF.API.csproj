@@ -7,12 +7,20 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Database\Configuration\**" />
+    <Compile Remove="Database\Entities\**" />
     <Compile Remove="Helpers\**" />
     <Compile Remove="SeedData\**" />
+    <Content Remove="Database\Configuration\**" />
+    <Content Remove="Database\Entities\**" />
     <Content Remove="Helpers\**" />
     <Content Remove="SeedData\**" />
+    <EmbeddedResource Remove="Database\Configuration\**" />
+    <EmbeddedResource Remove="Database\Entities\**" />
     <EmbeddedResource Remove="Helpers\**" />
     <EmbeddedResource Remove="SeedData\**" />
+    <None Remove="Database\Configuration\**" />
+    <None Remove="Database\Entities\**" />
     <None Remove="Helpers\**" />
     <None Remove="SeedData\**" />
   </ItemGroup>
@@ -38,11 +46,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SIGREF.API.ServiceDefaults\SIGREF.API.ServiceDefaults.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Database\Configuration\" />
-    <Folder Include="Database\Entities\" />
   </ItemGroup>
 
 </Project>

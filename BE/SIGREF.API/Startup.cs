@@ -1,12 +1,10 @@
 using Hl7.Fhir.Rest;
-using Microsoft.EntityFrameworkCore.Diagnostics.Internal;
 using Microsoft.OpenApi.Models;
 using SIGREF.API.Constants;
 using SIGREF.API.Database;
 using SIGREF.API.Services;
 using SIGREF.API.Services.Patient;
 using SIGREF.API.Services.Practitioner;
-using System.Reflection;
 
 namespace SIGREF.API;
 
