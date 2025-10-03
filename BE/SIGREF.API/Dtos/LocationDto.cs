@@ -7,7 +7,6 @@ namespace SIGREF.API.Dtos;
 public class LocationDto
 {
     public string? Id { get; set; }
-    public string? Identifier { get; set; }
     
     [Required]
     public string Name { get; set; } = string.Empty;

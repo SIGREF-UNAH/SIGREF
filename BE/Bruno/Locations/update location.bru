@@ -1,0 +1,42 @@
+meta {
+  name: update location
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{PATH}}/locations/752
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "string",
+    "description": "string",
+    "status": 0,
+    "mode": 0,
+    "address": {
+      "use": "string",
+      "type": "string",
+      "text": "string",
+      "line": [
+        "string"
+      ],
+      "city": "string",
+      "district": "string",
+      "state": "string",
+      "postalCode": "string",
+      "country": "string"
+    },
+    "telecom": [
+      {
+        "system": "string",
+        "value": "string",
+        "use": "string",
+        "rank": 0
+      }
+    ],
+    "type": "string"
+  }
+}
