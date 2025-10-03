@@ -5,6 +5,8 @@ using SIGREF.API.Database;
 using SIGREF.API.Services;
 using SIGREF.API.Services.Patient;
 using SIGREF.API.Services.Practitioner;
+using SIGREF.API.Services.Organization;
+using SIGREF.API.Services.Organizations;
 
 namespace SIGREF.API;
 
@@ -35,6 +37,7 @@ public class Startup
         services.AddScoped<HealthcareService>();
         services.AddScoped<IPatientService, PatientService>();
         services.AddScoped<IPractitionerService, PractitionerService>();
+        services.AddScoped<IOrganizationService, OrganizationService>();
 
         services.AddControllers();
         services.AddEndpointsApiExplorer();
