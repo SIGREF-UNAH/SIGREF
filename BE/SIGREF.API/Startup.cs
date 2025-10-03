@@ -1,8 +1,12 @@
-using SIGREF.API.Database;
-using SIGREF.API.Constants;
-using SIGREF.API.Services;
 using Hl7.Fhir.Rest;
+using Microsoft.EntityFrameworkCore.Diagnostics.Internal;
 using Microsoft.OpenApi.Models;
+using SIGREF.API.Constants;
+using SIGREF.API.Database;
+using SIGREF.API.Services;
+using SIGREF.API.Services.Patient;
+using SIGREF.API.Services.Practitioner;
+using System.Reflection;
 
 namespace SIGREF.API;
 
@@ -17,7 +21,7 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        // Configurar las opciones de Env - inyectar la sección completa
+        // Configurar las opciones de variables de entorno
         services.Configure<Env>(_configuration);
 
         // Registrar FhirClient directamente
@@ -28,26 +32,11 @@ public class Startup
             return fhirService.GetFhirClient();
         });
 
-        // Registrar FhirService (opcional si aún lo necesitas)
-        services.AddScoped<LocationService>();
-
-        services.AddControllers();
-        services.AddEndpointsApiExplorer();
-
-        // Configurar las opciones de Env - inyectar la sección completa
-        services.Configure<Env>(_configuration);
-
-        // Registrar FhirClient directamente
-        services.AddScoped<FhirService>();
-        services.AddScoped<FhirClient>(serviceProvider =>
-        {
-            var fhirService = serviceProvider.GetRequiredService<FhirService>();
-            return fhirService.GetFhirClient();
-        });
-
-        // Registrar FhirService (opcional si aún lo necesitas)
+        // Registrar servicios personalizados
         services.AddScoped<LocationService>();
         services.AddScoped<HealthcareService>();
+        services.AddScoped<IPatientService, PatientService>();
+        services.AddScoped<IPractitionerService, PractitionerService>();
 
         services.AddControllers();
         services.AddEndpointsApiExplorer();
@@ -100,7 +89,7 @@ public class Startup
                 .AllowCredentials());
         });
     }
-
+  
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
         if (env.IsDevelopment())
