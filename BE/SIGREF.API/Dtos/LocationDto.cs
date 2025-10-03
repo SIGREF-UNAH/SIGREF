@@ -1,4 +1,5 @@
 #nullable enable
+using Hl7.Fhir.Model;
 using System.ComponentModel.DataAnnotations;
 
 namespace SIGREF.API.Dtos;
@@ -39,6 +40,8 @@ public class AddressDto
     public string? Country { get; set; }
 }
 
+// ContactPointDto to represent contact details like phone, email, etc.
+// deveria de usar [JsonConverter(typeof(JsonStringEnumConverter))] ???
 public class ContactPointDto
 {
     public string? System { get; set; }  // phone, email, fax, etc.
