@@ -8,11 +8,9 @@ import {
   LocationMode,
   type CreateLocationDto,
   LocationStatus,
-  type ContactPointDto,
-  type AddressDto,
 } from "../../../api/models/";
 
-export default function useLocationForm(initial?: Partial<CreateLocationDto>) {
+export default function useLocationForm() {
   const queryClient = useQueryClient();
   const { mutateAsync: createLocation } = usePostApiLocations({
     mutation: {
@@ -24,101 +22,22 @@ export default function useLocationForm(initial?: Partial<CreateLocationDto>) {
     },
   });
 
-  const [formData, setFormData] = useState<CreateLocationDto>({
-    name: "",
-    alias: [],
-    description: null,
-    status: LocationStatus.NUMBER_0,
-    mode: LocationMode.NUMBER_0,
-    address: {
-      line: [],
-      city: null,
-      state: null,
-      postalCode: null,
-      country: null,
-    },
-    telecom: [],
-    type: null,
-    partOfId: null,
-    managingOrganizationIds: null,
-    ...initial,
-  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const setField = (field: keyof CreateLocationDto | string, value: any) => {
-    setFormData((prev) => {
-      // Manejo de campos simples
-      if (field in prev) {
-        return { ...prev, [field]: value };
-      }
-      // Manejo de subcampos como address.line, address.city, etc.
-      if (field.startsWith("address.")) {
-        const subField = field.split(".")[1] as keyof AddressDto;
-        return {
-          ...prev,
-          address: {
-            ...prev.address,
-            [subField]: subField === "line" ? [value] : value || null,
-          },
-        };
-      }
-      // Manejo de telecom (phone -> {system: "phone"}, email -> {system: "email"})
-      if (field === "phone" || field === "email") {
-        const system = field === "phone" ? "phone" : "email";
-        const existingTelecom = (prev.telecom || []).filter(
-          (t) => t.system !== system
-        );
-        const newTelecom: ContactPointDto = { system, value, use: "work" };
-        return {
-          ...prev,
-          telecom: value ? [...existingTelecom, newTelecom] : existingTelecom,
-        };
-      }
-      // Manejo de alias como array
-      if (field === "alias") {
-        return { ...prev, alias: Array.isArray(value) ? value : [] };
-      }
-      return prev;
-    });
-  };
-
-  const reset = () => {
-    setFormData({
-      name: "",
-      alias: [],
-      description: null,
-      status: LocationStatus.NUMBER_0,
-      mode: LocationMode.NUMBER_0,
-      address: {
-        line: [],
-        city: null,
-        state: null,
-        postalCode: null,
-        country: null,
-      },
-      telecom: [],
-      type: null,
-      partOfId: null,
-      managingOrganizationIds: null,
-    });
-    setError(null);
-  };
-
-  const handleSubmit = async (): Promise<boolean> => {
+  const handleSubmit = async (values: CreateLocationDto): Promise<boolean> => {
     setIsSubmitting(true);
     setError(null);
 
     try {
-      if (!formData.name) {
+      if (!values.name) {
         throw new Error("El nombre de la ubicación es obligatorio");
       }
-      if (!formData.address?.line?.[0]) {
+      if (!values.address?.line?.length || !values.address.line[0]) {
         throw new Error("La dirección es obligatoria");
       }
 
-      await createLocation({ data: formData });
-      reset();
+      await createLocation({ data: values });
       setIsSubmitting(false);
       return true;
     } catch (err: any) {
@@ -128,5 +47,5 @@ export default function useLocationForm(initial?: Partial<CreateLocationDto>) {
     }
   };
 
-  return { formData, setField, reset, handleSubmit, isSubmitting, error };
+  return { handleSubmit, isSubmitting, error };
 }
