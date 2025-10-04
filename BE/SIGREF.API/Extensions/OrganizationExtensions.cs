@@ -29,13 +29,6 @@ public static class OrganizationExtensions
                 Type = i.Type?.Text ?? string.Empty
             }).ToList();
         }
-
-        // Types
-        if (organization.Type != null)
-        {
-            dto.Types = organization.Type.ToList();
-        }
-
         // Aliases
         if (organization.Alias != null)
         {
@@ -50,8 +43,8 @@ public static class OrganizationExtensions
                 Name = c.Name?.Text,
                 Address = c.Address != null ? new AddressDto
                 {
-                    Use = c.Address.Use?.ToString(),
-                    Type = c.Address.Type?.ToString(),
+                    Use = c.Address.Use.Value,
+                    Type = c.Address.Type.Value,
                     Text = c.Address.Text,
                     Line = c.Address.Line?.ToList() ?? new List<string>(),
                     City = c.Address.City,
@@ -62,9 +55,9 @@ public static class OrganizationExtensions
                 } : null,
                 Telecom = c.Telecom?.Select(t => new ContactPointDto
                 {
-                    System = t.System?.ToString(),
+                    System = t.System.Value,
                     Value = t.Value,
-                    Use = t.Use?.ToString(),
+                    Use = t.Use.Value,
                     Rank = t.Rank
                 }).ToList() ?? new List<ContactPointDto>()
             }).ToList();
@@ -101,7 +94,7 @@ public static class OrganizationExtensions
         {
             Active = dto.Active ?? true,
             Name = dto.Name,
-            Text = !string.IsNullOrEmpty(dto.Description) 
+            Text = !string.IsNullOrEmpty(dto.Description)
                 ? new Narrative { Div = dto.Description, Status = Narrative.NarrativeStatus.Generated }
                 : null
         };
@@ -147,12 +140,8 @@ public static class OrganizationExtensions
                 Name = !string.IsNullOrEmpty(c.Name) ? new HumanName { Text = c.Name } : null,
                 Address = c.Address != null ? new Address
                 {
-                    Use = !string.IsNullOrEmpty(c.Address.Use) && Enum.TryParse<Address.AddressUse>(c.Address.Use, true, out var addressUse) 
-                        ? addressUse 
-                        : null,
-                    Type = !string.IsNullOrEmpty(c.Address.Type) && Enum.TryParse<Address.AddressType>(c.Address.Type, true, out var addressType) 
-                        ? addressType 
-                        : null,
+                    Use = c.Address.Use,
+                    Type = c.Address.Type,
                     Text = c.Address.Text,
                     Line = c.Address.Line?.ToArray(),
                     City = c.Address.City,
@@ -163,13 +152,9 @@ public static class OrganizationExtensions
                 } : null,
                 Telecom = c.Telecom?.Select(t => new ContactPoint
                 {
-                    System = !string.IsNullOrEmpty(t.System) && Enum.TryParse<ContactPoint.ContactPointSystem>(t.System, true, out var system) 
-                        ? system 
-                        : null,
+                    System = t.System,
                     Value = t.Value,
-                    Use = !string.IsNullOrEmpty(t.Use) && Enum.TryParse<ContactPoint.ContactPointUse>(t.Use, true, out var cpUse) 
-                        ? cpUse 
-                        : null,
+                    Use = t.Use,
                     Rank = t.Rank
                 }).ToList()
             }).ToList();
@@ -215,10 +200,10 @@ public static class OrganizationExtensions
 
         if (!string.IsNullOrEmpty(dto.Description))
         {
-            existingOrganization.Text = new Narrative 
-            { 
-                Div = dto.Description, 
-                Status = Narrative.NarrativeStatus.Generated 
+            existingOrganization.Text = new Narrative
+            {
+                Div = dto.Description,
+                Status = Narrative.NarrativeStatus.Generated
             };
         }
 
@@ -263,12 +248,8 @@ public static class OrganizationExtensions
                 Name = !string.IsNullOrEmpty(c.Name) ? new HumanName { Text = c.Name } : null,
                 Address = c.Address != null ? new Address
                 {
-                    Use = !string.IsNullOrEmpty(c.Address.Use) && Enum.TryParse<Address.AddressUse>(c.Address.Use, true, out var addressUse) 
-                        ? addressUse 
-                        : null,
-                    Type = !string.IsNullOrEmpty(c.Address.Type) && Enum.TryParse<Address.AddressType>(c.Address.Type, true, out var addressType) 
-                        ? addressType 
-                        : null,
+                    Use = c.Address.Use,
+                    Type = c.Address.Type,
                     Text = c.Address.Text,
                     Line = c.Address.Line?.ToArray(),
                     City = c.Address.City,
@@ -279,13 +260,9 @@ public static class OrganizationExtensions
                 } : null,
                 Telecom = c.Telecom?.Select(t => new ContactPoint
                 {
-                    System = !string.IsNullOrEmpty(t.System) && Enum.TryParse<ContactPoint.ContactPointSystem>(t.System, true, out var system) 
-                        ? system 
-                        : null,
+                    System = t.System, 
                     Value = t.Value,
-                    Use = !string.IsNullOrEmpty(t.Use) && Enum.TryParse<ContactPoint.ContactPointUse>(t.Use, true, out var cpUse) 
-                        ? cpUse 
-                        : null,
+                    Use = t.Use,       
                     Rank = t.Rank
                 }).ToList()
             }).ToList();

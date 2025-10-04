@@ -20,9 +20,9 @@ namespace SIGREF.API.Dtos.Common
 
     public class ReferenceDto // Para relaciones entre recursos
     {
+        public string? Type { get; set; }
         public string? Identifier { get; set; }
         public string? Reference { get; set; }
-        public string? Type { get; set; }
         public string? Display { get; set; }
     }
 
@@ -67,8 +67,11 @@ namespace SIGREF.API.Dtos.Common
 
     public class AddressDto // Para direcciones
     {
-        public string? Use { get; set; }
-        public string? Type { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public Address.AddressUse? Use { get; set; }
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public Address.AddressType? Type { get; set; }
         public string? Text { get; set; }
         public List<string> Line { get; set; } = new();
         public string? City { get; set; }
@@ -90,9 +93,11 @@ namespace SIGREF.API.Dtos.Common
 
     public class ContactPointDto // Para puntos de contacto como teléfono, email, etc.
     {
-        public string? System { get; set; } // phone, email, fax, etc.
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public ContactPoint.ContactPointSystem? System { get; set; } // phone, email, fax, etc.
         public string? Value { get; set; }
-        public string? Use { get; set; } // home, work, mobile, etc.
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public ContactPoint.ContactPointUse? Use { get; set; } // home, work, mobile, etc.
         public int? Rank { get; set; }
     }
 

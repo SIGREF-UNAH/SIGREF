@@ -5,6 +5,7 @@ using Microsoft.OpenApi.Models;
 using SIGREF.API.Constants;
 using SIGREF.API.Database;
 using SIGREF.API.Services;
+using SIGREF.API.Services.Location;
 using SIGREF.API.Services.Organization;
 using SIGREF.API.Services.Organizations;
 using SIGREF.API.Services.Patient;
@@ -37,7 +38,11 @@ public class Startup
             return fhirService.GetFhirClient();
         });
 
-        // Registrar servicios personalizados
+        // SEEDER
+        services.AddScoped<SIGREFSeeder>();
+
+
+        // Registrar FhirService (opcional si aún lo necesitas)
         services.AddScoped<LocationService>();
         services.AddScoped<HealthcareService>();
         services.AddScoped<IPatientService, PatientService>();
