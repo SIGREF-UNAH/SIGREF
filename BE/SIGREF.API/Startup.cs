@@ -75,7 +75,6 @@ public class Startup
         });
 
         // SEEDER
-        services.AddScoped<FhirService>();
         services.AddScoped<SIGREFSeeder>();
 
 

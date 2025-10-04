@@ -28,8 +28,4 @@
     <ProjectReference Include="..\SIGREF.API.ServiceDefaults\SIGREF.API.ServiceDefaults.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Dtos\CommonRequestDtos\" />
-  </ItemGroup>
-
 </Project>

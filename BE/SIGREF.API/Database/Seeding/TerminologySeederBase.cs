@@ -7,18 +7,33 @@ namespace SIGREF.API.Database.Seeding;
 
 
 
+/// <summary>
+/// Representa una definición de terminología que incluye metadatos de un sistema de códigos y un conjunto de valores (ValueSet),
+/// junto con un diccionario de conceptos asociados.
+/// </summary>
 public class TerminologyDefinition
 {
+    // URL única que identifica el sistema de códigos (ej. URI de FHIR CodeSystem).
     public string CodeSystemUrl { get; set; } = default!;
+
+    // Nombre técnico del sistema de códigos, generalmente en formato canónico.
     public string CodeSystemName { get; set; } = default!;
+
+    // Título legible para humanos del sistema de códigos.
     public string CodeSystemTitle { get; set; } = default!;
+
+    // Colección de conceptos donde la clave es el código y el valor es su descripción o display.
     public Dictionary<string, string> Concepts { get; set; } = new();
 
+    // URL única que identifica el conjunto de valores (ValueSet) asociado.
     public string ValueSetUrl { get; set; } = default!;
+
+    // Nombre técnico del conjunto de valores.
     public string ValueSetName { get; set; } = default!;
+
+    // Título legible para humanos del conjunto de valores.
     public string ValueSetTitle { get; set; } = default!;
 }
-
 /// <summary>
 /// Clase base para los seeders de terminología FHIR.
 /// Contiene utilidades para verificar existencia de CodeSystem y ValueSet
