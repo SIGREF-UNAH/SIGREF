@@ -74,6 +74,11 @@ public class Startup
             return fhirService.GetFhirClient();
         });
 
+        // SEEDER
+        services.AddScoped<FhirService>();
+        services.AddScoped<SIGREFSeeder>();
+
+
         // Registrar FhirService (opcional si aún lo necesitas)
         services.AddScoped<LocationService>();
 

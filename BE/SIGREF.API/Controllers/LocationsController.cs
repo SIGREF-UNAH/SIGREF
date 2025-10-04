@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SIGREF.API.Dtos;
+using SIGREF.API.Dtos.Location;
 using SIGREF.API.Extensions;
 using SIGREF.API.Services.Location;
 
