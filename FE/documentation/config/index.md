@@ -5,4 +5,6 @@
 
 ## 📌 Acceso a Documentos Específicos
 
-Páginas reutilizables para la UI:
+Funcionaliades y configuraciones clave para la aplicación:
+
+- [Keycloak](/documentation/config/keycloak.md)
