@@ -1,72 +1,36 @@
 using Hl7.Fhir.Rest;
-using Microsoft.EntityFrameworkCore.Diagnostics.Internal;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SIGREF.API.Constants;
 using SIGREF.API.Database;
 using SIGREF.API.Services;
 using SIGREF.API.Services.Location;
+using SIGREF.API.Services.Organization;
+using SIGREF.API.Services.Organizations;
 using SIGREF.API.Services.Patient;
 using SIGREF.API.Services.Practitioner;
-using System.Reflection;
+using System.Security.Claims;
+using System.Text.Json;
+
 
 namespace SIGREF.API;
-/// <summary>
-/// Clase principal de arranque de la aplicación ASP.NET Core.
-/// Se encarga de configurar los servicios y el pipeline de ejecución.
-/// </summary>
+
 public class Startup
 {
     private readonly IConfiguration _configuration;
 
-    /// <summary>
-    /// Constructor de la clase Startup.
-    /// </summary>
-    /// <param name="configuration">
-    /// Objeto de configuración (IConfiguration) que contiene
-    /// valores de appsettings.json, variables de entorno, etc.
-    /// </param>
     public Startup(IConfiguration configuration)
     {
         this._configuration = configuration;
     }
 
-    /// <summary>
-    /// Método para registrar y configurar los servicios que estarán disponibles 
-    /// a través de la inyección de dependencias.
-    /// </summary>
-    /// <param name="services">Colección de servicios (IServiceCollection).</param>
-    /// <remarks>
-    /// Aquí se registran:
-    /// <list type="bullet">
-    ///   <item><description>Opciones de configuración de entorno (<c>Env</c>).</description></item>
-    ///   <item><description>Servicios FHIR (<c>FhirService</c>, <c>FhirClient</c>).</description></item>
-    ///   <item><description>Servicios propios como <c>LocationService</c>.</description></item>
-    ///   <item><description>Controladores y utilidades de API (Swagger, HttpContext).</description></item>
-    ///   <item><description>Conexión a base de datos PostgreSQL (<c>SIGREFContext</c>).</description></item>
-    ///   <item><description>Configuración de CORS (orígenes permitidos).</description></item>
-    /// </list>
-    /// </remarks>
     public void ConfigureServices(IServiceCollection services)
     {
-        // --- Configuración de entorno (Env) ---
-        // Se mapea la configuración completa proveniente de appsettings.json o variables de entorno
-        // hacia la clase fuertemente tipada "Env". Esto permite acceder a parámetros de configuración,
-        // como la URL base de FHIR (Env.Phir.BaseUrl), mediante inyección de dependencias (IOptions<Env>).
+        // Configurar las opciones de variables de entorno
         services.Configure<Env>(_configuration);
 
-        // --- Registro de servicios FHIR ---
-        // Se registran los servicios necesarios para interactuar con un servidor FHIR:
-        //
-        // 1. FhirService:
-        //    - Registrado con ciclo de vida Scoped (una instancia por cada request HTTP).
-        //    - Encapsula la lógica de inicialización y configuración del cliente FHIR.
-        //
-        // 2. FhirClient:
-        //    - También Scoped, pero creado a través de una factoría (lambda).
-        //    - La factoría obtiene el FhirService desde el contenedor y utiliza su método
-        //      GetFhirClient() para devolver una instancia ya configurada.
-        //    - Esto garantiza que cualquier clase que requiera un FhirClient reciba
-        //      un cliente listo para consumir el servidor FHIR, utilizando la configuración definida.
+        // Registrar FhirClient directamente
         services.AddScoped<FhirService>();
         services.AddScoped<FhirClient>(serviceProvider =>
         {
@@ -80,12 +44,23 @@ public class Startup
 
         // Registrar FhirService (opcional si aún lo necesitas)
         services.AddScoped<LocationService>();
+        services.AddScoped<HealthcareService>();
+        services.AddScoped<IPatientService, PatientService>();
+        services.AddScoped<IPractitionerService, PractitionerService>();
+        services.AddScoped<IOrganizationService, OrganizationService>();
 
         services.AddControllers();
         services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen();
+        services.AddHttpContextAccessor();
+
+        // Configuración de PostgreSQL con Aspire
+        services.AddNpgsql<SIGREFContext>("hapi");
+        services.AddHttpContextAccessor();
+
+        // Configuración de Swagger para JWT
         services.AddSwaggerGen(c =>
         {
-            // Configuración de Swagger para JWT
             c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Name = "Authorization",
@@ -112,45 +87,92 @@ public class Startup
             });
         });
 
-        services.AddHttpContextAccessor();
-        // --- Configuración de entorno (Env) ---
-        // Se mapea la configuración completa proveniente de appsettings.json o variables de entorno
-        // hacia la clase fuertemente tipada "Env". Esto permite acceder a parámetros de configuración,
-        // como la URL base de FHIR (Env.Phir.BaseUrl), mediante inyección de dependencias (IOptions<Env>).
-        services.Configure<Env>(_configuration);
-
-        // --- Registro de servicios FHIR ---
-        // Se registran los servicios necesarios para interactuar con un servidor FHIR:
-        //
-        // 1. FhirService:
-        //    - Registrado con ciclo de vida Scoped (una instancia por cada request HTTP).
-        //    - Encapsula la lógica de inicialización y configuración del cliente FHIR.
-        //
-        // 2. FhirClient:
-        //    - También Scoped, pero creado a través de una factoría (lambda).
-        //    - La factoría obtiene el FhirService desde el contenedor y utiliza su método
-        //      GetFhirClient() para devolver una instancia ya configurada.
-        //    - Esto garantiza que cualquier clase que requiera un FhirClient reciba
-        //      un cliente listo para consumir el servidor FHIR, utilizando la configuración definida.
-        services.AddScoped<FhirService>();
-        services.AddScoped<FhirClient>(serviceProvider =>
+        // Configuración de Autenticación con Keycloak
+        services.AddAuthentication(options =>
         {
-            var fhirService = serviceProvider.GetRequiredService<FhirService>();
-            return fhirService.GetFhirClient();
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            var authority = _configuration["Keycloak:Authority"];  
+            var audience = _configuration["Keycloak:Audience"];
+            var requireHttps = _configuration.GetValue<bool>("Keycloak:RequireHttps");
+
+            options.Authority = authority;
+            options.Audience = audience;
+            options.RequireHttpsMetadata = requireHttps;
+
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidAudiences = new[] { audience, "account" },
+                RoleClaimType = ClaimTypes.Role,
+                NameClaimType = "preferred_username"
+            };
+
+            // Aquí mapeamos los roles
+            options.Events = new JwtBearerEvents
+            {
+                OnTokenValidated = context =>
+                {
+                    var identity = context.Principal.Identity as ClaimsIdentity;
+
+                    if (identity != null)
+                    {
+                        // Lista de roles
+                        var validRoles = new[] { 
+                            Roles.admin, 
+                            Roles.cashier, 
+                            Roles.ti, 
+                            Roles.auditor 
+                        };
+
+                        // --- Roles de Realm ---
+                        var realmAccess = context.Principal.FindFirst("realm_access")?.Value;
+                        if (!string.IsNullOrEmpty(realmAccess))
+                        {
+                            using var doc = JsonDocument.Parse(realmAccess);
+                            if (doc.RootElement.TryGetProperty("roles", out var rolesElement))
+                            {
+                                foreach (var role in rolesElement.EnumerateArray())
+                                {
+                                    var roleName = role.GetString();
+                                    if (validRoles.Contains(roleName))
+                                    {
+                                        identity.AddClaim(new Claim(ClaimTypes.Role, roleName));
+                                    }
+                                }
+                            }
+                        }
+
+                        // --- Roles del Client (sigref-api) ---
+                        var resourceAccess = context.Principal.FindFirst("resource_access")?.Value;
+                        if (!string.IsNullOrEmpty(resourceAccess))
+                        {
+                            using var doc = JsonDocument.Parse(resourceAccess);
+                            if (doc.RootElement.TryGetProperty(audience, out var clientElement) &&
+                                clientElement.TryGetProperty("roles", out var clientRoles))
+                            {
+                                foreach (var role in clientRoles.EnumerateArray())
+                                {
+                                    var roleName = role.GetString();
+                                    if (validRoles.Contains(roleName))
+                                    {
+                                        identity.AddClaim(new Claim(ClaimTypes.Role, roleName));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return Task.CompletedTask;
+                }
+            };
+
         });
 
-        // Registrar FhirService (opcional si aún lo necesitas)
-        services.AddScoped<LocationService>();
-        services.AddScoped<IPatientService, PatientService>();
-        services.AddScoped<IPractitionerService, PractitionerService>();
-
-        services.AddControllers();
-        services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
-        services.AddHttpContextAccessor();
-
-
-        services.AddNpgsql<SIGREFContext>("hapi");
+        services.AddAuthorization();
 
         // CORS Configuration
         services.AddCors(opt =>
@@ -163,22 +185,7 @@ public class Startup
                 .AllowCredentials());
         });
     }
-
-    /// <summary>
-    /// Método para configurar el pipeline de procesamiento de la aplicación.
-    /// </summary>
-    /// <param name="app">Aplicación (IApplicationBuilder) usada para construir la tubería HTTP.</param>
-    /// <param name="env">Entorno web (IWebHostEnvironment) que indica si es Desarrollo, Producción, etc.</param>
-    /// <remarks>
-    /// En este método se definen los middleware y el flujo de la aplicación:
-    /// <list type="bullet">
-    ///   <item><description>Swagger para documentación (solo en desarrollo).</description></item>
-    ///   <item><description>Redirección HTTPS.</description></item>
-    ///   <item><description>Ruteo (Routing).</description></item>
-    ///   <item><description>Política de CORS aplicada.</description></item>
-    ///   <item><description>Mapeo de controladores (<c>endpoints.MapControllers()</c>).</description></item>
-    /// </list>
-    /// </remarks>
+  
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
         if (env.IsDevelopment())

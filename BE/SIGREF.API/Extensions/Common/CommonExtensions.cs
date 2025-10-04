@@ -1,5 +1,5 @@
 ﻿using Hl7.Fhir.Model;
-using SIGREF.API.Dtos;
+#nullable enable
 using SIGREF.API.Dtos.Common;
 
 namespace SIGREF.API.Extensions.Common

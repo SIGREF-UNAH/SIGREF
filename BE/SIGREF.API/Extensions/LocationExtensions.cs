@@ -2,7 +2,6 @@
 using Hl7.Fhir.Model;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Location;
-
 namespace SIGREF.API.Extensions;
 
 public static class LocationExtensions
@@ -101,7 +100,6 @@ public static class LocationExtensions
 
         return null;
     }
-
 
     private static List<CodeableConcept> CreateCodeableConceptList(string? text)
     {

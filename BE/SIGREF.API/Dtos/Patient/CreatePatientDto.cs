@@ -1,4 +1,4 @@
-﻿
+﻿#nullable enable
 using Hl7.Fhir.Model;
 using FhirPatient = Hl7.Fhir.Model.Patient;
 using SIGREF.API.Dtos.Common;

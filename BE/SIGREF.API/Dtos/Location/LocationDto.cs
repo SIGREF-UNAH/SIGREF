@@ -21,9 +21,10 @@ public class LocationDto
     public AddressDto? Address { get; set; }
     
     public List<ContactPointDto> Telecom { get; set; } = new();
-
+    
     // Pasar a CodeableConcept para estandarizar con otros campos
     public string? Type { get; set; }
     
     public DateTime? LastUpdated { get; set; }
 }
+

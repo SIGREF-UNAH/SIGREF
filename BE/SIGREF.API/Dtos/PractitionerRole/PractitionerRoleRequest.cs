@@ -2,7 +2,7 @@
 using Hl7.Fhir.Model;
 using System.Text.Json.Serialization;
 using SIGREF.API.Dtos.Common;
-
+#nullable enable
 namespace SIGREF.API.Dtos.PractitionerRole;
 public class CreatePractitionerRoleDto
 {

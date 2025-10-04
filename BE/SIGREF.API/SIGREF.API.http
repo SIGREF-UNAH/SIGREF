@@ -16,3 +16,63 @@ Content-Type: application/json
   "description": "Description of the new location"
 }
 ###
+
+### ============ HealthcareService ============
+
+### Obtener todos los servicios médicos
+GET {{ApiUrl}}/api/Healthcares
+Accept: application/json
+
+### Obtener un servicio médico por id
+GET {{ApiUrl}}/api/Healthcares/1602
+Accept: application/json
+
+### Crear un nuevo servicio médico
+POST {{ApiUrl}}/api/Healthcares
+Content-Type: application/json
+{
+  "active": true,
+  "name": "Examen de Sangre",
+  "abbreviation": "EXS",
+  "comment": "Descripción de prueba.",
+  "cost": 100,
+  "specialty": [
+    {
+      "text": "Medicina General"
+    }
+  ],
+  "providedBy": null,
+  "location": [
+    {
+      "reference": "Location/1",
+      "display": "Consulta Interna"
+    }
+  ]
+}
+
+### Actualizar un servicio médico existente
+PUT {{ApiUrl}}/api/Healthcares/1602
+Content-Type: application/json
+{
+  "active": false,
+  "name": "Rayos X",
+  "comment": "Examen",
+  "abbreviation": "RX",
+  "cost": 180,
+  "specialty": [
+    {
+      "text": "Radiografia"
+    }
+  ],
+  "providedBy": null,
+  "location": [
+    {
+      "reference": "Location/1",
+      "display": "Laboratorio"
+    }
+  ]
+ }
+
+### Eliminar un servicio médico por id
+DELETE {{ApiUrl}}/api/Healthcares/1602
+Accept: application/json

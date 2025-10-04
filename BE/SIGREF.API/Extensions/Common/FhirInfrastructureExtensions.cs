@@ -1,5 +1,5 @@
 ﻿using Hl7.Fhir.Model;
-
+#nullable enable
 namespace SIGREF.API.Extensions.Common
 {
     /// <summary>

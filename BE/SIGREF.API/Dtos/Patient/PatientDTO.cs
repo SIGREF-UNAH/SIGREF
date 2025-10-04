@@ -1,4 +1,5 @@
-﻿using Hl7.Fhir.Model;
+﻿#nullable enable
+using Hl7.Fhir.Model;
 using SIGREF.API.Dtos.Common;
 using System.Text.Json.Serialization;
 

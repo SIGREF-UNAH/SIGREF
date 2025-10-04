@@ -1,4 +1,5 @@
 ﻿using Hl7.Fhir.Model;
+#nullable enable
 using SIGREF.API.Dtos.Common;
 using System.Text.Json.Serialization;
 
@@ -9,7 +10,7 @@ public class PractitionerRoleDto
     public string? Id { get; set; }
 
     [JsonPropertyName("identifier")]
-    public List<IdentifierTypeDto>? Identifier { get; set; } = new();
+    public List<IdentifierDto>? Identifier { get; set; } = new();
 
     [JsonPropertyName("active")]
     public bool Active { get; set; } = true;
