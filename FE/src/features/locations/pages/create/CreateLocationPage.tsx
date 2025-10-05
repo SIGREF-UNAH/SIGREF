@@ -43,18 +43,6 @@ export default function Home() {
                 Crear Ubicación
               </Link>
 
-              <Link
-                to="/locations/edit"
-                onClick={() => handleButtonClick("editar")}
-                className={`px-4 py-2 transition-colors z-10 cursor-pointer ${
-                  activeButton === "editar"
-                    ? "border border-gray-300 bg-transparent text-[#7BA2D4] rounded-t-md"
-                    : "text-[#163C65]"
-                }`}
-              >
-                Editar Ubicación
-              </Link>
-
               <div className="absolute bottom-0 h-[1px] bg-gray-300 z-0 left-0 right-0"></div>
             </div>
           </div>

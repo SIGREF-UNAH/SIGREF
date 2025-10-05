@@ -13,7 +13,7 @@ const LocationsRouter = () => {
       <Route path="create" element={<CreateLocationPage />} />      
 
       {/* Ruta para editar una ubicación */}
-      <Route path="edit" element={<EditLocation />} />
+      <Route path="edit/:id" element={<EditLocation />} />
     </Routes>
   );
 };

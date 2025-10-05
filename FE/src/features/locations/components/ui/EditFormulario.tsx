@@ -1,287 +1,295 @@
-import { Form, Input, Select, Button, Card, Row, Col, Typography, Space, Divider, Spin } from "antd";
-import { EnvironmentOutlined, ContactsOutlined, SnippetsOutlined, CheckOutlined } from "@ant-design/icons";
-import { useParams } from "react-router-dom";   
-import useEditLocationForm from "../../hooks/useEditLocationForm";
-import { LocationStatus, LocationMode } from "../../../../api/models";
+import { useState, useEffect } from "react";
+import { ProForm, ProFormText, ProFormTextArea, ProFormSelect } from "@ant-design/pro-components";
+import { Button } from "antd";
+import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
+import { BsBuilding, BsGeoAltFill, BsPersonFill } from "react-icons/bs";
+import { MdOutlineAddLocationAlt } from "react-icons/md";
+import { usePutApiLocationsId, useGetApiLocationsId } from "../../../../api/locations/locations";
+import {   useParams } from "react-router";
+import { useNavigate } from 'react-router-dom';
+import { message, Spin } from "antd";
+import type { UpdateLocationDto } from "../../../../api/models";
 
-const { Title } = Typography;
-const { TextArea } = Input;
-const { Option } = Select;
 
-export default function LocationManagementForm() {
-  const [form] = Form.useForm();
-  const { id } = useParams<{ id: string }>();
+export default function EditLocation() {
+  const { id } = useParams(); 
+  const numericId = Number(id);
 
-  const {
-    formData,
-    setField,
-    handleSubmit,
-    isSubmitting,   
-    error,
-  } = useEditLocationForm(id!); 
+  const [contacts, setContacts] = useState([{ id: "1", name: "", phone: "", email: "" }]);
+  const { data: location, isPending } = useGetApiLocationsId(numericId);
 
-  const initialValues = {
-    name: formData?.name || "",
-    type: formData?.type || "",
-    description: formData?.description || "",
-    status: formData?.status?.toString() || LocationStatus.NUMBER_0.toString(),
-    direccion: formData?.address?.line?.[0] || "",
-    ciudad: formData?.address?.city || "",
-    estadoProvincia: formData?.address?.state || "",
-    codigoPostal: formData?.address?.postalCode || "",
-    pais: formData?.address?.country || "",
-    phone: formData?.telecom?.find(t => t.system === "phone")?.value || "",
-    email: formData?.telecom?.find(t => t.system === "email")?.value || "",
+  const [form] = ProForm.useForm();
+
+  const { mutate: updateLocation, isPending: isUpdating } = usePutApiLocationsId({
+    mutation: {
+      onSuccess: () => message.success("Ubicación actualizada con éxito"),
+      onError: () => message.error("Error al actualizar la ubicación"),
+    },
+  });
+
+  useEffect(() => {
+    if (location) {
+      form.setFieldsValue(location);
+
+      if (location.contactos && location.contactos.length > 0) {
+        setContacts(
+          location.contactos.map((c: any, index: number) => ({
+            id: Date.now().toString() + index,
+            name: c.nombre,
+            phone: c.telefono,
+            email: c.email,
+          }))
+        );
+      }
+    }
+  }, [location, form]);
+
+  const navigate = useNavigate();
+  const addContact = () => {
+    setContacts([...contacts, { id: Date.now().toString(), name: "", phone: "", email: "" }]);
   };
 
-  if (isSubmitting) {    
+  const removeContact = (id: string) => {
+    if (contacts.length > 1) {
+      setContacts(contacts.filter((contact) => contact.id !== id));
+    }
+  };
+
+  if (isPending) {
     return (
       <div className="flex justify-center items-center h-64">
         <Spin size="large" />
       </div>
     );
   }
+
   return (
     <div className="bg-[#FAFAFA] rounded-lg border-2 border-[#D9D9D9] p-6">
-      <Card>  
-        <div className="mb-6">
-          <Space align="center" className="mb-4">
-            <EnvironmentOutlined className="!text-[#7BA2D4] !text-xl" />
-            <Title level={4} className="!mb-0 !text-[#333333]">
-              Actualizar Ubicación
-            </Title>
-          </Space>
-        </div>
+      <div className="mb-6 flex items-center gap-2">
+        <MdOutlineAddLocationAlt className="w-10 h-10 text-blue-500" />
+        <span className="text-xl font-semibold text-[#333333]">Actualizar Ubicación</span>
+      </div>
 
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-          initialValues={initialValues}
-        >
-          {/* Información Básica */}
-          <div className="mb-8">
-            <Space align="center" className="mb-4">
-              <SnippetsOutlined className="!text-[#7BA2D4] !text-xl" />
-              <Title level={5} className="!mb-0 !text-[#333333]">
-                Información Básica
-              </Title>  
-            </Space>
-
-            <Row gutter={16}>
-              <Col xs={24} sm={8}>
-                <Form.Item
-                  label={<span className="text-[#616161]">Nombre de la Ubicación</span>}
-                  name="name"
-                  rules={[{ required: true, message: "Por favor ingrese el nombre" }]}
-                >
-                  <Input 
-                    className="!bg-[#ffffff]"
-                    placeholder="Ej. Sala de emergencias"
-                    onChange={(e) => setField("name", e.target.value)} 
-                  />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={8}>
-                <Form.Item 
-                  label={<span className="text-[#616161]">Tipo de Función</span>} 
-                  name="type" 
-                >
-                  <Input 
-                    className="!bg-[#ffffff]"
-                    placeholder="Ej. Emergencias, ROOM"
-                    onChange={(e) => setField("type", e.target.value)} 
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <Row gutter={16}>
-              <Col xs={24} sm={8}>
-                <Form.Item
-                  label={<span className="text-[#616161]">Estado</span>}
-                  name="status"
-                >
-                  <Select 
-                    className="[&_.ant-select-selector]:!border-gray-400"
-                    placeholder="Seleccionar estado"
-                    onChange={(value) => setField("status", parseInt(value))}
-                  >
-                    <Option value={LocationStatus.NUMBER_0.toString()}>Activo</Option>
-                    <Option value={LocationStatus.NUMBER_1.toString()}>Inactivo</Option>
-                    <Option value={LocationStatus.NUMBER_2.toString()}>Suspendido</Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={8}>
-                <Form.Item
-                  label={<span className="text-[#616161]">Modo</span>}
-                  name="mode"
-                >
-                  <Select 
-                    className="[&_.ant-select-selector]:!border-gray-400"
-                    placeholder="Seleccionar modo"
-                    onChange={(value) => setField("mode", parseInt(value))}
-                  >
-                    <Option value={LocationMode.NUMBER_0.toString()}>Instancia</Option>
-                    <Option value={LocationMode.NUMBER_1.toString()}>Clase</Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <Form.Item 
-              label={<span className="text-[#616161]">Descripción</span>} 
-              name="description"
-            >
-              <TextArea 
-                rows={3}  
-                className="!bg-[#ffffff]" 
-                placeholder="Descripción adicional de la ubicación"
-                onChange={(e) => setField("description", e.target.value)}
-              />
-            </Form.Item>
-          </div>
-
-          <Divider className="!border-gray-800 !mt-14"/>
-
-          {/* Dirección Física */}
-          <div className="mb-8">
-            <Space align="center" className="mb-4">
-              <EnvironmentOutlined className="!text-[#7BA2D4] !text-xl" />
-              <Title level={5} className="!mb-0 !text-[#333333]">
-                Dirección Física
-              </Title>
-            </Space>
-
-            <Form.Item
-              label={<span className="text-[#616161]">Dirección</span>}
-              name="direccion"
-            >
-              <Input 
-                className="!bg-[#ffffff]"
-                placeholder="Ej. Avenida principal 123"
-                onChange={(e) => setField("address.line", e.target.value)}
-              />
-            </Form.Item>
-
-            <Row gutter={16}>
-              <Col xs={24} sm={12}>
-                <Form.Item
-                  label={<span className="text-[#616161]">Ciudad</span>}    
-                  name="ciudad"
-                >
-                  <Input 
-                    className="!bg-[#ffffff]"
-                    placeholder="Ej. San José"
-                    onChange={(e) => setField("address.city", e.target.value)}
-                  />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12}>
-                <Form.Item
-                  label={<span className="text-[#616161]">Estado/Provincia</span>}
-                  name="estadoProvincia"
-                >
-                  <Input 
-                    className="!bg-[#ffffff]"
-                    placeholder="Ej. San José" 
-                    onChange={(e) => setField("address.state", e.target.value)}
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <Row gutter={16}>
-              <Col xs={24} sm={12}>
-                <Form.Item 
-                  label={<span className="text-[#616161]">Código postal</span>} 
-                  name="codigoPostal"
-                >
-                  <Input 
-                    className="!bg-[#ffffff]"
-                    placeholder="Ej. 10110"
-                    onChange={(e) => setField("address.postalCode", e.target.value)} 
-                  />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12}>
-                <Form.Item 
-                  label={<span className="text-[#616161]">País</span>} 
-                  name="pais" 
-                >
-                  <Input 
-                    className="!bg-[#ffffff]"
-                    placeholder="Ej. Costa Rica"
-                    onChange={(e) => setField("address.country", e.target.value)} 
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-          </div>    
-
-          <Divider className="!border-gray-800"/>
-
-          {/* Información de Contacto */}
-          <div className="mb-8">
-            <Space align="center" className="mb-4">
-              <ContactsOutlined className="!text-[#7BA2D4] !text-xl" />
-              <Title level={5} className="!mb-0 !text-[#333333]">
-                Información de Contacto
-              </Title>
-            </Space>
-
-            <Row gutter={16}>
-              <Col xs={24} sm={8}>
-                <Form.Item 
-                  label={<span className="text-[#616161]">Teléfono</span>}
-                  name="phone"
-                >
-                  <Input 
-                    className="!bg-[#ffffff]"
-                    placeholder="Ej. +504 4665-5945"
-                    onChange={(e) => setField("phone", e.target.value)} 
-                  />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={8}>
-                <Form.Item
-                  label={<span className="text-[#616161]">Correo electrónico</span>}
-                  name="email"
-                >
-                  <Input 
-                    className="!bg-[#ffffff]"
-                    placeholder="Ej. contacto@hospital.cr"
-                    onChange={(e) => setField("email", e.target.value)} 
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-          </div>
-
-          {/* Submit Button */}
-          <div className="flex justify-end">
-            <Form.Item>
+       <ProForm
+        form={form}
+        initialValues={location}
+        submitter={{
+          render: (props) => (
+            <div className="flex justify-end gap-4">
+              <Button
+              type="default"
+              onClick={() => navigate('/locations/list')} 
+              className="border-gray-300 hover:border-blue-500"
+              size="large"
+              >
+              Cancelar
+             </Button>
               <Button
                 type="primary"
-                htmlType="submit"
+                onClick={() => props.form?.submit?.()}
+                className="bg-green-500 hover:bg-green-600"
                 size="large"
-                loading={isSubmitting}
-                icon={<CheckOutlined className="!text-stone-100 !mr-1" />} 
-                className="!bg-[#4CAF50] hover:!bg-green-700 !border-green-500 hover:!border-green-600"
+                loading={isUpdating}
               >
-                {isSubmitting ? 'Guardando...' : 'Editar Ubicación'}
+                Editar Ubicación
               </Button>
-            </Form.Item>
+            </div>
+          ),
+        }}
+        onFinish={(values) => {
+          const payload: UpdateLocationDto = {
+            name: values.nombreUbicacion || "",
+            description: values.descripcion || null,
+            status: values.estado || "active",
+            mode: values.modo || "Instance",
+            type: values.tipoFuncion || null,
+            address: {
+              line: values.direccion ? [values.direccion] : [],
+              city: values.ciudad || null,
+              state: values.estadoProvincia || null,
+              postalCode: values.codigoPostal || null,
+              country: values.pais || null,
+            },
+            telecom: contacts
+              .flatMap((c, idx) => [
+                c.phone ? { system: "phone", value: c.phone, use: "work", rank: idx + 1 } : null,
+                c.email ? { system: "email", value: c.email, use: "work", rank: idx + 1 } : null,
+              ])
+              .filter(Boolean),
+          };
+
+          console.log("Enviando payload:", payload);
+
+          if (numericId) {
+            updateLocation({ id: numericId, data: payload }); 
+          } else {
+            message.error("ID de ubicación inválido");
+          }
+        }}
+      >
+        {/* Información Básica */}
+        <div className="mb-8">
+          <div className="mb-4 flex items-center gap-2">
+            <BsBuilding className="w-8 h-8 text-blue-500" />
+            <span className="text-lg font-semibold text-[#333333]">Información Básica</span>
           </div>
 
-          {error && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-              <span className="text-red-600">Error: {error}</span>
+          <div className="grid grid-cols-3 gap-4">
+            <ProFormText
+              name="nombreUbicacion"
+              label="Nombre de la Ubicación"
+              placeholder="Ej. Sala de emergencias"
+              rules={[{ required: true, message: "Este campo es requerido" }]}
+            />
+            <ProFormText name="alias" label="Alias" placeholder="Ej. Emergencias, ER" />
+            <ProFormText name="tipoFuncion" label="Tipo de Función" placeholder="Ej. Emergencias, ROOM" />
+          </div>
+
+          <div className="mt-4">
+            <ProFormSelect
+              name="estado"
+              label="Estado"
+              placeholder="Seleccionar estado"
+              options={[
+                { label: "Activo", value: "active" },
+                { label: "Inactivo", value: "inactive" },
+                { label: "Suspendido", value: "suspended" },
+              ]}
+             
+            />
+          </div>         
+          <div className="mt-4">
+            <ProFormSelect
+              name="modo"
+              label="Modo"
+              placeholder="Seleccionar modo"
+              options={[
+                { label: "Instancia", value: "Instance" },
+                { label: "Tipo", value: "Kind" },
+              ]}             
+            />
+          </div>
+          <div className="mt-4">
+            <ProFormTextArea
+              name="descripcion"
+              label="Descripción"
+              placeholder="Descripción adicional de la ubicación"
+              fieldProps={{ rows: 3 }}        
+            />
+          </div>
+        </div>
+        {/* Dirección Física */}
+        <div className="mb-8 border-t pt-6">
+          <div className="mb-4 flex items-center gap-2">
+            <BsGeoAltFill className="w-8 h-8 text-blue-500" />
+            <span className="text-lg font-semibold text-[#333333]">Dirección física</span>
+          </div>
+          <div className="mb-4">
+            <ProFormText
+              name="direccion"
+              label="Dirección"
+              placeholder="Ej. Avenida principal 123"
+              rules={[{ required: true, message: "Este campo es requerido" }]}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <ProFormText name="ciudad" label="Ciudad" placeholder="Ej. San Jose" />
+            <ProFormText name="estadoProvincia" label="Estado/Provincia" placeholder="Ej. San Jose" />
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-4">
+            <ProFormText name="codigoPostal" label="Código postal" placeholder="Ej. 10110" />
+            <ProFormText name="pais" label="País" placeholder="Ej. Costa Rica" />
+          </div>
+        </div>
+        {/* Información de Contacto */}
+        <div className="mb-8 border-t pt-6">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BsPersonFill className="w-8 h-8 text-blue-500" />
+              <span className="text-lg font-semibold text-[#333333]">Información de contacto</span>
             </div>
-          )}
-        </Form>
-      </Card>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={addContact}
+              className="bg-green-500 hover:bg-green-600"
+            >
+              Agregar Contacto
+            </Button>
+          </div>
+          <div className="space-y-4">
+            {contacts.map((contact, index) => (
+              <div key={contact.id} className="grid grid-cols-[1fr_1fr_1fr_auto] items-end gap-4">
+                <ProFormText
+                  name={`contacto_nombre_${contact.id}`}
+                  label={index === 0 ? "Nombre de contacto" : undefined}
+                  placeholder="Ej. Juan"
+                  initialValue={contact.name}
+                  onChange={(e) =>
+                    setContacts((prev) =>
+                      prev.map((c) =>
+                        c.id === contact.id ? { ...c, name: e.target.value } : c
+                      )
+                    )
+                  }
+                />
+                <ProFormText
+                  name={`contacto_telefono_${contact.id}`}
+                  label={index === 0 ? "Teléfono" : undefined}
+                  placeholder="Ej. +504 4864-5945"
+                  initialValue={contact.phone}
+                  onChange={(e) =>
+                    setContacts((prev) =>
+                      prev.map((c) =>
+                        c.id === contact.id ? { ...c, phone: e.target.value } : c
+                      )
+                    )
+                  }
+                />
+                <ProFormText
+                  name={`contacto_email_${contact.id}`}
+                  label={index === 0 ? "Correo electrónico" : undefined}
+                  placeholder="Ej. contacto@hospital.cr"
+                  initialValue={contact.email}
+                  onChange={(e) =>
+                    setContacts((prev) =>
+                      prev.map((c) =>
+                        c.id === contact.id ? { ...c, email: e.target.value } : c
+                      )
+                    )
+                  }
+                />
+                <Button
+                  danger
+                  icon={<DeleteOutlined />}
+                  onClick={() => removeContact(contact.id)}
+                  disabled={contacts.length === 1}
+                  className="mb-6"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Organización y Jerarquía */}
+        <div className="border-t pt-6">
+          <div className="mb-4 flex items-center gap-2">
+            <BsBuilding className="w-8 h-8 text-blue-500" />
+            <span className="text-lg font-semibold text-[#333333]">Organización y jerarquía</span>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <ProFormText
+              name="organizacionResponsable"
+              label="Organización Responsable"
+              placeholder="Ej. Hospital Nacional"
+            />
+            <ProFormText
+              name="locationPadre"
+              label="Parte de (Location Padre)"
+              placeholder="Ej. Edificio Principal"
+            />
+          </div>
+        </div>
+      </ProForm>
     </div>
-  )
+  );
 }
