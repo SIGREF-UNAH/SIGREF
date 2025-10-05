@@ -31,21 +31,55 @@ Accept: application/json
 POST {{ApiUrl}}/api/Healthcares
 Content-Type: application/json
 {
+  "identifier": [
+    {
+      "use": 1,
+      "type": "Internal ID",
+      "system": "http://hospitalcentral.hn/healthcareservice",
+      "value": "HC-SRV-001"
+    }
+  ],
   "active": true,
-  "name": "Examen de Sangre",
-  "abbreviation": "EXS",
-  "comment": "Descripción de prueba.",
-  "cost": 100,
+  "name": "Consulta Médica General",
+  "abbreviation": "CMG",
+  "comment": "Servicio de atención médica general disponible de lunes a viernes con cita previa.",
+  "cost": 350.00,
   "specialty": [
     {
+      "coding": [
+        {
+          "system": "http://snomed.info/sct",
+          "version": "2024-03",
+          "code": "408443003",
+          "display": "General medical service",
+          "userSelected": true
+        }
+      ],
       "text": "Medicina General"
     }
   ],
-  "providedBy": null,
+  "providedBy": {
+    "type": "Organization",
+    "identifier": {
+      "use": 1,
+      "type": "Internal ID",
+      "system": "http://hospitalcentral.hn/organization",
+      "value": "ORG-001"
+    },
+    "reference": "Organization/1702",
+    "display": "Hospital Central de Tegucigalpa"
+  },
   "location": [
     {
+      "type": "Location",
+      "identifier": {
+        "use": 1,
+        "type": "Internal ID",
+        "system": "http://hospitalcentral.hn/location",
+        "value": "LOC-002"
+      },
       "reference": "Location/1",
-      "display": "Consulta Interna"
+      "display": "Clínica Externa, Piso 2 - Hospital Central"
     }
   ]
 }
@@ -54,24 +88,58 @@ Content-Type: application/json
 PUT {{ApiUrl}}/api/Healthcares/1602
 Content-Type: application/json
 {
-  "active": false,
-  "name": "Rayos X",
-  "comment": "Examen",
-  "abbreviation": "RX",
-  "cost": 180,
-  "specialty": [
+  "identifier": [
     {
-      "text": "Radiografia"
+      "use": 1,
+      "type": "Internal ID",
+      "system": "http://clinicasanmiguel.hn/healthcareservice",
+      "value": "HC-SRV-045"
     }
   ],
-  "providedBy": null,
+  "active": true,
+  "name": "Servicio de Radiología Diagnóstica",
+  "abbreviation": "SRD",
+  "comment": "Servicio de radiología para estudios diagnósticos. Se atiende por orden de cita y emergencia.",
+  "cost": 850.00,
+  "specialty": [
+    {
+      "coding": [
+        {
+          "system": "http://snomed.info/sct",
+          "version": "2024-03",
+          "code": "394914008",
+          "display": "Diagnostic radiology",
+          "userSelected": true
+        }
+      ],
+      "text": "Radiología Diagnóstica"
+    }
+  ],
+  "providedBy": {
+    "type": "Organization",
+    "identifier": {
+      "use": 1,
+      "type": "Internal ID",
+      "system": "http://clinicasanmiguel.hn/organization",
+      "value": "ORG-007"
+    },
+    "reference": "Organization/1702",
+    "display": "Clínica San Miguel"
+  },
   "location": [
     {
+      "type": "Location",
+      "identifier": {
+        "use": 1,
+        "type": "Internal ID",
+        "system": "http://clinicasanmiguel.hn/location",
+        "value": "LOC-010"
+      },
       "reference": "Location/1",
-      "display": "Laboratorio"
+      "display": "Edificio Principal, Piso 1 - Área de Radiología"
     }
   ]
- }
+}
 
 ### Eliminar un servicio médico por id
 DELETE {{ApiUrl}}/api/Healthcares/1602

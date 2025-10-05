@@ -1,9 +1,7 @@
 #nullable enable
 using Hl7.Fhir.Model;
-using SIGREF.API.Dtos;
 using SIGREF.API.Dtos.Common;
-using SIGREF.API.Extensions.Common;
-
+using SIGREF.API.Dtos.Location;
 namespace SIGREF.API.Extensions;
 
 public static class LocationExtensions
@@ -17,12 +15,13 @@ public static class LocationExtensions
             Name = location.Name ?? string.Empty,
             Description = location.Description,
             Status = location.Status?.ToString() ?? "active",
-            Type = GetTypeText(location.Type),
+            Type = location.Type.ToString(),
             LastUpdated = location.Meta?.LastUpdated?.DateTime,
             Address = location.Address?.ToDto(),
             Telecom = location.Telecom?.Select(t => t.ToDto()).ToList() ?? new List<ContactPointDto>()
         };
     }
+
 
     // Extension method para convertir CreateLocationDto a FHIR Location
     public static Location ToFhirLocation(this CreateLocationDto createDto)
@@ -108,4 +107,65 @@ public static class LocationExtensions
             ? new List<CodeableConcept>()
             : [new CodeableConcept { Text = text, }];
     }
+}
+
+public static class AddressExtensions
+{
+    public static AddressDto ToDto(this Address address)
+    {
+        return new AddressDto
+        {
+            Use = address.Use,
+            Type = address.Type,
+            Text = address.Text,
+            Line = address.Line?.ToList() ?? new List<string>(),
+            City = address.City,
+            District = address.District,
+            State = address.State,
+            PostalCode = address.PostalCode,
+            Country = address.Country
+        };
+    }
+
+    public static Address ToFhirAddress(this AddressDto addressDto)
+    {
+        return new Address
+        {
+            Use = addressDto.Use,
+            Type = addressDto.Type,
+            Text = addressDto.Text,
+            Line = addressDto.Line,
+            City = addressDto.City,
+            District = addressDto.District,
+            State = addressDto.State,
+            PostalCode = addressDto.PostalCode,
+            Country = addressDto.Country
+        };
+    }
+}
+
+public static class ContactPointExtensions
+{
+    public static ContactPointDto ToDto(this ContactPoint contactPoint)
+    {
+        return new ContactPointDto
+        {
+            System = contactPoint.System,
+            Value = contactPoint.Value,
+            Use = contactPoint.Use,
+            Rank = contactPoint.Rank
+        };
+    }
+
+    public static ContactPoint ToFhirContactPoint(this ContactPointDto contactPointDto)
+    {
+        return new ContactPoint
+        {
+            System = contactPointDto.System,
+            Value = contactPointDto.Value,
+            Use = contactPointDto.Use,
+            Rank = contactPointDto.Rank
+        };
+    }
+
 }

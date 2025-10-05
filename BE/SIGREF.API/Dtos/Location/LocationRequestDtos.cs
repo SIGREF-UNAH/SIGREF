@@ -3,9 +3,10 @@ using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Hl7.Fhir.Model;
+using FhirLocation = Hl7.Fhir.Model.Location;
 using SIGREF.API.Dtos.Common;
 
-namespace SIGREF.API.Dtos;
+namespace SIGREF.API.Dtos.Location;
 
 public class CreateLocationDto
 {
@@ -16,11 +17,11 @@ public class CreateLocationDto
     public string? Description { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public Location.LocationStatus? Status { get; set; }
+    public FhirLocation.LocationStatus? Status { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
 
-    public Location.LocationMode Mode { get; set; }
+    public FhirLocation.LocationMode Mode { get; set; }
 
     public AddressDto? Address { get; set; }
 
@@ -38,11 +39,11 @@ public class UpdateLocationDto
     public string? Description { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public Location.LocationStatus? Status { get; set; }
+    public FhirLocation.LocationStatus? Status { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
 
-    public Location.LocationMode Mode { get; set; }
+    public FhirLocation.LocationMode Mode { get; set; }
 
     public AddressDto? Address { get; set; }
 

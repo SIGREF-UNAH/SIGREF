@@ -3,15 +3,19 @@ using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Services;
 using SIGREF.API.Extensions;
 using SIGREF.API.Dtos;
+using SIGREF.API.Constants;
+using SIGREF.API.Dtos.Location;
 
 namespace SIGREF.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize(AuthenticationSchemes = "Bearer")]
 public class LocationsController(LocationService locationService) : ControllerBase
 {
     // GET: api/locations
     [HttpGet]
+    [Authorize(Roles = RolesConstants.admin)] // Permitido solo para ADMIN
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -27,6 +31,7 @@ public class LocationsController(LocationService locationService) : ControllerBa
 
     // GET api/locations/5
     [HttpGet("{id}")]
+    [Authorize(Roles = RolesConstants.cashier)] // Permitido solo para CASHIER
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Produces<LocationDto>()]
