@@ -5,7 +5,6 @@ using Microsoft.OpenApi.Models;
 using SIGREF.API.Constants;
 using SIGREF.API.Database;
 using SIGREF.API.Services;
-using SIGREF.API.Services.Location;
 using SIGREF.API.Services.Organization;
 using SIGREF.API.Services.Organizations;
 using SIGREF.API.Services.Patient;
@@ -40,7 +39,6 @@ public class Startup
 
         // SEEDER
         services.AddScoped<SIGREFSeeder>();
-
 
         // Registrar FhirService (opcional si aún lo necesitas)
         services.AddScoped<LocationService>();
@@ -123,10 +121,10 @@ public class Startup
                     {
                         // Lista de roles
                         var validRoles = new[] { 
-                            Roles.admin, 
-                            Roles.cashier, 
-                            Roles.ti, 
-                            Roles.auditor 
+                            RolesConstants.admin, 
+                            RolesConstants.cashier, 
+                            RolesConstants.ti, 
+                            RolesConstants.auditor 
                         };
 
                         // --- Roles de Realm ---

@@ -8,6 +8,8 @@ namespace SIGREF.API.Dtos.Healthcare
     {
         public string? Id { get; set; }
 
+        public List<IdentifierDto>? Identifier { get; set; }
+
         public bool Active { get; set; } = true;
 
         public string Name { get; set; } = string.Empty;

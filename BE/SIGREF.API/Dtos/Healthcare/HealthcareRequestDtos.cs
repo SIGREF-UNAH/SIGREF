@@ -5,6 +5,8 @@ using System.ComponentModel.DataAnnotations;
 
 public class CreateHealthcareDto
 {
+    public List<IdentifierDto>? Identifier { get; set; }
+
     public bool Active { get; set; } = true;
 
     [Required(ErrorMessage = "Es requerido ingresar el nombre del servicio médico")]

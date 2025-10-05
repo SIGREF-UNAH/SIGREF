@@ -5,7 +5,6 @@ using SIGREF.API.Extensions;
 using SIGREF.API.Dtos;
 using SIGREF.API.Constants;
 using SIGREF.API.Dtos.Location;
-using SIGREF.API.Services.Location;
 
 namespace SIGREF.API.Controllers;
 
@@ -16,7 +15,7 @@ public class LocationsController(LocationService locationService) : ControllerBa
 {
     // GET: api/locations
     [HttpGet]
-    [Authorize(Roles = Roles.admin)] // Permitido solo para ADMIN
+    [Authorize(Roles = RolesConstants.admin)] // Permitido solo para ADMIN
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -32,7 +31,7 @@ public class LocationsController(LocationService locationService) : ControllerBa
 
     // GET api/locations/5
     [HttpGet("{id}")]
-    [Authorize(Roles = Roles.cashier)] // Permitido solo para CASHIER
+    [Authorize(Roles = RolesConstants.cashier)] // Permitido solo para CASHIER
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Produces<LocationDto>()]

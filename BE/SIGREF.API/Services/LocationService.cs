@@ -4,16 +4,16 @@ using Task = System.Threading.Tasks.Task;
 using Hl7.Fhir.Model;
 
 
-namespace SIGREF.API.Services.Location;
+namespace SIGREF.API.Services;
 
 public class LocationService(FhirClient fhirService)
 {
     private const string ResourceType = nameof(Location);
     /// <summary>
-    /// Obtiene un recurso <see cref="Location"/> por su identificador único.
+    /// Obtiene un recurso <see cref="FhirLocation"/> por su identificador único.
     /// </summary>
     /// <param name="id">Identificador único del recurso Location. No debe ser nulo ni vacío.</param>
-    /// <returns>Una tarea que representa la operación asíncrona. El resultado es el recurso <see cref="Location"/> solicitado.</returns>
+    /// <returns>Una tarea que representa la operación asíncrona. El resultado es el recurso <see cref="FhirLocation"/> solicitado.</returns>
     /// <exception cref="ArgumentNullException">Se lanza si <paramref name="id"/> es <c>null</c>.</exception>
     /// <exception cref="ArgumentException">Se lanza si <paramref name="id"/> es una cadena vacía o solo espacios en blanco.</exception>
     /// <exception cref="FhirOperationException">Se lanza si el recurso no se encuentra o el servidor FHIR devuelve un error.</exception>
@@ -29,9 +29,9 @@ public class LocationService(FhirClient fhirService)
         return fhirService.ReadAsync<FhirLocation>($"{ResourceType}/{id}");
     }
     /// <summary>
-    /// Obtiene todos los recursos <see cref="Location"/> disponibles en el servidor FHIR.
+    /// Obtiene todos los recursos <see cref="FhirLocation"/> disponibles en el servidor FHIR.
     /// </summary>
-    /// <returns>Una tarea que representa la operación asíncrona. El resultado es una colección de recursos <see cref="Location"/>.</returns>
+    /// <returns>Una tarea que representa la operación asíncrona. El resultado es una colección de recursos <see cref="FhirLocation"/>.</returns>
     /// <remarks>
     /// Este método realiza una búsqueda sin filtros. En entornos con grandes volúmenes de datos, se recomienda paginar o filtrar.
     /// </remarks>
@@ -52,11 +52,11 @@ public class LocationService(FhirClient fhirService)
                Enumerable.Empty<FhirLocation>();
     }
     /// <summary>
-    /// Crea un nuevo recurso <see cref="Location"/> en el servidor FHIR.
+    /// Crea un nuevo recurso <see cref="FhirLocation"/> en el servidor FHIR.
     /// Si el recurso no tiene un ID asignado, se genera uno automáticamente.
     /// También establece metadatos iniciales: fecha de última actualización y versión 1.
     /// </summary>
-    /// <param name="location">El recurso <see cref="Location"/> a crear. No debe ser nulo.</param>
+    /// <param name="location">El recurso <see cref="FhirLocation"/> a crear. No debe ser nulo.</param>
     /// <returns>Una tarea que representa la operación asíncrona. El resultado es el recurso creado, con metadatos actualizados.</returns>
     /// <exception cref="ArgumentNullException">Se lanza si <paramref name="location"/> es <c>null</c>.</exception>
     /// <exception cref="FhirOperationException">Se lanza si el servidor FHIR rechaza la creación (por ejemplo, ID duplicado).</exception>
@@ -86,11 +86,11 @@ public class LocationService(FhirClient fhirService)
         return location;
     }
     /// <summary>
-    /// Actualiza un recurso <see cref="Location"/> existente en el servidor FHIR.
+    /// Actualiza un recurso <see cref="FhirLocation"/> existente en el servidor FHIR.
     /// Actualiza automáticamente la fecha de última modificación e incrementa el número de versión.
     /// Si el recurso no tiene metadatos, se inicializan.
     /// </summary>
-    /// <param name="location">El recurso <see cref="Location"/> a actualizar. Debe tener un ID y no ser nulo.</param>
+    /// <param name="location">El recurso <see cref="FhirLocation"/> a actualizar. Debe tener un ID y no ser nulo.</param>
     /// <returns>Una tarea que representa la operación asíncrona. El resultado es el recurso actualizado con metadatos renovados.</returns>
     /// <exception cref="ArgumentNullException">Se lanza si <paramref name="location"/> es <c>null</c>.</exception>
     /// <exception cref="ArgumentException">Se lanza si <paramref name="location"/> no tiene un ID asignado.</exception>
@@ -128,7 +128,7 @@ public class LocationService(FhirClient fhirService)
     }
 
     /// <summary>
-    /// Elimina un recurso <see cref="Location"/> del servidor FHIR por su identificador.
+    /// Elimina un recurso <see cref="FhirLocation"/> del servidor FHIR por su identificador.
     /// </summary>
     /// <param name="id">Identificador único del recurso Location a eliminar. No debe ser nulo ni vacío.</param>
     /// <returns>Una tarea que representa la operación asíncrona.</returns>
