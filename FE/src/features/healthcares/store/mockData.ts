@@ -1,19 +1,7 @@
-export interface Healthcare {
-  id: string;
-  active: boolean;
-  name: string;
-  abbreviation: string;
-  comment: string | null;
-  cost: number;
-  specialty: Array<{ text: string }>;
-  providedBy: {
-    reference: string;
-    display: string;
-  } | null;
-  location: Array<{ reference: string; display: string }> | null;
-}
+import type { Healthcare, Location, Organization } from "../../../api/interfaces";
 
-export const mockData: Healthcare[] = [
+// Servicios Médicos de ejemplo
+export const mockHealthcares: Healthcare[] = [
   {
     id: "1",
     active: true,
@@ -21,12 +9,19 @@ export const mockData: Healthcare[] = [
     abbreviation: "EXS",
     comment: "Perfil lipídico, glucosa, hemograma completo",
     cost: 100,
-    specialty: [{ text: "Medicina General" }],
+    specialty: [
+      { 
+        text: "Medicina General" 
+      }
+    ],
     providedBy: {
       reference: "Organization/1",
       display: "Hospital de Occidente"
     },
-    location: [{ reference: "Location/1", display: "Laboratorio Central" }]
+    location: [{ 
+      reference: "Location/1", 
+      display: "Laboratorio Central" 
+    }]
   },
   {
     id: "2",
@@ -35,7 +30,7 @@ export const mockData: Healthcare[] = [
     abbreviation: "RX-TX",
     comment: "Proyección posteroanterior y lateral",
     cost: 150,
-    specialty: [{ text: "Radiología" }],
+    specialty: [{ coding: [], text: "Radiología" }],
     providedBy: {
       reference: "Organization/2",
       display: "Clínica de Occidente"
@@ -49,9 +44,9 @@ export const mockData: Healthcare[] = [
     abbreviation: "CR",
     comment: "Nefrectomía parcial por tumor",
     cost: 8500,
-    specialty: [{ text: "Urología" }, { text: "Cirugía General" }],
-    providedBy: null,
-    location: null
+    specialty: [{ coding: [], text: "Urología" }, { coding: [], text: "Cirugía General" }],
+    providedBy: undefined,
+    location: undefined
   },
   {
     id: "4",
@@ -60,7 +55,7 @@ export const mockData: Healthcare[] = [
     abbreviation: "RM-CEREBRAL",
     comment: "Con contraste gadolinio",
     cost: 650,
-    specialty: [{ text: "Radiología" }, { text: "Neurología" }],
+    specialty: [{ coding: [], text: "Radiología" }, { coding: [], text: "Neurología" }],
     providedBy: {
       reference: "Organization/3",
       display: "Centro Médico Metropolitano"
@@ -74,7 +69,7 @@ export const mockData: Healthcare[] = [
     abbreviation: "CON-CARDIO",
     comment: "Evaluación cardiovascular completa",
     cost: 120,
-    specialty: [{ text: "Cardiología" }],
+    specialty: [{ coding: [], text: "Cardiología" }],
     providedBy: {
       reference: "Organization/4",
       display: "Instituto Cardiológico"
@@ -102,7 +97,7 @@ export const mockData: Healthcare[] = [
     abbreviation: "ECO-OBST",
     comment: "Control trimestral del embarazo",
     cost: 95,
-    specialty: [{ text: "Ginecología" }, { text: "Radiología" }],
+    specialty: [{ coding: [], text: "Ginecología" }, { coding: [], text: "Radiología" }],
     providedBy: {
       reference: "Organization/5",
       display: "Maternidad Santa Ana"
@@ -116,7 +111,7 @@ export const mockData: Healthcare[] = [
     abbreviation: "EDA",
     comment: "Con biopsia si se requiere",
     cost: 380,
-    specialty: [{ text: "Gastroenterología" }],
+    specialty: [{ coding: [], text: "Gastroenterología" }],
     providedBy: {
       reference: "Organization/6",
       display: "Centro Gastrointestinal"
@@ -144,7 +139,7 @@ export const mockData: Healthcare[] = [
     abbreviation: "CON-DERMA",
     comment: "Evaluación de lesiones cutáneas",
     cost: 85,
-    specialty: [{ text: "Dermatología" }],
+    specialty: [{ coding: [], text: "Dermatología" }],
     providedBy: {
       reference: "Organization/7",
       display: "Clínica de la Piel"
@@ -158,7 +153,7 @@ export const mockData: Healthcare[] = [
     abbreviation: "CC",
     comment: "Facomulsificación con lente intraocular",
     cost: 2200,
-    specialty: [{ text: "Oftalmología" }],
+    specialty: [{ coding: [], text: "Oftalmología" }],
     providedBy: {
       reference: "Organization/8",
       display: "Centro Oftalmológico Avanzado"
@@ -172,7 +167,7 @@ export const mockData: Healthcare[] = [
     abbreviation: "UROANALISIS",
     comment: "Incluye urocultivo y antibiograma",
     cost: 45,
-    specialty: [{ text: "Laboratorio Clínico" }],
+    specialty: [{ coding: [], text: "Laboratorio Clínico" }],
     providedBy: {
       reference: "Organization/1",
       display: "Hospital de Occidente"
@@ -186,7 +181,7 @@ export const mockData: Healthcare[] = [
     abbreviation: "MAMO",
     comment: "Screening para cáncer de mama",
     cost: 130,
-    specialty: [{ text: "Radiología" }, { text: "Mastología" }],
+    specialty: [{ coding: [], text: "Radiología" }, { coding: [], text: "Mastología" }],
     providedBy: {
       reference: "Organization/9",
       display: "Centro de la Mujer"
@@ -200,7 +195,7 @@ export const mockData: Healthcare[] = [
     abbreviation: "FTR-RESP",
     comment: "Sesión de 45 minutos",
     cost: 60,
-    specialty: [{ text: "Fisioterapia" }, { text: "Neumología" }],
+    specialty: [{ coding: [], text: "Fisioterapia" }, { coding: [], text: "Neumología" }],
     providedBy: {
       reference: "Organization/10",
       display: "Centro de Rehabilitación"
@@ -228,7 +223,7 @@ export const mockData: Healthcare[] = [
     abbreviation: "CON-PSIQ",
     comment: "Evaluación inicial 60 minutos",
     cost: 150,
-    specialty: [{ text: "Psiquiatría" }],
+    specialty: [{ coding: [], text: "Psiquiatría" }],
     providedBy: {
       reference: "Organization/11",
       display: "Instituto de Salud Mental"
@@ -256,7 +251,7 @@ export const mockData: Healthcare[] = [
     abbreviation: "TEST-ALERG",
     comment: "Panel de 40 alérgenos comunes",
     cost: 190,
-    specialty: [{ text: "Alergología" }, { text: "Inmunología" }],
+    specialty: [{ coding: [], text: "Alergología" }, { coding: [], text: "Inmunología" }],
     providedBy: {
       reference: "Organization/12",
       display: "Centro Alergológico"
@@ -270,7 +265,7 @@ export const mockData: Healthcare[] = [
     abbreviation: "APENDICECTOMIA",
     comment: "Procedimiento laparoscópico",
     cost: 3200,
-    specialty: [{ text: "Cirugía General" }],
+    specialty: [{ coding: [], text: "Cirugía General" }],
     providedBy: {
       reference: "Organization/1",
       display: "Hospital de Occidente"
@@ -284,7 +279,7 @@ export const mockData: Healthcare[] = [
     abbreviation: "DMO",
     comment: "Evaluación de masa ósea lumbar y femoral",
     cost: 110,
-    specialty: [{ text: "Reumatología" }, { text: "Radiología" }],
+    specialty: [{ coding: [], text: "Reumatología" }, { coding: [], text: "Radiología" }],
     providedBy: {
       reference: "Organization/13",
       display: "Centro de Osteoporosis"
@@ -298,7 +293,7 @@ export const mockData: Healthcare[] = [
     abbreviation: "TO",
     comment: "Sesión de rehabilitación funcional",
     cost: 55,
-    specialty: [{ text: "Terapia Ocupacional" }],
+    specialty: [{ coding: [], text: "Terapia Ocupacional" }],
     providedBy: {
       reference: "Organization/10",
       display: "Centro de Rehabilitación"
@@ -312,7 +307,7 @@ export const mockData: Healthcare[] = [
     abbreviation: "ANGIO-COR",
     comment: "Estudio hemodinámico diagnóstico",
     cost: 2800,
-    specialty: [{ text: "Cardiología Intervencionista" }],
+    specialty: [{ coding: [], text: "Cardiología Intervencionista" }],
     providedBy: {
       reference: "Organization/4",
       display: "Instituto Cardiológico"
@@ -326,7 +321,7 @@ export const mockData: Healthcare[] = [
     abbreviation: "CON-NUTRI",
     comment: "Plan alimentario personalizado",
     cost: 70,
-    specialty: [{ text: "Nutriología" }],
+    specialty: [{ coding: [], text: "Nutriología" }],
     providedBy: {
       reference: "Organization/14",
       display: "Centro de Nutrición"
@@ -354,11 +349,46 @@ export const mockData: Healthcare[] = [
     abbreviation: "PCR-COVID",
     comment: "Resultados en 24 horas",
     cost: 75,
-    specialty: [{ text: "Laboratorio Clínico" }, { text: "Infectología" }],
+    specialty: [{ coding: [], text: "Laboratorio Clínico" }, { coding: [], text: "Infectología" }],
     providedBy: {
       reference: "Organization/1",
       display: "Hospital de Occidente"
     },
     location: [{ reference: "Location/22", display: "Laboratorio Molecular" }]
   }
+];
+
+// Locations de ejemplo
+export const mockLocations: Location[] = [
+  {
+    id: "1",
+    name: "Consultoría Externa",
+    description: "Área de consultas externas",
+    status: "Active",
+  },
+  {
+    id: "2",
+    name: "Emergencias",
+    description: "Área de emergencias",
+    status: "Active",
+  },
+  {
+    id: "3",
+    name: "Laboratorio",
+    description: "Laboratorio clínico",
+    status: "Inactive",
+  },
+  {
+    id: "4",
+    name: "Odontología",
+    description: "Servicios dentales",
+    status: "Inactive",
+  },
+];
+
+// Organizaciones de ejemplo
+export const mockOrganizations: Organization[] = [
+  { id: "1702", name: "Hospital de Occidente", active: true },
+  { id: "1703", name: "Hospital General", active: true },
+  { id: "1704", name: "Clínica Central", active: true },
 ];

@@ -54,7 +54,7 @@ namespace SIGREF.API.Dtos.Common
 
     public class CodeableConceptDto // Para conceptos codificados
     {
-        public List<CodingDto> Coding { get; set; } = new();
+        public List<CodingDto>? Coding { get; set; } = new();
         public string? Text { get; set; }
     }
 

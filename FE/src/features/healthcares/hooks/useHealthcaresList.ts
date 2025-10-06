@@ -1,9 +1,9 @@
 import type { TablePaginationConfig } from "antd";
 import { useUrlFilters } from "../../../shared/hooks";
-import { mockData } from "../store";
 import { useNavigate } from "react-router";
+import { mockHealthcares } from "../store";
 
-export function useHealthcares() {
+export function useHealthcaresList() {
   const navigate = useNavigate();
     
   // Manejar todos los filtros en la URL
@@ -17,7 +17,7 @@ export function useHealthcares() {
   });
 
   // Filtrar datos basados en búsqueda y ubicación
-  const filteredData = mockData.filter((item) => {
+  const filteredData = mockHealthcares.filter((item) => {
     const matchesSearch =
       item.name.toLowerCase().includes(filters.search.toLowerCase()) ||
       item.abbreviation.toLowerCase().includes(filters.search.toLowerCase());
@@ -60,7 +60,7 @@ export function useHealthcares() {
   // Obtener las ubicaciones únicas para filtro
   const departments = Array.from(
     new Set(
-      mockData
+      mockHealthcares
         .flatMap((item) => item.location?.map((loc) => loc.display) || [])
         .filter(Boolean)
     )

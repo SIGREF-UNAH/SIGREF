@@ -12,6 +12,8 @@
   "dependencies": {
     "@ant-design/icons": "^5.6.1",
     "@ant-design/pro-components": "^2.8.10",
+    "@casl/ability": "^6.7.3",
+    "@casl/react": "^5.0.0",
     "@fontsource/roboto": "^5.2.8",
     "@react-keycloak/web": "^3.4.0",
     "@tailwindcss/vite": "^4.1.13",

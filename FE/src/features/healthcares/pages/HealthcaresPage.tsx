@@ -1,13 +1,14 @@
 import { Table, Button, Input, Select, Space } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import type { Healthcare } from "../store";
-import { useHealthcares } from "../hooks";
+import type { Healthcare } from "../../../api/interfaces";
+import { useHealthcaresList } from "../hooks";
 import {
   EditOutlined,
   DeleteOutlined,
   PlusOutlined,
   FilterOutlined,
 } from "@ant-design/icons";
+import { HealthcareHeader } from "../components/ui";
 
 const { Search } = Input;
 
@@ -21,7 +22,10 @@ export const HealthcaresPage = () => {
     handleEdit,
     handleDelete,
     setFilter,
-  } = useHealthcares();
+  } = useHealthcaresList();
+
+  // TODO: Agregar columna de "Activo" o "Inactivo"
+  // TODO: Crear modal de confirmación para eliminar servicio
 
   // Columnas de la tabla
   const columns: ColumnsType<Healthcare> = [
@@ -76,15 +80,7 @@ export const HealthcaresPage = () => {
     <div>
       {/* Encabezado */}
       <div className="flex mb-4 items-start justify-between">
-        <div>
-          <h1 className="text-general-primary text-3xl font-bold mb-1">
-            Gestión de Servicios
-          </h1>
-          <p className="text-general-secondary">
-            Visualice, cree y edite los servicios médicos disponibles que ofrece
-            el hospital.
-          </p>
-        </div>
+        <HealthcareHeader />
         <Button
           type="primary"
           icon={<PlusOutlined />}
@@ -118,7 +114,6 @@ export const HealthcaresPage = () => {
             options={departments.map((dept) => ({ label: dept, value: dept }))}
           />
         </div>
-
         {/* Lista de servicios */}
         <Table
           columns={columns}
