@@ -2,7 +2,7 @@ import { HealthcareForm } from "../components";
 import { HealthcareHeader } from "../components/ui";
 import { useHealthcareForm, useUpdateHealthcare } from "../hooks";
 import { FormTitle } from "../components/ui/FormTitle";
-import { LoadingSpinner } from "../../../shared/components/ui";
+import { HealthcareFormSkeleton } from "../components/skeletons";
 
 export const UpdateHealthcarePage = () => {
   const { formik, isPending, isLoading } = useUpdateHealthcare();
@@ -19,7 +19,7 @@ export const UpdateHealthcarePage = () => {
       <div className="p-6 border-2 bg-card border-primary shadow-md rounded-lg">
         <FormTitle title="Editar Servicio" icon="edit" />
         {isLoading ? (
-          <LoadingSpinner />
+          <HealthcareFormSkeleton />
         ) : (
           <HealthcareForm
             formik={formik}

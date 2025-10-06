@@ -2,6 +2,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import { healthcareInitValues, healthcareValidationSchema } from "../forms";
+import type { Healthcare } from "../../../api/interfaces";
 
 export function useUpdateHealthcare() {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ export function useUpdateHealthcare() {
   const [isLoading, setIsLoading] = useState(true);
 
   // Validación del formulario con Formik
-  const formik = useFormik({
+  const formik = useFormik<Healthcare>({
     initialValues: healthcareInitValues,
     validationSchema: healthcareValidationSchema,
     onSubmit: async (values) => {
@@ -86,12 +87,19 @@ export function useUpdateHealthcare() {
 
         // Establecer los valores en formik
         formik.setValues({
+          id: id ?? "", // Agrega el id requerido
           name: mockResponse.name,
           abbreviation: mockResponse.abbreviation,
           cost: mockResponse.cost,
           comment: mockResponse.comment,
-          providedBy: mockResponse.providedBy,
-          location: mockResponse.location,
+          providedBy: {
+            reference: mockResponse.providedBy.reference,
+            display: mockResponse.providedBy.display,
+          },
+          location: mockResponse.location.map(loc => ({
+            reference: loc.reference,
+            display: loc.display,
+          })),
           active: mockResponse.active,
         });
       } catch (error) {

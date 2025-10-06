@@ -26,6 +26,7 @@ export const HealthcaresPage = () => {
 
   // TODO: Agregar columna de "Activo" o "Inactivo"
   // TODO: Crear modal de confirmación para eliminar servicio
+  // TODO: Simular Loading y skeleton
 
   // Columnas de la tabla
   const columns: ColumnsType<Healthcare> = [
