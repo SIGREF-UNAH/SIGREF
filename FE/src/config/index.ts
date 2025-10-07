@@ -1,3 +1,2 @@
-export * from "./AntConfig";
-export * from "./keycloak";
+export * from "./AntdConfig";
 export * from "./menuRoles";

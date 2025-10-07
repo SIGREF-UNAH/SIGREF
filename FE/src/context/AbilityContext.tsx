@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo } from 'react'
-import { defineAbilitiesFor } from '../config/abilities'
+import { defineAbilitiesFor } from '../auth/abilities'
 import { Ability } from '@casl/ability'
 
 const AbilityContext = createContext<Ability | null>(null)

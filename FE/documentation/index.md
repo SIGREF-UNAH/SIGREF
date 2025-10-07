@@ -14,3 +14,6 @@ Explicación sobre las páginas personalizados utilizados en el proyecto.
 
 - ⚒️ [**Hooks Reutilizables**](./hooks/index.md)  
 Explicación sobre los hooks personalizados utilizados en el proyecto.
+
+- ⚙️ [**Configuraciones**](./config/index.md)  
+Explicación sobre funcionalidades y configuraciones clave del proyecto.
