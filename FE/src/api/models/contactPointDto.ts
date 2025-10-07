@@ -4,14 +4,14 @@
  * SIGREF.API
  * OpenAPI spec version: 1.0
  */
+import type { ContactPointSystem } from "./contactPointSystem";
+import type { ContactPointUse } from "./contactPointUse";
 
 export interface ContactPointDto {
-  /** @nullable */
-  system?: string | null;
+  system?: ContactPointSystem;
   /** @nullable */
   value?: string | null;
-  /** @nullable */
-  use?: string | null;
+  use?: ContactPointUse;
   /** @nullable */
   rank?: number | null;
 }

@@ -4,12 +4,12 @@
  * SIGREF.API
  * OpenAPI spec version: 1.0
  */
+import type { AddressUse } from "./addressUse";
+import type { AddressType } from "./addressType";
 
 export interface AddressDto {
-  /** @nullable */
-  use?: string | null;
-  /** @nullable */
-  type?: string | null;
+  use?: AddressUse;
+  type?: AddressType;
   /** @nullable */
   text?: string | null;
   /** @nullable */

@@ -46,6 +46,7 @@ public class LocationsController(LocationService locationService) : ControllerBa
     }
 
     [HttpPost]
+    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [Produces<LocationDto>()]
@@ -61,6 +62,7 @@ public class LocationsController(LocationService locationService) : ControllerBa
     }
 
     [HttpPut("{id}")]
+    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -84,6 +86,7 @@ public class LocationsController(LocationService locationService) : ControllerBa
     }
 
     [HttpDelete("{id}")]
+    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteLocation(int id)

@@ -1,11 +1,9 @@
 import { BrowserRouter } from "react-router";
 import { AppRouter } from "./routers";
 import { AntdConfig } from "./config";
-import { Navbar } from "./shared/components/layout/navbar/Navbar";
-import { Footer } from "./shared/components/layout/footer/Footer";
 import { useKeycloak } from "@react-keycloak/web";
 import { AbilityProvider } from "./context/AbilityContext";
-import { getRolesFromToken } from "./utils/keycloakRoles";
+import { getRolesFromToken } from "./auth/roles";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const queryClient = new QueryClient();
@@ -29,11 +27,9 @@ function App() {
       <BrowserRouter>
         <AbilityProvider roles={roles}>
           <div className="min-h-screen flex flex-col">
-          <Navbar />
           <main className="flex-1">
             <AppRouter />
           </main>
-          <Footer />
           </div>
         </AbilityProvider>
       </BrowserRouter>
