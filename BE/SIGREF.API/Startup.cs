@@ -1,7 +1,6 @@
 using Hl7.Fhir.Rest;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using SIGREF.API.Constants;
 using SIGREF.API.Database;
 using SIGREF.API.Services;
@@ -11,7 +10,6 @@ using SIGREF.API.Services.Patient;
 using SIGREF.API.Services.Practitioner;
 using System.Security.Claims;
 using System.Text.Json;
-
 
 namespace SIGREF.API;
 
@@ -37,7 +35,7 @@ public class Startup
             return fhirService.GetFhirClient();
         });
 
-        // SEEDER
+        // Seeder
         services.AddScoped<SIGREFSeeder>();
 
         // Registrar FhirService (opcional si aún lo necesitas)
@@ -55,35 +53,6 @@ public class Startup
         // Configuración de PostgreSQL con Aspire
         services.AddNpgsql<SIGREFContext>("hapi");
         services.AddHttpContextAccessor();
-
-        // Configuración de Swagger para JWT
-        services.AddSwaggerGen(c =>
-        {
-            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-            {
-                Name = "Authorization",
-                Type = SecuritySchemeType.Http,
-                Scheme = "Bearer",
-                BearerFormat = "JWT",
-                In = ParameterLocation.Header,
-                Description = "Ingrese 'Bearer' seguido de un espacio y el token JWT"
-            });
-
-            c.AddSecurityRequirement(new OpenApiSecurityRequirement
-            {
-                {
-                    new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference
-                        {
-                            Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                        }
-                    },
-                    new string[] { }
-                }
-            });
-        });
 
         // Configuración de Autenticación con Keycloak
         services.AddAuthentication(options =>
@@ -105,9 +74,10 @@ public class Startup
             {
                 ValidateIssuer = true,
                 ValidateAudience = true,
-                ValidAudiences = new[] { audience, "account" },
-                RoleClaimType = ClaimTypes.Role,
-                NameClaimType = "preferred_username"
+                ValidAudience = audience,
+                ValidIssuer = $"{authority}",
+                NameClaimType = "preferred_username",
+                RoleClaimType = ClaimTypes.Role
             };
 
             // Aquí mapeamos los roles
@@ -145,7 +115,7 @@ public class Startup
                             }
                         }
 
-                        // --- Roles del Client (sigref-api) ---
+                        // --- Roles del Client ---
                         var resourceAccess = context.Principal.FindFirst("resource_access")?.Value;
                         if (!string.IsNullOrEmpty(resourceAccess))
                         {
@@ -193,10 +163,13 @@ public class Startup
         }
 
         app.UseHttpsRedirection();
-        app.UseRouting();
+
         app.UseCors("CorsPolicy");
 
+        app.UseRouting();
+
         app.UseAuthentication();
+
         app.UseAuthorization();
 
         app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
