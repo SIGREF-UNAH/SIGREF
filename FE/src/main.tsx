@@ -1,11 +1,14 @@
 import { ReactKeycloakProvider } from "@react-keycloak/web";
-import { keycloak } from "./config";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { keycloak } from "./auth/keycloak.ts";
 
 createRoot(document.getElementById("root")!).render(
-  <ReactKeycloakProvider authClient={keycloak}>
+  <ReactKeycloakProvider
+    authClient={keycloak}
+    onTokens={() => localStorage.setItem("kc_token", keycloak.token || "")}
+  >
     <App />
   </ReactKeycloakProvider>
 );

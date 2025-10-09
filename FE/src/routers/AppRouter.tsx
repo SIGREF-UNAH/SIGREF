@@ -1,15 +1,23 @@
-import { Route, Routes } from "react-router";
+import { Navigate, Route, Routes } from "react-router";
 import LocationsRouter from "../features/locations/routers/LocationsRouter";
-import { Home } from "../features/auth/pages";
- 
-export const AppRouter = () => {
+import { Layout } from "../shared/components";
+import { HealthcaresRouter } from "../features/healthcares/routers";
+import { Home } from "../shared/pages";
+
+ export const AppRouter = () => {
   return (
     <Routes>
-      {/* Rutas de locations */}
-      <Route path="/locations/*" element={<LocationsRouter />} />
+      <Route path="/" element={<Home />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route element={<Layout />}>
 
-      <Route path="*" element={<Home />} />
- 
+        {/* Rutas de locations */}
+        <Route path="/locations/*" element={<LocationsRouter />} />
+
+        {/* Rutas de Servicios Médicos */}
+        <Route path="/healthcares/*" element={<HealthcaresRouter />} />
+
+      </Route>
     </Routes>
   );
-};  
+};

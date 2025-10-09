@@ -1,3 +1,3 @@
-export { Footer } from "./layout/footer/Footer";
-export { Navbar } from "./layout/navbar/Navbar";
-
+export * from './Layout';
+export * from './ProtectedRoute';
+export * from './ui/LoadingSpinner';
