@@ -5,16 +5,15 @@
  * OpenAPI spec version: 1.0
  */
 
-export interface ProblemDetails {
+export interface CodingDto {
   /** @nullable */
-  type?: string | null;
+  system?: string | null;
   /** @nullable */
-  title?: string | null;
+  version?: string | null;
   /** @nullable */
-  status?: number | null;
+  code?: string | null;
   /** @nullable */
-  detail?: string | null;
+  display?: string | null;
   /** @nullable */
-  instance?: string | null;
-  [key: string]: unknown;
+  userSelected?: boolean | null;
 }

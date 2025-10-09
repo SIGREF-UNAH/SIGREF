@@ -12,6 +12,8 @@
   "dependencies": {
     "@ant-design/icons": "^5.6.1",
     "@ant-design/pro-components": "^2.8.10",
+    "@casl/ability": "^6.7.3",
+    "@casl/react": "^5.0.0",
     "@fontsource/roboto": "^5.2.8",
     "@react-keycloak/web": "^3.4.0",
     "@tailwindcss/vite": "^4.1.13",
@@ -40,7 +42,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
-    "orval": "^7.13.0",
+    "orval": "^7.13.1",
     "prettier": "^3.6.2",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.39.1",

@@ -5,10 +5,13 @@
  * OpenAPI spec version: 1.0
  */
 
-export type LocationMode = (typeof LocationMode)[keyof typeof LocationMode];
+export type AddressUse = (typeof AddressUse)[keyof typeof AddressUse];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const LocationMode = {
+export const AddressUse = {
   NUMBER_0: 0,
   NUMBER_1: 1,
+  NUMBER_2: 2,
+  NUMBER_3: 3,
+  NUMBER_4: 4,
 } as const;

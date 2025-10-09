@@ -21,75 +21,74 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
-  CreateLocationDto,
-  LocationDto,
+  CreatePractitionerDto,
   ProblemDetails,
-  UpdateLocationDto,
+  UpdatePractitionerDto,
 } from ".././models";
 
 import { customInstance } from ".././mutator/customInstance";
 
-export const getApiLocations = (signal?: AbortSignal) => {
-  return customInstance<LocationDto[]>({
-    url: `/api/Locations`,
+export const getApiPractitioner = (signal?: AbortSignal) => {
+  return customInstance<void>({
+    url: `/api/Practitioner`,
     method: "GET",
     signal,
   });
 };
 
-export const getGetApiLocationsQueryKey = () => {
-  return [`/api/Locations`] as const;
+export const getGetApiPractitionerQueryKey = () => {
+  return [`/api/Practitioner`] as const;
 };
 
-export const getGetApiLocationsQueryOptions = <
-  TData = Awaited<ReturnType<typeof getApiLocations>>,
-  TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
+export const getGetApiPractitionerQueryOptions = <
+  TData = Awaited<ReturnType<typeof getApiPractitioner>>,
+  TError = void,
 >(options?: {
   query?: Partial<
-    UseQueryOptions<Awaited<ReturnType<typeof getApiLocations>>, TError, TData>
+    UseQueryOptions<
+      Awaited<ReturnType<typeof getApiPractitioner>>,
+      TError,
+      TData
+    >
   >;
 }) => {
   const { query: queryOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetApiLocationsQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getGetApiPractitionerQueryKey();
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiLocations>>> = ({
-    signal,
-  }) => getApiLocations(signal);
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getApiPractitioner>>
+  > = ({ signal }) => getApiPractitioner(signal);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getApiLocations>>,
+    Awaited<ReturnType<typeof getApiPractitioner>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetApiLocationsQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getApiLocations>>
+export type GetApiPractitionerQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getApiPractitioner>>
 >;
-export type GetApiLocationsQueryError =
-  | ProblemDetails
-  | ProblemDetails
-  | ProblemDetails
-  | void;
+export type GetApiPractitionerQueryError = void;
 
-export function useGetApiLocations<
-  TData = Awaited<ReturnType<typeof getApiLocations>>,
-  TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
+export function useGetApiPractitioner<
+  TData = Awaited<ReturnType<typeof getApiPractitioner>>,
+  TError = void,
 >(
   options: {
     query: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof getApiLocations>>,
+        Awaited<ReturnType<typeof getApiPractitioner>>,
         TError,
         TData
       >
     > &
       Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiLocations>>,
+          Awaited<ReturnType<typeof getApiPractitioner>>,
           TError,
-          Awaited<ReturnType<typeof getApiLocations>>
+          Awaited<ReturnType<typeof getApiPractitioner>>
         >,
         "initialData"
       >;
@@ -98,23 +97,23 @@ export function useGetApiLocations<
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
-export function useGetApiLocations<
-  TData = Awaited<ReturnType<typeof getApiLocations>>,
-  TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
+export function useGetApiPractitioner<
+  TData = Awaited<ReturnType<typeof getApiPractitioner>>,
+  TError = void,
 >(
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof getApiLocations>>,
+        Awaited<ReturnType<typeof getApiPractitioner>>,
         TError,
         TData
       >
     > &
       Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiLocations>>,
+          Awaited<ReturnType<typeof getApiPractitioner>>,
           TError,
-          Awaited<ReturnType<typeof getApiLocations>>
+          Awaited<ReturnType<typeof getApiPractitioner>>
         >,
         "initialData"
       >;
@@ -123,14 +122,14 @@ export function useGetApiLocations<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
-export function useGetApiLocations<
-  TData = Awaited<ReturnType<typeof getApiLocations>>,
-  TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
+export function useGetApiPractitioner<
+  TData = Awaited<ReturnType<typeof getApiPractitioner>>,
+  TError = void,
 >(
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof getApiLocations>>,
+        Awaited<ReturnType<typeof getApiPractitioner>>,
         TError,
         TData
       >
@@ -141,14 +140,14 @@ export function useGetApiLocations<
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
-export function useGetApiLocations<
-  TData = Awaited<ReturnType<typeof getApiLocations>>,
-  TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
+export function useGetApiPractitioner<
+  TData = Awaited<ReturnType<typeof getApiPractitioner>>,
+  TError = void,
 >(
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof getApiLocations>>,
+        Awaited<ReturnType<typeof getApiPractitioner>>,
         TError,
         TData
       >
@@ -158,7 +157,7 @@ export function useGetApiLocations<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getGetApiLocationsQueryOptions(options);
+  const queryOptions = getGetApiPractitionerQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,
@@ -170,36 +169,36 @@ export function useGetApiLocations<
   return query;
 }
 
-export const postApiLocations = (
-  createLocationDto: CreateLocationDto,
+export const postApiPractitioner = (
+  createPractitionerDto: CreatePractitionerDto,
   signal?: AbortSignal,
 ) => {
-  return customInstance<LocationDto | void>({
-    url: `/api/Locations`,
+  return customInstance<void>({
+    url: `/api/Practitioner`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    data: createLocationDto,
+    data: createPractitionerDto,
     signal,
   });
 };
 
-export const getPostApiLocationsMutationOptions = <
+export const getPostApiPractitionerMutationOptions = <
   TError = ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof postApiLocations>>,
+    Awaited<ReturnType<typeof postApiPractitioner>>,
     TError,
-    { data: CreateLocationDto },
+    { data: CreatePractitionerDto },
     TContext
   >;
 }): UseMutationOptions<
-  Awaited<ReturnType<typeof postApiLocations>>,
+  Awaited<ReturnType<typeof postApiPractitioner>>,
   TError,
-  { data: CreateLocationDto },
+  { data: CreatePractitionerDto },
   TContext
 > => {
-  const mutationKey = ["postApiLocations"];
+  const mutationKey = ["postApiPractitioner"];
   const { mutation: mutationOptions } = options
     ? options.mutation &&
       "mutationKey" in options.mutation &&
@@ -209,67 +208,67 @@ export const getPostApiLocationsMutationOptions = <
     : { mutation: { mutationKey } };
 
   const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof postApiLocations>>,
-    { data: CreateLocationDto }
+    Awaited<ReturnType<typeof postApiPractitioner>>,
+    { data: CreatePractitionerDto }
   > = (props) => {
     const { data } = props ?? {};
 
-    return postApiLocations(data);
+    return postApiPractitioner(data);
   };
 
   return { mutationFn, ...mutationOptions };
 };
 
-export type PostApiLocationsMutationResult = NonNullable<
-  Awaited<ReturnType<typeof postApiLocations>>
+export type PostApiPractitionerMutationResult = NonNullable<
+  Awaited<ReturnType<typeof postApiPractitioner>>
 >;
-export type PostApiLocationsMutationBody = CreateLocationDto;
-export type PostApiLocationsMutationError = ProblemDetails;
+export type PostApiPractitionerMutationBody = CreatePractitionerDto;
+export type PostApiPractitionerMutationError = ProblemDetails;
 
-export const usePostApiLocations = <
+export const usePostApiPractitioner = <
   TError = ProblemDetails,
   TContext = unknown,
 >(
   options?: {
     mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof postApiLocations>>,
+      Awaited<ReturnType<typeof postApiPractitioner>>,
       TError,
-      { data: CreateLocationDto },
+      { data: CreatePractitionerDto },
       TContext
     >;
   },
   queryClient?: QueryClient,
 ): UseMutationResult<
-  Awaited<ReturnType<typeof postApiLocations>>,
+  Awaited<ReturnType<typeof postApiPractitioner>>,
   TError,
-  { data: CreateLocationDto },
+  { data: CreatePractitionerDto },
   TContext
 > => {
-  const mutationOptions = getPostApiLocationsMutationOptions(options);
+  const mutationOptions = getPostApiPractitionerMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };
-export const getApiLocationsId = (id: number, signal?: AbortSignal) => {
-  return customInstance<LocationDto>({
-    url: `/api/Locations/${id}`,
+export const getApiPractitionerId = (id: string, signal?: AbortSignal) => {
+  return customInstance<void>({
+    url: `/api/Practitioner/${id}`,
     method: "GET",
     signal,
   });
 };
 
-export const getGetApiLocationsIdQueryKey = (id?: number) => {
-  return [`/api/Locations/${id}`] as const;
+export const getGetApiPractitionerIdQueryKey = (id?: string) => {
+  return [`/api/Practitioner/${id}`] as const;
 };
 
-export const getGetApiLocationsIdQueryOptions = <
-  TData = Awaited<ReturnType<typeof getApiLocationsId>>,
+export const getGetApiPractitionerIdQueryOptions = <
+  TData = Awaited<ReturnType<typeof getApiPractitionerId>>,
   TError = ProblemDetails,
 >(
-  id: number,
+  id: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof getApiLocationsId>>,
+        Awaited<ReturnType<typeof getApiPractitionerId>>,
         TError,
         TData
       >
@@ -278,11 +277,12 @@ export const getGetApiLocationsIdQueryOptions = <
 ) => {
   const { query: queryOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetApiLocationsIdQueryKey(id);
+  const queryKey =
+    queryOptions?.queryKey ?? getGetApiPractitionerIdQueryKey(id);
 
   const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof getApiLocationsId>>
-  > = ({ signal }) => getApiLocationsId(id, signal);
+    Awaited<ReturnType<typeof getApiPractitionerId>>
+  > = ({ signal }) => getApiPractitionerId(id, signal);
 
   return {
     queryKey,
@@ -290,35 +290,35 @@ export const getGetApiLocationsIdQueryOptions = <
     enabled: !!id,
     ...queryOptions,
   } as UseQueryOptions<
-    Awaited<ReturnType<typeof getApiLocationsId>>,
+    Awaited<ReturnType<typeof getApiPractitionerId>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetApiLocationsIdQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getApiLocationsId>>
+export type GetApiPractitionerIdQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getApiPractitionerId>>
 >;
-export type GetApiLocationsIdQueryError = ProblemDetails;
+export type GetApiPractitionerIdQueryError = ProblemDetails;
 
-export function useGetApiLocationsId<
-  TData = Awaited<ReturnType<typeof getApiLocationsId>>,
+export function useGetApiPractitionerId<
+  TData = Awaited<ReturnType<typeof getApiPractitionerId>>,
   TError = ProblemDetails,
 >(
-  id: number,
+  id: string,
   options: {
     query: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof getApiLocationsId>>,
+        Awaited<ReturnType<typeof getApiPractitionerId>>,
         TError,
         TData
       >
     > &
       Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiLocationsId>>,
+          Awaited<ReturnType<typeof getApiPractitionerId>>,
           TError,
-          Awaited<ReturnType<typeof getApiLocationsId>>
+          Awaited<ReturnType<typeof getApiPractitionerId>>
         >,
         "initialData"
       >;
@@ -327,24 +327,24 @@ export function useGetApiLocationsId<
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
-export function useGetApiLocationsId<
-  TData = Awaited<ReturnType<typeof getApiLocationsId>>,
+export function useGetApiPractitionerId<
+  TData = Awaited<ReturnType<typeof getApiPractitionerId>>,
   TError = ProblemDetails,
 >(
-  id: number,
+  id: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof getApiLocationsId>>,
+        Awaited<ReturnType<typeof getApiPractitionerId>>,
         TError,
         TData
       >
     > &
       Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiLocationsId>>,
+          Awaited<ReturnType<typeof getApiPractitionerId>>,
           TError,
-          Awaited<ReturnType<typeof getApiLocationsId>>
+          Awaited<ReturnType<typeof getApiPractitionerId>>
         >,
         "initialData"
       >;
@@ -353,15 +353,15 @@ export function useGetApiLocationsId<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
-export function useGetApiLocationsId<
-  TData = Awaited<ReturnType<typeof getApiLocationsId>>,
+export function useGetApiPractitionerId<
+  TData = Awaited<ReturnType<typeof getApiPractitionerId>>,
   TError = ProblemDetails,
 >(
-  id: number,
+  id: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof getApiLocationsId>>,
+        Awaited<ReturnType<typeof getApiPractitionerId>>,
         TError,
         TData
       >
@@ -372,15 +372,15 @@ export function useGetApiLocationsId<
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
-export function useGetApiLocationsId<
-  TData = Awaited<ReturnType<typeof getApiLocationsId>>,
+export function useGetApiPractitionerId<
+  TData = Awaited<ReturnType<typeof getApiPractitionerId>>,
   TError = ProblemDetails,
 >(
-  id: number,
+  id: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof getApiLocationsId>>,
+        Awaited<ReturnType<typeof getApiPractitionerId>>,
         TError,
         TData
       >
@@ -390,7 +390,7 @@ export function useGetApiLocationsId<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getGetApiLocationsIdQueryOptions(id, options);
+  const queryOptions = getGetApiPractitionerIdQueryOptions(id, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,
@@ -402,35 +402,35 @@ export function useGetApiLocationsId<
   return query;
 }
 
-export const putApiLocationsId = (
-  id: number,
-  updateLocationDto: UpdateLocationDto,
+export const putApiPractitionerId = (
+  id: string,
+  updatePractitionerDto: UpdatePractitionerDto,
 ) => {
-  return customInstance<LocationDto>({
-    url: `/api/Locations/${id}`,
+  return customInstance<void>({
+    url: `/api/Practitioner/${id}`,
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    data: updateLocationDto,
+    data: updatePractitionerDto,
   });
 };
 
-export const getPutApiLocationsIdMutationOptions = <
+export const getPutApiPractitionerIdMutationOptions = <
   TError = ProblemDetails | ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof putApiLocationsId>>,
+    Awaited<ReturnType<typeof putApiPractitionerId>>,
     TError,
-    { id: number; data: UpdateLocationDto },
+    { id: string; data: UpdatePractitionerDto },
     TContext
   >;
 }): UseMutationOptions<
-  Awaited<ReturnType<typeof putApiLocationsId>>,
+  Awaited<ReturnType<typeof putApiPractitionerId>>,
   TError,
-  { id: number; data: UpdateLocationDto },
+  { id: string; data: UpdatePractitionerDto },
   TContext
 > => {
-  const mutationKey = ["putApiLocationsId"];
+  const mutationKey = ["putApiPractitionerId"];
   const { mutation: mutationOptions } = options
     ? options.mutation &&
       "mutationKey" in options.mutation &&
@@ -440,70 +440,70 @@ export const getPutApiLocationsIdMutationOptions = <
     : { mutation: { mutationKey } };
 
   const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof putApiLocationsId>>,
-    { id: number; data: UpdateLocationDto }
+    Awaited<ReturnType<typeof putApiPractitionerId>>,
+    { id: string; data: UpdatePractitionerDto }
   > = (props) => {
     const { id, data } = props ?? {};
 
-    return putApiLocationsId(id, data);
+    return putApiPractitionerId(id, data);
   };
 
   return { mutationFn, ...mutationOptions };
 };
 
-export type PutApiLocationsIdMutationResult = NonNullable<
-  Awaited<ReturnType<typeof putApiLocationsId>>
+export type PutApiPractitionerIdMutationResult = NonNullable<
+  Awaited<ReturnType<typeof putApiPractitionerId>>
 >;
-export type PutApiLocationsIdMutationBody = UpdateLocationDto;
-export type PutApiLocationsIdMutationError = ProblemDetails | ProblemDetails;
+export type PutApiPractitionerIdMutationBody = UpdatePractitionerDto;
+export type PutApiPractitionerIdMutationError = ProblemDetails | ProblemDetails;
 
-export const usePutApiLocationsId = <
+export const usePutApiPractitionerId = <
   TError = ProblemDetails | ProblemDetails,
   TContext = unknown,
 >(
   options?: {
     mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof putApiLocationsId>>,
+      Awaited<ReturnType<typeof putApiPractitionerId>>,
       TError,
-      { id: number; data: UpdateLocationDto },
+      { id: string; data: UpdatePractitionerDto },
       TContext
     >;
   },
   queryClient?: QueryClient,
 ): UseMutationResult<
-  Awaited<ReturnType<typeof putApiLocationsId>>,
+  Awaited<ReturnType<typeof putApiPractitionerId>>,
   TError,
-  { id: number; data: UpdateLocationDto },
+  { id: string; data: UpdatePractitionerDto },
   TContext
 > => {
-  const mutationOptions = getPutApiLocationsIdMutationOptions(options);
+  const mutationOptions = getPutApiPractitionerIdMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };
-export const deleteApiLocationsId = (id: number) => {
+export const deleteApiPractitionerId = (id: string) => {
   return customInstance<void>({
-    url: `/api/Locations/${id}`,
+    url: `/api/Practitioner/${id}`,
     method: "DELETE",
   });
 };
 
-export const getDeleteApiLocationsIdMutationOptions = <
+export const getDeleteApiPractitionerIdMutationOptions = <
   TError = ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof deleteApiLocationsId>>,
+    Awaited<ReturnType<typeof deleteApiPractitionerId>>,
     TError,
-    { id: number },
+    { id: string },
     TContext
   >;
 }): UseMutationOptions<
-  Awaited<ReturnType<typeof deleteApiLocationsId>>,
+  Awaited<ReturnType<typeof deleteApiPractitionerId>>,
   TError,
-  { id: number },
+  { id: string },
   TContext
 > => {
-  const mutationKey = ["deleteApiLocationsId"];
+  const mutationKey = ["deleteApiPractitionerId"];
   const { mutation: mutationOptions } = options
     ? options.mutation &&
       "mutationKey" in options.mutation &&
@@ -513,43 +513,43 @@ export const getDeleteApiLocationsIdMutationOptions = <
     : { mutation: { mutationKey } };
 
   const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof deleteApiLocationsId>>,
-    { id: number }
+    Awaited<ReturnType<typeof deleteApiPractitionerId>>,
+    { id: string }
   > = (props) => {
     const { id } = props ?? {};
 
-    return deleteApiLocationsId(id);
+    return deleteApiPractitionerId(id);
   };
 
   return { mutationFn, ...mutationOptions };
 };
 
-export type DeleteApiLocationsIdMutationResult = NonNullable<
-  Awaited<ReturnType<typeof deleteApiLocationsId>>
+export type DeleteApiPractitionerIdMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteApiPractitionerId>>
 >;
 
-export type DeleteApiLocationsIdMutationError = ProblemDetails;
+export type DeleteApiPractitionerIdMutationError = ProblemDetails;
 
-export const useDeleteApiLocationsId = <
+export const useDeleteApiPractitionerId = <
   TError = ProblemDetails,
   TContext = unknown,
 >(
   options?: {
     mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof deleteApiLocationsId>>,
+      Awaited<ReturnType<typeof deleteApiPractitionerId>>,
       TError,
-      { id: number },
+      { id: string },
       TContext
     >;
   },
   queryClient?: QueryClient,
 ): UseMutationResult<
-  Awaited<ReturnType<typeof deleteApiLocationsId>>,
+  Awaited<ReturnType<typeof deleteApiPractitionerId>>,
   TError,
-  { id: number },
+  { id: string },
   TContext
 > => {
-  const mutationOptions = getDeleteApiLocationsIdMutationOptions(options);
+  const mutationOptions = getDeleteApiPractitionerIdMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };
