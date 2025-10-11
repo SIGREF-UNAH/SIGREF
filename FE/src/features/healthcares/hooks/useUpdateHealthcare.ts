@@ -2,7 +2,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import { healthcareInitValues, healthcareValidationSchema } from "../forms";
-import type { Healthcare } from "../../../api/interfaces";
+import type { HealthcareDto } from "../../../api/models";
 
 export function useUpdateHealthcare() {
   const navigate = useNavigate();
@@ -11,7 +11,7 @@ export function useUpdateHealthcare() {
   const [isLoading, setIsLoading] = useState(true);
 
   // Validación del formulario con Formik
-  const formik = useFormik<Healthcare>({
+  const formik = useFormik<HealthcareDto>({
     initialValues: healthcareInitValues,
     validationSchema: healthcareValidationSchema,
     onSubmit: async (values) => {

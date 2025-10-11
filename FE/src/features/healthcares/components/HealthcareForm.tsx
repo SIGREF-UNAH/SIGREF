@@ -11,14 +11,14 @@ import {
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { FormikProps } from "formik";
-import type { Healthcare, Location, Organization } from "../../../api/interfaces";
+import type { HealthcareDto, LocationDto, OrganizationDto } from "../../../api/models";
 
 const { TextArea } = Input;
 
 interface HealthcareFormProps {
-  formik: FormikProps<Healthcare>;
-  organizations: Organization[];
-  locations: Location[];
+  formik: FormikProps<HealthcareDto>;
+  organizations: OrganizationDto[];
+  locations: LocationDto[];
   submitButtonText?: string;
   isPending?: boolean;
   onCancel: () => void;
@@ -34,7 +34,7 @@ export const HealthcareForm = ({
 }: HealthcareFormProps) => {
   const [searchText, setSearchText] = useState("");
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
-  const [selectedLocations, setSelectedLocations] = useState<Location[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<LocationDto[]>([]);
 
   // Inicializar ubicaciones seleccionadas desde formik
   useEffect(() => {
@@ -47,8 +47,8 @@ export const HealthcareForm = ({
 
       if (currentIds !== newIds) {
         setSelectedRowKeys(locationIds.filter((id): id is string => typeof id === "string"));
-        const selectedLocs = locations.filter((loc: Location) =>
-          locationIds.includes(loc.id)
+        const selectedLocs = locations.filter((loc: LocationDto) =>
+          locationIds.includes(loc.id || "")
         );
         setSelectedLocations(selectedLocs);
       }
@@ -60,8 +60,8 @@ export const HealthcareForm = ({
     location.name.toLowerCase().includes(searchText.toLowerCase())
   );
 
-  // Columnas tabla
-  const columns: ColumnsType<Location> = [
+  // Columnas de la tabla
+  const columns: ColumnsType<LocationDto> = [
     {
       title: "Nombre",
       dataIndex: "name",
@@ -82,7 +82,7 @@ export const HealthcareForm = ({
   // Selección de ubicaciones
   const rowSelection = {
     selectedRowKeys,
-    onChange: (newSelectedRowKeys: React.Key[], selectedRows: Location[]) => {
+    onChange: (newSelectedRowKeys: React.Key[], selectedRows: LocationDto[]) => {
       setSelectedRowKeys(newSelectedRowKeys as string[]);
       setSelectedLocations(selectedRows);
       formik.setFieldValue(
@@ -132,7 +132,7 @@ export const HealthcareForm = ({
             name="name"
             placeholder="Ej. Radiografía Dental"
             size="large"
-            value={formik.values.name}
+            value={formik.values.name || ""}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
             disabled={isPending}
@@ -154,7 +154,7 @@ export const HealthcareForm = ({
             name="abbreviation"
             placeholder="Ej. RD"
             size="large"
-            value={formik.values.abbreviation}
+            value={formik.values.abbreviation || ""}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
             disabled={isPending}
@@ -196,7 +196,7 @@ export const HealthcareForm = ({
             name="comment"
             rows={4}
             placeholder="Ej. El servicio de radiografía es de alta calidad."
-            value={formik.values.comment}
+            value={formik.values.comment || ""}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
             disabled={isPending}

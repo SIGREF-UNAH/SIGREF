@@ -2,14 +2,14 @@ import { useNavigate } from "react-router";
 import { useState } from "react";
 import { healthcareInitValues, healthcareValidationSchema } from "../forms";
 import { useFormik } from "formik";
-import type { Healthcare } from "../../../api/interfaces";
+import type { HealthcareDto } from "../../../api/models";
 
 export function useCreateHealthcare() {
   const navigate = useNavigate();
   const [isPending, setIsPending] = useState(false);
 
   // Validación del formulario con Formik
-  const formik = useFormik<Healthcare>({
+  const formik = useFormik<HealthcareDto>({
     initialValues: healthcareInitValues,
     validationSchema: healthcareValidationSchema,
     onSubmit: async (values) => {

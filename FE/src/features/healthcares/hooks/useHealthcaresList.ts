@@ -1,32 +1,61 @@
 import type { TablePaginationConfig } from "antd";
 import { useUrlFilters } from "../../../shared/hooks";
 import { useNavigate } from "react-router";
-import { mockHealthcares } from "../store";
+import { useQueryClient } from "@tanstack/react-query";
+import { message } from "antd";
+import {
+  getGetApiHealthcaresQueryKey,
+  useDeleteApiHealthcaresId,
+  useGetApiHealthcares,
+} from "../../../api/healthcares/healthcares";
 
 export function useHealthcaresList() {
   const navigate = useNavigate();
-    
+  const queryClient = useQueryClient();
+
+  // Obtener datos de la API
+  const { data: healthcares, isLoading, isError } = useGetApiHealthcares({});
+
+  // Mutación para eliminar
+  const { mutate: deleteHealthcare } = useDeleteApiHealthcaresId({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: getGetApiHealthcaresQueryKey(),
+        });
+        message.success("Servicio médico eliminado exitosamente");
+      },
+      onError: () => message.error("Error al eliminar el servicio médico"),
+    },
+  });
+
   // Manejar todos los filtros en la URL
   const { filters, setFilter, setFilters } = useUrlFilters({
     defaultValues: {
       search: "",
       department: undefined as string | undefined,
+      status: undefined as string | undefined,
       page: 1,
       pageSize: 10,
     },
   });
 
-  // Filtrar datos basados en búsqueda y ubicación
-  const filteredData = mockHealthcares.filter((item) => {
+  // Filtrar datos basados en búsqueda, ubicación y estado
+  const filteredData = (healthcares || []).filter((item) => {
     const matchesSearch =
-      item.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-      item.abbreviation.toLowerCase().includes(filters.search.toLowerCase());
+      item.name?.toLowerCase().includes(filters.search.toLowerCase()) ||
+      item.abbreviation?.toLowerCase().includes(filters.search.toLowerCase());
 
     const matchesDepartment =
       !filters.department ||
       item.location?.some((loc) => loc.display === filters.department);
 
-    return matchesSearch && matchesDepartment;
+    const matchesStatus =
+      !filters.status ||
+      (filters.status === "active" && item.active) ||
+      (filters.status === "inactive" && !item.active);
+
+    return matchesSearch && matchesDepartment && matchesStatus;
   });
 
   // Crear nuevo servicio
@@ -41,8 +70,7 @@ export function useHealthcaresList() {
 
   // Eliminar
   const handleDelete = (id: string) => {
-    console.log("Delete healthcare:", id);
-    // TODO: Abrir modal de confirmación
+    deleteHealthcare({ id });
   };
 
   // Configuración de paginación
@@ -51,6 +79,7 @@ export function useHealthcaresList() {
     pageSize: filters.pageSize,
     showSizeChanger: true,
     pageSizeOptions: ["10", "20", "50", "100"],
+    total: filteredData.length,
     onChange: (page, pageSize) => {
       setFilters({ page, pageSize });
     },
@@ -60,7 +89,7 @@ export function useHealthcaresList() {
   // Obtener las ubicaciones únicas para filtro
   const departments = Array.from(
     new Set(
-      mockHealthcares
+      (healthcares || [])
         .flatMap((item) => item.location?.map((loc) => loc.display) || [])
         .filter(Boolean)
     )
@@ -71,6 +100,8 @@ export function useHealthcaresList() {
     departments,
     filteredData,
     paginationConfig,
+    isLoading,
+    isError,
     handleCreate,
     handleEdit,
     handleDelete,
