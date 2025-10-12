@@ -20,7 +20,7 @@ namespace SIGREF.API.Controllers
         {
             var healthcares = await healthcareService.GetAllHealthcaresAsync();
             var healthcareDtos = healthcares.Select(healthcare => healthcare.ToDto());
-            
+
             return Ok(healthcareDtos);
         }
 
@@ -32,9 +32,9 @@ namespace SIGREF.API.Controllers
         {
             var healthcare = await healthcareService.GetHealthcareByIdAsync(id);
             if (healthcare == null) return NotFound($"Healthcare with id '{id}' not found.");
-            
+
             var healthcareDto = healthcare.ToDto();
-            
+
             return Ok(healthcareDto);
         }
 

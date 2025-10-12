@@ -10,7 +10,7 @@ namespace SIGREF.API.Controllers.PractitionerC;
 
 [Route("api/[controller]")]
 [ApiController]
-public class PractitionerController: ControllerBase
+public class PractitionerController : ControllerBase
 {
     private readonly IPractitionerService _practitionerService;
 

@@ -1,17 +1,22 @@
 ﻿using SIGREF.API.Dtos.PractitionerRole;
+using SIGREF.API.Services.Common;
 
 namespace SIGREF.API.Services.PractitionerRole;
 public interface IPractitionerRoleService
 {
+    // Crear un nuevo PractitionerRole
+    Task<ServiceResult<PractitionerRoleDto>> CreateAsync(CreatePractitionerRoleDto dto);
 
-    //Task<PractitionerRoleDto> CreatePractitionerAsync(CreatePractitionerRoleDto dto);
+    // Obtener un PractitionerRole por Id
+    Task<PractitionerRoleDto?> GetByIdAsync(string id);
 
-    //Task<PractitionerRoleDto> GetPractitionerByIdAsync(string id);
+    // Obtener todos
+    Task<IEnumerable<PractitionerRoleDto>> GetAllAsync();
 
-   // Task<IEnumerable<FhirPractitioner>> GetAllPractitionersAsync();
+    // Actualizar
+    Task<ServiceResult<PractitionerRoleDto?>> UpdateAsync(string id, UpdatePractitionerRoleDto dto);
 
-    //Task<FhirPractitioner> UpdatePractitionerAsync(string id, FhirPractitioner dto);
-
-    //Task DeletePractitionerAsync(string id);
+    // Eliminar
+    Task<bool> DeleteAsync(string id);
 }
 

@@ -19,7 +19,7 @@ namespace SIGREF.API.Services
         public async Task<IEnumerable<Healthcare>> GetAllHealthcaresAsync()
         {
             var searchResult = await fhirService.SearchAsync<Healthcare>();
-            return searchResult.Entry?.Select(e => 
+            return searchResult.Entry?.Select(e =>
                 e.Resource as Healthcare).Where(l => l != null) ?? Enumerable.Empty<Healthcare>();
         }
 
