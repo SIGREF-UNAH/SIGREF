@@ -1,7 +1,7 @@
-import type { Healthcare, Location, Organization } from "../../../api/interfaces";
+import type { HealthcareDto, LocationDto, OrganizationDto } from "../../../api/models";
 
 // Servicios Médicos de ejemplo
-export const mockHealthcares: Healthcare[] = [
+export const mockHealthcares: HealthcareDto[] = [
   {
     id: "1",
     active: true,
@@ -359,7 +359,7 @@ export const mockHealthcares: Healthcare[] = [
 ];
 
 // Locations de ejemplo
-export const mockLocations: Location[] = [
+export const mockLocations: LocationDto[] = [
   {
     id: "1",
     name: "Consultoría Externa",
@@ -387,7 +387,7 @@ export const mockLocations: Location[] = [
 ];
 
 // Organizaciones de ejemplo
-export const mockOrganizations: Organization[] = [
+export const mockOrganizations: OrganizationDto[] = [
   { id: "1702", name: "Hospital de Occidente", active: true },
   { id: "1703", name: "Hospital General", active: true },
   { id: "1704", name: "Clínica Central", active: true },

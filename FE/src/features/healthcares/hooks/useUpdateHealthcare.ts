@@ -1,124 +1,66 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { useFormik } from "formik";
-import { healthcareInitValues, healthcareValidationSchema } from "../forms";
-import type { Healthcare } from "../../../api/interfaces";
+import { message } from "antd";
+import { useQueryClient } from "@tanstack/react-query";
+import type { UpdateHealthcareDto } from "../../../api/models";
+import {
+  getGetApiHealthcaresQueryKey,
+  useGetApiHealthcaresId,
+  usePutApiHealthcaresId,
+} from "../../../api/healthcares/healthcares";
 
 export function useUpdateHealthcare() {
-  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const [isPending, setIsPending] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  // Validación del formulario con Formik
-  const formik = useFormik<Healthcare>({
-    initialValues: healthcareInitValues,
-    validationSchema: healthcareValidationSchema,
-    onSubmit: async (values) => {
-      setIsPending(true);
-
-      try {
-        // Llamada a la API
-        // const result = await updateHealthcare(id, values);
-        const result = { 
-          healthcare: values, 
-          status: true, 
-          message: "Servicio actualizado correctamente" 
-        };
-        console.log("Healthcare Service to update:", result.healthcare);
-
-        if (!result.status) {
-          console.error("Error al actualizar el servicio médico: ", result.message);
-          return;
-        }
-
-        navigate("/healthcares");
-        
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setIsPending(false);
-      } 
+  // Obtener datos del servicio a editar
+  const { data: healthcare, isLoading } = useGetApiHealthcaresId(id!, {
+    query: {
+      enabled: !! id, // Solo ejecuta si hay id
     },
-    enableReinitialize: true,
   });
 
-  useEffect(() => {
-    const fetchHealthcareData = async () => {
-      try {
-        setIsLoading(true);
-        
-        // TODO: Reemplazar con llamada real al backend
-        // const response = await getHealthcareById(id);
-        
-        // Simulación de llamada al backend con delay
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        
-        // Mock data - simula la respuesta del backend
-        const mockResponse = {
-          identifier: null,
-          active: true,
-          name: "Radiografía Dental",
-          abbreviation: "RD",
-          comment: "Servicio de radiografía dental completo",
-          cost: 300.0,
-          specialty: null,
-          providedBy: {
-            type: null,
-            identifier: null,
-            reference: "Organization/1702",
-            display: "Hospital de Occidente",
-          },
-          location: [
-            {
-              type: null,
-              identifier: null,
-              reference: "Location/1",
-              display: "Consultoría Externa",
-            },
-            {
-              type: null,
-              identifier: null,
-              reference: "Location/2",
-              display: "Emergencias",
-            },
-          ],
-        };
-
-        // Establecer los valores en formik
-        formik.setValues({
-          id: id ?? "", // Agrega el id requerido
-          name: mockResponse.name,
-          abbreviation: mockResponse.abbreviation,
-          cost: mockResponse.cost,
-          comment: mockResponse.comment,
-          providedBy: {
-            reference: mockResponse.providedBy.reference,
-            display: mockResponse.providedBy.display,
-          },
-          location: mockResponse.location.map(loc => ({
-            reference: loc.reference,
-            display: loc.display,
-          })),
-          active: mockResponse.active,
+  // Mutación para actualizar servicio
+  const { mutateAsync: updateHealthcare, isPending } = usePutApiHealthcaresId({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: getGetApiHealthcaresQueryKey(),
         });
-      } catch (error) {
-        console.error("Error al cargar el servicio:", error);
-        // TODO: Mostrar notificación de error
-        // message.error("Error al cargar el servicio");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+        message.success("Servicio médico actualizado exitosamente");
+        navigate("/healthcares");
+      },
+      onError: (error: any) => {
+        console.error("Error al actualizar el servicio médico:", error);
+        message.error(
+          error?.response?.data?.message ||
+            "Error al actualizar el servicio médico"
+        );
+      },
+    },
+  });
 
-    if (id) {
-      fetchHealthcareData();
+  // Función para manejar el submit del formulario
+  const handleFinish = async (values: UpdateHealthcareDto) => {
+    if (!id) {
+      message.error("ID del servicio no encontrado");
+      return;
     }
-  }, [id]);
+
+    try {
+      await updateHealthcare({
+        id,
+        data: values,
+      });
+    } catch (error) {
+      console.error("Error en handleFinish:", error);
+    }
+  };
 
   return {
-    formik,
+    healthcare,
     isPending,
     isLoading,
+    handleFinish,
   };
 }

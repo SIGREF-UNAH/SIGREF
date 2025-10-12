@@ -1,14 +1,15 @@
 import { useNavigate } from "react-router";
-import { mockLocations, mockOrganizations } from "../store";
+import { useGetApiOrganizations } from "../../../api/organizations/organizations";
+import { useGetApiLocations } from "../../../api/locations/locations";
 
 export function useHealthcareForm() {
   const navigate = useNavigate();
 
-  // Obtener las organizaciones (Despues sera desde la API)
-  const organizations = mockOrganizations;
+  // Obtener las organizaciones desde la API
+  const { data: organizations = [], isLoading: isLoadingOrganizations } = useGetApiOrganizations({});
 
-  // Obtener las ubicaciones (Despues sera desde la API)
-  const locations = mockLocations;
+  // Obtener las ubicaciones desde la API
+  const { data: locations = [], isLoading: isLoadingLocations } = useGetApiLocations({});
 
   const handleCancel = () => {
     navigate("/healthcares");
@@ -17,6 +18,9 @@ export function useHealthcareForm() {
   return {
     organizations,
     locations,
+    isLoadingOrganizations,
+    isLoadingLocations,
+    isLoading: isLoadingOrganizations || isLoadingLocations,
     handleCancel,
   };
 }
