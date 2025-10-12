@@ -3,6 +3,7 @@ using Hl7.Fhir.Model;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Common.ValidationAtributes;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace SIGREF.API.Dtos.Practitioner;
 
@@ -19,6 +20,8 @@ public class CreatePractitionerDto
     [AtLeastOneNameRequired]
     public List<HumanNameDto>? Name { get; set; } = new();
     public List<ContactPointDto>? Telecom { get; set; } = new();
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+
     public AdministrativeGender? Gender { get; set; } = AdministrativeGender.Unknown;
     public DateTime? BirthDate { get; set; }
 }
@@ -32,6 +35,7 @@ public class UpdatePractitionerDto
     [AtLeastOneNameRequired]
     public List<HumanNameDto>? Name { get; set; } = new();
     public List<ContactPointDto>? Telecom { get; set; } = new();
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public AdministrativeGender? Gender { get; set; } = AdministrativeGender.Unknown;
     public DateTime? BirthDate { get; set; }
 
