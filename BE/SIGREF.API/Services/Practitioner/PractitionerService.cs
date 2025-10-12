@@ -19,17 +19,17 @@ public class PractitionerService : IPractitionerService
     {
         _fhirClient = fhirClient ?? throw new System.ArgumentNullException(nameof(fhirClient));
     }
-    public async Task<PractitionerDto> CreatePractitionerAsync(CreatePractitionerDto dto)
+    public async Task<FhirPractitioner> CreatePractitionerAsync(CreatePractitionerDto dto)
     {
-        var practitioner = dto.ToFhirPractitioner(); 
+        var practitioner = dto.ToFhirPractitioner();
         // Establecer metadatos
-        practitioner.Meta = new Meta
-        {
-            LastUpdated = DateTimeOffset.Now,
-            VersionId = "1"
-        };
+        //practitioner.Meta = new Meta
+        //{
+        //    LastUpdated = DateTimeOffset.Now,
+        //    VersionId = "1"
+        //};
         var created = await _fhirClient.CreateAsync(practitioner);
-        return created.ToDto();
+        return created;
     }
 
     public async Task DeletePractitionerAsync(string id)

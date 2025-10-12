@@ -91,16 +91,18 @@ public abstract class TerminologySeederBase
             Logger.LogInformation("ValueSet {Name} ya existe. Saltando creación.", def.ValueSetName);
             return;
         }
-
-        var valueSet = new ValueSet
+        else
         {
-            Url = def.ValueSetUrl,
-            Name = def.ValueSetName,
-            Title = def.ValueSetTitle,
-            Status = PublicationStatus.Active,
-            Compose = new ValueSet.ComposeComponent
+
+            var valueSet = new ValueSet
             {
-                Include = new List<ValueSet.ConceptSetComponent>
+                Url = def.ValueSetUrl,
+                Name = def.ValueSetName,
+                Title = def.ValueSetTitle,
+                Status = PublicationStatus.Active,
+                Compose = new ValueSet.ComposeComponent
+                {
+                    Include = new List<ValueSet.ConceptSetComponent>
                 {
                     new()
                     {
@@ -111,11 +113,12 @@ public abstract class TerminologySeederBase
                             .ToList()
                     }
                 }
-            }
-        };
+                }
+            };
 
-        await FhirClient.CreateAsync(valueSet, cancellationToken);
-        Logger.LogInformation("ValueSet {Name} creado.", def.ValueSetName);
+            await FhirClient.CreateAsync(valueSet, cancellationToken);
+            Logger.LogInformation("ValueSet {Name} creado.", def.ValueSetName);
+        }
     }
 
     /// <summary>

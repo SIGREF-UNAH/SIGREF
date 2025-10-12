@@ -1,7 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
-using SIGREF.API.Database.Seeding;
-
-using SIGREF.API.Services;
+﻿
+using System.Threading;
 
 /// <summary>
 /// Clase orquestadora de la siembra (seeding) de vocabularios FHIR en el sistema.
@@ -16,33 +14,24 @@ public class SIGREFSeeder
     private readonly TiposUbicacionSeeder _tiposUbicacionSeeder;
     private readonly ILogger<SIGREFSeeder> _logger;
 
-    /// <summary>
-    /// Constructor principal del seeder.
-    /// </summary>
-    /// <param name="fhirService">Servicio para acceder al cliente FHIR.</param>
-    /// <param name="logger">Logger para registrar la actividad del seeding.</param>
+    // Ahora inyectamos los seeders ya creados por DI
     public SIGREFSeeder(
-        FhirService fhirService,
-        ILoggerFactory loggerFactory
-    )
+        RolesAdminSeeder rolesAdminSeeder,
+        TiposUbicacionSeeder tiposUbicacionSeeder,
+        ILogger<SIGREFSeeder> logger)
     {
-        _rolesAdminSeeder = new RolesAdminSeeder(fhirService, loggerFactory.CreateLogger<RolesAdminSeeder>());
-        _tiposUbicacionSeeder = new TiposUbicacionSeeder(fhirService, loggerFactory.CreateLogger<TiposUbicacionSeeder>());
-        _logger = loggerFactory.CreateLogger<SIGREFSeeder>();
+        _rolesAdminSeeder = rolesAdminSeeder;
+        _tiposUbicacionSeeder = tiposUbicacionSeeder;
+        _logger = logger;
     }
 
-    /// <summary>
-    /// Ejecuta el proceso de siembra de todos los vocabularios necesarios.
-    /// </summary>
-    /// <param name="cancellationToken">Token para cancelar la operación si es necesario.</param>
-    public async Task SeedAsync(CancellationToken cancellationToken = default)
+    public async Task SeedAsync(CancellationToken ct = default)
     {
-        _logger.LogInformation("Esperando a que el servidor FHIR este disponible (90s)...");
-        await Task.Delay(TimeSpan.FromSeconds(90), cancellationToken);
-
-        _logger.LogInformation("Iniciando proceso de siembra de vocabularios...");
-        await _rolesAdminSeeder.SeedAsync(cancellationToken);
-        await _tiposUbicacionSeeder.SeedAsync(cancellationToken);
-        _logger.LogInformation("Proceso de siembra completado.");
+        // _logger.LogInformation("Esperando a que el servidor FHIR esté disponible (90s)...");
+        //await Task.Delay(TimeSpan.FromSeconds(90));
+        _logger.LogInformation("Iniciando siembra...");
+        await _rolesAdminSeeder.SeedAsync(ct);
+        await _tiposUbicacionSeeder.SeedAsync(ct);
+        _logger.LogInformation("Siembra completada.");
     }
 }

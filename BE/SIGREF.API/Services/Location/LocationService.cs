@@ -82,7 +82,7 @@ public class LocationService(FhirClient fhirService)
             VersionId = "1"
         };
 
-         await fhirService.CreateAsync(location);
+        await fhirService.CreateAsync(location);
         return location;
     }
     /// <summary>
@@ -142,6 +142,6 @@ public class LocationService(FhirClient fhirService)
     /// </example>
     public async Task DeleteLocationAsync(int id)
     {
-         await fhirService.DeleteAsync($"{ResourceType}/{id}");
+        await fhirService.DeleteAsync($"{ResourceType}/{id}");
     }
 }

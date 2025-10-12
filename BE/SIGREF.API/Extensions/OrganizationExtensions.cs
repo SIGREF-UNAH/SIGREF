@@ -26,7 +26,7 @@ public static class OrganizationExtensions
                 Use = i.Use != null && Enum.TryParse<Identifier.IdentifierUse>(i.Use.ToString(), out var use)
     ? use
     : null,  // Asignación directa del enum
-                Type = i.Type?.Text ?? string.Empty
+                Type = i.Type?.ToCodeableConceptDto()
             }).ToList();
         }
         // Aliases
@@ -107,7 +107,7 @@ public static class OrganizationExtensions
                 System = i.System,
                 Value = i.Value,
                 Use = i.Use,  // Asignación directa del enum
-                Type = !string.IsNullOrEmpty(i.Type) ? new CodeableConcept { Text = i.Type } : null
+                Type = i.Type?.ToFhirCodeableConcept()
             }).ToList();
         }
 
@@ -215,7 +215,7 @@ public static class OrganizationExtensions
                 System = i.System,
                 Value = i.Value,
                 Use = i.Use,  // Asignación directa del enum
-                Type = !string.IsNullOrEmpty(i.Type) ? new CodeableConcept { Text = i.Type } : null
+                Type = i.Type?.ToFhirCodeableConcept()
             }).ToList();
         }
 
@@ -260,9 +260,9 @@ public static class OrganizationExtensions
                 } : null,
                 Telecom = c.Telecom?.Select(t => new ContactPoint
                 {
-                    System = t.System, 
+                    System = t.System,
                     Value = t.Value,
-                    Use = t.Use,       
+                    Use = t.Use,
                     Rank = t.Rank
                 }).ToList()
             }).ToList();

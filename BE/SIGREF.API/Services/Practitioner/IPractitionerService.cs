@@ -4,7 +4,7 @@ using SIGREF.API.Dtos.Practitioner;
 namespace SIGREF.API.Services.Practitioner;
 public interface IPractitionerService
 {
-    Task<PractitionerDto> CreatePractitionerAsync(CreatePractitionerDto dto);
+    Task<FhirPractitioner> CreatePractitionerAsync(CreatePractitionerDto dto);
 
     Task<FhirPractitioner> GetPractitionerByIdAsync(string id);
 

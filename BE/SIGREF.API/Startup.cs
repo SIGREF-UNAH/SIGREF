@@ -10,6 +10,7 @@ using SIGREF.API.Services.Organization;
 using SIGREF.API.Services.Organizations;
 using SIGREF.API.Services.Patient;
 using SIGREF.API.Services.Practitioner;
+using SIGREF.API.Services.PractitionerRole;
 using System.Security.Claims;
 using System.Text.Json;
 
@@ -39,6 +40,8 @@ public class Startup
         });
 
         // SEEDER
+        services.AddScoped<RolesAdminSeeder>();
+        services.AddScoped<TiposUbicacionSeeder>();
         services.AddScoped<SIGREFSeeder>();
 
 
@@ -46,6 +49,7 @@ public class Startup
         services.AddScoped<LocationService>();
         services.AddScoped<HealthcareService>();
         services.AddScoped<IPatientService, PatientService>();
+        services.AddScoped<IPractitionerRoleService, PractitionerRoleService>();
         services.AddScoped<IPractitionerService, PractitionerService>();
         services.AddScoped<IOrganizationService, OrganizationService>();
 
@@ -95,7 +99,7 @@ public class Startup
         })
         .AddJwtBearer(options =>
         {
-            var authority = _configuration["Keycloak:Authority"];  
+            var authority = _configuration["Keycloak:Authority"];
             var audience = _configuration["Keycloak:Audience"];
             var requireHttps = _configuration.GetValue<bool>("Keycloak:RequireHttps");
 
@@ -122,11 +126,11 @@ public class Startup
                     if (identity != null)
                     {
                         // Lista de roles
-                        var validRoles = new[] { 
-                            Roles.admin, 
-                            Roles.cashier, 
-                            Roles.ti, 
-                            Roles.auditor 
+                        var validRoles = new[] {
+                            Roles.admin,
+                            Roles.cashier,
+                            Roles.ti,
+                            Roles.auditor
                         };
 
                         // --- Roles de Realm ---
@@ -185,7 +189,7 @@ public class Startup
                 .AllowCredentials());
         });
     }
-  
+
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
         if (env.IsDevelopment())

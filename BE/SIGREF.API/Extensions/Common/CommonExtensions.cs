@@ -1,88 +1,142 @@
-﻿using Hl7.Fhir.Model;
-#nullable enable
+﻿#nullable enable
+using System.Linq;
+using Hl7.Fhir.Model;
 using SIGREF.API.Dtos.Common;
 
-namespace SIGREF.API.Extensions.Common
+namespace SIGREF.API.Extensions;
+public static class CommonExtensions
 {
-    public static class CommonExtensions
+    // ────────────────────────────────────────────────
+    // HUMAN NAME
+    // ────────────────────────────────────────────────
+
+    public static HumanNameDto ToDto(this HumanName name)
     {
-        // ──────────────────────────────────────────────────
-        // HUMAN NAME
-        // ──────────────────────────────────────────────────
-
-        public static HumanNameDto ToDto(this HumanName name)
+        return new HumanNameDto
         {
-            return new HumanNameDto
+            Use = name.Use,
+            Text = name.Text,
+            Family = name.Family,
+            Given = name.Given?.ToList(),
+            Prefix = name.Prefix?.ToList(),
+            Suffix = name.Suffix?.ToList()
+        };
+    }
+
+    public static HumanName ToFhirHumanName(this HumanNameDto dto)
+    {
+        return new HumanName
+        {
+            Use = dto.Use,
+            Text = dto.Text,
+            Family = dto.Family,
+            Given = dto.Given?.ToArray(),
+            Prefix = dto.Prefix?.ToArray(),
+            Suffix = dto.Suffix?.ToArray()
+        };
+    }
+
+    // ────────────────────────────────────────────────
+    // IDENTIFIER
+    // ────────────────────────────────────────────────
+
+    public static IdentifierDto ToDto(this Identifier identifier)
+    {
+        return new IdentifierDto
+        {
+            Use = identifier.Use,
+            Type = identifier.Type?.ToCodeableConceptDto(), 
+            System = identifier.System,
+            Value = identifier.Value
+        };
+    }
+
+    public static Identifier ToFhirIdentifier(this IdentifierDto dto)
+    {
+        return new Identifier
+        {
+            Use = dto.Use,
+            Type = dto.Type?.ToFhirCodeableConcept(), 
+            System = dto.System,
+            Value = dto.Value
+        };
+    }
+
+    // ────────────────────────────────────────────────
+    // REFERENCE
+    // ────────────────────────────────────────────────
+
+    public static ResourceReference ToFhirReference(this ReferenceDto dto)
+        => new(dto.Reference, dto.Display);
+
+    public static ReferenceDto ToReferenceDto(this ResourceReference reference)
+        => new()
+        {
+            Reference = reference.Reference,
+            Display = reference.Display
+        };
+
+    // ────────────────────────────────────────────────
+    // CODEABLE CONCEPT
+    // ────────────────────────────────────────────────
+
+    public static CodeableConcept ToFhirCodeableConcept(this CodeableConceptDto dto)
+    {
+        var coding = dto.Coding?.Select(c => new Coding(c.System, c.Code, c.Display)).ToList();
+
+        return new CodeableConcept
+        {
+            Text = dto.Text,
+            Coding = coding
+        };
+    }
+
+    public static CodeableConceptDto ToCodeableConceptDto(this CodeableConcept cc)
+    {
+        return new CodeableConceptDto
+        {
+            Text = cc.Text,
+            Coding = cc.Coding?.Select(c => new CodingDto
             {
-                Use = name.Use,
-                Text = name.Text,
-                Family = name.Family,
-                Given = name.Given?.ToList(),
-                Prefix = name.Prefix?.ToList(),
-                Suffix = name.Suffix?.ToList()
-            };
-        }
+                System = c.System,
+                Code = c.Code,
+                Display = c.Display
+            }).ToList()
+        };
+    }
 
-        public static HumanName ToFhirHumanName(this HumanNameDto dto)
+
+
+    /// <summary>
+    /// Genera un Display genérico para cualquier DomainResource a partir de campos relevantes.
+    /// </summary>
+    /// <param name="resource">Recurso FHIR</param>
+    /// <param name="fieldSelectors">Funciones que devuelven strings a combinar en el Display</param>
+    public static void GenerateDisplay(this DomainResource resource, params Func<DomainResource, string?>[] fieldSelectors)
+    {
+        if (resource == null) return;
+        if (fieldSelectors == null || fieldSelectors.Length == 0) return;
+
+        // Extraer todos los valores no nulos y no vacíos
+        var parts = fieldSelectors
+            .Select(selector => selector(resource)?.Trim())
+            .Where(s => !string.IsNullOrEmpty(s))
+            .ToList();
+
+        // Si no hay valores, usar Id o tipo de recurso
+        if (!parts.Any())
         {
-            return new HumanName
-            {
-                Use = dto.Use,
-                Text = dto.Text,
-                Family = dto.Family,
-                Given = dto.Given?.ToArray(),
-                Prefix = dto.Prefix?.ToArray(),
-                Suffix = dto.Suffix?.ToArray()
-            };
+            parts.Add(!string.IsNullOrEmpty(resource.Id) ? resource.Id : resource.TypeName);
         }
 
-        // ──────────────────────────────────────────────────
-        // CONTACT POINT (Telecom)
-        // ──────────────────────────────────────────────────
+        // Combinar con separador
+        var display = string.Join(" - ", parts);
 
-
-
-
-
-        // ──────────────────────────────────────────────────
-        // IDENTIFIER
-        // ──────────────────────────────────────────────────
-
-        public static IdentifierDto ToDto(this Identifier identifier)
+        // Asignar a Text.Div
+        resource.Text = new Narrative
         {
-            return new IdentifierDto
-            {
-                Use = identifier.Use,
-                // TODO: Mapear el tipo de CodeableConcept a un string simple
-                Type = GetTypeText(identifier.Type),
-                System = identifier.System,
-                Value = identifier.Value
-            };
-        }
-
-        public static Identifier ToFhirIdentifier(this IdentifierDto dto)
-        {
-            return new Identifier
-            {
-                Use = dto.Use,
-                Type = string.IsNullOrEmpty(dto.Type)
-                    ? null
-                    : new CodeableConcept { Text = dto.Type },
-                System = dto.System,
-                Value = dto.Value
-            };
-        }
-
-        // TODO : Mejorar este método para manejar múltiples tipos y codificaciones
-        private static string? GetTypeText(CodeableConcept? type)
-        {
-            if (type == null) return null;
-            if (!string.IsNullOrEmpty(type.Text)) return type.Text;
-            if (type.Coding?.Any() == true) return type.Coding.First().Display ?? type.Coding.First().Code;
-            return null;
-        }
-
-
-
+            Status = Narrative.NarrativeStatus.Generated,
+            Div = $"<div>{display}</div>"
+        };
     }
 }

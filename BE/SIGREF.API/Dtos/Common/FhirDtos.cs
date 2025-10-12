@@ -1,7 +1,7 @@
 ﻿#nullable enable
 using System.Text.Json.Serialization;
 using Hl7.Fhir.Model;
-
+using System.ComponentModel.DataAnnotations;
 namespace SIGREF.API.Dtos.Common
 {
     /* 
@@ -13,15 +13,14 @@ namespace SIGREF.API.Dtos.Common
     {
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public Identifier.IdentifierUse? Use { get; set; }
-        public string? Type { get; set; } // Texto: "DNI", "Pasaporte", etc.
+        public CodeableConceptDto? Type { get; set; } //"DNI", "Pasaporte", etc.
         public string? System { get; set; } // URI del sistema emisor
         public string? Value { get; set; } // Valor del ID
     }
-
     public class ReferenceDto // Para relaciones entre recursos
     {
         public string? Type { get; set; }
-        public string? Identifier { get; set; }
+        public IdentifierDto? Identifier { get; set; }
         public string? Reference { get; set; }
         public string? Display { get; set; }
     }
@@ -39,8 +38,8 @@ namespace SIGREF.API.Dtos.Common
 
     public class AttachmentDto // Para archivos adjuntos como imágenes, documentos, etc.
     {
-        public string? Url { get; set; }
         public string? ContentType { get; set; }
+        public string? Url { get; set; }
         public string? Title { get; set; }
     }
 
@@ -52,11 +51,11 @@ namespace SIGREF.API.Dtos.Common
 
     public class CodeableConceptDto // Para conceptos codificados
     {
-        public List<CodingDto> Coding { get; set; } = new();
+        public List<CodingDto>? Coding { get; set; } = new();
         public string? Text { get; set; }
     }
 
-    public class CodingDto 
+    public class CodingDto
     {
         public string? System { get; set; }
         public string? Version { get; set; }
@@ -98,6 +97,7 @@ namespace SIGREF.API.Dtos.Common
         public string? Value { get; set; }
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public ContactPoint.ContactPointUse? Use { get; set; } // home, work, mobile, etc.
+        [Range(1, int.MaxValue, ErrorMessage = "Rank debe ser un número entero mayor o igual a 1.")]
         public int? Rank { get; set; }
     }
 
@@ -107,7 +107,7 @@ namespace SIGREF.API.Dtos.Common
         public NotAvailableTimeDto? NotAvailableTime { get; set; }
     }
 
-    public class AvailableTimeDto 
+    public class AvailableTimeDto
     {
         public List<string>? DaysOfWeek { get; set; } // mon, tue, wed, thu, fri, sat, sun
         public bool? AllDay { get; set; }
@@ -123,7 +123,7 @@ namespace SIGREF.API.Dtos.Common
 
     public class PeriodDto // Para períodos de tiempo
     {
-        public DateTime Start { get; set; }
-        public DateTime End { get; set; }
+        public DateTime? Start { get; set; }
+        public DateTime? End { get; set; }
     }
 }
