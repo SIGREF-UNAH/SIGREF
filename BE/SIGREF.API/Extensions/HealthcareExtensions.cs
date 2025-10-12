@@ -1,119 +1,64 @@
-﻿using Hl7.Fhir.Model;
-using SIGREF.API.Dtos.Common;
+﻿#nullable enable
+using Hl7.Fhir.Model;
 using SIGREF.API.Dtos.Healthcare;
+using SIGREF.API.Extensions.Common;
 
 namespace SIGREF.API.Extensions;
 
 public static class HealthcareExtensions
 {
-    // URLs para los campos adicionales
     private const string AbbreviationExtensionUrl = "http://sigref.api/extensions/healthcare/abbreviation";
     private const string CostExtensionUrl = "http://sigref.api/extensions/healthcare/cost";
 
     // Convertir FHIR HealthcareService a HealthcareDto
-    public static HealthcareDto ToDto(this HealthcareService healthcare)
+    public static HealthcareDto ToDto(this HealthcareService? healthcare)
     {
-        // Respuesta por si healthcare es null
-        if (healthcare == null)
-        {
+        if (healthcare is null)
             return new HealthcareDto
             {
                 Id = string.Empty,
+                Identifier = [],
                 Active = true,
                 Name = string.Empty,
                 Abbreviation = string.Empty,
                 Comment = string.Empty,
                 Cost = 0,
-                Specialty = new List<CodeableConceptDto>(),
-                ProvidedBy = new ReferenceDto(),
-                Location = new List<ReferenceDto>(),
+                Specialty = [],
+                ProvidedBy = null,
+                Location = [],
                 LastUpdated = null
             };
-        }
-
-        // Obtener abbreviation y cost de extensiones
-        var abbreviation = healthcare.GetStringExtension(AbbreviationExtensionUrl);
-        var cost = healthcare.GetDecimalExtension(CostExtensionUrl) ?? 0;
 
         return new HealthcareDto
         {
             Id = healthcare.Id ?? string.Empty,
+            Identifier = healthcare.Identifier?.Select(i => i.ToDto()).ToList() ?? [],
             Active = healthcare.Active ?? true,
             Name = healthcare.Name ?? string.Empty,
-            Abbreviation = abbreviation ?? string.Empty,
+            Abbreviation = healthcare.GetStringExtension(AbbreviationExtensionUrl) ?? string.Empty,
             Comment = healthcare.Comment ?? string.Empty,
-            Cost = cost,
-            Specialty = healthcare.Specialty?.Select(s => new CodeableConceptDto
-            {
-                Text = s?.Text ?? string.Empty,
-                Coding = s?.Coding?.Select(c => new CodingDto
-                {
-                    System = c?.System ?? string.Empty,
-                    Code = c?.Code ?? string.Empty,
-                    Display = c?.Display ?? string.Empty,
-                }).ToList() ?? new List<CodingDto>(),
-            }).ToList() ?? new List<CodeableConceptDto>(),
-            ProvidedBy = healthcare.ProvidedBy == null ? null : new ReferenceDto
-            {
-                Identifier = healthcare.ProvidedBy?.Identifier == null
-                    ? null
-                    : new IdentifierDto
-                    {
-                        System = healthcare.ProvidedBy.Identifier.System,
-                        Value = healthcare.ProvidedBy.Identifier.Value
-                    },
-                Reference = healthcare.ProvidedBy.Reference ?? string.Empty,
-                Display = healthcare.ProvidedBy.Display ?? string.Empty,
-                Type = healthcare.ProvidedBy.Type,
-            },
-            Location = healthcare.Location?.Select(loc => new ReferenceDto
-            {
-                Reference = loc?.Reference ?? string.Empty,
-                Display = loc?.Display ?? string.Empty,
-            }).ToList() ?? new List<ReferenceDto>(),
-            LastUpdated = healthcare.Meta?.LastUpdated?.DateTime,
+            Cost = healthcare.GetDecimalExtension(CostExtensionUrl) ?? 0,
+            Specialty = healthcare.Specialty?.Select(s => s.ToCodeableConceptDto()).ToList() ?? [],
+            ProvidedBy = healthcare.ProvidedBy?.ToReferenceDto(),
+            Location = healthcare.Location?.Select(l => l.ToReferenceDto()).ToList() ?? [],
+            LastUpdated = healthcare.Meta?.LastUpdated?.DateTime
         };
     }
 
     // Convertir CreateHealthcareDto a FHIR HealthcareService
-    public static HealthcareService ToFhirHealthcare(this CreateHealthcareDto createDto)
+    public static HealthcareService ToFhirHealthcare(this CreateHealthcareDto dto)
     {
-        if (createDto == null)
-            throw new ArgumentNullException(nameof(createDto));
+        ArgumentNullException.ThrowIfNull(dto);
 
         var healthcare = new HealthcareService
         {
-            Active = createDto.Active,
-            Name = createDto.Name ?? string.Empty,
-            Comment = createDto.Comment ?? string.Empty,
-            Specialty = createDto.Specialty?.Select(s => new CodeableConcept
-            {
-                Text = s?.Text ?? string.Empty,
-                Coding = s?.Coding?.Select(c => new Coding
-                {
-                    System = c?.System ?? string.Empty,
-                    Code = c?.Code ?? string.Empty,
-                    Display = c?.Display ?? string.Empty,
-                }).ToList() ?? new List<Coding>(),
-            }).ToList() ?? new List<CodeableConcept>(),
-            ProvidedBy = createDto.ProvidedBy == null ? null : new ResourceReference
-            {
-                Identifier = createDto.ProvidedBy?.Identifier == null
-                    ? null
-                    : new Identifier
-                    {
-                        System = createDto.ProvidedBy.Identifier.System,
-                        Value = createDto.ProvidedBy.Identifier.Value
-                    },
-                Reference = createDto.ProvidedBy.Reference ?? string.Empty, // Ej: "Organization/{id}"
-                Display = createDto.ProvidedBy.Display ?? string.Empty,
-                Type = createDto.ProvidedBy.Type,
-            },
-            Location = createDto.Location?.Select(loc => new ResourceReference
-            {
-                Reference = loc?.Reference ?? string.Empty, // Ej: "Location/{id}"
-                Display = loc?.Display ?? string.Empty,
-            }).ToList() ?? new List<ResourceReference>(),
+            Active = dto.Active,
+            Identifier = dto.Identifier?.Select(i => i.ToFhirIdentifier()).ToList() ?? [],
+            Name = dto.Name ?? string.Empty,
+            Comment = dto.Comment ?? string.Empty,
+            Specialty = dto.Specialty?.Select(s => s.ToFhirCodeableConcept()).ToList() ?? [],
+            ProvidedBy = dto.ProvidedBy?.ToFhirReference(),
+            Location = dto.Location?.Select(l => l.ToFhirReference()).ToList() ?? [],
             Meta = new Meta
             {
                 LastUpdated = DateTimeOffset.Now,
@@ -121,159 +66,60 @@ public static class HealthcareExtensions
             }
         };
 
-        // Agregar extensiones personalizadas solo si tienen valor
-        if (!string.IsNullOrEmpty(createDto.Abbreviation))
-        {
-            healthcare.AddExtension(AbbreviationExtensionUrl, new FhirString(createDto.Abbreviation));
-        }
+        if (!string.IsNullOrEmpty(dto.Abbreviation))
+            healthcare.AddOrUpdateExtension(AbbreviationExtensionUrl, new FhirString(dto.Abbreviation));
 
-        healthcare.AddExtension(CostExtensionUrl, new FhirDecimal(createDto.Cost));
+        healthcare.AddOrUpdateExtension(CostExtensionUrl, new FhirDecimal(dto.Cost));
 
         return healthcare;
     }
 
-    // Convertir UpdateHealthcareDto a FHIR HealthcareService
-    public static HealthcareService ApplyUpdate(this HealthcareService existingHealthcare, UpdateHealthcareDto updateDto)
+    // Aplicar UpdateHealthcareDto a un HealthcareService existente
+    public static HealthcareService ApplyUpdate(this HealthcareService existing, UpdateHealthcareDto update)
     {
-        if (existingHealthcare == null)
-            throw new ArgumentNullException(nameof(existingHealthcare));
+        ArgumentNullException.ThrowIfNull(existing);
 
-        if (updateDto == null)
-            return existingHealthcare;
+        if (update.Identifier != null) existing.Identifier = update.Identifier.Select(i => i.ToFhirIdentifier()).ToList();
+        if (update.Active) existing.Active = update.Active;
+        if (!string.IsNullOrEmpty(update.Name)) existing.Name = update.Name;
+        if (!string.IsNullOrEmpty(update.Comment)) existing.Comment = update.Comment;
+        if (update.Specialty != null) existing.Specialty = update.Specialty.Select(s => s.ToFhirCodeableConcept()).ToList();
+        if (update.ProvidedBy != null) existing.ProvidedBy = update.ProvidedBy.ToFhirReference();
+        if (update.Location != null) existing.Location = update.Location.Select(l => l.ToFhirReference()).ToList();
 
-        if (updateDto.Active != true || updateDto.Active != false)
-            existingHealthcare.Active = updateDto.Active;
+        // Extensiones personalizadas
+        if (update.Abbreviation is not null)
+            existing.AddOrUpdateExtension(AbbreviationExtensionUrl, new FhirString(update.Abbreviation));
 
-        if (!string.IsNullOrEmpty(updateDto.Name))
-            existingHealthcare.Name = updateDto.Name;
+        if (update.Cost.HasValue)
+            existing.AddOrUpdateExtension(CostExtensionUrl, new FhirDecimal(update.Cost.Value));
 
-        if (!string.IsNullOrEmpty(updateDto.Comment))
-            existingHealthcare.Comment = updateDto.Comment;
+        // Metadatos
+        existing.Meta ??= new Meta();
+        existing.Meta.LastUpdated = DateTimeOffset.Now;
+        existing.Meta.VersionId = FhirInfrastructureExtensions.IncrementVersion(existing.Meta.VersionId);
 
-        if (updateDto.Specialty != null)
-        {
-            existingHealthcare.Specialty = updateDto.Specialty.Select(s => new CodeableConcept
-            {
-                Text = s?.Text ?? string.Empty,
-                Coding = s?.Coding?.Select(c => new Coding
-                {
-                    System = c?.System ?? string.Empty,
-                    Code = c?.Code ?? string.Empty,
-                    Display = c?.Display ?? string.Empty,
-                }).ToList() ?? new List<Coding>(),
-            }).ToList();
-        }
-
-        if (updateDto.ProvidedBy != null)
-        {
-            existingHealthcare.ProvidedBy = new ResourceReference
-            {
-                Identifier = updateDto.ProvidedBy.Identifier == null
-                    ? null
-                    : new Identifier
-                    {
-                        System = updateDto.ProvidedBy.Identifier.System,
-                        Value = updateDto.ProvidedBy.Identifier.Value
-                    },
-                Reference = updateDto.ProvidedBy.Reference ?? string.Empty,
-                Display = updateDto.ProvidedBy.Display ?? string.Empty,
-                Type = updateDto.ProvidedBy.Type,
-            };
-        }
-
-        if (updateDto.Location != null)
-        {
-            existingHealthcare.Location = updateDto.Location.Select(loc => new ResourceReference
-            {
-                Reference = loc?.Reference ?? string.Empty,
-                Display = loc?.Display ?? string.Empty,
-            }).ToList();
-        }
-
-        // Asegurarse de que las extensiones existen
-        if (existingHealthcare.Extension == null)
-            existingHealthcare.Extension = new List<Extension>();
-
-        // Actualizar o crear extensión de Abbreviation
-        if (updateDto.Abbreviation != null)
-        {
-            var abbreviationExtension = existingHealthcare.Extension.FirstOrDefault(e => e.Url == AbbreviationExtensionUrl);
-            if (abbreviationExtension != null)
-            {
-                abbreviationExtension.Value = new FhirString(updateDto.Abbreviation);
-            }
-            else
-            {
-                existingHealthcare.Extension.Add(new Extension(AbbreviationExtensionUrl, new FhirString(updateDto.Abbreviation)));
-            }
-        }
-
-        // Actualizar o crear extensión de Cost
-        if (updateDto.Cost.HasValue)
-        {
-            var costExtension = existingHealthcare.Extension.FirstOrDefault(e => e.Url == CostExtensionUrl);
-            if (costExtension != null)
-            {
-                costExtension.Value = new FhirDecimal(updateDto.Cost.Value);
-            }
-            else
-            {
-                existingHealthcare.Extension.Add(new Extension(CostExtensionUrl, new FhirDecimal(updateDto.Cost.Value)));
-            }
-        }
-
-        // Actualizar metadatos
-        if (existingHealthcare.Meta == null)
-            existingHealthcare.Meta = new Meta();
-
-        existingHealthcare.Meta.LastUpdated = DateTimeOffset.Now;
-
-        // Incrementar versión
-        if (int.TryParse(existingHealthcare.Meta.VersionId, out var currentVersion))
-            existingHealthcare.Meta.VersionId = (currentVersion + 1).ToString();
-        else
-            existingHealthcare.Meta.VersionId = "2"; // Empezar desde 2 si no hay versión
-
-        return existingHealthcare;
+        return existing;
     }
 
-    // helper methods para manejar extensiones
-    private static string GetStringExtension(this HealthcareService healthcare, string url)
+    // ──────────────────────────────────────────────────
+    // HELPERS
+    // ──────────────────────────────────────────────────
+
+    // Obtener valor string de extensiones personalizadas
+    private static string? GetStringExtension(this DomainResource resource, string url) =>
+        (resource.Extension?.FirstOrDefault(e => e.Url == url)?.Value as FhirString)?.Value;
+
+    // Obtener valor decimal de extensiones personalizadas
+    private static decimal? GetDecimalExtension(this DomainResource resource, string url) =>
+        (resource.Extension?.FirstOrDefault(e => e.Url == url)?.Value as FhirDecimal)?.Value;
+
+    // Añadir o actualizar una extensión personalizada
+    private static void AddOrUpdateExtension(this DomainResource resource, string url, DataType value)
     {
-        // Verificar si healthcare es null
-        if (healthcare == null)
-            return null;
-
-        // Verificar si Extension es null o vacía
-        if (healthcare.Extension == null || !healthcare.Extension.Any())
-            return null;
-
-        var extension = healthcare.Extension.FirstOrDefault(e => e?.Url == url);
-        return (extension?.Value as FhirString)?.Value;
-    }
-
-    private static decimal? GetDecimalExtension(this HealthcareService healthcare, string url)
-    {
-        // Verificar si healthcare es null
-        if (healthcare == null)
-            return null;
-
-        // Verificar si Extension es null o vacía
-        if (healthcare.Extension == null || !healthcare.Extension.Any())
-            return null;
-
-        var extension = healthcare.Extension.FirstOrDefault(e => e?.Url == url);
-        return (extension?.Value as FhirDecimal)?.Value;
-    }
-
-    private static void AddExtension(this HealthcareService healthcare, string url, DataType value)
-    {
-        if (healthcare == null)
-            return;
-
-        if (healthcare.Extension == null)
-            healthcare.Extension = new List<Extension>();
-
-        healthcare.Extension.Add(new Extension(url, value));
+        resource.Extension ??= [];
+        var existing = resource.Extension.FirstOrDefault(e => e.Url == url);
+        if (existing is not null) existing.Value = value;
+        else resource.Extension.Add(new Extension(url, value));
     }
 }

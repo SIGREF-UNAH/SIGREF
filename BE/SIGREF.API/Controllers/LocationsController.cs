@@ -2,10 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Services;
 using SIGREF.API.Extensions;
-using SIGREF.API.Dtos;
-using SIGREF.API.Constants;
 using SIGREF.API.Dtos.Location;
-using SIGREF.API.Services.Location;
+using SIGREF.API.Constants;
 
 namespace SIGREF.API.Controllers;
 
@@ -16,7 +14,7 @@ public class LocationsController(LocationService locationService) : ControllerBa
 {
     // GET: api/locations
     [HttpGet]
-    [Authorize(Roles = Roles.admin)] // Permitido solo para ADMIN
+    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -32,7 +30,7 @@ public class LocationsController(LocationService locationService) : ControllerBa
 
     // GET api/locations/5
     [HttpGet("{id}")]
-    [Authorize(Roles = Roles.cashier)] // Permitido solo para CASHIER
+    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Produces<LocationDto>()]
@@ -47,6 +45,7 @@ public class LocationsController(LocationService locationService) : ControllerBa
     }
 
     [HttpPost]
+    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [Produces<LocationDto>()]
@@ -62,6 +61,7 @@ public class LocationsController(LocationService locationService) : ControllerBa
     }
 
     [HttpPut("{id}")]
+    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -85,6 +85,7 @@ public class LocationsController(LocationService locationService) : ControllerBa
     }
 
     [HttpDelete("{id}")]
+    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteLocation(int id)

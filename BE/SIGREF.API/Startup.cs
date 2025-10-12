@@ -1,11 +1,9 @@
 using Hl7.Fhir.Rest;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using SIGREF.API.Constants;
 using SIGREF.API.Database;
 using SIGREF.API.Services;
-using SIGREF.API.Services.Location;
 using SIGREF.API.Services.Organization;
 using SIGREF.API.Services.Organizations;
 using SIGREF.API.Services.Patient;
@@ -13,7 +11,6 @@ using SIGREF.API.Services.Practitioner;
 using SIGREF.API.Services.PractitionerRole;
 using System.Security.Claims;
 using System.Text.Json;
-
 
 namespace SIGREF.API;
 
@@ -44,7 +41,6 @@ public class Startup
         services.AddScoped<TiposUbicacionSeeder>();
         services.AddScoped<SIGREFSeeder>();
 
-
         // Registrar FhirService (opcional si aún lo necesitas)
         services.AddScoped<LocationService>();
         services.AddScoped<HealthcareService>();
@@ -61,35 +57,6 @@ public class Startup
         // Configuración de PostgreSQL con Aspire
         services.AddNpgsql<SIGREFContext>("hapi");
         services.AddHttpContextAccessor();
-
-        // Configuración de Swagger para JWT
-        services.AddSwaggerGen(c =>
-        {
-            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-            {
-                Name = "Authorization",
-                Type = SecuritySchemeType.Http,
-                Scheme = "Bearer",
-                BearerFormat = "JWT",
-                In = ParameterLocation.Header,
-                Description = "Ingrese 'Bearer' seguido de un espacio y el token JWT"
-            });
-
-            c.AddSecurityRequirement(new OpenApiSecurityRequirement
-            {
-                {
-                    new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference
-                        {
-                            Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                        }
-                    },
-                    new string[] { }
-                }
-            });
-        });
 
         // Configuración de Autenticación con Keycloak
         services.AddAuthentication(options =>
@@ -111,9 +78,10 @@ public class Startup
             {
                 ValidateIssuer = true,
                 ValidateAudience = true,
-                ValidAudiences = new[] { audience, "account" },
-                RoleClaimType = ClaimTypes.Role,
-                NameClaimType = "preferred_username"
+                ValidAudience = audience,
+                ValidIssuer = $"{authority}",
+                NameClaimType = "preferred_username",
+                RoleClaimType = ClaimTypes.Role
             };
 
             // Aquí mapeamos los roles
@@ -126,11 +94,11 @@ public class Startup
                     if (identity != null)
                     {
                         // Lista de roles
-                        var validRoles = new[] {
-                            Roles.admin,
-                            Roles.cashier,
-                            Roles.ti,
-                            Roles.auditor
+                        var validRoles = new[] { 
+                            RolesConstants.admin, 
+                            RolesConstants.cashier, 
+                            RolesConstants.ti, 
+                            RolesConstants.auditor 
                         };
 
                         // --- Roles de Realm ---
@@ -151,7 +119,7 @@ public class Startup
                             }
                         }
 
-                        // --- Roles del Client (sigref-api) ---
+                        // --- Roles del Client ---
                         var resourceAccess = context.Principal.FindFirst("resource_access")?.Value;
                         if (!string.IsNullOrEmpty(resourceAccess))
                         {
@@ -199,10 +167,13 @@ public class Startup
         }
 
         app.UseHttpsRedirection();
-        app.UseRouting();
+
         app.UseCors("CorsPolicy");
 
+        app.UseRouting();
+
         app.UseAuthentication();
+
         app.UseAuthorization();
 
         app.UseEndpoints(endpoints => { endpoints.MapControllers(); });

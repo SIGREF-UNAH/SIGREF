@@ -13,10 +13,10 @@ public static class TerminologyConstants
     public static readonly Dictionary<string, string> RolesAdminConcepts = new()
     {
         // Llave: Constante en Roles.cs
-        [Roles.cashier] = "aux-recepcion",
-        [Roles.admin] = "admin-fondos",
-        [Roles.ti] = "personal-tic",
-        [Roles.auditor] = "auditor-sistema"
+        [RolesConstants.cashier] = "aux-recepcion",
+        [RolesConstants.admin] = "admin-fondos",
+        [RolesConstants.ti] = "personal-tic",
+        [RolesConstants.auditor] = "auditor-sistema"
     };
 
     // Conceptos: Ubicaciones

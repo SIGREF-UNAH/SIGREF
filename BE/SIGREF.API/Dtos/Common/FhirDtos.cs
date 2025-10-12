@@ -6,7 +6,9 @@ namespace SIGREF.API.Dtos.Common
 {
     /* 
         ========== DTOs comunes usados en múltiples entidades FHIR ========== 
+
         En este apartado se colocarán los DTOs que son reutilizables en varias entidades FHIR.
+        Esto ayuda a mantener el código limpio y evita la duplicación.
     */
 
     public class IdentifierDto
