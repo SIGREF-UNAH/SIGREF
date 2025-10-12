@@ -9,13 +9,11 @@ import {
   DeleteOutlined,
   PlusOutlined,
   FilterOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
+import { HealthcareDetailsModal } from "../components/modals";
 
 const { Search } = Input;
-
-// TODO: Modal para ver detalles del servicio
-// TODO: Implementar ProContainer (preguntarle al Maiky)
-// ! Error al editar campo "active", revisar BE
 
 export const HealthcaresPage = () => {
   const {
@@ -25,10 +23,14 @@ export const HealthcaresPage = () => {
     paginationConfig,
     isLoading,
     isError,
+    selectedHealthcare,
+    isModalOpen,
     handleCreate,
     handleEdit,
     handleDelete,
+    handleViewDetails,
     setFilter,
+    handleCloseModal,
   } = useHealthcaresList();
 
   // Columnas de la tabla
@@ -65,8 +67,8 @@ export const HealthcaresPage = () => {
       key: "active",
       width: 60,
       render: (status: boolean) => {
-        const color = status === true ? "green" : "default";
-        const text = status === true ? "Activo" : "Inactivo";
+        const color = status === true ? "green" : "error";
+        const text = status === true ? "✓ Activo" : "✗ Inactivo";
         return <Tag color={color}>{text}</Tag>;
       },
     },
@@ -76,6 +78,12 @@ export const HealthcaresPage = () => {
       width: 120,
       render: (_, record) => (
         <Space size="small">
+          <Button
+            type="text"
+            icon={<EyeOutlined />}
+            onClick={() => handleViewDetails(record)}
+            title="Ver detalles"
+          />
           <Button
             type="text"
             icon={<EditOutlined />}
@@ -190,6 +198,13 @@ export const HealthcaresPage = () => {
           />
         </div>
       )}
+
+      {/* Modal de detalles */}
+      <HealthcareDetailsModal
+        open={isModalOpen}
+        healthcare={selectedHealthcare}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 };

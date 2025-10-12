@@ -80,7 +80,7 @@ public static class HealthcareExtensions
         ArgumentNullException.ThrowIfNull(existing);
 
         if (update.Identifier != null) existing.Identifier = update.Identifier.Select(i => i.ToFhirIdentifier()).ToList();
-        if (update.Active) existing.Active = update.Active;
+        if (update.Active == true || update.Active == false) existing.Active = update.Active;
         if (!string.IsNullOrEmpty(update.Name)) existing.Name = update.Name;
         if (!string.IsNullOrEmpty(update.Comment)) existing.Comment = update.Comment;
         if (update.Specialty != null) existing.Specialty = update.Specialty.Select(s => s.ToFhirCodeableConcept()).ToList();

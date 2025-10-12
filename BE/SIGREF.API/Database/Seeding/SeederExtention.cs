@@ -2,7 +2,7 @@
 using Hl7.Fhir.Rest;
 using SIGREF.API.Constants;
 using SIGREF.API.Database.Seeding;
-using SIGREF.API.Services;
+using SIGREF.API.Services.Common;
 using Task = System.Threading.Tasks.Task;
 
 /// <summary>

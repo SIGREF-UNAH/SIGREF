@@ -8,10 +8,16 @@ import {
   useDeleteApiHealthcaresId,
   useGetApiHealthcares,
 } from "../../../api/healthcares/healthcares";
+import { useState } from "react";
+import type { HealthcareDto } from "../../../api/models";
 
 export function useHealthcaresList() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  // Estado para el modal de detalles
+  const [selectedHealthcare, setSelectedHealthcare] = useState<HealthcareDto | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Obtener datos de la API
   const { data: healthcares, isLoading, isError } = useGetApiHealthcares({});
@@ -58,7 +64,7 @@ export function useHealthcaresList() {
     return matchesSearch && matchesDepartment && matchesStatus;
   });
 
-  // Crear nuevo servicio
+  // Crear
   const handleCreate = () => {
     navigate("/healthcares/create");
   };
@@ -71,6 +77,18 @@ export function useHealthcaresList() {
   // Eliminar
   const handleDelete = (id: string) => {
     deleteHealthcare({ id });
+  };
+
+  // Ver detalles
+  const handleViewDetails = (healthcare: HealthcareDto) => {
+    setSelectedHealthcare(healthcare);
+    setIsModalOpen(true);
+  };
+
+  // Cerrar modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedHealthcare(null);
   };
 
   // Configuración de paginación
@@ -102,9 +120,13 @@ export function useHealthcaresList() {
     paginationConfig,
     isLoading,
     isError,
+    selectedHealthcare,
+    isModalOpen,
     handleCreate,
     handleEdit,
     handleDelete,
     setFilter,
+    handleViewDetails,
+    handleCloseModal,
   };
 }

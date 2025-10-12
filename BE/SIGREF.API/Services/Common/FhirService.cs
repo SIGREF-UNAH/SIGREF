@@ -2,7 +2,7 @@ using Hl7.Fhir.Rest;
 using Microsoft.Extensions.Options;
 using SIGREF.API.Constants;
 
-namespace SIGREF.API.Services;
+namespace SIGREF.API.Services.Common;
 
 /// <summary>
 /// Servicio para interactuar con un servidor FHIR (Fast Healthcare Interoperability Resources).

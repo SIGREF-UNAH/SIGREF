@@ -4,7 +4,7 @@ using Task = System.Threading.Tasks.Task;
 using Hl7.Fhir.Model;
 
 
-namespace SIGREF.API.Services;
+namespace SIGREF.API.Services.Location;
 
 public class LocationService(FhirClient fhirService)
 {

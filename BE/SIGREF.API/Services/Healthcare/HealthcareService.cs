@@ -3,28 +3,28 @@ using Hl7.Fhir.Rest;
 using Task = System.Threading.Tasks.Task;
 
 // Alias para evitar el conflicto de nombres
-using Healthcare = Hl7.Fhir.Model.HealthcareService;
+using FhirHealthcare = Hl7.Fhir.Model.HealthcareService;
 
-namespace SIGREF.API.Services
+namespace SIGREF.API.Services.Healthcare
 {
     public class HealthcareService(FhirClient fhirService)
     {
         // Obtener un servicio médico por id
-        public Task<Healthcare> GetHealthcareByIdAsync(string id)
+        public Task<FhirHealthcare> GetHealthcareByIdAsync(string id)
         {
-            return fhirService.ReadAsync<Healthcare>($"HealthcareService/{id}");
+            return fhirService.ReadAsync<FhirHealthcare>($"HealthcareService/{id}");
         }
 
         // Obtener todos los servicios médicos
-        public async Task<IEnumerable<Healthcare>> GetAllHealthcaresAsync()
+        public async Task<IEnumerable<FhirHealthcare>> GetAllHealthcaresAsync()
         {
-            var searchResult = await fhirService.SearchAsync<Healthcare>();
+            var searchResult = await fhirService.SearchAsync<FhirHealthcare>();
             return searchResult.Entry?.Select(e =>
-                e.Resource as Healthcare).Where(l => l != null) ?? Enumerable.Empty<Healthcare>();
+                e.Resource as FhirHealthcare).Where(l => l != null) ?? Enumerable.Empty<FhirHealthcare>();
         }
 
         // Crear un servicio médico
-        public async Task<Healthcare> CreateHealthcareAsync(Healthcare healthcare)
+        public async Task<FhirHealthcare> CreateHealthcareAsync(FhirHealthcare healthcare)
         {
             // Establecer metadatos
             healthcare.Meta = new Meta
@@ -37,7 +37,7 @@ namespace SIGREF.API.Services
         }
 
         // Editar un servicio médico
-        public async Task<Healthcare> UpdateHealthcareAsync(Healthcare healthcare)
+        public async Task<FhirHealthcare> UpdateHealthcareAsync(FhirHealthcare healthcare)
         {
             // Actualizar metadatos
             if (healthcare.Meta == null)

@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos.Healthcare;
 using SIGREF.API.Extensions;
-using SIGREF.API.Services;
+using SIGREF.API.Services.Healthcare;
 
-namespace SIGREF.API.Controllers
+namespace SIGREF.API.Controllers.Healthcare
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -51,10 +51,7 @@ namespace SIGREF.API.Controllers
             var createdHealthcare = await healthcareService.CreateHealthcareAsync(healthcare);
             var createdHealthcareDto = createdHealthcare.ToDto();
 
-            // BUG: No puedo retornar el recurso creado, por respuesta tardía del servicio de hapi-fhir
-            // return CreatedAtAction(nameof(GetById), new { id = createdHealthcare.Id }, createdHealthcare);
-
-            return Ok(createdHealthcareDto);
+            return CreatedAtAction(nameof(GetById), new { id = createdHealthcare.Id }, createdHealthcare);
         }
 
         [HttpPut("{id}")]
