@@ -1,4 +1,4 @@
-import { Table, Button, Input, Select, Space, Popconfirm, Alert } from "antd";
+import { Table, Button, Input, Select, Space, Popconfirm, Alert, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useHealthcaresList } from "../hooks";
 import { HealthcareHeader } from "../components/ui";
@@ -12,6 +12,10 @@ import {
 } from "@ant-design/icons";
 
 const { Search } = Input;
+
+// TODO: Modal para ver detalles del servicio
+// TODO: Implementar ProContainer (preguntarle al Maiky)
+// ! Error al editar campo "active", revisar BE
 
 export const HealthcaresPage = () => {
   const {
@@ -42,10 +46,11 @@ export const HealthcaresPage = () => {
       width: 200,
     },
     {
-      title: "Area Asistencial",
+      title: "Ubicación(es)",
       key: "area",
       width: 200,
-      render: (_, record) => record.location?.[0]?.display || "-",
+      render: (_, record) => record.location?.map(loc => 
+        loc?.display).filter(Boolean).join(", ") || "-",
     },
     {
       title: "Costo",
@@ -59,11 +64,11 @@ export const HealthcaresPage = () => {
       dataIndex: "active",
       key: "active",
       width: 60,
-      render: (active: boolean) => (active ? 
-        <div className="text-green-600">Activo</div>
-        : 
-        <div className="text-red-600">Inactivo</div>
-      ),
+      render: (status: boolean) => {
+        const color = status === true ? "green" : "default";
+        const text = status === true ? "Activo" : "Inactivo";
+        return <Tag color={color}>{text}</Tag>;
+      },
     },
     {
       title: "Acciones",
