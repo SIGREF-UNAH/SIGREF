@@ -36,9 +36,9 @@ public static class LocationExtensions
             Address = createDto.Address?.ToFhirAddress(),
             Telecom = createDto.Telecom?.Select(t => t.ToFhirContactPoint()).ToList() ?? [],
             //TODO: Revisar PartOf y ManagingOrganization si funciona la relación
-            PartOf = !string.IsNullOrEmpty(createDto.PartOfId) ? new ResourceReference( "Locations/" +createDto.PartOfId) : null,
+            PartOf = !string.IsNullOrEmpty(createDto.PartOfId) ? new ResourceReference("Locations/" + createDto.PartOfId) : null,
             ManagingOrganization = !string.IsNullOrEmpty(createDto.ManagingOrganizationIds)
-                ? new ResourceReference("Organization/"+createDto.ManagingOrganizationIds)
+                ? new ResourceReference("Organization/" + createDto.ManagingOrganizationIds)
                 : null,
             Meta = new Meta
             {

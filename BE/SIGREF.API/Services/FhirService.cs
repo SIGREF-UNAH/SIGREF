@@ -26,12 +26,12 @@ public class FhirService
         var fhirEndpoint = env.Value;
         _fhirClient = new FhirClient(fhirEndpoint.Fhir.BaseUrl, new FhirClientSettings()
 
-            {
-                Timeout = 10000,
-                PreferredFormat = ResourceFormat.Json,
-                VerifyFhirVersion = true,
-                ReturnPreference = ReturnPreference.Minimal,
-            }
+        {
+            Timeout = 10000,
+            PreferredFormat = ResourceFormat.Json,
+            VerifyFhirVersion = true,
+            ReturnPreference = ReturnPreference.Representation,
+        }
         );
     }
 

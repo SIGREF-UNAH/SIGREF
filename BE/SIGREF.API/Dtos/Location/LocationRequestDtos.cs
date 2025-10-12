@@ -10,7 +10,7 @@ namespace SIGREF.API.Dtos.Location;
 
 public class CreateLocationDto
 {
-    [Required] [StringLength(255)] public string Name { get; set; } = string.Empty;
+    [Required][StringLength(255)] public string Name { get; set; } = string.Empty;
 
     public string[] Alias { get; set; } = [];
 

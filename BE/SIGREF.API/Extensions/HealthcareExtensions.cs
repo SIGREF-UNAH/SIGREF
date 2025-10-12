@@ -38,9 +38,9 @@ public static class HealthcareExtensions
             Abbreviation = healthcare.GetStringExtension(AbbreviationExtensionUrl) ?? string.Empty,
             Comment = healthcare.Comment ?? string.Empty,
             Cost = healthcare.GetDecimalExtension(CostExtensionUrl) ?? 0,
-            Specialty = healthcare.Specialty?.Select(s => s.ToDto()).ToList() ?? [],
-            ProvidedBy = healthcare.ProvidedBy?.ToDto(),
-            Location = healthcare.Location?.Select(l => l.ToDto()).ToList() ?? [],
+            Specialty = healthcare.Specialty?.Select(s => s.ToCodeableConceptDto()).ToList() ?? [],
+            ProvidedBy = healthcare.ProvidedBy?.ToReferenceDto(),
+            Location = healthcare.Location?.Select(l => l.ToReferenceDto()).ToList() ?? [],
             LastUpdated = healthcare.Meta?.LastUpdated?.DateTime
         };
     }
