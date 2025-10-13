@@ -1,18 +1,18 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
-import LocationForm from "../../components/ui/LocationForm";
+import { useState } from "react";
+import EditLocation from "../../components/ui/EditFormulario";
 
-export default function Home() {
-  const [activeButton, setActiveButton] = useState<"listar" | "crear" | "editar" | null>("crear");
-
-  const handleButtonClick = (button: "listar" | "crear" | "editar") => {
-    setActiveButton(button);
-  };
-
+ export default function EditLocations() {
+   const [activeButton, setActiveButton] = useState<"listar" | "crear" | "editar" | null>("editar");
+   
+     // Función para manejar el clic en un botón
+     const handleButtonClick = (button: "listar" | "crear" | "editar") => {
+       setActiveButton(button);
+      };
   return (
     <div className="min-h-screen bg-white">
-      <main className="p-6">
-        {/* Header */}
+      <main className="p-6"> 
+       {/* Header */}
         <div className="relative mb-6">
           <div className="flex justify-between items-center relative z-10">
             <h1 className="text-3xl font-bold text-[#333333]">Gestión de Ubicaciones</h1>
@@ -47,10 +47,11 @@ export default function Home() {
             </div>
           </div>
         </div>
-
-        {/* Location Form */}
-        <LocationForm />
+        {/* Formulario de gestión de ubicaciones */}
+        <EditLocation />
       </main>
     </div>
-  );
+      
+  )
 }
+

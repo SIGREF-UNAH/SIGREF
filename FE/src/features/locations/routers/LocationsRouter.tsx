@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router";
 import CreateLocationPage from "../pages/create/CreateLocationPage";
 import LocationListPage from "../pages/list/LocationListPage";
 import LocationDetailsPage from "../pages/list/LocationDetailsPage";
+import EditLocations from "../pages/edit/EditLocation";
 
 const LocationsRouter = () => {
   return (
@@ -14,8 +15,12 @@ const LocationsRouter = () => {
       {/* Ruta para crear una ubicación */}
       <Route path="create" element={<CreateLocationPage />} />  
 
+      {/* Ruta para editar una ubicación */}
+      <Route path="edit/:id" element={<EditLocations />} />
+
       {/* Ruta para ver detalles de una ubicación */}
       <Route path="/details/:id" element={<LocationDetailsPage />} />    
+
     </Routes>
   );
 };
