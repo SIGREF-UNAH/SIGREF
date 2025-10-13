@@ -1,6 +1,6 @@
 import { useKeycloak } from "@react-keycloak/web";
 
-export const Home = () => {
+export const HomePage = () => {
   const { keycloak } = useKeycloak();
 
   return (
@@ -65,6 +65,8 @@ export const Home = () => {
         </button>
       </div>
 
+      {/* Prueba de ProtectedComponent */}
+      
     </div>
   );
 };

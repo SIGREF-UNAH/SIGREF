@@ -18,10 +18,8 @@ import {
   SaveOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
-import { useUrlFilters } from "../../../../shared/hooks";
-import { ServiceIncome } from "./ServiceIncome";
-import { IncomeSummary } from "./IncomeSummary";
-import { ListPatient } from "./ListPatient";
+import { useUrlFilters } from "../../../shared/hooks";
+import { IncomeSummary, ListPatient, ServiceIncome } from "../components";
 
 const { TextArea } = Input;
 const { Text } = Typography;

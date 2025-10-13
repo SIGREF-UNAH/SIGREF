@@ -1,8 +1,8 @@
 import { PageContainer, ProCard, ProTable, type ProColumns } from "@ant-design/pro-components";
 import { Typography, Button, Input } from "antd";
 import { useState } from "react";
-import { useUrlFilters } from "../../../../shared/hooks";
-import { EditIncomeModal } from "../edit";
+import { useUrlFilters } from "../../../shared/hooks";
+import { EditIncomeModal } from "../components/modals";
 interface Income {
   id: number;
   fecha: string;

@@ -8,7 +8,7 @@ import {
 export const HealthcaresRouter = () => {
   return (
     <Routes>
-      <Route path="/*" element={<HealthcaresPage />} />
+      <Route path="/list" element={<HealthcaresPage />} />
       <Route path="/create" element={<CreateHealthcarePage />} />
       <Route path="/update/:id" element={<UpdateHealthcarePage />} />
     </Routes>

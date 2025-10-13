@@ -1,6 +1,10 @@
 import { ProLayout } from "@ant-design/pro-components";
 import { Badge } from "antd/lib";
 import { Link, Outlet } from "react-router";
+import { Dropdown } from "antd";
+import { useKeycloak } from "@react-keycloak/web";
+import { MenusPorRol } from "../../config";
+import { validRoles } from "../../auth";
 import {
   BellOutlined,
   BookOutlined,
@@ -12,10 +16,6 @@ import {
   UserOutlined,
   WarningOutlined,
 } from "@ant-design/icons";
-import { Dropdown } from "antd";
-import { useKeycloak } from "@react-keycloak/web";
-import { MenusPorRol } from "../../config";
-import { rolesMapping } from "../../auth";
 
 export const Layout = () => {
   
@@ -25,8 +25,8 @@ export const Layout = () => {
   const roles = keycloak.tokenParsed?.realm_access?.roles || [];
 
   // Filtrar roles para mostrar solo los que nos interesan
-  const rolesMapeados = roles
-    .map(rol => rolesMapping[rol])
+  const rolesValidos = roles
+    .map(rol => validRoles[rol])
     .filter(rolMapeado => rolMapeado !== undefined);
 
   const name = keycloak.tokenParsed?.name || "Usuario";
@@ -41,7 +41,7 @@ export const Layout = () => {
 
   return (
     <ProLayout
-      title={`SIGREF - Panel ${rolesMapeados}`}
+      title={`SIGREF - Panel de ${rolesValidos}`}
       logo="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Logo_de_SESAL.svg/1200px-Logo_de_SESAL.svg.png"
       layout="top"
       fixedHeader
@@ -50,7 +50,7 @@ export const Layout = () => {
           {logo}
           <div className="felx flex-col">
             <div className="text-xs md:text-sm font-semibold text-general truncate max-w-[150px] md:max-w-none">
-              {`SIGREF - Panel ${rolesMapeados}`}{" "}
+              {`SIGREF - Panel de ${rolesValidos}`}{" "}
             </div>
             <div className="flex items-center gap-2">
               <img
@@ -199,7 +199,7 @@ export const Layout = () => {
               <div className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity">
                 {dom}
                 <div className="flex flex-col leading-none">
-                  <span className="text-xs text-general">{rolesMapeados}</span>
+                  <span className="text-xs text-general">{rolesValidos}</span>
                   <span className="font-medium">{name}</span>
                 </div>
               </div>
@@ -209,7 +209,7 @@ export const Layout = () => {
       }}
       menuHeaderRender={undefined}
       menuDataRender={() =>
-        Object.entries(MenusPorRol[rolesMapeados[0]] || {}).map(([key, items]) => ({
+        Object.entries(MenusPorRol[rolesValidos[0]] || {}).map(([key, items]) => ({
           path: `/${key}`,
           name: key.charAt(0).toUpperCase() + key.slice(1),
           children: items,
