@@ -13,9 +13,9 @@ export function getRolesFromToken(keycloak: Keycloak): string[] {
   return [...realmRoles, ...clientRoles];
 }
 
-export const rolesMapping: Record<string, string> = {
-  "admin": "Administrador",
-  "cashier": "Auxiliar de Caja", 
-  "ti": "Técnico de Informática",
-  "auditor": "Auditoria"
+export const validRoles: Record<string, string> = {
+  admin: "Administrador",
+  cashier: "Auxiliar de Caja", 
+  ti: "Técnico de Informática",
+  auditor: "Auditoria"
 };

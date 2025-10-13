@@ -1,5 +1,5 @@
 import { Card, Typography, Space, Select, Input, Divider } from "antd";
-import { keycloak } from "../../../../auth";
+import { keycloak } from "../../../auth";
 
 export const IncomeSummary = ({
   serie,
