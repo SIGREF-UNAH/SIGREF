@@ -1,97 +1,53 @@
-import { message } from "antd";
-import { useNavigate } from "react-router-dom";
-import { usePostApiPatients } from "../../../api/patients/patients";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { usePostApiPatients, getGetApiPatientsQueryKey } from "../../../api/patients/patients";
 import type { CreatePatientDto } from "../../../api/models";
 
-export function useCreatePatientForm() {
-  const [messageApi, contextHolder] = message.useMessage();
-  const navigate = useNavigate();
+export default function useCreatePatientForm() {
+  const queryClient = useQueryClient();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const mutation = usePostApiPatients({
+  const { mutateAsync: createPatient } = usePostApiPatients({
     mutation: {
       onSuccess: () => {
-        messageApi.success("Paciente guardado exitosamente");
-        navigate("/patients/list");
-      },
-      onError: (error: any) => {
-        console.error("Error al crear paciente:", error);
-        messageApi.error("Error al guardar el paciente. Intente de nuevo.");
+        queryClient.invalidateQueries({ queryKey: getGetApiPatientsQueryKey() });
       },
     },
   });
 
-  const handleFinish = async (formValues: any) => {
-    try {
-      console.log("Valores del formulario:", formValues);
-
-      const payload: CreatePatientDto = {
-        active: true,
-        gender: formValues.genero,
-        birthDate: formValues.fechanacimiento,
-        maritalStatus: formValues.estadoCivil,
-        name: [
-          {
-            use: formValues.tipoNombre,
-            given: [formValues.primerNombre, formValues.segundoNombre].filter(Boolean),
-            family: formValues.apellidos,
-            period: {
-              start: formValues.fechaInicioNombre,
-              end: formValues.fechaExpiracionNombre,
-            },
-          },
-        ],
-        telecom: [
-          {
-            system: formValues.tipoContacto,
-            value: formValues.valor,
-            use: formValues.contactoPreferido ? "preferred" : "home",
-            period: {
-              start: formValues.fechaInicioContacto,
-              end: formValues.fechaExpiracionContacto,
-            },
-          },
-        ],
-        address: [
-          {
-            use: formValues.tipoDireccion,
-            country: formValues.pais,
-            state: formValues.departamento,
-            city: formValues.ciudad,
-            text: formValues.detalleDireccion,
-            period: {
-              start: formValues.fechaRegistro,
-              end: formValues.fechaFinalizacion,
-            },
-          },
-        ],
-        identifier: [
-          {
-            type: formValues.tipoIdentificacion,
-            value: formValues.numeroIdentificacion,
-            assigner: formValues.emisor,
-            period: {
-              start: formValues.fechaExpedicion,
-            },
-          },
-        ],
-      };
-
-      await mutation.mutateAsync({ data: payload });
-    } catch (err) {
-      console.error("Error en handleFinish:", err);
-      messageApi.error("Error interno al procesar el formulario.");
-    }
+  const handleSubmit = async (values: any): Promise<boolean> => {
+  const payload: CreatePatientDto = {
+    gender: values.gender === "0" ? "male" : "female",
+    birthDate: values.fechanacimiento,
+    name: [
+      {
+        use: "official",  
+        given: [values.primerNombre, values.segundoNombre].filter(Boolean),
+        family: values.apellidos,
+        text: `${values.primerNombre} ${values.segundoNombre ?? ""} ${values.apellidos}`.trim(),
+      },
+    ],
+    telecom: [],  
+    address: [],  
+    identifier: [],  
   };
 
-  const handleCancel = () => {
-    messageApi.info("Operación cancelada");
-    navigate("/patients/list");
-  };
+  console.log("Datos enviados al backend:", payload);
 
-  return {
-    handleFinish,
-    handleCancel,
-    contextHolder,
-    isLoading: mutation.isLoading,
-  };
+  setIsSubmitting(true);
+  setError(null);
+
+  try {
+    await createPatient({ data: payload });
+    setIsSubmitting(false);
+    return true;
+  } catch (err: any) {
+    setError(err.message || "Error al crear paciente");
+    setIsSubmitting(false);
+    return false;
+  }
+};
+
+  return { handleSubmit, isSubmitting, error };
 }

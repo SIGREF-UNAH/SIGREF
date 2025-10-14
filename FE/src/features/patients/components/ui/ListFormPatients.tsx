@@ -1,139 +1,68 @@
-import { useState } from "react"
-import { ProForm, ProFormText, ProFormSelect, ProFormDatePicker } from "@ant-design/pro-components"
-import { Button, Table, Tag, Pagination } from "antd"
-import { FilterOutlined, UserOutlined, CopyOutlined } from "@ant-design/icons"
-import type { ColumnsType } from "antd/es/table"
+import { useState } from "react";
+import {
+  ProForm,
+  ProFormText,
+  ProFormSelect,
+  ProFormDatePicker,
+} from "@ant-design/pro-components";
+import { Button, Table, Tag, Pagination } from "antd";
+import { FilterOutlined, UserOutlined, CopyOutlined } from "@ant-design/icons";
+import type { ColumnsType } from "antd/es/table";
+import { useGetApiPatients } from "../../../../api/patients/patients";
+import { Link } from "react-router";
 
 interface Patient {
-  key: string
-  nombre: string
-  identificadorTipo: "DNI" | "PST" | "ID"
-  identificador: string
-  contacto: string
-  nacimiento: string
-  nacionalidad: string
-  genero: string
-  estadoVital: "vivo" | "sin vida"
+  id: string;
+  key: string;
+  nombre: string;
+  identificadorTipo: "DNI" | "PST" | "ID";
+  identificador: string;
+  contacto: string;
+  nacimiento: string;
+  nacionalidad: string;
+  genero: string;
+  estadoVital: "vivo" | "sin vida";
 }
 
-const mockData: Patient[] = [
-  {
-    key: "1",
-    nombre: "Yuvini Perez Andrade Menjivar",
-    identificadorTipo: "DNI",
-    identificador: "0001-2000-12345",
-    contacto: "(+504) 9999-9999",
-    nacimiento: "01/09/2025",
-    nacionalidad: "HN",
-    genero: "H",
-    estadoVital: "vivo",
-  },
-  {
-    key: "2",
-    nombre: "Yuvini Perez Andrade Menjivar",
-    identificadorTipo: "DNI",
-    identificador: "0001-2000-12345",
-    contacto: "(+504) 9999-9999",
-    nacimiento: "01/09/2025",
-    nacionalidad: "GUA",
-    genero: "H",
-    estadoVital: "vivo",
-  },
-  {
-    key: "3",
-    nombre: "Yuvini Perez Andrade Menjivar",
-    identificadorTipo: "PST",
-    identificador: "AE56718K900088",
-    contacto: "(+504) 9999-9999",
-    nacimiento: "01/09/2025",
-    nacionalidad: "GER",
-    genero: "H",
-    estadoVital: "vivo",
-  },
-  {
-    key: "4",
-    nombre: "Yuvini Perez Andrade Menjivar",
-    identificadorTipo: "PST",
-    identificador: "AE56718K900088",
-    contacto: "(+504) 9999-9999",
-    nacimiento: "01/09/2025",
-    nacionalidad: "GER",
-    genero: "H",
-    estadoVital: "vivo",
-  },
-  {
-    key: "5",
-    nombre: "Yuvini Perez Andrade Menjivar",
-    identificadorTipo: "ID",
-    identificador: "AE56718K900088",
-    contacto: "(+504) 9999-9999",
-    nacimiento: "01/09/2025",
-    nacionalidad: "NIC",
-    genero: "H",
-    estadoVital: "vivo",
-  },
-  {
-    key: "6",
-    nombre: "Yuvini Perez Andrade Menjivar",
-    identificadorTipo: "ID",
-    identificador: "AE56718K900088",
-    contacto: "(+504) 9999-9999",
-    nacimiento: "01/09/2025",
-    nacionalidad: "COL",
-    genero: "H",
-    estadoVital: "sin vida",
-  },
-  {
-    key: "7",
-    nombre: "Yuvini Perez Andrade Menjivar",
-    identificadorTipo: "ID",
-    identificador: "AE56718K900088",
-    contacto: "yuvi@gm.ad",
-    nacimiento: "01/09/2025",
-    nacionalidad: "COL",
-    genero: "H",
-    estadoVital: "sin vida",
-  },
-  {
-    key: "8",
-    nombre: "Yuvini Perez Andrade Menjivar",
-    identificadorTipo: "DNI",
-    identificador: "0001-2000-12345",
-    contacto: "juanperez@uaaa",
-    nacimiento: "01/09/2025",
-    nacionalidad: "HN",
-    genero: "H",
-    estadoVital: "vivo",
-  },
-  {
-    key: "9",
-    nombre: "Yuvini Perez Andrade Menjivar",
-    identificadorTipo: "DNI",
-    identificador: "0001-2000-12345",
-    contacto: "(+504) 9999-9999",
-    nacimiento: "01/09/2025",
-    nacionalidad: "GUA",
-    genero: "H",
-    estadoVital: "vivo",
-  },
-]
-
 export default function ListFormPatients() {
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
+  const {
+    data: apiPatients,
+    isLoading,
+    isError,
+    error,
+  } = useGetApiPatients<PatientApi[]>();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const patients: Patient[] =
+    apiPatients?.map((p: PatientApi, index: number) => ({
+      id: p.id || String(index),
+      key: p.id || String(index),
+      nombre:
+        p.name?.[0]?.text ??
+        p.name?.[0]?.given?.join(" ") ??
+        "Nombre no disponible",
+      identificadorTipo: p.identifier?.[0]?.type?.text ?? "DNI",
+      identificador: p.identifier?.[0]?.value || "-",
+      contacto: p.telecom?.[0]?.value || "-",
+      nacimiento: p.birthDate || "-",
+      nacionalidad: p.nationality || "-",
+      genero: p.gender || "-",
+      estadoVital: p.active ? "vivo" : "sin vida",
+    })) || [];
 
   const getIdentificadorColor = (tipo: string) => {
     switch (tipo) {
       case "DNI":
-        return "blue"
+        return "blue";
       case "PST":
-        return "purple"
+        return "purple";
       case "ID":
-        return "red"
+        return "red";
       default:
-        return "default"
+        return "default";
     }
-  }
+  };
 
   const columns: ColumnsType<Patient> = [
     {
@@ -141,6 +70,9 @@ export default function ListFormPatients() {
       dataIndex: "nombre",
       key: "nombre",
       width: 250,
+      render: (_, record) => (
+        <Link to={`/patients/getby/${record.id}`}>{record.nombre}</Link>
+      ),
     },
     {
       title: "Identificador",
@@ -148,7 +80,9 @@ export default function ListFormPatients() {
       width: 200,
       render: (_, record) => (
         <span>
-          <Tag color={getIdentificadorColor(record.identificadorTipo)}>{record.identificadorTipo}:</Tag>
+          <Tag color={getIdentificadorColor(record.identificadorTipo)}>
+            {record.identificadorTipo}:
+          </Tag>
           {record.identificador}
         </span>
       ),
@@ -181,21 +115,25 @@ export default function ListFormPatients() {
       title: "Estado Vital",
       key: "estadoVital",
       width: 120,
-      render: (_, record) => <Tag color={record.estadoVital === "vivo" ? "green" : "red"}>{record.estadoVital}</Tag>,
+      render: (_, record) => (
+        <Tag color={record.estadoVital === "vivo" ? "green" : "red"}>
+          {record.estadoVital}
+        </Tag>
+      ),
     },
-  ]
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="mx-auto max-w-7xl">
-        <h1 className="mb-6 text-3xl font-bold text-gray-900">Gestión de Pacientes</h1>
-
         {/* Información del Paciente Seleccionado */}
         <div className="mb-6 rounded-lg border-2 border-blue-400 bg-white p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <UserOutlined className="text-blue-600" />
-              <span className="text-lg font-medium text-blue-600">Informacion del Paciente Seleccionado</span>
+              <span className="text-lg font-medium text-blue-600">
+                Informacion del Paciente Seleccionado
+              </span>
             </div>
             <Button icon={<CopyOutlined />}>Copiar Datos</Button>
           </div>
@@ -205,12 +143,22 @@ export default function ListFormPatients() {
         <div className="mb-6 rounded-lg border border-gray-300 bg-white p-6">
           <div className="mb-4 flex items-center gap-2">
             <FilterOutlined className="text-gray-600" />
-            <span className="text-lg font-medium text-blue-600">Filtros de Búsqueda</span>
+            <span className="text-lg font-medium text-blue-600">
+              Filtros de Búsqueda
+            </span>
           </div>
 
-          <ProForm submitter={false} layout="horizontal" className="patient-filters">
+          <ProForm
+            submitter={false}
+            layout="horizontal"
+            className="patient-filters"
+          >
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <ProFormText name="nombreCompleto" label="Nombres del Paciente" placeholder="Nombre Completo" />
+              <ProFormText
+                name="nombreCompleto"
+                label="Nombres del Paciente"
+                placeholder="Nombre Completo"
+              />
 
               <ProFormSelect
                 name="tipoIdentificador"
@@ -224,9 +172,15 @@ export default function ListFormPatients() {
               />
 
               <div>
-                <label className="mb-2 block text-sm text-gray-700">Identificador</label>
+                <label className="mb-2 block text-sm text-gray-700">
+                  Identificador
+                </label>
                 <div className="flex gap-2">
-                  <input type="text" placeholder="—" className="flex-1 rounded border border-gray-300 px-3 py-1.5" />
+                  <input
+                    type="text"
+                    placeholder="—"
+                    className="flex-1 rounded border border-gray-300 px-3 py-1.5"
+                  />
                 </div>
               </div>
 
@@ -286,7 +240,11 @@ export default function ListFormPatients() {
                 placeholder="Todos"
               />
 
-              <ProFormText name="contacto" label="Contacto" placeholder="50499919292329" />
+              <ProFormText
+                name="contacto"
+                label="Contacto"
+                placeholder="50499919292329"
+              />
             </div>
           </ProForm>
         </div>
@@ -294,12 +252,14 @@ export default function ListFormPatients() {
         {/* Registro de Pacientes */}
         <div className="rounded-lg border border-gray-300 bg-white p-6">
           <div className="mb-4 flex items-center gap-2">
-            <span className="text-lg font-medium text-blue-600">📋 Registro de Pacientes</span>
+            <span className="text-lg font-medium text-blue-600">
+              📋 Registro de Pacientes
+            </span>
           </div>
 
           <Table
             columns={columns}
-            dataSource={mockData}
+            dataSource={patients}
             pagination={false}
             scroll={{ x: 1200 }}
             className="patient-table"
@@ -308,7 +268,9 @@ export default function ListFormPatients() {
           <div className="mt-4 flex items-center justify-between">
             <span className="text-sm text-gray-600">1-50 of 1,250</span>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">Registros por Página</span>
+              <span className="text-sm text-gray-600">
+                Registros por Página
+              </span>
               <select
                 value={pageSize}
                 onChange={(e) => setPageSize(Number(e.target.value))}
@@ -330,5 +292,5 @@ export default function ListFormPatients() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -5,8 +5,8 @@ import {
   ProFormDatePicker,
   ProFormRadio,
   ProFormGroup,
-} from "@ant-design/pro-components"
-import { Button, Collapse, Space } from "antd"
+} from "@ant-design/pro-components";
+import { Button, Collapse, message, Space } from "antd";
 import {
   GlobalOutlined,
   IdcardOutlined,
@@ -14,14 +14,30 @@ import {
   PhoneOutlined,
   HomeOutlined,
   PlusOutlined,
-} from "@ant-design/icons"
-import type { CollapseProps } from "antd"
-import { useCreatePatientForm } from "../../hook/useCreatePatient";
+} from "@ant-design/icons";
+import type { CollapseProps } from "antd";
+import useCreatePatientForm from "../../hook/useCreatePatient";
+import { Link } from "react-router-dom";
 
-const { Panel } = Collapse
+const { Panel } = Collapse;
 
 export default function CreateFormPatient() {
-  const { handleFinish, handleCancel, contextHolder, isLoading} = useCreatePatientForm();
+  const { handleSubmit, isSubmitting, error } = useCreatePatientForm();
+
+  const [messageApi, contextHolder] = message.useMessage();
+
+  const onFinish = async (values: any) => {
+    const success = await handleSubmit(values);
+    if (success) {
+      messageApi.success("Paciente creado exitosamente");
+    } else {
+      messageApi.error(error ?? "Error al crear el paciente");
+    }
+  };
+
+  const onCancel = () => {
+    messageApi.info("Operación cancelada");
+  };
 
   const nacionalidadContent = (
     <ProFormGroup>
@@ -38,8 +54,8 @@ export default function CreateFormPatient() {
         width="sm"
         rules={[{ required: true, message: "Campo requerido" }]}
         options={[
-          { label: "Masculino", value: "1" },
-          { label: "Femenino", value: "2" },
+          { label: "Masculino", value: "0" },
+          { label: "Femenino", value: "1" },
         ]}
       />
       <ProFormSelect
@@ -59,15 +75,20 @@ export default function CreateFormPatient() {
         label="Estado Vital"
         placeholder="VIVO"
         width="sm"
-        rules={[{ required: true, message: "Campo requerido" }]}
         options={[
           { label: "Vivo", value: "vivo" },
           { label: "Fallecido", value: "fallecido" },
         ]}
       />
-      <ProFormDatePicker name="fechanacimiento" label="Fecha de Nacimiento" placeholder="dd / mm / yyyy" width="md" />
-    </ProFormGroup>  
-  )
+      <ProFormDatePicker
+        name="fechanacimiento"
+        label="Fecha de Nacimiento"
+        placeholder="dd / mm / yyyy"
+        width="md"
+        rules={[{ required: true, message: "Campo requerido" }]}
+      />
+    </ProFormGroup>
+  );
 
   const identificacionesContent = (
     <ProFormGroup>
@@ -89,10 +110,19 @@ export default function CreateFormPatient() {
         width="md"
       />
       <ProFormText name="emisor" label="Emisor" placeholder="SRNP" width="sm" />
-      <ProFormDatePicker name="fechaExpedicion" label="Fecha Expedición" placeholder="dd / mm / yyyy" width="md" />
-      <ProFormRadio.Group name="identificacionPreferida" label=" " options={[{ label: "Preferido", value: true }]} />
+      <ProFormDatePicker
+        name="fechaExpedicion"
+        label="Fecha Expedición"
+        placeholder="dd / mm / yyyy"
+        width="md"
+      />
+      <ProFormRadio.Group
+        name="identificacionPreferida"
+        label=" "
+        options={[{ label: "Preferido", value: true }]}
+      />
     </ProFormGroup>
-  )
+  );
 
   const nombresContent = (
     <ProFormGroup>
@@ -113,14 +143,24 @@ export default function CreateFormPatient() {
         width="md"
         rules={[{ required: true, message: "Campo requerido" }]}
       />
-      <ProFormText name="segundoNombre" label="Segundo Nombre" placeholder="Nombre" width="md" />
+      <ProFormText
+        name="segundoNombre"
+        label="Segundo Nombre"
+        placeholder="Nombre"
+        width="md"
+      />
       <ProFormText
         name="apellidos"
         label="Apellidos"
         placeholder="Apellido Díaz"
         width="md"
       />
-      <ProFormDatePicker name="fechaInicioNombre" label="Fecha de Inicio" placeholder="dd / mm / yyyy" width="md" />
+      <ProFormDatePicker
+        name="fechaInicioNombre"
+        label="Fecha de Inicio"
+        placeholder="dd / mm / yyyy"
+        width="md"
+      />
       <ProFormDatePicker
         name="fechaExpiracionNombre"
         label="Fecha de Expiración"
@@ -128,7 +168,7 @@ export default function CreateFormPatient() {
         width="md"
       />
     </ProFormGroup>
-  )
+  );
 
   const contactoContent = (
     <ProFormGroup>
@@ -148,25 +188,32 @@ export default function CreateFormPatient() {
         label="Codigo de País"
         placeholder="+504"
         width="md"
-        
       />
       <ProFormText
         name="valor"
         label="Valor"
         placeholder="9999-9999"
         width="md"
-        
       />
-      <ProFormDatePicker name="fechaInicioContacto" label="Fecha de Inicio" placeholder="dd / mm / yyyy" width="md" />
+      <ProFormDatePicker
+        name="fechaInicioContacto"
+        label="Fecha de Inicio"
+        placeholder="dd / mm / yyyy"
+        width="md"
+      />
       <ProFormDatePicker
         name="fechaExpiracionContacto"
         label="Fecha de Expiración"
         placeholder="dd / mm / yyyy"
         width="md"
       />
-      <ProFormRadio.Group name="contactoPreferido" label=" " options={[{ label: "Preferido", value: true }]} />
+      <ProFormRadio.Group
+        name="contactoPreferido"
+        label=" "
+        options={[{ label: "Preferido", value: true }]}
+      />
     </ProFormGroup>
-  )
+  );
 
   const direccionesContent = (
     <ProFormGroup>
@@ -223,10 +270,20 @@ export default function CreateFormPatient() {
           style: { width: "100%" },
         }}
       />
-      <ProFormDatePicker name="fechaRegistro" label="Fecha de Registro" placeholder="dd / mm / yyyy" width="md" />
-      <ProFormDatePicker name="fechaFinalizacion" label="Fecha Finalización" placeholder="dd / mm / yyyy" width="md" />
+      <ProFormDatePicker
+        name="fechaRegistro"
+        label="Fecha de Registro"
+        placeholder="dd / mm / yyyy"
+        width="md"
+      />
+      <ProFormDatePicker
+        name="fechaFinalizacion"
+        label="Fecha Finalización"
+        placeholder="dd / mm / yyyy"
+        width="md"
+      />
     </ProFormGroup>
-  )
+  );
 
   const collapseItems: CollapseProps["items"] = [
     {
@@ -244,8 +301,7 @@ export default function CreateFormPatient() {
           size="small"
           icon={<PlusOutlined />}
           onClick={(e) => {
-            e.stopPropagation()
-            messageApi.info("Agregar nacionalidad")
+            e.stopPropagation();
           }}
         >
           Agregar
@@ -267,8 +323,7 @@ export default function CreateFormPatient() {
           size="small"
           icon={<PlusOutlined />}
           onClick={(e) => {
-            e.stopPropagation()
-            messageApi.info("Agregar identificación")
+            e.stopPropagation();
           }}
         >
           Agregar
@@ -290,8 +345,7 @@ export default function CreateFormPatient() {
           size="small"
           icon={<PlusOutlined />}
           onClick={(e) => {
-            e.stopPropagation()
-            messageApi.info("Agregar nombre")
+            e.stopPropagation();
           }}
         >
           Agregar
@@ -313,8 +367,7 @@ export default function CreateFormPatient() {
           size="small"
           icon={<PlusOutlined />}
           onClick={(e) => {
-            e.stopPropagation()
-            messageApi.info("Agregar contacto")
+            e.stopPropagation();
           }}
         >
           Agregar
@@ -336,47 +389,49 @@ export default function CreateFormPatient() {
           size="small"
           icon={<PlusOutlined />}
           onClick={(e) => {
-            e.stopPropagation()
-            messageApi.info("Agregar dirección")
+            e.stopPropagation();
           }}
         >
           Agregar
         </Button>
       ),
     },
-  ]
+  ];
 
   return (
-  <div className="flex flex-col min-h-screen bg-gray-50">
-  {contextHolder}
+    <div className="flex flex-col min-h-screen bg-gray-50">
+      {contextHolder}
 
-  <main className="flex-1 w-full p-8">
-    <h1 className="text-3xl font-bold text-[#333333] mb-8">Gestión de Pacientes</h1>
-
-    <ProForm
-      onFinish={handleFinish}
-      submitter={{
-        render: (_, dom) => (
-          <div className="flex justify-end gap-3 mt-6"> 
-            <Button size="large" onClick={handleCancel}>
-              Cancelar
-            </Button>
-            <Button type="primary" size="large" htmlType="submit" loading={isLoading}>
-              Guardar
-            </Button>
-          </div>
-        ),
-      }}
-    >
-      <Collapse
-        defaultActiveKey={["1", "2", "3", "4", "5"]}
-        items={collapseItems}
-        className="mb-6"
-      />
-    </ProForm>
-  </main>
-</div>
-);
-
+      <main className="flex-1 w-full p-8">
+        <ProForm
+          onFinish={onFinish}
+          submitter={{
+            render: (_, dom) => (
+              <div className="flex justify-end gap-3 mt-6">
+                <Link to={"/patients/list"}>
+                  <Button size="large" onClick={onCancel}>
+                    Cancelar
+                  </Button>
+                </Link>
+                <Button
+                  type="primary"
+                  size="large"
+                  htmlType="submit"
+                  loading={isSubmitting}
+                >
+                  Guardar
+                </Button>
+              </div>
+            ),
+          }}
+        >
+          <Collapse
+            defaultActiveKey={["1", "2", "3", "4", "5"]}
+            items={collapseItems}
+            className="mb-6"
+          />
+        </ProForm>
+      </main>
+    </div>
+  );
 }
-
