@@ -3,6 +3,7 @@ import { Card, Button, Tooltip } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useKeycloak } from "@react-keycloak/web";
 import { ProtectedComponent } from "../components";
+import { validRoles } from "../../auth";
 import {
   DollarOutlined,
   MedicineBoxOutlined,
@@ -12,16 +13,12 @@ import {
   TeamOutlined,
   UserOutlined,
   BarChartOutlined,
-  LogoutOutlined,
-  SettingOutlined,
+  QuestionCircleOutlined,
 } from "@ant-design/icons";
-import { validRoles } from "../../auth";
-
-const cardStyle = "shadow-md rounded-2xl border hover:shadow-lg transition-all duration-300";
-const iconStyle = "text-secondary text-5xl mb-3";
 
 // TODO: Mejorar el diseño y dar funcionalidad a los botones
 // TODO: Investigar si pueden funcionar los shortcuts en Web
+// TODO: Agregar menu de comandos
 
 interface ModuleCardProps {
   title: string;
@@ -41,14 +38,14 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
   const navigate = useNavigate();
 
   return (
-    <Card className={`${cardStyle} flex flex-col items-center justify-between`}>
+    <Card className="shadow-md rounded-2xl border hover:shadow-lg transition-all duration-300 flex flex-col items-center justify-between">
       <Tooltip title={`Atajo: ${shortcut}`}>
         <div className="absolute top-2 right-3 text-xs text-general-secondary select-none">
           {shortcut}
         </div>
       </Tooltip>
       <div className="flex h-35 flex-col items-center justify-center">
-        <div className={iconStyle}>{icon}</div>
+        <div className="text-primary text-5xl mb-3">{icon}</div>
         <h3 className="text-lg font-semibold mb-2 text-center">{title}</h3>
         <p className="text-general-secondary text-center text-sm mb-4 px-2">
           {description}
@@ -59,7 +56,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
           type="primary"
           className="rounded-lg px-6"
           onClick={() => navigate(path)}
-          style={{ backgroundColor: "var(--color-secondary)" }}
+          style={{ backgroundColor: "var(--color-primary)" }}
         >
           Acceder
         </Button>
@@ -82,14 +79,14 @@ export const HomePage: React.FC = () => {
     validRoles[r as keyof typeof validRoles]) || "SIN ROL";
 
   return (
-    <div className="p-8">
+    <div>
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         {/* Mensaje de bienvenida */}
         <div>
           <h1 className="text-2xl font-bold">
             Bienvenido,{" "}
-            <span className="text-secondary capitalize">{userName}</span>
+            <span className="text-primary capitalize">{userName}</span>
           </h1>
           <p className="text-general-secondary text-sm mt-1">
             Rol: <span className="uppercase font-semibold">{userRole}</span>
@@ -98,19 +95,8 @@ export const HomePage: React.FC = () => {
 
         {/* Botones */}
         <div className="flex gap-2">
-          <Button icon={<UserOutlined />} type="default">
-            Ayuda
-          </Button>
-          <Button icon={<SettingOutlined />} type="default">
-            Ajustes
-          </Button>
-          <Button 
-            danger 
-            icon={<LogoutOutlined />} 
-            type="default"
-            onClick={() => keycloak.logout()} 
-          >
-            Salir
+          <Button icon={<QuestionCircleOutlined />} type="default">
+            Atajos
           </Button>
         </div>
       </div>

@@ -13,9 +13,10 @@ import { EventsRouter } from "../features/events/routers";
  export const AppRouter = () => {
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
       <Route element={<Layout />}>
+        {/* Página de Inicio */}
+        <Route path="/" element={<HomePage />} />
 
         {/* Rutas de Ubicaciones */}
         <Route path="/locations/*" element={<LocationsRouter />} />
