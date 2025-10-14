@@ -1,6 +1,6 @@
 import { ProLayout } from "@ant-design/pro-components";
 import { Badge } from "antd/lib";
-import { Link, Outlet } from "react-router";
+import { Link, Outlet, useNavigate } from "react-router";
 import { Dropdown } from "antd";
 import { useKeycloak } from "@react-keycloak/web";
 import { MenusPorRol } from "../../config";
@@ -18,16 +18,16 @@ import {
 } from "@ant-design/icons";
 
 export const Layout = () => {
-  
+  const navigate = useNavigate();
   const { keycloak } = useKeycloak();
-  
+
   // Obtener todos los roles del token
   const roles = keycloak.tokenParsed?.realm_access?.roles || [];
 
   // Filtrar roles para mostrar solo los que nos interesan
   const rolesValidos = roles
-    .map(rol => validRoles[rol])
-    .filter(rolMapeado => rolMapeado !== undefined);
+    .map((rol) => validRoles[rol])
+    .filter((rolMapeado) => rolMapeado !== undefined);
 
   const name = keycloak.tokenParsed?.name || "Usuario";
 
@@ -46,18 +46,21 @@ export const Layout = () => {
       layout="top"
       fixedHeader
       headerTitleRender={(logo) => (
-        <div className="flex items-center gap-2 md:gap-4">
+        <div
+          className="flex items-center gap-2 md:gap-4 hover:cursor-pointer"
+          onClick={() => navigate("/")}
+        >
           {logo}
-          <div className="felx flex-col">
-            <div className="text-xs md:text-sm font-semibold text-general truncate max-w-[150px] md:max-w-none">
-              {`SIGREF - Panel de ${rolesValidos}`}{" "}
-            </div>
+          <div className="flex">
             <div className="flex items-center gap-2">
               <img
                 src="https://krti.cl/wp-content/uploads/2021/04/Logo-Hospital-Final.png"
                 alt="Hospital de Occidente"
                 className="h-6 md:h-8"
               />
+            </div>
+            <div className="ml-4 text-xs md:text-xl font-semibold text-general truncate max-w-[150px] md:max-w-none">
+              {`SIGREF - Panel de ${rolesValidos}`}{" "}
             </div>
           </div>
         </div>
@@ -160,7 +163,7 @@ export const Layout = () => {
       }}
       avatarProps={{
         src: undefined,
-        size: "large",
+        size: "default",
         style: {
           backgroundColor: "#163C65",
           fontSize: "16px",
@@ -209,11 +212,13 @@ export const Layout = () => {
       }}
       menuHeaderRender={undefined}
       menuDataRender={() =>
-        Object.entries(MenusPorRol[rolesValidos[0]] || {}).map(([key, items]) => ({
-          path: `/${key}`,
-          name: key.charAt(0).toUpperCase() + key.slice(1),
-          children: items,
-        }))
+        Object.entries(MenusPorRol[rolesValidos[0]] || {}).map(
+          ([key, items]) => ({
+            path: `/${key}`,
+            name: key.charAt(0).toUpperCase() + key.slice(1),
+            children: items,
+          })
+        )
       }
       menuItemRender={(item, dom) => <Link to={item.path || "/"}>{dom}</Link>}
     >

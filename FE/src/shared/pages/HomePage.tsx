@@ -19,6 +19,7 @@ import {
 // TODO: Mejorar el diseño y dar funcionalidad a los botones
 // TODO: Investigar si pueden funcionar los shortcuts en Web
 // TODO: Agregar menu de comandos
+// TODO: Coincidir diseño de los demas modulos
 
 interface ModuleCardProps {
   title: string;
