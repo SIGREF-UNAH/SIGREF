@@ -13,16 +13,16 @@ import {
   DeleteOutlined,
   ArrowLeftOutlined,
 } from "@ant-design/icons";
-import { useGetApiLocationsId } from "../../../../api/locations/locations";
-import { LocationMode, LocationStatus } from "../../../../api/models";
-import DeleteLocationModal from "../../components/modals/DeleteLocationModal";
+import { useGetApiLocationsId } from "../../../api/locations/locations";
+import DeleteLocationModal from "../components/modals/DeleteLocationModal";
 import {
   useDeleteApiLocationsId,
   getGetApiLocationsQueryKey,
-} from "../../../../api/locations/locations";
+} from "../../../api/locations/locations";
 import { useQueryClient } from "@tanstack/react-query";
 import { BsBuilding, BsGeoAltFill, BsPersonFill } from "react-icons/bs";
 import { BiChevronDown } from "react-icons/bi";
+import { LocationMode, LocationStatus } from "../../../api/models";
 
 const LocationDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -49,10 +49,6 @@ const LocationDetailsPage: React.FC = () => {
 
   const handleDeleteClick = () => {
     setDeleteModalVisible(true);
-  };
-
-  const handleDeleteCancel = () => {
-    setDeleteModalVisible(false);
   };
 
   const handleDelete = async (locationId: number) => {

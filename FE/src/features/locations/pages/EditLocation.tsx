@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import EditLocation from "../../components/ui/EditFormulario";
+import EditLocation from "../components/ui/EditFormulario";
 
  export default function EditLocations() {
    const [activeButton, setActiveButton] = useState<"listar" | "crear" | "editar" | null>("editar");
