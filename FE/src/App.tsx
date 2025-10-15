@@ -5,35 +5,43 @@ import { AbilityProvider } from "./context/AbilityContext";
 import { getRolesFromToken } from "./auth/roles";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AntdConfig } from "./config/components";
+import { Spin } from "antd";
 
 const queryClient = new QueryClient();
 
 function App() {
-
   const { initialized, keycloak } = useKeycloak();
   if (!initialized) {
-    return <div>Cargando...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Spin size="large" />
+      </div>
+    );
   }
 
   if (!keycloak.authenticated) {
     keycloak.login();
-    return <div>Redirigiendo a la página de inicio de sesión...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Redirigiendo a la página de inicio de sesión...
+      </div>
+    );
   }
   const roles = getRolesFromToken(keycloak);
 
   return (
     <QueryClientProvider client={queryClient}>
-    <AntdConfig>
-      <BrowserRouter>
-        <AbilityProvider roles={roles}>
-          <div className="min-h-screen flex flex-col">
-          <main className="flex-1">
-            <AppRouter />
-          </main>
-          </div>
-        </AbilityProvider>
-      </BrowserRouter>
-    </AntdConfig>
+      <AntdConfig>
+        <BrowserRouter>
+          <AbilityProvider roles={roles}>
+            <div className="min-h-screen flex flex-col">
+              <main className="flex-1">
+                <AppRouter />
+              </main>
+            </div>
+          </AbilityProvider>
+        </BrowserRouter>
+      </AntdConfig>
     </QueryClientProvider>
   );
 }
