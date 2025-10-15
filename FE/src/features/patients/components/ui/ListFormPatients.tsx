@@ -195,17 +195,9 @@ export default function ListFormPatients() {
                 placeholder="Todos"
               />
 
-              <ProFormSelect
+               <ProFormText
                 name="nacionalidad"
                 label="Nacionalidad"
-                options={[
-                  { label: "Todos", value: "todos" },
-                  { label: "HN", value: "HN" },
-                  { label: "GUA", value: "GUA" },
-                  { label: "GER", value: "GER" },
-                  { label: "NIC", value: "NIC" },
-                  { label: "COL", value: "COL" },
-                ]}
                 placeholder="Todos"
               />
 

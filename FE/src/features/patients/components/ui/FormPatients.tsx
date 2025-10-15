@@ -48,14 +48,16 @@ export default function CreateFormPatient() {
         width="md"
       />
       <ProFormSelect
-        name="genero"
+        name="gender"
         label="Género"
         placeholder="Seleccione"
         width="sm"
         rules={[{ required: true, message: "Campo requerido" }]}
         options={[
-          { label: "Masculino", value: "0" },
-          { label: "Femenino", value: "1" },
+          { label: "Masculino", value: 1 },
+          { label: "Femenino", value: 2 },
+          { label: "Otro", value: 3 },
+          { label: "Desconocido", value: 0 },
         ]}
       />
       <ProFormSelect
@@ -76,8 +78,8 @@ export default function CreateFormPatient() {
         placeholder="VIVO"
         width="sm"
         options={[
-          { label: "Vivo", value: "vivo" },
-          { label: "Fallecido", value: "fallecido" },
+          { label: "Vivo", value: 1 },
+          { label: "Fallecido", value: 0 },
         ]}
       />
       <ProFormDatePicker
@@ -104,7 +106,7 @@ export default function CreateFormPatient() {
         ]}
       />
       <ProFormText
-        name="numeroIdentificacion"
+        name={["identifier", 0, "value"]}
         label="Número"
         placeholder="0000000000000"
         width="md"
@@ -173,14 +175,22 @@ export default function CreateFormPatient() {
   const contactoContent = (
     <ProFormGroup>
       <ProFormSelect
-        name="tipoContacto"
-        label="Tipo"
-        placeholder="Celular"
+        name={["telecom", 0, "system"]}
+        label="Tipo de contacto"
+        placeholder="Seleccione"
         width="sm"
         options={[
-          { label: "Celular", value: "celular" },
-          { label: "Teléfono", value: "telefono" },
-          { label: "Email", value: "email" },
+          { label: "Teléfono", value: 0 },
+          { label: "Email", value: 1 },
+        ]}
+      />
+      <ProFormSelect
+        name={["telecom", 0, "use"]}
+        label="Uso"
+        options={[
+          { label: "Móvil", value: "mobile" },
+          { label: "Casa", value: "home" },
+          { label: "Trabajo", value: "work" },
         ]}
       />
       <ProFormText
@@ -190,9 +200,9 @@ export default function CreateFormPatient() {
         width="md"
       />
       <ProFormText
-        name="valor"
+        name={["telecom", 0, "value"]}
         label="Valor"
-        placeholder="9999-9999"
+        placeholder="9999-9999 / ejemplo@correo.com"
         width="md"
       />
       <ProFormDatePicker
@@ -228,41 +238,26 @@ export default function CreateFormPatient() {
           { label: "Otro", value: "otro" },
         ]}
       />
-      <ProFormSelect
-        name="pais"
-        label="País"
+      <ProFormText
+        name={["address", 0, "country"]}
+        label="Pais"
         placeholder="Honduras"
         width="md"
-        options={[
-          { label: "Honduras", value: "honduras" },
-          { label: "Guatemala", value: "guatemala" },
-          { label: "El Salvador", value: "el_salvador" },
-        ]}
       />
-      <ProFormSelect
-        name="departamento"
+      <ProFormText
+        name={["address", 0, "state"]}
         label="Departamento"
-        placeholder="Copán"
+        placeholder="Copan"
         width="md"
-        options={[
-          { label: "Copán", value: "copan" },
-          { label: "Cortés", value: "cortes" },
-          { label: "Francisco Morazán", value: "francisco_morazan" },
-        ]}
       />
-      <ProFormSelect
-        name="ciudad"
+      <ProFormText
+        name={["address", 0, "city"]}
         label="Ciudad"
         placeholder="Santa Rosa"
         width="md"
-        options={[
-          { label: "Santa Rosa", value: "santa_rosa" },
-          { label: "San Pedro Sula", value: "san_pedro_sula" },
-          { label: "Tegucigalpa", value: "tegucigalpa" },
-        ]}
       />
       <ProFormText
-        name="detalleDireccion"
+        name={["address", 0, "line", 0]}
         label="Detalle de Ubicación"
         placeholder="Ave 13, Calle 7, Casa 2 planta Azul"
         width="xl"

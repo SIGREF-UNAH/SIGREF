@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { usePostApiPatients, getGetApiPatientsQueryKey } from "../../../api/patients/patients";
+import {
+  usePostApiPatients,
+  getGetApiPatientsQueryKey,
+} from "../../../api/patients/patients";
 import type { CreatePatientDto } from "../../../api/models";
 
 export default function useCreatePatientForm() {
@@ -11,43 +14,85 @@ export default function useCreatePatientForm() {
   const { mutateAsync: createPatient } = usePostApiPatients({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetApiPatientsQueryKey() });
+        queryClient.invalidateQueries({
+          queryKey: getGetApiPatientsQueryKey(),
+        });
       },
     },
   });
 
   const handleSubmit = async (values: any): Promise<boolean> => {
-  const payload: CreatePatientDto = {
-    gender: values.gender === "0" ? "male" : "female",
-    birthDate: values.fechanacimiento,
-    name: [
-      {
-        use: "official",  
-        given: [values.primerNombre, values.segundoNombre].filter(Boolean),
-        family: values.apellidos,
-        text: `${values.primerNombre} ${values.segundoNombre ?? ""} ${values.apellidos}`.trim(),
-      },
-    ],
-    telecom: [],  
-    address: [],  
-    identifier: [],  
+    const payload: CreatePatientDto = {
+      name: [
+        {
+          use: values.tipoNombre === "legal" ? 0 : 1,
+          text: `${values.primerNombre} ${values.apellidos}`,
+          family: values.apellidos,
+          given: [values.primerNombre, values.segundoNombre || ""].filter(
+            Boolean
+          ),
+          prefix: [],
+          suffix: [],
+        },
+      ],
+      gender: Number(values.gender),
+      birthDate: values.fechanacimiento,
+      active: values.estadoVital === 1,
+      telecom: values.telecom?.map((item: any, index: number) => ({
+        system: item.system,
+        use: item.use,
+        value: item.value || "",
+        rank: index + 1,
+      })),
+      address: [
+        {
+          use: 0,
+          type: 0,
+          text: values.address?.[0]?.line?.[0] || "",
+          line: [values.address?.[0]?.line?.[0] || ""],
+          city: values.address?.[0]?.city || "",
+          district: "",
+          state: values.address?.[0]?.state || "",
+          postalCode: "",
+          country: values.address?.[0]?.country || "",
+        },
+      ],
+      identifier: [
+        {
+          use: 0,
+          type: {
+            coding: [
+              {
+                system: "http://terminology.hl7.org/CodeSystem/v2-0203",
+                version: "2.9",
+                code: "ID",
+                display: values.tipoIdentificacion,
+                userSelected: true,
+              },
+            ],
+            text: values.tipoIdentificacion,
+          },
+          system: "https://example.com/identifiers",
+          value: values.identifier?.[0]?.value || "",
+        },
+      ],
+    };
+
+    console.log("Datos enviados al backend:", payload);
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      await createPatient({ data: payload });
+      setIsSubmitting(false);
+      return true;
+    } catch (err: any) {
+      setError(err.message || "Error al crear paciente");
+      setIsSubmitting(false);
+      return false;
+    }
   };
-
-  console.log("Datos enviados al backend:", payload);
-
-  setIsSubmitting(true);
-  setError(null);
-
-  try {
-    await createPatient({ data: payload });
-    setIsSubmitting(false);
-    return true;
-  } catch (err: any) {
-    setError(err.message || "Error al crear paciente");
-    setIsSubmitting(false);
-    return false;
-  }
-};
 
   return { handleSubmit, isSubmitting, error };
 }

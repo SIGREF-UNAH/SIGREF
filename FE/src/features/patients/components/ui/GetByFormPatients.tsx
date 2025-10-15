@@ -59,6 +59,13 @@ export default function GetByPatientsForm() {
       </div>
     );
 
+  const phone =
+    data?.telecom?.find((t) => t.system?.toLowerCase() === "phone")?.value ??
+    "No registrado";
+  const email =
+    data?.telecom?.find((t) => t.system?.toLowerCase() === "email")?.value ??
+    "No registrado";
+
   const selectedPatient = {
     nombre: data?.name?.[0]?.given?.join(" ") ?? "Desconocido",
     apellidos: data?.name?.[0]?.family ?? "Desconocido",
@@ -84,9 +91,9 @@ export default function GetByPatientsForm() {
     dniEmisor: data?.identifier?.[0]?.system ?? "Desconocido",
     pasaporte: data?.identifier?.[1]?.value ?? "No disponible",
     pasaporteEmisor: data?.identifier?.[1]?.system ?? "Desconocido",
-    movil: data?.telecom?.find((t) => t.system === 0)?.value ?? "No registrado",
+    movil: phone,
     preferido: "Preferido",
-    email: data?.telecom?.find((t) => t.system === 1)?.value ?? "No registrado",
+    email: email,
     casaDireccion: data?.address?.[0]?.text ?? "No disponible",
     casaDetalles: `${data?.address?.[0]?.city ?? ""}, ${data?.address?.[0]?.country ?? ""}`,
     trabajoDireccion: data?.address?.[1]?.text ?? "No registrada",
@@ -205,8 +212,7 @@ export default function GetByPatientsForm() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-      </div>
+      <div className="flex items-center justify-between"></div>
 
       {/* Patient Information Card */}
       <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
@@ -422,16 +428,10 @@ export default function GetByPatientsForm() {
                 { label: "Femenino", value: "F" },
               ]}
             />
-            <ProFormSelect
+            <ProFormText
               name="nacionalidad"
               label="Nacionalidad"
               placeholder="Todos"
-              options={[
-                { label: "Todos", value: "todos" },
-                { label: "Honduras", value: "HN" },
-                { label: "Guatemala", value: "GUA" },
-                { label: "Nicaragua", value: "NIC" },
-              ]}
             />
             <ProFormSelect
               name="estadoVital"

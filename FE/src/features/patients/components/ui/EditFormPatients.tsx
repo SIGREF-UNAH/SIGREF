@@ -16,7 +16,10 @@ import {
   PlusOutlined,
 } from "@ant-design/icons";
 import type { CollapseProps } from "antd";
-import { usePutApiPatientsId } from "../../../../api/patients/patients";
+import {
+  usePutApiPatientsId,
+  useGetApiPatientsId,
+} from "../../../../api/patients/patients";
 import { useNavigate, useParams } from "react-router-dom";
 
 const { Panel } = Collapse;
@@ -25,7 +28,7 @@ export default function EditFormPatient() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
-
+  const { data, error } = useGetApiPatientsId(id);
   const { mutate: updatePatient, isLoading } = usePutApiPatientsId({
     mutation: {
       onSuccess: () => {
@@ -45,47 +48,38 @@ export default function EditFormPatient() {
     const updatePatientDto = {
       name: [
         {
-          use: 0, // Legal
-          text: `${values.primerNombre} ${values.segundoNombre || ""} ${values.apellidos}`,
+          use: values.tipoNombre === "legal" ? 0 : 1,
+          text: `${values.primerNombre} ${values.apellidos}`,
           family: values.apellidos,
-          given: [values.primerNombre, values.segundoNombre || ""],
-          prefix: [], // si no tienes un campo para esto
+          given: [values.primerNombre, values.segundoNombre || ""].filter(
+            Boolean
+          ),
+          prefix: [],
           suffix: [],
         },
       ],
-      gender: Number(values.genero) || 0, // 0: Masculino, 1: Femenino
+      gender: Number(values.gender),
       birthDate: values.fechanacimiento,
-      active: true,
-
-      telecom: [
-        {
-          system: 0, // teléfono
-          value: `${values.codigoPais || ""} ${values.valor || ""}`,
-          use: 0, // casa o móvil
-          rank: 1,
-        },
-        {
-          system: 1, // email
-          value: values.email || "",
-          use: 1,
-          rank: 2,
-        },
-      ],
-
+      active: values.estadoVital === 1,
+      telecom: values.telecom?.map((item: any, index: number) => ({
+        system: item.system,
+        use: item.use,
+        value: item.value || "",
+        rank: index + 1,
+      })),
       address: [
         {
           use: 0,
           type: 0,
-          text: `${values.detalleDireccion}, ${values.ciudad}, ${values.departamento}`,
-          line: [values.detalleDireccion],
-          city: values.ciudad,
-          district: values.departamento,
-          state: values.departamento,
-          postalCode: values.codigoPostal || "00000",
-          country: values.pais,
+          text: values.address?.[0]?.line?.[0] || "",
+          line: [values.address?.[0]?.line?.[0] || ""],
+          city: values.address?.[0]?.city || "",
+          district: "",
+          state: values.address?.[0]?.state || "",
+          postalCode: "",
+          country: values.address?.[0]?.country || "",
         },
       ],
-
       identifier: [
         {
           use: 0,
@@ -94,15 +88,15 @@ export default function EditFormPatient() {
               {
                 system: "http://terminology.hl7.org/CodeSystem/v2-0203",
                 version: "2.9",
-                code: "SS",
-                display: "Social Security number",
-                userSelected: false,
+                code: "ID",
+                display: values.tipoIdentificacion,
+                userSelected: true,
               },
             ],
-            text: "Número de Seguro Social",
+            text: values.tipoIdentificacion,
           },
-          system: "https://example.com/identifiers/ssn",
-          value: values.numeroIdentificacion || "",
+          system: "https://example.com/identifiers",
+          value: values.identifier?.[0]?.value || "",
         },
       ],
     };
@@ -118,6 +112,32 @@ export default function EditFormPatient() {
     navigate("/patients/list");
   };
 
+  const initialValues = data
+    ? {
+        primerNombre: data.name?.[0]?.given?.[0] || "",
+        segundoNombre: data.name?.[0]?.given?.[1] || "",
+        apellidos: data.name?.[0]?.family || "",
+        gender: data.gender || 0,
+        estadoVital: data.active ? 1 : 0,
+        fechanacimiento: data.birthDate ? new Date(data.birthDate) : null,
+        tipoIdentificacion: data.identifier?.[0]?.type?.text || "",
+        identifier: [{ value: data.identifier?.[0]?.value || "" }],
+        telecom:
+          data.telecom?.map((t) => ({
+            system: t.system === "Phone" ? 0 : 1,
+            use: t.use?.toLowerCase() || "home",
+            value: t.value,
+          })) || [],
+        address:
+          data.address?.map((a) => ({
+            country: a.country || "",
+            state: a.state || "",
+            city: a.city || "",
+            line: a.line || [""],
+          })) || [],
+      }
+    : {};
+
   const nacionalidadContent = (
     <ProFormGroup>
       <ProFormText
@@ -127,14 +147,16 @@ export default function EditFormPatient() {
         width="md"
       />
       <ProFormSelect
-        name="genero"
+        name="gender"
         label="Género"
         placeholder="Seleccione"
         width="sm"
         rules={[{ required: true, message: "Campo requerido" }]}
         options={[
-          { label: "Masculino", value: "1" },
-          { label: "Femenino", value: "2" },
+          { label: "Masculino", value: 1 },
+          { label: "Femenino", value: 2 },
+          { label: "Otro", value: 3 },
+          { label: "Desconocido", value: 0 },
         ]}
       />
       <ProFormSelect
@@ -155,8 +177,8 @@ export default function EditFormPatient() {
         placeholder="VIVO"
         width="sm"
         options={[
-          { label: "Vivo", value: "vivo" },
-          { label: "Fallecido", value: "fallecido" },
+          { label: "Vivo", value: 1 },
+          { label: "Fallecido", value: 0 },
         ]}
       />
       <ProFormDatePicker
@@ -183,7 +205,7 @@ export default function EditFormPatient() {
         ]}
       />
       <ProFormText
-        name="numeroIdentificacion"
+        name={["identifier", 0, "value"]}
         label="Número"
         placeholder="0000000000000"
         width="md"
@@ -252,14 +274,22 @@ export default function EditFormPatient() {
   const contactoContent = (
     <ProFormGroup>
       <ProFormSelect
-        name="tipoContacto"
-        label="Tipo"
-        placeholder="Celular"
+        name={["telecom", 0, "system"]}
+        label="Tipo de contacto"
+        placeholder="Seleccione"
         width="sm"
         options={[
-          { label: "Celular", value: "celular" },
-          { label: "Teléfono", value: "telefono" },
-          { label: "Email", value: "email" },
+          { label: "Teléfono", value: 0 },
+          { label: "Email", value: 1 },
+        ]}
+      />
+      <ProFormSelect
+        name={["telecom", 0, "use"]}
+        label="Uso"
+        options={[
+          { label: "Móvil", value: "mobile" },
+          { label: "Casa", value: "home" },
+          { label: "Trabajo", value: "work" },
         ]}
       />
       <ProFormText
@@ -269,9 +299,9 @@ export default function EditFormPatient() {
         width="md"
       />
       <ProFormText
-        name="valor"
+        name={["telecom", 0, "value"]}
         label="Valor"
-        placeholder="9999-9999"
+        placeholder="9999-9999 / ejemplo@correo.com"
         width="md"
       />
       <ProFormDatePicker
@@ -307,41 +337,26 @@ export default function EditFormPatient() {
           { label: "Otro", value: "otro" },
         ]}
       />
-      <ProFormSelect
-        name="pais"
-        label="País"
+      <ProFormText
+        name={["address", 0, "country"]}
+        label="Pais"
         placeholder="Honduras"
         width="md"
-        options={[
-          { label: "Honduras", value: "honduras" },
-          { label: "Guatemala", value: "guatemala" },
-          { label: "El Salvador", value: "el_salvador" },
-        ]}
       />
-      <ProFormSelect
-        name="departamento"
+      <ProFormText
+        name={["address", 0, "state"]}
         label="Departamento"
-        placeholder="Copán"
+        placeholder="Copan"
         width="md"
-        options={[
-          { label: "Copán", value: "copan" },
-          { label: "Cortés", value: "cortes" },
-          { label: "Francisco Morazán", value: "francisco_morazan" },
-        ]}
       />
-      <ProFormSelect
-        name="ciudad"
+      <ProFormText
+        name={["address", 0, "city"]}
         label="Ciudad"
         placeholder="Santa Rosa"
         width="md"
-        options={[
-          { label: "Santa Rosa", value: "santa_rosa" },
-          { label: "San Pedro Sula", value: "san_pedro_sula" },
-          { label: "Tegucigalpa", value: "tegucigalpa" },
-        ]}
       />
       <ProFormText
-        name="detalleDireccion"
+        name={["address", 0, "line", 0]}
         label="Detalle de Ubicación"
         placeholder="Ave 13, Calle 7, Casa 2 planta Azul"
         width="xl"
@@ -493,6 +508,7 @@ export default function EditFormPatient() {
 
         <ProForm
           onFinish={handleFinish}
+          initialValues={initialValues}
           submitter={{
             render: (_, dom) => (
               <div className="flex justify-end gap-3 mt-6">
