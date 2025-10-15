@@ -28,11 +28,15 @@ export default function EditLocation() {
   const { data: location, isPending } = useGetApiLocationsId(numericId);
 
   const [form] = ProForm.useForm();
+  const navigate = useNavigate();
 
   const { mutate: updateLocation, isPending: isUpdating } =
     usePutApiLocationsId({
       mutation: {
-        onSuccess: () => message.success("Ubicación actualizada con éxito"),
+        onSuccess: () => {
+          message.success("Ubicación actualizada con éxito");
+          navigate("/locations/list");
+        },
         onError: () => message.error("Error al actualizar la ubicación"),
       },
     });
@@ -54,7 +58,6 @@ export default function EditLocation() {
     }
   }, [location, form]);
 
-  const navigate = useNavigate();
   const addContact = () => {
     setContacts([
       ...contacts,
@@ -68,35 +71,35 @@ export default function EditLocation() {
     }
   };
 
- useEffect(() => {
-  if (location) {
-    form.setFieldsValue({
-      nombreUbicacion: location.name || "",
-      alias: location.alias?.join(", ") || "",
-      tipoFuncion: location.type || "",
-      descripcion: location.description || "",
-      estado: location.status || "active",
-      modo: location.mode || "Instance",
-      direccion: location.address?.line?.[0] || "",
-      ciudad: location.address?.city || "",
-      estadoProvincia: location.address?.state || "",
-      codigoPostal: location.address?.postalCode || "",
-      pais: location.address?.country || "",
-      organizacionResponsable: location.managingOrganizationIds || "",
-      locationPadre: location.partOfId || "",
-    });
-    if (location.contactos && location.contactos.length > 0) {
-      setContacts(
-        location.contactos.map((c, index) => ({
-          id: Date.now().toString() + index,
-          name: c.nombre,
-          phone: c.telefono,
-          email: c.email,
-        }))
-      );
+  useEffect(() => {
+    if (location) {
+      form.setFieldsValue({
+        nombreUbicacion: location.name || "",
+        alias: location.alias?.join(", ") || "",
+        tipoFuncion: location.type || "",
+        descripcion: location.description || "",
+        estado: location.status || "active",
+        modo: location.mode || "Instance",
+        direccion: location.address?.line?.[0] || "",
+        ciudad: location.address?.city || "",
+        estadoProvincia: location.address?.state || "",
+        codigoPostal: location.address?.postalCode || "",
+        pais: location.address?.country || "",
+        organizacionResponsable: location.managingOrganizationIds || "",
+        locationPadre: location.partOfId || "",
+      });
+      if (location.contactos && location.contactos.length > 0) {
+        setContacts(
+          location.contactos.map((c, index) => ({
+            id: Date.now().toString() + index,
+            name: c.nombre,
+            phone: c.telefono,
+            email: c.email,
+          }))
+        );
+      }
     }
-  }
-}, [location, form]);
+  }, [location, form]);
   if (isPending) {
     return (
       <div className="flex justify-center items-center h-64">
