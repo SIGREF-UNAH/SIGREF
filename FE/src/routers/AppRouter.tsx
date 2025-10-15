@@ -3,6 +3,7 @@ import LocationsRouter from "../features/locations/routers/LocationsRouter";
 import { Layout } from "../shared/components";
 import { HealthcaresRouter } from "../features/healthcares/routers";
 import { Home } from "../shared/pages";
+import { EmployeesRouter } from "../features/employees/routers";
 
  export const AppRouter = () => {
   return (
@@ -16,6 +17,9 @@ import { Home } from "../shared/pages";
 
         {/* Rutas de Servicios Médicos */}
         <Route path="/healthcares/*" element={<HealthcaresRouter />} />
+
+        {/* Rutas de Empleados */}
+        <Route path="/employees/*" element={<EmployeesRouter/>}/>
 
       </Route>
     </Routes>
