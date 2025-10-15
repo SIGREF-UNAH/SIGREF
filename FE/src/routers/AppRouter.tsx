@@ -17,7 +17,7 @@ import { EventsRouter } from "../features/events/routers";
       <Route element={<Layout />}>
         {/* Página de Inicio */}
         <Route path="/" element={<HomePage />} />
-
+    
         {/* Rutas de Ubicaciones */}
         <Route path="/locations/*" element={<LocationsRouter />} />
 
