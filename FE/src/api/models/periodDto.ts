@@ -6,6 +6,8 @@
  */
 
 export interface PeriodDto {
-  start?: string;
-  end?: string;
+  /** @nullable */
+  start?: string | null;
+  /** @nullable */
+  end?: string | null;
 }

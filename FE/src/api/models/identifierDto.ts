@@ -5,11 +5,11 @@
  * OpenAPI spec version: 1.0
  */
 import type { IdentifierUse } from "./identifierUse";
+import type { CodeableConceptDto } from "./codeableConceptDto";
 
 export interface IdentifierDto {
   use?: IdentifierUse;
-  /** @nullable */
-  type?: string | null;
+  type?: CodeableConceptDto;
   /** @nullable */
   system?: string | null;
   /** @nullable */
