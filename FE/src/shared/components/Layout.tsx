@@ -1,6 +1,10 @@
 import { ProLayout } from "@ant-design/pro-components";
 import { Badge } from "antd/lib";
-import { Link, Outlet } from "react-router";
+import { Link, Outlet, useNavigate } from "react-router";
+import { Dropdown } from "antd";
+import { useKeycloak } from "@react-keycloak/web";
+import { MenusPorRol } from "../../config";
+import { validRoles } from "../../auth";
 import {
   BellOutlined,
   BookOutlined,
@@ -12,14 +16,19 @@ import {
   UserOutlined,
   WarningOutlined,
 } from "@ant-design/icons";
-import { Dropdown } from "antd";
-import { useKeycloak } from "@react-keycloak/web";
-import { MenusPorRol } from "../../config";
 
 export const Layout = () => {
-  
+  const navigate = useNavigate();
   const { keycloak } = useKeycloak();
+
+  // Obtener todos los roles del token
   const roles = keycloak.tokenParsed?.realm_access?.roles || [];
+
+  // Filtrar roles para mostrar solo los que nos interesan
+  const rolesValidos = roles
+    .map((rol) => validRoles[rol])
+    .filter((rolMapeado) => rolMapeado !== undefined);
+
   const name = keycloak.tokenParsed?.name || "Usuario";
 
   const getInitials = (fullName: string): string => {
@@ -32,23 +41,27 @@ export const Layout = () => {
 
   return (
     <ProLayout
-      title={`SIGREF - Panel ${roles}`}
+      title={`SIGREF - Panel de ${rolesValidos}`}
       logo="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Logo_de_SESAL.svg/1200px-Logo_de_SESAL.svg.png"
       layout="top"
       fixedHeader
+      
       headerTitleRender={(logo) => (
-        <div className="flex items-center gap-2 md:gap-4">
+        <div
+          className="flex items-center gap-2 md:gap-4 hover:cursor-pointer"
+          onClick={() => navigate("/")}
+        >
           {logo}
-          <div className="felx flex-col">
-            <div className="text-xs md:text-sm font-semibold text-general truncate max-w-[150px] md:max-w-none">
-              {`SIGREF - Panel ${roles}`}{" "}
-            </div>
+          <div className="flex">
             <div className="flex items-center gap-2">
               <img
                 src="https://krti.cl/wp-content/uploads/2021/04/Logo-Hospital-Final.png"
                 alt="Hospital de Occidente"
                 className="h-6 md:h-8"
               />
+            </div>
+            <div className="ml-4 mr-8 text-xs md:text-xl font-semibold text-general truncate max-w-[150px] md:max-w-none">
+              {`SIGREF - Panel de ${rolesValidos}`}{" "}
             </div>
           </div>
         </div>
@@ -151,7 +164,7 @@ export const Layout = () => {
       }}
       avatarProps={{
         src: undefined,
-        size: "large",
+        size: "default",
         style: {
           backgroundColor: "#163C65",
           fontSize: "16px",
@@ -190,7 +203,7 @@ export const Layout = () => {
               <div className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity">
                 {dom}
                 <div className="flex flex-col leading-none">
-                  <span className="text-xs text-general">{roles}</span>
+                  <span className="text-xs text-general">{rolesValidos}</span>
                   <span className="font-medium">{name}</span>
                 </div>
               </div>
@@ -200,11 +213,13 @@ export const Layout = () => {
       }}
       menuHeaderRender={undefined}
       menuDataRender={() =>
-        Object.entries(MenusPorRol[roles[0]] || {}).map(([key, items]) => ({
-          path: `/${key}`,
-          name: key.charAt(0).toUpperCase() + key.slice(1),
-          children: items,
-        }))
+        Object.entries(MenusPorRol[rolesValidos[0]] || {}).map(
+          ([key, items]) => ({
+            path: `/${key}`,
+            name: key.charAt(0).toUpperCase() + key.slice(1),
+            children: items,
+          })
+        )
       }
       menuItemRender={(item, dom) => <Link to={item.path || "/"}>{dom}</Link>}
     >
