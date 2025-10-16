@@ -45,6 +45,7 @@ export const Layout = () => {
       logo="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Logo_de_SESAL.svg/1200px-Logo_de_SESAL.svg.png"
       layout="top"
       fixedHeader
+      
       headerTitleRender={(logo) => (
         <div
           className="flex items-center gap-2 md:gap-4 hover:cursor-pointer"
@@ -59,7 +60,7 @@ export const Layout = () => {
                 className="h-6 md:h-8"
               />
             </div>
-            <div className="ml-4 text-xs md:text-xl font-semibold text-general truncate max-w-[150px] md:max-w-none">
+            <div className="ml-4 mr-8 text-xs md:text-xl font-semibold text-general truncate max-w-[150px] md:max-w-none">
               {`SIGREF - Panel de ${rolesValidos}`}{" "}
             </div>
           </div>

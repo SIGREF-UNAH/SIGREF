@@ -53,24 +53,24 @@ export const MenusPorRol: Record<
     empresa?: any[];
   }
 > = {
-  cashier_assistant: {
+  "Auxiliar de Caja": {
     fondos: FondosMenu,
     servicios: ServiciosMenu,
     pacientes: PacientesMenu,
   },
-  auditor: {
+ Administrador: {
     servicios: ServiciosListMenu,
     empleados: EmpleadosListMenu,
     eventos: EventosMenu,
   },
-  admin_1: {
+  Auditoria: {
     fondos: FondosMenu,
     servicios: ServiciosMenu,
     pacientes: PacientesMenu,
     empleados: EmpleadosMenu,
     empresa: EmpresaMenu,
   },
-  ti: {
+  "Técnico de Informática": {
     empleados: EmpleadosMenu,
     eventos: EventosMenu,
     empresa: EmpresaMenu,
