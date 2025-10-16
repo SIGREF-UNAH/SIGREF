@@ -7,5 +7,7 @@ namespace SIGREF.API.Database
         public SIGREFContext(DbContextOptions options) : base(options)
         {
         }
+
+        public DbSet<AuditLog> AuditLogs { get; set; }
     }
 }

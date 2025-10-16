@@ -3,8 +3,11 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using SIGREF.API.Constants;
 using SIGREF.API.Database;
+using SIGREF.API.Middleware;
+using SIGREF.API.Services.AuditLog;
 using SIGREF.API.Services.Common;
 using SIGREF.API.Services.Healthcare;
+using SIGREF.API.Services.Income;
 using SIGREF.API.Services.Location;
 using SIGREF.API.Services.Organization;
 using SIGREF.API.Services.Organizations;
@@ -50,6 +53,8 @@ public class Startup
         services.AddScoped<IPractitionerRoleService, PractitionerRoleService>();
         services.AddScoped<IPractitionerService, PractitionerService>();
         services.AddScoped<IOrganizationService, OrganizationService>();
+        services.AddScoped<IIncomeService, IncomeService>();
+        services.AddScoped<IAuditLogService, AuditLogService>();
 
         services.AddControllers();
         services.AddEndpointsApiExplorer();
@@ -177,6 +182,9 @@ public class Startup
         app.UseAuthentication();
 
         app.UseAuthorization();
+
+        // Middleware de auditoría (después de autenticación)
+        app.UseMiddleware<AuditLogMiddleware>();
 
         app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
     }

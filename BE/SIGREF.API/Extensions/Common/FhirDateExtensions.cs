@@ -1,5 +1,6 @@
 ﻿#nullable enable
 using Hl7.Fhir.Model;
+using System;
 
 namespace SIGREF.API.Extensions.Common
 {
