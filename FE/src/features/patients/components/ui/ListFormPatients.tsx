@@ -71,7 +71,7 @@ export default function ListFormPatients() {
       key: "nombre",
       width: 250,
       render: (_, record) => (
-        <Link to={`/patients/getby/${record.id}`}>{record.nombre}</Link>
+        <Link to={`/patients/details/${record.id}`}>{record.nombre}</Link>
       ),
     },
     {

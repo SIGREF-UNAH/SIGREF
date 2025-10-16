@@ -1,5 +1,3 @@
-"use client";
-
 import {
   ProForm,
   ProFormText,
@@ -35,7 +33,7 @@ interface PatientData {
   estadoVital?: string;
 }
 
-export default function GetByPatientsForm() {
+export default function PatientDetailsForm() {
   const params = useParams();
   const id = params?.id as string;
   const { data, isLoading, error } = useGetApiPatientsId(id);
@@ -125,7 +123,7 @@ export default function GetByPatientsForm() {
       width: 200,
       fixed: "left",
       render: (_, record) => (
-        <Link to={`/patients/getby/${record.id}`}>{record.nombre}</Link>
+        <Link to={`/patients/details/${record.id}`}>{record.nombre}</Link>
       ),
     },
     {
@@ -232,7 +230,7 @@ export default function GetByPatientsForm() {
             >
               Copiar Datos
             </Button>
-            <Link to={`/patients/edit/${id}`}>
+            <Link to={`/patients/update/${id}`}>
               <Button
                 type="primary"
                 icon={<EditOutlined />}

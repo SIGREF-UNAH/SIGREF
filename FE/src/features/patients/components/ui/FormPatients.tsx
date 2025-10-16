@@ -16,7 +16,7 @@ import {
   PlusOutlined,
 } from "@ant-design/icons";
 import type { CollapseProps } from "antd";
-import useCreatePatientForm from "../../hook/useCreatePatient";
+import useCreatePatientForm from "../../hooks/useCreatePatient";
 import { Link } from "react-router-dom";
 
 const { Panel } = Collapse;

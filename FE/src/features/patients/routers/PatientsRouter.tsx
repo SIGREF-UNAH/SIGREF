@@ -1,25 +1,19 @@
 import { Navigate, Route, Routes } from "react-router";
-import ListPatients from "../pages/list/ListPatient";
-import CreatePatients from "../pages/create/CreatePatients";
-import EditPatients from "../pages/edit/EditPatient";
-import GetByPatients from "../pages/list/GetByPatients";
+import {
+  CreatePatient,
+  PatientDetails,
+  PatientsList,
+  UpdatePatient,
+} from "../pages";
 
-const PatientsRouter = () => {
+export const PatientsRouter = () => {
   return (
     <Routes>
-     <Route path="*" element={<Navigate to="list" replace />} />
-
-      {/* Ruta principal para crear pacientes */}
-      <Route path="create" element={<CreatePatients />} />
-      {/* Ruta principal para listar pacientes */}
-      <Route path="list" element={<ListPatients />} />
-      {/* Ruta principal para obtener por id pacientes */}
-      <Route path="getby/:id" element={<GetByPatients />} />
-      {/* Ruta principal para editar pacientes */}
-      <Route path="edit/:id" element={<EditPatients />} />
-   
+      <Route path="*" element={<Navigate to="list" replace />} />
+      <Route path="/create" element={<CreatePatient />} />
+      <Route path="/list" element={<PatientsList />} />
+      <Route path="/details/:id" element={<PatientDetails />} />
+      <Route path="/update/:id" element={<UpdatePatient />} />
     </Routes>
   );
 };
-
-export default PatientsRouter;

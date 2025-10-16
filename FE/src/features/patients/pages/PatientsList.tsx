@@ -1,18 +1,19 @@
+import { Link } from "react-router";
 import { useState } from "react";
-import CreateFormPatient from "../../components/ui/FormPatients";
-import { Link } from "react-router-dom";
+import ListFormPatients from "../components/ui/ListFormPatients";
 
-const CreatePatients = () => {
+export const PatientsList = () => {
   const [activeButton, setActiveButton] = useState<"listar" | "crear" | null>(
-    "crear"
+    "listar"
   );
 
   // Función para manejar el clic en un botón
   const handleButtonClick = (button: "listar" | "crear") => {
     setActiveButton(button);
   };
+  
   return (
-    <div className=" min-h-screen bg-white">
+    <div>
       <main className="flex flex-col gap-6 p-6">
         {/* Header con título a la izquierda y menú a la derecha */}
         <div className="flex justify-between items-center">
@@ -48,14 +49,12 @@ const CreatePatients = () => {
             </Link>
           </div>
         </div>
-
+        
         {/* Formulario */}
         <div className="w-full">
-          <CreateFormPatient />
+          <ListFormPatients />
         </div>
       </main>
     </div>
   );
 };
-
-export default CreatePatients;
