@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router";
 import LocationsRouter from "../features/locations/routers/LocationsRouter";
 import { Layout } from "../shared/components";
+import PatientsRouter from "../features/patients/routers/PatientsRouter";
 import { HealthcaresRouter } from "../features/healthcares/routers";
 import { HomePage } from "../shared/pages";
 import { IncomesRouter } from "../features/incomes/routers";
@@ -20,6 +21,10 @@ import { EventsRouter } from "../features/events/routers";
     
         {/* Rutas de Ubicaciones */}
         <Route path="/locations/*" element={<LocationsRouter />} />
+
+        {/* Rutas de pacientes */}
+        <Route path="/patients/*" element={<PatientsRouter />} />
+        <Route path="*" element={<Home />} />
 
         {/* Rutas de Servicios Médicos */}
         <Route path="/healthcares/*" element={<HealthcaresRouter />} />
