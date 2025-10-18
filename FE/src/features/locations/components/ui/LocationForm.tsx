@@ -10,12 +10,15 @@ import { FaCheck } from "react-icons/fa";
 import { LocationStatus, LocationMode } from "../../../../api/models";
 import { useNavigate } from "react-router-dom";
 import useLocationForm from "../../hooks/useLocationForm";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { BsBuilding, BsGeoAltFill, BsPersonFill } from "react-icons/bs";
+import { Button } from "antd";
+import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 
 export default function LocationForm() {
   const navigate = useNavigate();
   const { handleSubmit, isSubmitting } = useLocationForm();
+   const [contacts, setContacts] = useState([{ id: "1", name: "", phone: "", email: "" }]);
   const formRef = useRef<any>();
 
   const onFinish = async (values: any) => {
@@ -24,7 +27,17 @@ export default function LocationForm() {
       formRef.current?.resetFields();
       navigate("/locations/list");
     } else {
-      console.log("Creado correctamente")
+      console.log("Creado correctamente");
+    }
+  };
+
+   const addContact = () => {
+    setContacts([...contacts, { id: Date.now().toString(), name: "", phone: "", email: "" }]);
+  };
+
+  const removeContact = (id: string) => {
+    if (contacts.length > 1) {
+      setContacts(contacts.filter((contact) => contact.id !== id));
     }
   };
 
@@ -103,7 +116,11 @@ export default function LocationForm() {
                 { label: "Suspendido", value: LocationStatus.NUMBER_2 },
               ]}
               rules={[{ required: true, message: "El estado es obligatorio" }]}
-              fieldProps={{ suffixIcon: <BiChevronDown className="w-4 h-4 text-[#616161]" /> }}
+              fieldProps={{
+                suffixIcon: (
+                  <BiChevronDown className="w-4 h-4 text-[#616161]" />
+                ),
+              }}
             />
           </div>
 
@@ -116,7 +133,11 @@ export default function LocationForm() {
                 { label: "Instance", value: LocationMode.NUMBER_1 },
               ]}
               rules={[{ required: true, message: "El modo es obligatorio" }]}
-              fieldProps={{ suffixIcon: <BiChevronDown className="w-4 h-4 text-[#616161]" /> }}
+              fieldProps={{
+                suffixIcon: (
+                  <BiChevronDown className="w-4 h-4 text-[#616161]" />
+                ),
+              }}
             />
             <ProFormText
               name="type"
@@ -153,26 +174,91 @@ export default function LocationForm() {
             <ProFormText name={["address", "state"]} label="Estado/Provincia" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 md:gap-16 lg:gap-32">
-            <ProFormText name={["address", "postalCode"]} label="Código Postal" />
+            <ProFormText
+              name={["address", "postalCode"]}
+              label="Código Postal"
+            />
             <ProFormText name={["address", "country"]} label="País" />
           </div>
         </section>
 
-        {/* Contacto */}
-        <section className="mt-6">
-          <div className="flex items-center gap-3 mb-6">
-            <BsPersonFill className="w-8 h-8 text-blue-500" />
-            <span className="text-lg font-semibold text-[#333333]">
-              Información de contacto
-            </span>
+        <div className="mb-8 border-t pt-6">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BsPersonFill className="w-8 h-8 text-blue-500" />
+              <span className="text-lg font-semibold text-[#333333]">
+                Información de contacto
+              </span>
+            </div>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={addContact}
+              className="bg-green-500 hover:bg-green-600"
+            >
+              Agregar Contacto
+            </Button>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8 md:gap-16 lg:gap-32">
-            <ProFormText name="managingOrganizationIds" label="Nombre de contacto" />
-            <ProFormText name="phone" label="Teléfono" />
-            <ProFormText name="email" label="Correo Electrónico" />
+          <div className="space-y-4">
+            {contacts.map((contact, index) => (
+              <div
+                key={contact.id}
+                className="grid grid-cols-[1fr_1fr_1fr_auto] items-end gap-4"
+              >
+                <ProFormText
+                  name={`contacto_nombre_${contact.id}`}
+                  label={index === 0 ? "Nombre de contacto" : undefined}
+                  placeholder="Ej. Juan"
+                  initialValue={contact.name}
+                  onChange={(e) =>
+                    setContacts((prev) =>
+                      prev.map((c) =>
+                        c.id === contact.id ? { ...c, name: e.target.value } : c
+                      )
+                    )
+                  }
+                />
+                <ProFormText
+                  name={`contacto_telefono_${contact.id}`}
+                  label={index === 0 ? "Teléfono" : undefined}
+                  placeholder="Ej. +504 4864-5945"
+                  initialValue={contact.phone}
+                  onChange={(e) =>
+                    setContacts((prev) =>
+                      prev.map((c) =>
+                        c.id === contact.id
+                          ? { ...c, phone: e.target.value }
+                          : c
+                      )
+                    )
+                  }
+                />
+                <ProFormText
+                  name={`contacto_email_${contact.id}`}
+                  label={index === 0 ? "Correo electrónico" : undefined}
+                  placeholder="Ej. contacto@hospital.cr"
+                  initialValue={contact.email}
+                  onChange={(e) =>
+                    setContacts((prev) =>
+                      prev.map((c) =>
+                        c.id === contact.id
+                          ? { ...c, email: e.target.value }
+                          : c
+                      )
+                    )
+                  }
+                />
+                <Button
+                  danger
+                  icon={<DeleteOutlined />}
+                  onClick={() => removeContact(contact.id)}
+                  disabled={contacts.length === 1}
+                  className="mb-6"
+                />
+              </div>
+            ))}
           </div>
-        </section>
+        </div>
 
         {/* Jerarquía */}
         <section className="mt-6">
@@ -184,7 +270,10 @@ export default function LocationForm() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 md:gap-16 lg:gap-32">
-            <ProFormText name="managingOrganizationIds" label="Organización responsable" />
+            <ProFormText
+              name="managingOrganizationIds"
+              label="Organización responsable"
+            />
             <ProFormText name="partOfId" label="Parte de (ubicación padre)" />
           </div>
         </section>

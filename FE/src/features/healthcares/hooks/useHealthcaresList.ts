@@ -1,19 +1,20 @@
+import { useState } from "react";
+import { useNavigate } from "react-router";
 import type { TablePaginationConfig } from "antd";
 import { useUrlFilters } from "../../../shared/hooks";
-import { useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { message } from "antd";
+import { useMessage } from "../../../shared/components";
+import type { HealthcareDto } from "../../../api/models";
 import {
   getGetApiHealthcaresQueryKey,
   useDeleteApiHealthcaresId,
   useGetApiHealthcares,
 } from "../../../api/healthcares/healthcares";
-import { useState } from "react";
-import type { HealthcareDto } from "../../../api/models";
 
 export function useHealthcaresList() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const msg = useMessage();
 
   // Estado para el modal de detalles
   const [selectedHealthcare, setSelectedHealthcare] = useState<HealthcareDto | null>(null);
@@ -29,9 +30,9 @@ export function useHealthcaresList() {
         queryClient.invalidateQueries({
           queryKey: getGetApiHealthcaresQueryKey(),
         });
-        message.success("Servicio médico eliminado exitosamente");
+        msg.success("Servicio médico eliminado correctamente");
       },
-      onError: () => message.error("Error al eliminar el servicio médico"),
+      onError: () => msg.error("Error al eliminar el servicio médico"),
     },
   });
 

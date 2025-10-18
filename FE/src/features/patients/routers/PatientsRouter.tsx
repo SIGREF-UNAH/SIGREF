@@ -1,12 +1,19 @@
 import { Navigate, Route, Routes } from "react-router";
+import {
+  CreatePatient,
+  PatientDetails,
+  PatientsList,
+  UpdatePatient,
+} from "../pages";
 
 export const PatientsRouter = () => {
   return (
     <Routes>
       <Route path="*" element={<Navigate to="list" replace />} />
-      {/* <Route path="/list" element={<PatientsListPage />} /> */}
-      {/* <Route path="/create" element={<CreatePatientPage />} /> */}
-      {/* <Route path="/update/:id" element={<UpdatePatientPage />} /> */}
+      <Route path="/create" element={<CreatePatient />} />
+      <Route path="/list" element={<PatientsList />} />
+      <Route path="/details/:id" element={<PatientDetails />} />
+      <Route path="/update/:id" element={<UpdatePatient />} />
     </Routes>
   );
 };

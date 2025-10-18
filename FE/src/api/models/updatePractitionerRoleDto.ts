@@ -9,7 +9,7 @@ import type { PeriodDto } from "./periodDto";
 import type { ReferenceDto } from "./referenceDto";
 import type { CodeableConceptDto } from "./codeableConceptDto";
 
-export interface CreatePractitionerRoleDto {
+export interface UpdatePractitionerRoleDto {
   identifier: IdentifierDto[];
   period?: PeriodDto;
   practitioner: ReferenceDto;
