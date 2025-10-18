@@ -44,36 +44,41 @@ export const ReportsRoutes = [
 export const RoutesByRole: Record<
   string,
   {
-    incomes?: any[];
-    healthcares?: any[];
-    patients?: any[];
-    practitioners?: any[];
-    events?: any[];
-    organizations?: any[];
-    locations?: any[];
-    reports?: any[];
+    fondos?: any[];
+    servicios?: any[];
+    pacientes?: any[];
+    empleados?: any[];
+    eventos?: any[];
+    organizaciones?: any[];
+    ubicaciones?: any[];
+    reportes?: any[];
   }
 > = {
-  cashier: {
-    incomes: IncomesRoutes,
-    healthcares: HealthcaresRoutes,
-    patients: PatientsRoutes,
+  "Administrador": {
+    fondos: IncomesRoutes,
+    servicios: HealthcaresRoutes,
+    organizaciones: OrganizationsRoutes,
+    ubicaciones: LocationsRoutes,
+    reportes: ReportsRoutes,
+    empleados: PractitionersRoutes,
+    pacientes: PatientsRoutes,
+    eventos: EventsRoutes,
   },
-  auditor: {
-    healthcares: HealthcaresRoutes,
-    practitioners: PractitionersRoutes,
-    events: EventsRoutes,
+  "Auditoria": {
+    fondos: IncomesRoutes,
+    servicios: HealthcaresRoutes,
+    empleados: PractitionersRoutes,
+    eventos: EventsRoutes,
   },
-  admin: {
-    incomes: IncomesRoutes,
-    healthcares: HealthcaresRoutes,
-    patients: PatientsRoutes,
-    practitioners: PractitionersRoutes,
-    organizations: OrganizationsRoutes,
+  "Auxiliar de Caja": {
+    fondos: IncomesRoutes,
+    servicios: HealthcaresRoutes,
+    pacientes: PatientsRoutes,
   },
-  ti: {
-    practitioners: PractitionersRoutes,
-    events: EventsRoutes,
-    organizations: OrganizationsRoutes,
+  "Técnico de Informática": {
+    organizaciones: OrganizationsRoutes,
+    ubicaciones: LocationsRoutes,
+    empleados: PractitionersRoutes,
+    eventos: EventsRoutes,
   },
 };
