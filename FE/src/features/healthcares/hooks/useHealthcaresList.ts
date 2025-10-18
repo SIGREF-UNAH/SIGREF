@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import type { TablePaginationConfig } from "antd";
 import { useUrlFilters } from "../../../shared/hooks";
 import { useQueryClient } from "@tanstack/react-query";
-import { useMessage } from "../../../shared/components";
+import { useMessage } from "../../../shared/hooks";
 import type { HealthcareDto } from "../../../api/models";
 import {
   getGetApiHealthcaresQueryKey,

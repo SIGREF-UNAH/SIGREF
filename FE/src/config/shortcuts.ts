@@ -2,18 +2,19 @@ import type { NavigateFunction } from "react-router";
 
 export interface ShortcutConfig {
   keys: string;
+  title: string;
   description: string;
+  roles: string[];
   action: (
     navigate: NavigateFunction,
     setShowHelp?: (show: boolean) => void
   ) => void;
-  roles: string[];
   category: string;
 }
 
 export interface ShortcutSection {
   title: string;
-  roles: string[];
+  category: string;
   shortcuts: {
     keys: string;
     description: string;
@@ -26,29 +27,33 @@ export const appShortcuts: ShortcutConfig[] = [
     keys: "ctrl+f",
     description: "Lista de Ingresos",
     action: (navigate) => navigate("/incomes/list"),
+    title: "Gestión de Fondos",
+    category: "incomes",
     roles: ["admin", "cashier", "auditor"],
-    category: "Gestión de Fondos",
   },
   {
     keys: "ctrl+shift+f",
     description: "Generar ingreso",
     action: (navigate) => navigate("/incomes/create"),
+    title: "Gestión de Fondos",
+    category: "incomes",
     roles: ["admin", "cashier", "auditor"],
-    category: "Gestión de Fondos",
   },
   {
     keys: "ctrl+f+c",
     description: "Cierre de caja",
     action: (navigate) => navigate("/incomes/close"),
+    title: "Gestión de Fondos",
+    category: "incomes",
     roles: ["admin", "cashier", "auditor"],
-    category: "Gestión de Fondos",
   },
   {
     keys: "ctrl+f+h",
     description: "Historial de cierres",
     action: (navigate) => navigate("/incomes/history"),
+    title: "Gestión de Fondos",
+    category: "incomes",
     roles: ["admin", "cashier", "auditor"],
-    category: "Gestión de Fondos",
   },
 
   // Gestión de Servicios
@@ -56,15 +61,17 @@ export const appShortcuts: ShortcutConfig[] = [
     keys: "ctrl+s",
     description: "Listar servicios",
     action: (navigate) => navigate("/healthcares/list"),
+    title: "Gestión de Servicios",
+    category: "healthcares",
     roles: ["admin", "cashier", "auditor"],
-    category: "Gestión de Servicios",
   },
   {
     keys: "ctrl+shift+s",
     description: "Crear servicio",
     action: (navigate) => navigate("/healthcares/create"),
+    title: "Gestión de Servicios",
+    category: "healthcares",
     roles: ["admin", "cashier", "auditor"],
-    category: "Gestión de Servicios",
   },
 
   // Gestión de Organizaciones
@@ -72,15 +79,17 @@ export const appShortcuts: ShortcutConfig[] = [
     keys: "ctrl+o",
     description: "Listar organizaciones",
     action: (navigate) => navigate("/organizations/list"),
+    title: "Gestión de Organizaciones",
+    category: "organizations",
     roles: ["admin", "ti"],
-    category: "Gestión de Organizaciones",
   },
   {
     keys: "ctrl+shift+o",
     description: "Crear organización",
     action: (navigate) => navigate("/organizations/create"),
+    title: "Gestión de Organizaciones",
+    category: "organizations",
     roles: ["admin", "ti"],
-    category: "Gestión de Organizaciones",
   },
 
   // Gestión de Ubicaciones
@@ -88,15 +97,17 @@ export const appShortcuts: ShortcutConfig[] = [
     keys: "ctrl+u",
     description: "Listar ubicaciones",
     action: (navigate) => navigate("/locations/list"),
+    title: "Gestión de Ubicaciones",
+    category: "locations",
     roles: ["admin", "ti"],
-    category: "Gestión de Ubicaciones",
   },
   {
     keys: "ctrl+shift+u",
     description: "Crear ubicación",
     action: (navigate) => navigate("/locations/create"),
+    title: "Gestión de Ubicaciones",
+    category: "locations",
     roles: ["admin", "ti"],
-    category: "Gestión de Ubicaciones",
   },
 
   // Gestión de Reportes
@@ -104,22 +115,25 @@ export const appShortcuts: ShortcutConfig[] = [
     keys: "ctrl+r",
     description: "Control de reportes",
     action: (navigate) => navigate("/reports/list"),
+    title: "Gestión de Reportes",
+    category: "reports",
     roles: ["admin"],
-    category: "Gestión de Reportes",
   },
   {
     keys: "ctrl+shift+r",
     description: "Generar reporte",
     action: (navigate) => navigate("/reports/create"),
+    title: "Gestión de Reportes",
+    category: "reports",
     roles: ["admin"],
-    category: "Gestión de Reportes",
   },
   {
     keys: "ctrl+r+h",
     description: "Historial de reportes",
     action: (navigate) => navigate("/reports/history"),
+    title: "Gestión de Reportes",
+    category: "reports",
     roles: ["admin"],
-    category: "Gestión de Reportes",
   },
 
   // Gestión de Empleados
@@ -127,15 +141,17 @@ export const appShortcuts: ShortcutConfig[] = [
     keys: "ctrl+e",
     description: "Listar empleados",
     action: (navigate) => navigate("/practitioners/list"),
+    title: "Gestión de Empleados",
+    category: "practitioners",
     roles: ["admin", "ti", "auditor"],
-    category: "Gestión de Empleados",
   },
   {
     keys: "ctrl+shift+e",
     description: "Crear empleado",
     action: (navigate) => navigate("/practitioners/create"),
+    title: "Gestión de Empleados",
+    category: "practitioners",
     roles: ["admin", "ti", "auditor"],
-    category: "Gestión de Empleados",
   },
 
   // Gestión de Pacientes
@@ -143,15 +159,17 @@ export const appShortcuts: ShortcutConfig[] = [
     keys: "ctrl+p",
     description: "Listar pacientes",
     action: (navigate) => navigate("/patients/list"),
+    title: "Gestión de Pacientes",
+    category: "patients",
     roles: ["admin", "cashier"],
-    category: "Gestión de Pacientes",
   },
   {
     keys: "ctrl+shift+p",
     description: "Crear paciente",
     action: (navigate) => navigate("/patients/create"),
+    title: "Gestión de Pacientes",
+    category: "patients",
     roles: ["admin", "cashier"],
-    category: "Gestión de Pacientes",
   },
 
   // Gestión de Eventos/Logs
@@ -159,7 +177,8 @@ export const appShortcuts: ShortcutConfig[] = [
     keys: "ctrl+l",
     description: "Control de eventos/logs",
     action: (navigate) => navigate("/events/list"),
-    roles: ["admin", "ti", "auditor"],
-    category: "Gestión de Eventos/Logs",
+    title: "Gestión de Eventos/Logs",
+    category: "events",
+     roles: ["admin", "ti", "auditor"],
   },
 ];

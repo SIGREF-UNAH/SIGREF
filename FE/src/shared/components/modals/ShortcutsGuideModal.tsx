@@ -1,6 +1,6 @@
 import { Modal } from "antd";
-import { ProtectedComponent } from "../ProtectedComponent";
-import { appShortcuts, type ShortcutSection } from "../../../config";
+import { appShortcuts, useAbility, type ShortcutSection } from "../../../config";
+import { Can } from "@casl/react";
 
 interface ShortcutsGuideModalProps {
   open: boolean;
@@ -11,9 +11,10 @@ export const ShortcutsGuideModal = ({
   open,
   onClose,
 }: ShortcutsGuideModalProps) => {
+  const ability = useAbility();
   
   const shortcutSections: ShortcutSection[] = appShortcuts.reduce((sections, shortcut) => {
-    const existingSection = sections.find(section => section.title === shortcut.category);
+    const existingSection = sections.find(section => section.title === shortcut.title);
     
     const shortcutItem = {
       keys: shortcut.keys.split(', ')[0], // Tomar la primera combinación de teclas
@@ -24,8 +25,8 @@ export const ShortcutsGuideModal = ({
       existingSection.shortcuts.push(shortcutItem);
     } else {
       sections.push({
-        title: shortcut.category,
-        roles: shortcut.roles,
+        title: shortcut.title,
+        category: shortcut.category,
         shortcuts: [shortcutItem]
       });
     }
@@ -48,7 +49,7 @@ export const ShortcutsGuideModal = ({
     >
       <div className="grid grid-cols-3 gap-6 p-4">
         {shortcutSections.map((section, index) => (
-          <ProtectedComponent key={index} allowedRoles={section.roles}>
+          <Can key={index} I="read" a={section.category} ability={ability}>
             <div className="border rounded-lg p-4 bg-gray-50">
               <h3 className="font-semibold text-base mb-3 text-general border-b pb-2">
                 {section.title}
@@ -66,7 +67,7 @@ export const ShortcutsGuideModal = ({
                 ))}
               </div>
             </div>
-          </ProtectedComponent>
+          </Can>
         ))}
       </div>
     </Modal>

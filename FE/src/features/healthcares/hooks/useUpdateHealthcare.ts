@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { useMessage } from "../../../shared/components";
+import { useMessage } from "../../../shared/hooks";
 import type { UpdateHealthcareDto } from "../../../api/models";
 import {
   getGetApiHealthcaresQueryKey,

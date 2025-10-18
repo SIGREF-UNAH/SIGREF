@@ -2,7 +2,7 @@ import { useNavigate } from "react-router";
 import type { CreateHealthcareDto } from "../../../api/models";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetApiHealthcaresQueryKey, usePostApiHealthcares } from "../../../api/healthcares/healthcares";
-import { useMessage } from "../../../shared/components";
+import { useMessage } from "../../../shared/hooks";
 
 export function useCreateHealthcare() {
   const navigate = useNavigate();

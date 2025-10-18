@@ -37,9 +37,9 @@ export const LocationsRoutes = [
 ];
 
 export const ReportsRoutes = [
-  { path: "/organizations/list", name: "Control de Reportes" },
-  { path: "/organizations/create", name: "Generar Reporte" },
-  { path: "/organizations/history", name: "Historial de Reportes" },
+  { path: "/reports/list", name: "Control de Reportes" },
+  { path: "/reports/create", name: "Generar Reporte" },
+  { path: "/reports/history", name: "Historial de Reportes" },
 ];
 
 // Rutas validas para cada rol

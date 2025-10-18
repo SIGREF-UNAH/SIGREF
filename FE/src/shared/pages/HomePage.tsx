@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { useKeycloak } from "@react-keycloak/web";
 import { validRoles } from "../../auth";
 import { ShortcutsGuideModal } from "../components/modals";
+import { useAbility } from "../../config";
+import { Can } from "@casl/react"
 import {
   DollarOutlined,
   MedicineBoxOutlined,
@@ -15,8 +17,6 @@ import {
   BarChartOutlined,
   QuestionCircleOutlined,
 } from "@ant-design/icons";
-import { useAbility } from "../../config";
-import { Can } from "@casl/react"
 
 interface ModuleCardProps {
   title: string;
@@ -26,6 +26,7 @@ interface ModuleCardProps {
   path: string;
 }
 
+// Card de módulo
 const ModuleCard: React.FC<ModuleCardProps> = ({
   title,
   description,
@@ -108,19 +109,18 @@ export const HomePage: React.FC = () => {
       {/* Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {/* Gestión de Fondos */}
-        <Can I="read" a="Fondos" ability={ability}>
-
+        <Can I="read" a="incomes" ability={ability}>
           <ModuleCard
             title="Gestión de Fondos"
             description={"Recepción y gestión de fondos e ingresos monetarios"}
             icon={<DollarOutlined />}
             shortcut="Ctrl + F"
             path="/incomes/list"
-            />
+          />
         </Can>
 
         {/* Gestión de Servicios Médicos */}
-        <Can I="read" a="Servicios" ability={ability}>
+        <Can I="read" a="healthcares" ability={ability}>
           <ModuleCard
             title="Gestión de Servicios"
             description={"Administre los servicios médicos que se ofrecen a los pacientes"}
@@ -131,7 +131,7 @@ export const HomePage: React.FC = () => {
         </Can>
 
         {/* Gestión de Organizaciones */}
-        <Can I="read" a="Organizaciones" ability={ability}>
+        <Can I="read" a="organizations" ability={ability}>
           <ModuleCard
             title="Gestión de Organizaciones"
             description={"Gestione las organizaciones que contribuyen al hospital"}
@@ -142,7 +142,7 @@ export const HomePage: React.FC = () => {
         </Can>
 
         {/* Gestión de Ubicaciones */}
-        <Can I="read" a="Ubicaciones" ability={ability}>
+        <Can I="read" a="locations" ability={ability}>
           <ModuleCard
             title="Gestión de Ubicaciones"
             description={"Administre las áreas donde se ofrecen los servicios médicos"}
@@ -153,7 +153,7 @@ export const HomePage: React.FC = () => {
         </Can>
 
         {/* Gestión de Reportes */}
-        <Can I="read" a="Reportes" ability={ability}>
+        <Can I="read" a="reports" ability={ability}>
           <ModuleCard
             title="Gestión de Reportes"
             description={"Genere informes financieros, estadísticos y análisis comparativos"}
@@ -164,7 +164,7 @@ export const HomePage: React.FC = () => {
         </Can>
 
         {/* Gestión de Empleados */}
-        <Can I="read" a="Empleados" ability={ability}>
+        <Can I="read" a="practitioners" ability={ability}>
           <ModuleCard
             title="Gestión de Empleados"
             description={"Lleve a cabo las tareas de gestión de los empleados del hospital"}
@@ -175,7 +175,7 @@ export const HomePage: React.FC = () => {
         </Can>
         
         {/* Gestión de Pacientes */}
-        <Can I="read" a="Pacientes" ability={ability}>
+        <Can I="read" a="patients" ability={ability}>
           <ModuleCard
             title="Gestión de Pacientes"
             description={"Administre los pacientes que se encuentran en el hospital"}
@@ -186,7 +186,7 @@ export const HomePage: React.FC = () => {
         </Can>
         
         {/* Gestión de Eventos/Logs */}
-        <Can I="read" a="Eventos" ability={ability}>
+        <Can I="read" a="events" ability={ability}>
           <ModuleCard
             title="Gestión de Eventos/Logs"
             description={"Visualiza los eventos y los registros del sistema"}
