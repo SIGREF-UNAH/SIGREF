@@ -21,15 +21,16 @@ public class PractitionerController : ControllerBase
 
 
     // GET: api/practitioner
-    [HttpGet]
+    [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces("application/json")]
-    public async Task<IActionResult> Get()
+    public async Task<IActionResult> GetFiltered([FromQuery] PractitionerFilterDto filter)
     {
-        var practitioners = await _practitionerService.GetAllPractitionersAsync();
+        var practitioners = await _practitionerService.GetFilteredPractitionersAsync(filter);
         return Ok(practitioners);
     }
+    
     // GET: api/practitioner/{id}
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]

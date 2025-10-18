@@ -28,13 +28,13 @@ public class PatientsController : ControllerBase
     /// <summary>
     /// Obtiene todos los pacientes registrados.
     /// </summary>
-    [HttpGet]
+    [HttpGet()]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces("application/json")]
-    public async Task<IActionResult> Get()
+    public async Task<IActionResult> GetFiltered([FromQuery] PatientFilterDto filter)
     {
-        var patients = await _patientService.GetAllPatientsAsync();
+        var patients = await _patientService.GetFilteredPatientsAsync(filter);
         return Ok(patients);
     }
 

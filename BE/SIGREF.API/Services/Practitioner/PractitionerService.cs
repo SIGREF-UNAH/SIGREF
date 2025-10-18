@@ -72,5 +72,27 @@ public class PractitionerService : IPractitionerService
         var result = await _fhirClient.UpdateAsync(dto);
         return result;
     }
+
+    // Filtrar
+    public async Task<IEnumerable<PractitionerDto>> GetFilteredPractitionersAsync(PractitionerFilterDto filter)
+    {
+        var searchParams = new SearchParams();
+
+        if (!string.IsNullOrWhiteSpace(filter.Name))
+            searchParams.Add("name", filter.Name);
+
+        if (filter.Active.HasValue)
+            searchParams.Add("active", filter.Active.Value.ToString().ToLowerInvariant());
+
+        if (filter.Gender.HasValue)
+            searchParams.Add("gender", filter.Gender.Value.ToString().ToLowerInvariant());
+
+        var bundle = await _fhirClient.SearchAsync<FhirPractitioner>(searchParams);
+
+        return bundle.Entry?
+                .Select(e => (e.Resource as FhirPractitioner)?.ToDto())
+                .Where(dto => dto != null)
+                .ToList() ?? Enumerable.Empty<PractitionerDto>();
+    }
 }
 

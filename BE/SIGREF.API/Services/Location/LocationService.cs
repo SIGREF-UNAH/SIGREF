@@ -2,13 +2,22 @@ using FhirLocation = Hl7.Fhir.Model.Location;
 using Hl7.Fhir.Rest;
 using Task = System.Threading.Tasks.Task;
 using Hl7.Fhir.Model;
-
+using SIGREF.API.Services.Common;
+using SIGREF.API.Dtos.Location;
+using System.Runtime.Serialization;
 
 namespace SIGREF.API.Services.Location;
 
-public class LocationService(FhirClient fhirService)
+public class LocationService
 {
-    private const string ResourceType = nameof(Location);
+    private readonly FhirClient _fhirClient;
+
+    public LocationService(FhirService fhirService)
+    {
+        _fhirClient = fhirService.GetFhirClient();
+    }
+
+    private const string ResourceType = nameof(FhirLocation);
     /// <summary>
     /// Obtiene un recurso <see cref="FhirLocation"/> por su identificador único.
     /// </summary>
@@ -26,7 +35,7 @@ public class LocationService(FhirClient fhirService)
     public Task<FhirLocation> GetLocationByIdAsync(int id)
 
     {
-        return fhirService.ReadAsync<FhirLocation>($"{ResourceType}/{id}");
+        return _fhirClient.ReadAsync<FhirLocation>($"{ResourceType}/{id}");
     }
     /// <summary>
     /// Obtiene todos los recursos <see cref="FhirLocation"/> disponibles en el servidor FHIR.
@@ -47,7 +56,7 @@ public class LocationService(FhirClient fhirService)
     /// </example>
     public async Task<IEnumerable<FhirLocation>> GetAllLocationsAsync()
     {
-        var searchResult = await fhirService.SearchAsync<FhirLocation>();
+        var searchResult = await _fhirClient.SearchAsync<FhirLocation>();
         return searchResult.Entry?.Select(e => e.Resource as FhirLocation).Where(l => l != null) ??
                Enumerable.Empty<FhirLocation>();
     }
@@ -82,7 +91,7 @@ public class LocationService(FhirClient fhirService)
             VersionId = "1"
         };
 
-        await fhirService.CreateAsync(location);
+        await _fhirClient.CreateAsync(location);
         return location;
     }
     /// <summary>
@@ -123,7 +132,7 @@ public class LocationService(FhirClient fhirService)
             location.Meta.VersionId = "1";
         }
 
-        var result = await fhirService.UpdateAsync(location);
+        var result = await _fhirClient.UpdateAsync(location);
         return result;
     }
 
@@ -142,6 +151,42 @@ public class LocationService(FhirClient fhirService)
     /// </example>
     public async Task DeleteLocationAsync(int id)
     {
-        await fhirService.DeleteAsync($"{ResourceType}/{id}");
+        await _fhirClient.DeleteAsync($"{ResourceType}/{id}");
     }
+
+    // Filtrado
+    public async Task<IEnumerable<Hl7.Fhir.Model.Location>> GetFilteredLocationsAsync(LocationFilterDto filter)
+        {
+            var searchParams = new SearchParams();
+
+            if (!string.IsNullOrWhiteSpace(filter.Name))
+                searchParams.Add("name", filter.Name);
+
+            if (filter.Status.HasValue)
+            {
+                var statusValue = GetEnumMemberValue(filter.Status.Value);
+                searchParams.Add("status", statusValue);
+            }
+
+            var bundle = await _fhirClient.SearchAsync<Hl7.Fhir.Model.Location>(searchParams);
+
+            var locations = bundle.Entry
+                .Where(e => e.Resource is Hl7.Fhir.Model.Location)
+                .Select(e => (Hl7.Fhir.Model.Location)e.Resource)
+                .ToList();
+
+            return locations;
+        }
+
+        // Auxiliar para obtener el valor de [EnumMember]
+        private static string GetEnumMemberValue(Enum enumValue)
+        {
+            var type = enumValue.GetType();
+            var info = type.GetField(enumValue.ToString());
+            var attr = info?.GetCustomAttributes(typeof(EnumMemberAttribute), false)
+                            .Cast<EnumMemberAttribute>()
+                            .FirstOrDefault();
+
+            return attr?.Value ?? enumValue.ToString().ToLowerInvariant();
+        }
 }

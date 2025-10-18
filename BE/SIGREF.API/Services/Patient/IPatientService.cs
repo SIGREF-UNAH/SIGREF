@@ -25,6 +25,13 @@ namespace SIGREF.API.Services.Patient
         Task<IEnumerable<PatientDTO>> GetAllPatientsAsync();
 
         /// <summary>
+        /// Aplica filtros para obtener pacientes desde el servidor FHIR.
+        /// </summary>
+        /// <param name="filter">Parámetros de filtro (nombre, género, estado civil, activo).</param>
+        /// <returns>Lista de pacientes que cumplen los criterios.</returns>
+        Task<IEnumerable<PatientDTO>> GetFilteredPatientsAsync(PatientFilterDto filter);
+
+        /// <summary>
         /// Actualiza un paciente existente.
         /// </summary>
         /// <param name="id">ID del paciente a actualizar.</param>

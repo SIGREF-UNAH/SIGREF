@@ -15,12 +15,11 @@ namespace SIGREF.API.Controllers.Healthcare
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [Produces<IEnumerable<HealthcareDto>>()]
-        public async Task<IActionResult> GetAll()
+        [Produces(typeof(IEnumerable<HealthcareDto>))]
+        public async Task<IActionResult> GetFiltered([FromQuery] HealthcareFilterDto filter)
         {
-            var healthcares = await healthcareService.GetAllHealthcaresAsync();
-            var healthcareDtos = healthcares.Select(healthcare => healthcare.ToDto());
-
+            var healthcares = await healthcareService.GetFilteredHealthcaresAsync(filter);
+            var healthcareDtos = healthcares.Select(h => h.ToDto());
             return Ok(healthcareDtos);
         }
 
