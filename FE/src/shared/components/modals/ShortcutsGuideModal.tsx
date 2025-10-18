@@ -1,5 +1,6 @@
 import { Modal } from "antd";
 import { ProtectedComponent } from "../ProtectedComponent";
+import { appShortcuts, type ShortcutSection } from "../../../config";
 
 interface ShortcutsGuideModalProps {
   open: boolean;
@@ -10,74 +11,27 @@ export const ShortcutsGuideModal = ({
   open,
   onClose,
 }: ShortcutsGuideModalProps) => {
-  const shortcutSections = [
-    {
-      title: "Gestión de Fondos",
-      roles: ["admin", "cashier", "auditor"],
-      shortcuts: [
-        { keys: "Ctrl + F", description: "Control de fondos" },
-        { keys: "Ctrl + FI", description: "Generar ingreso" },
-        { keys: "Ctrl + FC", description: "Cierre de caja" },
-        { keys: "Ctrl + FH", description: "Historial de cierres" },
-      ],
-    },
-    {
-      title: "Gestión de Servicios",
-      roles: ["admin", "cashier", "auditor"],
-      shortcuts: [
-        { keys: "Ctrl + S", description: "Listar servicios" },
-        { keys: "Ctrl + SC", description: "Crear servicio" },
-      ],
-    },
-    {
-      title: "Gestión de Organizaciones",
-      roles: ["admin", "ti"],
-      shortcuts: [
-        { keys: "Ctrl + O", description: "Listar organizaciones" },
-        { keys: "Ctrl + OC", description: "Crear organización" },
-      ],
-    },
-    {
-      title: "Gestión de Ubicaciones",
-      roles: ["admin", "ti"],
-      shortcuts: [
-        { keys: "Ctrl + U", description: "Listar ubicaciones" },
-        { keys: "Ctrl + UC", description: "Crear ubicación" },
-      ],
-    },
-    {
-      title: "Gestión de Reportes",
-      roles: ["admin"],
-      shortcuts: [
-        { keys: "Ctrl + R", description: "Control de reportes" },
-        { keys: "Ctrl + RC", description: "Generar reporte" },
-        { keys: "Ctrl + RH", description: "Historial de reportes" },
-      ],
-    },
-    {
-      title: "Gestión de Empleados",
-      roles: ["admin", "ti", "auditor"],
-      shortcuts: [
-        { keys: "Ctrl + E", description: "Listar empleados" },
-        { keys: "Ctrl + EC", description: "Crear empleado" },
-      ],
-    },
-    {
-      title: "Gestión de Pacientes",
-      roles: ["admin", "cashier"],
-      shortcuts: [
-        { keys: "Ctrl + P", description: "Listar pacientes" },
-        { keys: "Ctrl + PC", description: "Crear paciente" },
-      ],
-    },
-    {
-      title: "Gestión de Eventos/Logs",
-      roles: ["admin", "ti", "auditor"],
-      shortcuts: [
-        { keys: "Ctrl + L", description: "Control de eventos/logs" },
-      ],
-    },
-  ];
+  
+  const shortcutSections: ShortcutSection[] = appShortcuts.reduce((sections, shortcut) => {
+    const existingSection = sections.find(section => section.title === shortcut.category);
+    
+    const shortcutItem = {
+      keys: shortcut.keys.split(', ')[0], // Tomar la primera combinación de teclas
+      description: shortcut.description
+    };
+
+    if (existingSection) {
+      existingSection.shortcuts.push(shortcutItem);
+    } else {
+      sections.push({
+        title: shortcut.category,
+        roles: shortcut.roles,
+        shortcuts: [shortcutItem]
+      });
+    }
+    
+    return sections;
+  }, [] as ShortcutSection[]);
 
   return (
     <Modal

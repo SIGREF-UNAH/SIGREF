@@ -6,7 +6,7 @@ interface Props {
   children: ReactNode;
 }
 
-export const AntdConfig = ({ children }: Props) => {
+export const AntdProvider = ({ children }: Props) => {
   return (
     <ConfigProvider
       locale={esES}
