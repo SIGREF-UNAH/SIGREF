@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Card, Button, Tooltip } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useKeycloak } from "@react-keycloak/web";
-import { ProtectedComponent } from "../components";
 import { validRoles } from "../../auth";
 import { ShortcutsGuideModal } from "../components/modals";
 import {
@@ -16,6 +15,8 @@ import {
   BarChartOutlined,
   QuestionCircleOutlined,
 } from "@ant-design/icons";
+import { useAbility } from "../../config";
+import { Can } from "@casl/react"
 
 interface ModuleCardProps {
   title: string;
@@ -65,6 +66,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
 export const HomePage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { keycloak } = useKeycloak();
+  const ability = useAbility();
 
   // Obtener el nombre del usuario
   const userName = 
@@ -106,18 +108,19 @@ export const HomePage: React.FC = () => {
       {/* Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {/* Gestión de Fondos */}
-        <ProtectedComponent allowedRoles={["admin", "cashier", "auditor"]}>
+        <Can I="read" a="Fondos" ability={ability}>
+
           <ModuleCard
             title="Gestión de Fondos"
             description={"Recepción y gestión de fondos e ingresos monetarios"}
             icon={<DollarOutlined />}
             shortcut="Ctrl + F"
             path="/incomes/list"
-          />
-        </ProtectedComponent>
+            />
+        </Can>
 
         {/* Gestión de Servicios Médicos */}
-        <ProtectedComponent allowedRoles={["admin", "cashier", "auditor"]}>
+        <Can I="read" a="Servicios" ability={ability}>
           <ModuleCard
             title="Gestión de Servicios"
             description={"Administre los servicios médicos que se ofrecen a los pacientes"}
@@ -125,10 +128,10 @@ export const HomePage: React.FC = () => {
             shortcut="Ctrl + S"
             path="/healthcares/list"
           />
-        </ProtectedComponent>
+        </Can>
 
         {/* Gestión de Organizaciones */}
-        <ProtectedComponent allowedRoles={["admin", "ti"]}>
+        <Can I="read" a="Organizaciones" ability={ability}>
           <ModuleCard
             title="Gestión de Organizaciones"
             description={"Gestione las organizaciones que contribuyen al hospital"}
@@ -136,10 +139,10 @@ export const HomePage: React.FC = () => {
             shortcut="Ctrl + O"
             path="/organizations/list"
           />
-        </ProtectedComponent>
+        </Can>
 
         {/* Gestión de Ubicaciones */}
-        <ProtectedComponent allowedRoles={["admin", "ti"]}>
+        <Can I="read" a="Ubicaciones" ability={ability}>
           <ModuleCard
             title="Gestión de Ubicaciones"
             description={"Administre las áreas donde se ofrecen los servicios médicos"}
@@ -147,10 +150,10 @@ export const HomePage: React.FC = () => {
             shortcut="Ctrl + U"
             path="/locations/list"
           />
-        </ProtectedComponent>
+        </Can>
 
         {/* Gestión de Reportes */}
-        <ProtectedComponent allowedRoles={["admin"]}>
+        <Can I="read" a="Reportes" ability={ability}>
           <ModuleCard
             title="Gestión de Reportes"
             description={"Genere informes financieros, estadísticos y análisis comparativos"}
@@ -158,10 +161,10 @@ export const HomePage: React.FC = () => {
             shortcut="Ctrl + R"
             path="/reports/list"
           />
-        </ProtectedComponent>
+        </Can>
 
         {/* Gestión de Empleados */}
-        <ProtectedComponent allowedRoles={["admin", "ti", "auditor"]}>
+        <Can I="read" a="Empleados" ability={ability}>
           <ModuleCard
             title="Gestión de Empleados"
             description={"Lleve a cabo las tareas de gestión de los empleados del hospital"}
@@ -169,10 +172,10 @@ export const HomePage: React.FC = () => {
             shortcut="Ctrl + E"
             path="/practitioners/list"
           />
-        </ProtectedComponent>
+        </Can>
         
         {/* Gestión de Pacientes */}
-        <ProtectedComponent allowedRoles={["admin", "cashier"]}>
+        <Can I="read" a="Pacientes" ability={ability}>
           <ModuleCard
             title="Gestión de Pacientes"
             description={"Administre los pacientes que se encuentran en el hospital"}
@@ -180,10 +183,10 @@ export const HomePage: React.FC = () => {
             shortcut="Ctrl + P"
             path="/patients/list"
           />
-        </ProtectedComponent>
+        </Can>
         
         {/* Gestión de Eventos/Logs */}
-        <ProtectedComponent allowedRoles={["admin", "ti", "auditor"]}>
+        <Can I="read" a="Eventos" ability={ability}>
           <ModuleCard
             title="Gestión de Eventos/Logs"
             description={"Visualiza los eventos y los registros del sistema"}
@@ -191,7 +194,7 @@ export const HomePage: React.FC = () => {
             shortcut="Ctrl + L"
             path="/events/list"
           />
-        </ProtectedComponent>
+        </Can>
       </div>
 
       {/* Modal de Atajos */}
