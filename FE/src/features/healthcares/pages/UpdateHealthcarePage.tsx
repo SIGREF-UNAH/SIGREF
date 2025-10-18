@@ -1,8 +1,8 @@
 import { HealthcareForm } from "../components";
-import { HealthcareHeader } from "../components/ui";
 import { useHealthcareForm, useUpdateHealthcare } from "../hooks";
 import { FormTitle } from "../components/ui/FormTitle";
 import { HealthcareFormSkeleton } from "../components/skeletons";
+import { PageHeaderTabs } from "../../../shared/components/ui";
 
 export const UpdateHealthcarePage = () => {
   const {
@@ -24,12 +24,17 @@ export const UpdateHealthcarePage = () => {
   return (
     <div>
       {/* Encabezado */}
-      <div className="mb-6">
-        <HealthcareHeader />
-      </div>
+      <PageHeaderTabs
+        title="Gestión de Servicios"
+        tabs={[
+          { key: "listar", label: "Lista de Servicios", path: "/healthcares/list" },
+          { key: "crear", label: "Crear Servicio", path: "/healthcares/create" },
+        ]}
+        defaultActive="null"
+      />
 
       {/* Contenido Principal */}
-      <div className="p-6 border-2 bg-card border-primary shadow-md rounded-lg">
+      <div className="p-6 border-2 bg-card border-gray-300 shadow-md rounded-lg">
         <FormTitle title="Editar Servicio" icon="edit" />
 
         {isLoading ? (

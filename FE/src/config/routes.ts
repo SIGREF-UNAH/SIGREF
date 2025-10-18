@@ -1,3 +1,5 @@
+import { validRoles } from "../auth";
+
 export const IncomesRoutes = [
   { path: "/incomes/list", name: "Lista de Ingresos" },
   { path: "/incomes/create", name: "Generar Ingreso" },
@@ -6,17 +8,17 @@ export const IncomesRoutes = [
 ];
 
 export const HealthcaresRoutes = [
-  { path: "/healthcares/list", name: "Listar Servicios Médicos" },
-  { path: "/healthcares/create", name: "Crear Servicio Médico" },
+  { path: "/healthcares/list", name: "Lista de Servicios" },
+  { path: "/healthcares/create", name: "Crear Servicio" },
 ];
 
 export const PatientsRoutes = [
-  { path: "/patients/list", name: "Listar Pacientes" },
+  { path: "/patients/list", name: "Lista de Pacientes" },
   { path: "/patients/create", name: "Crear Paciente" },
 ];
 
 export const PractitionersRoutes = [
-  { path: "/practitioners/list", name: "Listar Empleados" },
+  { path: "/practitioners/list", name: "Lista de Empleados" },
   { path: "/practitioners/create", name: "Crear Empleado" },
 ];
 
@@ -25,12 +27,12 @@ export const EventsRoutes = [
 ];
 
 export const OrganizationsRoutes = [
-  { path: "/organizations/list", name: "Listar Organizaciones" },
+  { path: "/organizations/list", name: "Lista de Organizaciones" },
   { path: "/organizations/create", name: "Crear Organización" },
 ];
 
 export const LocationsRoutes = [
-  { path: "/locations/list", name: "Listar Ubicaciones" },
+  { path: "/locations/list", name: "Lista de Ubicaciones" },
   { path: "/locations/create", name: "Crear Ubicación" },
 ];
 
@@ -54,7 +56,7 @@ export const RoutesByRole: Record<
     reportes?: any[];
   }
 > = {
-  "Administrador": {
+  [validRoles.admin]: {
     fondos: IncomesRoutes,
     servicios: HealthcaresRoutes,
     organizaciones: OrganizationsRoutes,
@@ -64,18 +66,18 @@ export const RoutesByRole: Record<
     pacientes: PatientsRoutes,
     eventos: EventsRoutes,
   },
-  "Auditoria": {
+  [validRoles.auditor]: {
     fondos: IncomesRoutes,
     servicios: HealthcaresRoutes,
     empleados: PractitionersRoutes,
     eventos: EventsRoutes,
   },
-  "Auxiliar de Caja": {
+  [validRoles.cashier]: {
     fondos: IncomesRoutes,
     servicios: HealthcaresRoutes,
     pacientes: PatientsRoutes,
   },
-  "Técnico de Informática": {
+  [validRoles.ti]: {
     organizaciones: OrganizationsRoutes,
     ubicaciones: LocationsRoutes,
     empleados: PractitionersRoutes,
