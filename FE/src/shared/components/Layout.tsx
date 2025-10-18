@@ -3,7 +3,7 @@ import { Badge } from "antd/lib";
 import { Link, Outlet, useNavigate } from "react-router";
 import { Dropdown } from "antd";
 import { useKeycloak } from "@react-keycloak/web";
-import { MenusPorRol } from "../../config";
+import { RoutesByRole } from "../../config";
 import { validRoles } from "../../auth";
 import {
   BellOutlined,
@@ -213,7 +213,7 @@ export const Layout = () => {
       }}
       menuHeaderRender={undefined}
       menuDataRender={() =>
-        Object.entries(MenusPorRol[rolesValidos[0]] || {}).map(
+        Object.entries(RoutesByRole[rolesValidos[0]] || {}).map(
           ([key, items]) => ({
             path: `/${key}`,
             name: key.charAt(0).toUpperCase() + key.slice(1),

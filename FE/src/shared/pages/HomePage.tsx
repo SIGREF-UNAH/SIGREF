@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, Button, Tooltip } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useKeycloak } from "@react-keycloak/web";
 import { ProtectedComponent } from "../components";
 import { validRoles } from "../../auth";
+import { ShortcutsGuideModal } from "../components/modals";
 import {
   DollarOutlined,
   MedicineBoxOutlined,
@@ -15,11 +16,6 @@ import {
   BarChartOutlined,
   QuestionCircleOutlined,
 } from "@ant-design/icons";
-
-// TODO: Mejorar el diseño y dar funcionalidad a los botones
-// TODO: Investigar si pueden funcionar los shortcuts en Web
-// TODO: Agregar menu de comandos
-// TODO: Coincidir diseño de los demas modulos
 
 interface ModuleCardProps {
   title: string;
@@ -67,6 +63,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
 };
 
 export const HomePage: React.FC = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { keycloak } = useKeycloak();
 
   // Obtener el nombre del usuario
@@ -96,7 +93,11 @@ export const HomePage: React.FC = () => {
 
         {/* Botones */}
         <div className="flex gap-2">
-          <Button icon={<QuestionCircleOutlined />} type="default">
+          <Button 
+            icon={<QuestionCircleOutlined />} 
+            type="default" 
+            onClick={() => setIsModalOpen(true)}
+          >
             Atajos
           </Button>
         </div>
@@ -143,7 +144,7 @@ export const HomePage: React.FC = () => {
             title="Gestión de Ubicaciones"
             description={"Administre las áreas donde se ofrecen los servicios médicos"}
             icon={<EnvironmentOutlined />}
-            shortcut="Ctrl + A"
+            shortcut="Ctrl + U"
             path="/locations/list"
           />
         </ProtectedComponent>
@@ -165,7 +166,7 @@ export const HomePage: React.FC = () => {
             title="Gestión de Empleados"
             description={"Lleve a cabo las tareas de gestión de los empleados del hospital"}
             icon={<TeamOutlined />}
-            shortcut="Ctrl + M"
+            shortcut="Ctrl + E"
             path="/practitioners/list"
           />
         </ProtectedComponent>
@@ -192,6 +193,12 @@ export const HomePage: React.FC = () => {
           />
         </ProtectedComponent>
       </div>
+
+      {/* Modal de Atajos */}
+      <ShortcutsGuideModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 };
