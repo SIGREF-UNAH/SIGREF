@@ -129,37 +129,15 @@ export const HomePage: React.FC = () => {
             path="/healthcares/list"
           />
         </Can>
-
-        {/* Gestión de Organizaciones */}
-        <Can I="read" a="organizations" ability={ability}>
+        
+        {/* Gestión de Pacientes */}
+        <Can I="read" a="patients" ability={ability}>
           <ModuleCard
-            title="Gestión de Organizaciones"
-            description={"Gestione las organizaciones que contribuyen al hospital"}
-            icon={<ApartmentOutlined />}
-            shortcut="Ctrl + O"
-            path="/organizations/list"
-          />
-        </Can>
-
-        {/* Gestión de Ubicaciones */}
-        <Can I="read" a="locations" ability={ability}>
-          <ModuleCard
-            title="Gestión de Ubicaciones"
-            description={"Administre las áreas donde se ofrecen los servicios médicos"}
-            icon={<EnvironmentOutlined />}
-            shortcut="Ctrl + U"
-            path="/locations/list"
-          />
-        </Can>
-
-        {/* Gestión de Reportes */}
-        <Can I="read" a="reports" ability={ability}>
-          <ModuleCard
-            title="Gestión de Reportes"
-            description={"Genere informes financieros, estadísticos y análisis comparativos"}
-            icon={<BarChartOutlined />}
-            shortcut="Ctrl + R"
-            path="/reports/list"
+            title="Gestión de Pacientes"
+            description={"Administre los pacientes que se encuentran en el hospital"}
+            icon={<UserOutlined />}
+            shortcut="Ctrl + P"
+            path="/patients/list"
           />
         </Can>
 
@@ -174,17 +152,39 @@ export const HomePage: React.FC = () => {
           />
         </Can>
         
-        {/* Gestión de Pacientes */}
-        <Can I="read" a="patients" ability={ability}>
+        {/* Gestión de Ubicaciones */}
+        <Can I="read" a="locations" ability={ability}>
           <ModuleCard
-            title="Gestión de Pacientes"
-            description={"Administre los pacientes que se encuentran en el hospital"}
-            icon={<UserOutlined />}
-            shortcut="Ctrl + P"
-            path="/patients/list"
+            title="Gestión de Ubicaciones"
+            description={"Administre las áreas donde se ofrecen los servicios médicos"}
+            icon={<EnvironmentOutlined />}
+            shortcut="Ctrl + U"
+            path="/locations/list"
           />
         </Can>
         
+        {/* Gestión de Organizaciones */}
+        <Can I="read" a="organizations" ability={ability}>
+          <ModuleCard
+            title="Gestión de Organizaciones"
+            description={"Gestione las organizaciones que contribuyen al hospital"}
+            icon={<ApartmentOutlined />}
+            shortcut="Ctrl + O"
+            path="/organizations/list"
+          />
+        </Can>
+        
+        {/* Gestión de Reportes */}
+        <Can I="read" a="reports" ability={ability}>
+          <ModuleCard
+            title="Gestión de Reportes"
+            description={"Genere informes financieros, estadísticos y análisis comparativos"}
+            icon={<BarChartOutlined />}
+            shortcut="Ctrl + R"
+            path="/reports/list"
+          />
+        </Can>
+
         {/* Gestión de Eventos/Logs */}
         <Can I="read" a="events" ability={ability}>
           <ModuleCard

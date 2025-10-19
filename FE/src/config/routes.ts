@@ -50,20 +50,20 @@ export const RoutesByRole: Record<
     servicios?: any[];
     pacientes?: any[];
     empleados?: any[];
-    eventos?: any[];
-    organizaciones?: any[];
     ubicaciones?: any[];
+    organizaciones?: any[];
     reportes?: any[];
+    eventos?: any[];
   }
 > = {
   [validRoles.admin]: {
     fondos: IncomesRoutes,
     servicios: HealthcaresRoutes,
-    organizaciones: OrganizationsRoutes,
-    ubicaciones: LocationsRoutes,
-    reportes: ReportsRoutes,
-    empleados: PractitionersRoutes,
     pacientes: PatientsRoutes,
+    empleados: PractitionersRoutes,
+    ubicaciones: LocationsRoutes,
+    organizaciones: OrganizationsRoutes,
+    reportes: ReportsRoutes,
     eventos: EventsRoutes,
   },
   [validRoles.auditor]: {
@@ -78,9 +78,9 @@ export const RoutesByRole: Record<
     pacientes: PatientsRoutes,
   },
   [validRoles.ti]: {
-    organizaciones: OrganizationsRoutes,
-    ubicaciones: LocationsRoutes,
     empleados: PractitionersRoutes,
+    ubicaciones: LocationsRoutes,
+    organizaciones: OrganizationsRoutes,
     eventos: EventsRoutes,
   },
 };
