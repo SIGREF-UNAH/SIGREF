@@ -4,6 +4,8 @@ import { useHealthcaresList } from "../hooks";
 import { HealthcareHeader } from "../components/ui";
 import type { HealthcareDto } from "../../../api/models";
 import { HealthcaresPageSkeleton } from "../components/skeletons";
+import { HealthcareDetailsModal } from "../components/modals";
+import { PageHeaderTabs } from "../../../shared/components/ui";
 import {
   EditOutlined,
   DeleteOutlined,
@@ -11,7 +13,6 @@ import {
   FilterOutlined,
   EyeOutlined,
 } from "@ant-design/icons";
-import { HealthcareDetailsModal } from "../components/modals";
 
 const { Search } = Input;
 
@@ -137,24 +138,20 @@ export const HealthcaresPage = () => {
   return (
     <div>
       {/* Encabezado */}
-      <div className="flex mb-4 items-start justify-between">
-        <HealthcareHeader />
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={handleCreate}
-          size="large"
-          style={{ backgroundColor: "var(--color-primary)" }}
-        >
-          Nuevo Servicio
-        </Button>
-      </div>
+      <PageHeaderTabs
+        title="Gestión de Servicios"
+        tabs={[
+          { key: "listar", label: "Lista de Servicios", path: "/healthcares/list" },
+          { key: "crear", label: "Crear Servicio", path: "/healthcares/create" },
+        ]}
+        defaultActive="crear"
+      />
 
       {/* Contenido */}
       {isLoading ? (
         <HealthcaresPageSkeleton />
       ) : (
-        <div className="p-4 border-2 bg-card border-primary shadow-md rounded-lg">
+        <div className="p-4 border-2 bg-card border-gray-300 shadow-md rounded-lg">
           {/* Busqueda y filtros */}
           <div className="flex justify-end gap-3 mb-4">
             <Search

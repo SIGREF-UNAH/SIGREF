@@ -23,6 +23,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { BsBuilding, BsGeoAltFill, BsPersonFill } from "react-icons/bs";
 import { BiChevronDown } from "react-icons/bi";
 import { LocationMode, LocationStatus } from "../../../api/models";
+import { PageHeaderTabs } from "../../../shared/components/ui";
 
 const LocationDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -114,16 +115,17 @@ const LocationDetailsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <main className="p-6">
+    <div>
+      <main>
         {/* Header */}
-        <div className="relative mb-6">
-          <div className="flex justify-between items-center relative z-10">
-            <h1 className="text-3xl font-bold text-[#333333]">
-              Detalles de la Ubicación
-            </h1>
-          </div>
-        </div>
+        <PageHeaderTabs
+          title="Gestión de Ubicaciones"
+          tabs={[
+            { key: "listar", label: "Lista de Ubicaciones", path: "/locations/list" },
+            { key: "crear", label: "Crear Ubicación", path: "/locations/create" },
+          ]}
+          defaultActive="null"
+        />
 
         <div className="bg-[#FAFAFA] rounded-lg border-2 border-[#D9D9D9] p-6">
           {/* Header */}

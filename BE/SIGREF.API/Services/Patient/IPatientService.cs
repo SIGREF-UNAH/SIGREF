@@ -9,20 +9,20 @@ namespace SIGREF.API.Services.Patient
         /// </summary>
         /// <param name="dto">Datos del paciente a crear.</param>
         /// <returns>El paciente creado, con ID y metadatos asignados.</returns>
-        Task<PatientDTO> CreatePatientAsync(CreatePatientDto dto);
+        Task<PatientDto> CreatePatientAsync(CreatePatientDto dto);
 
         /// <summary>
         /// Obtiene un paciente por su ID.
         /// </summary>
         /// <param name="id">ID del paciente.</param>
         /// <returns>El paciente solicitado.</returns>
-        Task<PatientDTO> GetPatientByIdAsync(string id);
+        Task<PatientDto> GetPatientByIdAsync(string id);
 
         /// <summary>
         /// Obtiene todos los pacientes (con paginación en futuras versiones).
         /// </summary>
         /// <returns>Lista de pacientes.</returns>
-        Task<IEnumerable<PatientDTO>> GetAllPatientsAsync();
+        Task<IEnumerable<PatientDto>> GetAllPatientsAsync();
 
         /// <summary>
         /// Actualiza un paciente existente.
@@ -30,7 +30,7 @@ namespace SIGREF.API.Services.Patient
         /// <param name="id">ID del paciente a actualizar.</param>
         /// <param name="dto">Datos a actualizar.</param>
         /// <returns>El paciente actualizado.</returns>
-        Task<PatientDTO> UpdatePatientAsync(string id, UpdatePatientDto dto);
+        Task<PatientDto> UpdatePatientAsync(string id, UpdatePatientDto dto);
 
         /// <summary>
         /// Elimina un paciente por su ID.

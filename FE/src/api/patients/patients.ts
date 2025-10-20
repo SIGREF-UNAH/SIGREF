@@ -22,6 +22,7 @@ import type {
 
 import type {
   CreatePatientDto,
+  PatientDto,
   ProblemDetails,
   UpdatePatientDto,
 } from ".././models";
@@ -29,7 +30,11 @@ import type {
 import { customInstance } from ".././mutator/customInstance";
 
 export const getApiPatients = (signal?: AbortSignal) => {
-  return customInstance<void>({ url: `/api/Patients`, method: "GET", signal });
+  return customInstance<PatientDto[]>({
+    url: `/api/Patients`,
+    method: "GET",
+    signal,
+  });
 };
 
 export const getGetApiPatientsQueryKey = () => {
@@ -149,7 +154,7 @@ export const postApiPatients = (
   createPatientDto: CreatePatientDto,
   signal?: AbortSignal,
 ) => {
-  return customInstance<void>({
+  return customInstance<PatientDto[] | void>({
     url: `/api/Patients`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -222,7 +227,7 @@ export const usePostApiPatients = <TError = ProblemDetails, TContext = unknown>(
   return useMutation(mutationOptions, queryClient);
 };
 export const getApiPatientsId = (id: string, signal?: AbortSignal) => {
-  return customInstance<void>({
+  return customInstance<PatientDto[]>({
     url: `/api/Patients/${id}`,
     method: "GET",
     signal,
@@ -378,7 +383,7 @@ export const putApiPatientsId = (
   id: string,
   updatePatientDto: UpdatePatientDto,
 ) => {
-  return customInstance<void>({
+  return customInstance<PatientDto[]>({
     url: `/api/Patients/${id}`,
     method: "PUT",
     headers: { "Content-Type": "application/json" },

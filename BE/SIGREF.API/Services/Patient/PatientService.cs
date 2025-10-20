@@ -56,7 +56,7 @@ public class PatientService : IPatientService
     /// var createdPatient = await patientService.CreatePatientAsync(createDto);
     /// </code>
     /// </example>
-    public async Task<PatientDTO> CreatePatientAsync(CreatePatientDto dto)
+    public async Task<PatientDto> CreatePatientAsync(CreatePatientDto dto)
     {
         var patient = dto.ToFhirPatient(); // Convierte DTO -> FHIR Patient
         var created = await _fhirClient.CreateAsync(patient);
@@ -77,19 +77,19 @@ public class PatientService : IPatientService
     /// Console.WriteLine(patient.Name.First().Given.First());
     /// </code>
     /// </example>
-    public async Task<PatientDTO> GetPatientByIdAsync(string id)
+    public async Task<PatientDto> GetPatientByIdAsync(string id)
     {
         var patient = await _fhirClient.ReadAsync<FhirPatient>($"{ResourceType}/{id}");
         return patient.ToDto();
     }
 
-    public async Task<IEnumerable<PatientDTO>> GetAllPatientsAsync()
+    public async Task<IEnumerable<PatientDto>> GetAllPatientsAsync()
     {
         var bundle = await _fhirClient.SearchAsync<FhirPatient>();
         return bundle.Entry?
                    .Select(e => (e.Resource as FhirPatient)?.ToDto())
                    .Where(dto => dto != null)
-                   .ToList() ?? Enumerable.Empty<PatientDTO>();
+                   .ToList() ?? Enumerable.Empty<PatientDto>();
     }
     /// <summary>
     /// Actualiza un paciente existente en el servidor FHIR.
@@ -106,7 +106,7 @@ public class PatientService : IPatientService
     /// var updatedPatient = await patientService.UpdatePatientAsync("123", updateDto);
     /// </code>
     /// </example>
-    public async Task<PatientDTO> UpdatePatientAsync(string id, UpdatePatientDto dto)
+    public async Task<PatientDto> UpdatePatientAsync(string id, UpdatePatientDto dto)
     {
         // 1. Leer paciente existente
         var existing = await _fhirClient.ReadAsync<FhirPatient>($"{ResourceType}/{id}");

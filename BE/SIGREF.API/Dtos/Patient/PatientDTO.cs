@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace SIGREF.API.Dtos.Patient
 {
-    public class PatientDTO
+    public class PatientDto
     {
         [JsonPropertyName("id")]
         public string? Id { get; set; }

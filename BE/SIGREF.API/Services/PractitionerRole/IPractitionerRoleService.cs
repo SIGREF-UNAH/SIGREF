@@ -1,4 +1,5 @@
-﻿using SIGREF.API.Dtos.PractitionerRole;
+﻿#nullable enable
+using SIGREF.API.Dtos.PractitionerRole;
 using SIGREF.API.Services.Common;
 
 namespace SIGREF.API.Services.PractitionerRole;

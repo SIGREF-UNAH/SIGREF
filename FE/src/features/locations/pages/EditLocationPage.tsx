@@ -1,7 +1,7 @@
+import EditLocation from "../components/ui/EditFormulario";
 import { PageHeaderTabs } from "../../../shared/components/ui";
-import LocationForm from "../components/ui/LocationForm";
 
-export default function CreateLocationPage() {
+export default function EditLocationPage() {
   return (
     <div>
       <main>
@@ -12,11 +12,11 @@ export default function CreateLocationPage() {
             { key: "listar", label: "Lista de Ubicaciones", path: "/locations/list" },
             { key: "crear", label: "Crear Ubicación", path: "/locations/create" },
           ]}
-          defaultActive="crear"
+          defaultActive="null"
         />
 
-        {/* Location Form */}
-        <LocationForm />
+        {/* Formulario de gestión de ubicaciones */}
+        <EditLocation />
       </main>
     </div>
   );
