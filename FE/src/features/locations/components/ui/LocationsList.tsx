@@ -130,7 +130,7 @@ const LocationList: React.FC = () => {
               Detalles
             </Button>
           </Link>
-          <Link to={`/locations/edit/${record.id}`}>
+          <Link to={`/locations/update/${record.id}`}>
             <Button
               type="primary"
               size="small"

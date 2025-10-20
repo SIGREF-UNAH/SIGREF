@@ -1,15 +1,15 @@
-import { useState } from "react";
 import {
   ProForm,
   ProFormText,
   ProFormSelect,
   ProFormDatePicker,
+  ProTable,
+  type ProColumns,
 } from "@ant-design/pro-components";
-import { Button, Table, Tag, Pagination } from "antd";
-import { FilterOutlined, UserOutlined, CopyOutlined } from "@ant-design/icons";
-import type { ColumnsType } from "antd/es/table";
-import { useGetApiPatients } from "../../../../api/patients/patients";
+import { Tag, Pagination } from "antd";
+import { FilterOutlined } from "@ant-design/icons";
 import { Link } from "react-router";
+import { useListPatients } from "../../hooks";
 
 interface Patient {
   id: string;
@@ -26,49 +26,20 @@ interface Patient {
 
 export default function ListFormPatients() {
   const {
-    data: apiPatients,
-    isLoading,
-    isError,
-    error,
-  } = useGetApiPatients<PatientApi[]>();
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+    patients,
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    setPageSize,
+    getIdentificadorColor,
+  } = useListPatients();
 
-  const patients: Patient[] =
-    apiPatients?.map((p: PatientApi, index: number) => ({
-      id: p.id || String(index),
-      key: p.id || String(index),
-      nombre:
-        p.name?.[0]?.text ??
-        p.name?.[0]?.given?.join(" ") ??
-        "Nombre no disponible",
-      identificadorTipo: p.identifier?.[0]?.type?.text ?? "DNI",
-      identificador: p.identifier?.[0]?.value || "-",
-      contacto: p.telecom?.[0]?.value || "-",
-      nacimiento: p.birthDate || "-",
-      nacionalidad: p.nationality || "-",
-      genero: p.gender || "-",
-      estadoVital: p.active ? "vivo" : "sin vida",
-    })) || [];
-
-  const getIdentificadorColor = (tipo: string) => {
-    switch (tipo) {
-      case "DNI":
-        return "blue";
-      case "PST":
-        return "purple";
-      case "ID":
-        return "red";
-      default:
-        return "default";
-    }
-  };
-
-  const columns: ColumnsType<Patient> = [
+  const columns: ProColumns<Patient>[] = [
     {
       title: "Nombre",
       dataIndex: "nombre",
       key: "nombre",
+      valueType: "text",
       width: 250,
       render: (_, record) => (
         <Link to={`/patients/details/${record.id}`}>{record.nombre}</Link>
@@ -76,7 +47,9 @@ export default function ListFormPatients() {
     },
     {
       title: "Identificador",
+      dataIndex: "identificador",
       key: "identificador",
+      valueType: "text",
       width: 200,
       render: (_, record) => (
         <span>
@@ -91,29 +64,35 @@ export default function ListFormPatients() {
       title: "Contacto",
       dataIndex: "contacto",
       key: "contacto",
+      valueType: "text",
       width: 150,
     },
     {
       title: "Nacimiento",
       dataIndex: "nacimiento",
       key: "nacimiento",
+      valueType: "date",
       width: 120,
     },
     {
       title: "Nacionalidad",
       dataIndex: "nacionalidad",
       key: "nacionalidad",
+      valueType: "text",
       width: 120,
     },
     {
       title: "Género",
       dataIndex: "genero",
       key: "genero",
+      valueType: "text",
       width: 80,
     },
     {
       title: "Estado Vital",
+      dataIndex: "estadoVital",
       key: "estadoVital",
+      valueType: "text",
       width: 120,
       render: (_, record) => (
         <Tag color={record.estadoVital === "vivo" ? "green" : "red"}>
@@ -126,19 +105,6 @@ export default function ListFormPatients() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="mx-auto max-w-7xl">
-        {/* Información del Paciente Seleccionado */}
-        <div className="mb-6 rounded-lg border-2 border-blue-400 bg-white p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <UserOutlined className="text-blue-600" />
-              <span className="text-lg font-medium text-blue-600">
-                Informacion del Paciente Seleccionado
-              </span>
-            </div>
-            <Button icon={<CopyOutlined />}>Copiar Datos</Button>
-          </div>
-        </div>
-
         {/* Filtros de Búsqueda */}
         <div className="mb-6 rounded-lg border border-gray-300 bg-white p-6">
           <div className="mb-4 flex items-center gap-2">
@@ -153,7 +119,8 @@ export default function ListFormPatients() {
             layout="horizontal"
             className="patient-filters"
           >
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {/* Contenedor de los filtros */}
+            <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2 lg:grid-cols-4">
               <ProFormText
                 name="nombreCompleto"
                 label="Nombres del Paciente"
@@ -171,18 +138,11 @@ export default function ListFormPatients() {
                 placeholder="DNI"
               />
 
-              <div>
-                <label className="mb-2 block text-sm text-gray-700">
-                  Identificador
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="—"
-                    className="flex-1 rounded border border-gray-300 px-3 py-1.5"
-                  />
-                </div>
-              </div>
+              <ProFormText
+                name="identificador"
+                label="Identificador"
+                placeholder="—"
+              />
 
               <ProFormSelect
                 name="genero"
@@ -195,7 +155,7 @@ export default function ListFormPatients() {
                 placeholder="Todos"
               />
 
-               <ProFormText
+              <ProFormText
                 name="nacionalidad"
                 label="Nacionalidad"
                 placeholder="Todos"
@@ -249,12 +209,13 @@ export default function ListFormPatients() {
             </span>
           </div>
 
-          <Table
+          <ProTable
             columns={columns}
             dataSource={patients}
+            search={false}
+            options={false}
             pagination={false}
             scroll={{ x: 1200 }}
-            className="patient-table"
           />
 
           <div className="mt-4 flex items-center justify-between">

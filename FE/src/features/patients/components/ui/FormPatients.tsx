@@ -19,8 +19,6 @@ import type { CollapseProps } from "antd";
 import useCreatePatientForm from "../../hooks/useCreatePatient";
 import { Link } from "react-router-dom";
 
-const { Panel } = Collapse;
-
 export default function CreateFormPatient() {
   const { handleSubmit, isSubmitting, error } = useCreatePatientForm();
 
@@ -157,18 +155,6 @@ export default function CreateFormPatient() {
         placeholder="Apellido Díaz"
         width="md"
       />
-      <ProFormDatePicker
-        name="fechaInicioNombre"
-        label="Fecha de Inicio"
-        placeholder="dd / mm / yyyy"
-        width="md"
-      />
-      <ProFormDatePicker
-        name="fechaExpiracionNombre"
-        label="Fecha de Expiración"
-        placeholder="dd / mm / yyyy"
-        width="md"
-      />
     </ProFormGroup>
   );
 
@@ -180,8 +166,13 @@ export default function CreateFormPatient() {
         placeholder="Seleccione"
         width="sm"
         options={[
-          { label: "Teléfono", value: 0 },
-          { label: "Email", value: 1 },
+          { label: "Teléfono", value: "phone" },
+          { label: "Fax", value: "fax" },
+          { label: "Email", value: "email" },
+          { label: "Pager", value: "pager" },
+          { label: "URL", value: "url" },
+          { label: "SMS", value: "sms" },
+          { label: "Otro", value: "other" },
         ]}
       />
       <ProFormSelect
@@ -203,18 +194,6 @@ export default function CreateFormPatient() {
         name={["telecom", 0, "value"]}
         label="Valor"
         placeholder="9999-9999 / ejemplo@correo.com"
-        width="md"
-      />
-      <ProFormDatePicker
-        name="fechaInicioContacto"
-        label="Fecha de Inicio"
-        placeholder="dd / mm / yyyy"
-        width="md"
-      />
-      <ProFormDatePicker
-        name="fechaExpiracionContacto"
-        label="Fecha de Expiración"
-        placeholder="dd / mm / yyyy"
         width="md"
       />
       <ProFormRadio.Group
@@ -265,18 +244,6 @@ export default function CreateFormPatient() {
           style: { width: "100%" },
         }}
       />
-      <ProFormDatePicker
-        name="fechaRegistro"
-        label="Fecha de Registro"
-        placeholder="dd / mm / yyyy"
-        width="md"
-      />
-      <ProFormDatePicker
-        name="fechaFinalizacion"
-        label="Fecha Finalización"
-        placeholder="dd / mm / yyyy"
-        width="md"
-      />
     </ProFormGroup>
   );
 
@@ -290,18 +257,6 @@ export default function CreateFormPatient() {
         </Space>
       ),
       children: nacionalidadContent,
-      extra: (
-        <Button
-          type="primary"
-          size="small"
-          icon={<PlusOutlined />}
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          Agregar
-        </Button>
-      ),
     },
     {
       key: "2",
@@ -312,18 +267,6 @@ export default function CreateFormPatient() {
         </Space>
       ),
       children: identificacionesContent,
-      extra: (
-        <Button
-          type="primary"
-          size="small"
-          icon={<PlusOutlined />}
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          Agregar
-        </Button>
-      ),
     },
     {
       key: "3",
@@ -334,18 +277,6 @@ export default function CreateFormPatient() {
         </Space>
       ),
       children: nombresContent,
-      extra: (
-        <Button
-          type="primary"
-          size="small"
-          icon={<PlusOutlined />}
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          Agregar
-        </Button>
-      ),
     },
     {
       key: "4",
@@ -401,7 +332,7 @@ export default function CreateFormPatient() {
         <ProForm
           onFinish={onFinish}
           submitter={{
-            render: (_, dom) => (
+            render: (_) => (
               <div className="flex justify-end gap-3 mt-6">
                 <Link to={"/patients/list"}>
                   <Button size="large" onClick={onCancel}>

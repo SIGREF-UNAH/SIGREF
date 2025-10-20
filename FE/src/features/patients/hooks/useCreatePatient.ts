@@ -44,19 +44,18 @@ export default function useCreatePatientForm() {
         value: item.value || "",
         rank: index + 1,
       })),
-      address: [
-        {
+      address:
+        values.address?.map((addr: any, index: number) => ({
           use: 0,
           type: 0,
-          text: values.address?.[0]?.line?.[0] || "",
-          line: [values.address?.[0]?.line?.[0] || ""],
-          city: values.address?.[0]?.city || "",
-          district: "",
-          state: values.address?.[0]?.state || "",
-          postalCode: "",
-          country: values.address?.[0]?.country || "",
-        },
-      ],
+          text: addr.line?.[0] || "",
+          line: addr.line || [],
+          city: addr.city || "",
+          district: addr.district || "",
+          state: addr.state || "",
+          postalCode: addr.postalCode || "",
+          country: addr.country || "",
+        })) || [],
       identifier: [
         {
           use: 0,

@@ -412,7 +412,7 @@ const LocationDetailsPage: React.FC = () => {
                       <ArrowLeftOutlined /> Volver
                     </Button>
                   </Link>
-                  <Link to={`/locations/edit/${location.id}`}>
+                  <Link to={`/locations/update/${location.id}`}>
                     <Button
                       type="primary"
                       size="large"

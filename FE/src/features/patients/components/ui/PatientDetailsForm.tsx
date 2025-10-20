@@ -3,6 +3,7 @@ import {
   ProFormText,
   ProFormSelect,
   ProFormDatePicker,
+  ProTable,
 } from "@ant-design/pro-components";
 import {
   UserOutlined,
@@ -13,12 +14,10 @@ import {
   CopyOutlined,
   EditOutlined,
 } from "@ant-design/icons";
-import { Badge, Button, Pagination, Spin, Table, Tag, Typography } from "antd";
+import { Badge, Button, Pagination, Spin, Tag, Typography } from "antd";
 import type { ProColumns } from "@ant-design/pro-components";
-import { useGetApiPatientsId } from "../../../../api/patients/patients";
-import { useGetApiPatients } from "../../../../api/patients/patients";
-import { Link, useParams } from "react-router-dom";
-import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useDetailsPatient } from "../../hooks";
 
 interface PatientData {
   id: string;
@@ -34,12 +33,19 @@ interface PatientData {
 }
 
 export default function PatientDetailsForm() {
-  const params = useParams();
-  const id = params?.id as string;
-  const { data, isLoading, error } = useGetApiPatientsId(id);
-  const { data: apiPatients } = useGetApiPatients<PatientApi[]>();
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+   const {
+    id,
+    isLoading,
+    error,
+    selectedPatient,
+    patients,
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    setPageSize,
+    contextHolder,
+    handleCopyData,
+  } = useDetailsPatient();
 
   if (isLoading)
     return (
@@ -56,64 +62,6 @@ export default function PatientDetailsForm() {
         </Typography.Text>
       </div>
     );
-
-  const phone =
-    data?.telecom?.find((t) => t.system?.toLowerCase() === "phone")?.value ??
-    "No registrado";
-  const email =
-    data?.telecom?.find((t) => t.system?.toLowerCase() === "email")?.value ??
-    "No registrado";
-
-  const selectedPatient = {
-    nombre: data?.name?.[0]?.given?.join(" ") ?? "Desconocido",
-    apellidos: data?.name?.[0]?.family ?? "Desconocido",
-    fechaNacimiento: data?.birthDate
-      ? new Date(data.birthDate).toLocaleDateString("es-HN", {
-          day: "2-digit",
-          month: "long",
-          year: "numeric",
-        })
-      : "No especificada",
-    edad: data?.birthDate
-      ? `${Math.floor((Date.now() - new Date(data.birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000))} años`
-      : "No especificada",
-    genero:
-      data?.gender === 1
-        ? "Masculino"
-        : data?.gender === 2
-          ? "Femenino"
-          : "No especificado",
-    nacionalidad: data?.address?.[0]?.country ?? "No registrada",
-    estadoVital: data?.active ? "Con Vida" : "Sin Vida",
-    dni: data?.identifier?.[0]?.value ?? "No disponible",
-    dniEmisor: data?.identifier?.[0]?.system ?? "Desconocido",
-    pasaporte: data?.identifier?.[1]?.value ?? "No disponible",
-    pasaporteEmisor: data?.identifier?.[1]?.system ?? "Desconocido",
-    movil: phone,
-    preferido: "Preferido",
-    email: email,
-    casaDireccion: data?.address?.[0]?.text ?? "No disponible",
-    casaDetalles: `${data?.address?.[0]?.city ?? ""}, ${data?.address?.[0]?.country ?? ""}`,
-    trabajoDireccion: data?.address?.[1]?.text ?? "No registrada",
-    trabajoDetalles: `${data?.address?.[1]?.city ?? ""}, ${data?.address?.[1]?.country ?? ""}`,
-  };
-
-  const patients: Patient[] =
-    apiPatients?.map((p: PatientApi, index: number) => ({
-      id: p.id || String(index),
-      key: p.id || String(index),
-      nombre:
-        p.name?.[0]?.text ??
-        p.name?.[0]?.given?.join(" ") ??
-        "Nombre no disponible",
-      identificadorTipo: p.identifier?.[0]?.type?.text ?? "DNI",
-      identificador: p.identifier?.[0]?.value || "-",
-      contacto: p.telecom?.[0]?.value || "-",
-      nacimiento: p.birthDate || "-",
-      nacionalidad: p.nationality || "-",
-      genero: p.gender || "-",
-      estadoVital: p.active ? "vivo" : "sin vida",
-    })) || [];
 
   const columns: ProColumns<PatientData>[] = [
     {
@@ -179,36 +127,10 @@ export default function PatientDetailsForm() {
     },
   ];
 
-  const handleCopyData = () => {
-    if (!data) {
-      navigator.clipboard.writeText("No hay datos del paciente para copiar.");
-      return;
-    }
-
-    const info = `
-   Nombre: ${selectedPatient.nombre} ${selectedPatient.apellidos}
-   Fecha de Nacimiento: ${selectedPatient.fechaNacimiento}
-   Edad: ${selectedPatient.edad}
-   Género: ${selectedPatient.genero}
-   Nacionalidad: ${selectedPatient.nacionalidad}
-   Estado Vital: ${selectedPatient.estadoVital}
-
-   DNI: ${selectedPatient.dni} (${selectedPatient.dniEmisor})
-   Pasaporte: ${selectedPatient.pasaporte} (${selectedPatient.pasaporteEmisor})
-
-   Móvil: ${selectedPatient.movil}
-   Email: ${selectedPatient.email}
-
-   Dirección Casa: ${selectedPatient.casaDireccion}
-   Dirección Trabajo: ${selectedPatient.trabajoDireccion}
-  `.trim();
-
-    navigator.clipboard.writeText(info);
-    alert("Datos del paciente copiados al portapapeles.");
-  };
-
+  
   return (
     <div className="space-y-6">
+      {contextHolder}
       {/* Header */}
       <div className="flex items-center justify-between"></div>
 
@@ -382,65 +304,73 @@ export default function PatientDetailsForm() {
         </div>
       </div>
 
-      {/* Search Filters */}
-      <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
-        <div className="flex items-center gap-2 text-primary mb-4">
-          <FilterOutlined className="text-lg" />
-          <h2 className="text-base font-medium">Filtros de Búsqueda</h2>
+      {/* Contenedor de los filtros */}
+      <div className="mb-6 rounded-lg border border-gray-300 bg-white p-6">
+        <div className="mb-4 flex items-center gap-2">
+          <FilterOutlined className="text-gray-600" />
+          <span className="text-lg font-medium text-blue-600">
+            Filtros de Búsqueda
+          </span>
         </div>
 
         <ProForm
-          submitter={{
-            render: () => null,
-          }}
+          submitter={false}
           layout="horizontal"
+          className="patient-filters"
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Contenedor de los filtros */}
+          <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2 lg:grid-cols-4">
             <ProFormText
-              name="nombrePaciente"
-              label="Nombre del Paciente"
+              name="nombreCompleto"
+              label="Nombres del Paciente"
               placeholder="Nombre Completo"
             />
+
             <ProFormSelect
               name="tipoIdentificador"
               label="Tipo de Identificador"
-              placeholder="DNI"
               options={[
-                { label: "DNI", value: "dni" },
-                { label: "Pasaporte", value: "pasaporte" },
-                { label: "ID", value: "id" },
+                { label: "DNI", value: "DNI" },
+                { label: "PST", value: "PST" },
+                { label: "ID", value: "ID" },
               ]}
+              placeholder="DNI"
             />
+
             <ProFormText
               name="identificador"
               label="Identificador"
-              placeholder="---"
+              placeholder="—"
             />
+
             <ProFormSelect
               name="genero"
               label="Género"
-              placeholder="Todos"
               options={[
                 { label: "Todos", value: "todos" },
-                { label: "Masculino", value: "M" },
-                { label: "Femenino", value: "F" },
+                { label: "H", value: "H" },
+                { label: "M", value: "M" },
               ]}
+              placeholder="Todos"
             />
+
             <ProFormText
               name="nacionalidad"
               label="Nacionalidad"
               placeholder="Todos"
             />
+
             <ProFormSelect
               name="estadoVital"
               label="Estado Vital"
-              placeholder="Todos"
               options={[
                 { label: "Todos", value: "todos" },
                 { label: "Vivo", value: "vivo" },
-                { label: "Sin Vida", value: "sin_vida" },
+                { label: "Sin vida", value: "sin vida" },
               ]}
+              placeholder="Todos"
             />
+
             <ProFormDatePicker
               name="fechaNacimiento"
               label="Fecha Nacimiento"
@@ -449,26 +379,27 @@ export default function PatientDetailsForm() {
                 format: "DD/MM/YYYY",
               }}
             />
+
             <ProFormSelect
               name="tipoContacto"
               label="Tipo Contacto"
-              placeholder="Todos"
               options={[
                 { label: "Todos", value: "todos" },
                 { label: "Teléfono", value: "telefono" },
                 { label: "Email", value: "email" },
               ]}
+              placeholder="Todos"
             />
+
             <ProFormText
               name="contacto"
               label="Contacto"
-              placeholder="504999929329"
+              placeholder="50499919292329"
             />
           </div>
         </ProForm>
       </div>
 
-      {/* Patient Registry Table */}
       {/* Registro de Pacientes */}
       <div className="rounded-lg border border-gray-300 bg-white p-6">
         <div className="mb-4 flex items-center gap-2">
@@ -477,12 +408,14 @@ export default function PatientDetailsForm() {
           </span>
         </div>
 
-        <Table
+        <ProTable
           columns={columns}
           dataSource={patients}
           pagination={false}
           scroll={{ x: 1200 }}
           className="patient-table"
+          search={false}
+          options={false}
         />
 
         <div className="mt-4 flex items-center justify-between">
