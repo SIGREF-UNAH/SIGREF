@@ -1,43 +1,42 @@
 import { useNavigate } from "react-router";
-import { useState } from "react";
-import { healthcareInitValues, healthcareValidationSchema } from "../forms";
-import { useFormik } from "formik";
-import type { Healthcare } from "../../../api/interfaces";
+import type { CreateHealthcareDto } from "../../../api/models";
+import { useQueryClient } from "@tanstack/react-query";
+import { getGetApiHealthcaresQueryKey, usePostApiHealthcares } from "../../../api/healthcares/healthcares";
+import { useMessage } from "../../../shared/hooks";
 
 export function useCreateHealthcare() {
   const navigate = useNavigate();
-  const [isPending, setIsPending] = useState(false);
+  const queryClient = useQueryClient();
+  const msg = useMessage();
 
-  // Validación del formulario con Formik
-  const formik = useFormik<Healthcare>({
-    initialValues: healthcareInitValues,
-    validationSchema: healthcareValidationSchema,
-    onSubmit: async (values) => {
-      setIsPending(true);
-
-      try {
-        // Llamada a la API
-        // const result = await createHealthcare(values);
-        const result = { healthcare: values, status: true, message: "Actividad creada correctamente" };
-        console.log("Healthcare Service to create:", result.healthcare);
-
-        if (!result.status) {
-          console.error("Error al crear el servicio médico: ", result.message);
-          return;
-        }
-
+  // Mutación para crear servicio
+  const { mutateAsync: createHealthcare, isPending } = usePostApiHealthcares({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetApiHealthcaresQueryKey() });
+        msg.success("Servicio médico creado correctamente");
         navigate("/healthcares");
-        
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setIsPending(false);
-      } 
+      },
+      onError: (error: any) => {
+        console.error("Error al crear el servicio médico:", error);
+        msg.error(
+          error?.response?.data?.message || "Error al crear el servicio médico"
+        );
+      },
     },
   });
 
+  // Función para manejar el submit del formulario
+  const handleFinish = async (values: CreateHealthcareDto) => {
+    try {
+      await createHealthcare({ data: values });
+    } catch (error) {
+      console.error("Error en handleFinish:", error);
+    }
+  };
+
   return {
-    formik,
+    handleFinish,
     isPending,
   };
 }

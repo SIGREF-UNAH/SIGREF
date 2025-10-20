@@ -1,8 +1,6 @@
-// src/components/ProtectedRoute.tsx
-// import { Can } from "@casl/react";
 import { Navigate } from "react-router";
 import type { JSX } from "react";
-import { useAbility } from "../../context/AbilityContext";
+import { useAbility } from "../../config/providers";
 
 export const ProtectedRoute = ({
   action,

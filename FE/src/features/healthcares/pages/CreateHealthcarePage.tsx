@@ -1,30 +1,50 @@
 import { HealthcareForm } from "../components/HealthcareForm";
-import { HealthcareHeader } from "../components/ui";
 import { FormTitle } from "../components/ui/FormTitle";
 import { useCreateHealthcare, useHealthcareForm } from "../hooks";
+import { HealthcareFormSkeleton } from "../components/skeletons";
+import { PageHeaderTabs } from "../../../shared/components/ui";
 
 export const CreateHealthcarePage = () => {
-  const { formik, isPending } = useCreateHealthcare();
-  const { organizations, locations, handleCancel } = useHealthcareForm();
+  const { 
+    isPending, 
+    handleFinish 
+  } = useCreateHealthcare();
+  
+  const { 
+    organizations, 
+    locations, 
+    isLoading, 
+    handleCancel 
+  } = useHealthcareForm();
 
   return (
     <div>
       {/* Encabezado */}
-      <div className="mb-6">
-        <HealthcareHeader />
-      </div>
+      <PageHeaderTabs
+        title="Gestión de Servicios"
+        tabs={[
+          { key: "listar", label: "Lista de Servicios", path: "/healthcares/list" },
+          { key: "crear", label: "Crear Servicio", path: "/healthcares/create" },
+        ]}
+        defaultActive="listar"
+      />
 
       {/* Contenido Principal */}
-      <div className="p-6 border-2 bg-card border-primary shadow-md rounded-lg">
+      <div className="p-6 border-2 bg-card border-gray-300 shadow-md rounded-lg">
         <FormTitle title="Crear Servicio" icon="create" />
-        <HealthcareForm
-          formik={formik}
-          organizations={organizations as any}
-          locations={locations as any}
-          onCancel={handleCancel}
-          submitButtonText="Crear servicio"
-          isPending={isPending}
-        />
+        
+        {isLoading ? (
+          <HealthcareFormSkeleton />
+        ) : (
+          <HealthcareForm
+            organizations={organizations}
+            locations={locations}
+            onFinish={handleFinish}
+            onCancel={handleCancel}
+            submitButtonText="Crear servicio"
+            isPending={isPending}
+          />
+        )}
       </div>
     </div>
   );

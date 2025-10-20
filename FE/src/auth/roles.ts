@@ -2,6 +2,7 @@ import Keycloak from "keycloak-js";
 
 const clientId = import.meta.env.VITE_KEYCLOAK_CLIENT_ID;
 
+// Función para obtener los roles del token de Keycloak
 export function getRolesFromToken(keycloak: Keycloak): string[] {
   if (!keycloak?.authenticated || !keycloak?.tokenParsed) return [];
 
@@ -12,3 +13,11 @@ export function getRolesFromToken(keycloak: Keycloak): string[] {
 
   return [...realmRoles, ...clientRoles];
 }
+
+// Lista de roles válidos
+export const validRoles: Record<string, string> = {
+  admin: "Administrador",
+  cashier: "Auxiliar de Caja", 
+  ti: "Técnico de Informática",
+  auditor: "Auditoria"
+};
