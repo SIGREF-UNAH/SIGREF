@@ -74,7 +74,7 @@ export const Layout = () => {
             }}
           >
             <span>SIGREF - Sistema de Gestión de Receptoría de Fondos</span>
-            <span>© 2025 Ingeniería en Sistemas - UNAH Copán</span>
+            <span>© 2025 Ingeniería en Sistemas - UNAH Campus Copán</span>
           </div>
         )}
         headerTitleRender={(logo) => (
