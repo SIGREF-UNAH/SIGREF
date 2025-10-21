@@ -1,14 +1,23 @@
 import { useParams } from "react-router";
 import { useState, useMemo } from "react";
 import { message } from "antd";
-import { useGetApiPatients, useGetApiPatientsId } from "../../../api/patients/patients";
+import {
+  useGetApiPatients,
+  useGetApiPatientsId,
+} from "../../../api/patients/patients";
+import type { PatientDto } from "../../../api/models";
 
 export function useDetailsPatient() {
   const { id } = useParams();
   const [messageApi, contextHolder] = message.useMessage();
 
-  const { data, isLoading, error } = useGetApiPatientsId(id);
-  const { data: apiPatients } = useGetApiPatients<PatientApi[]>();
+  const { data, isLoading, error } = useGetApiPatientsId(id ?? "") as {
+    data?: PatientDto;
+    isLoading: boolean;
+    error?: any;
+  };
+  const { data: apiPatients } = useGetApiPatients();
+  const patient: PatientDto | undefined = Array.isArray(data) ? data[0] : data;
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -42,64 +51,70 @@ export function useDetailsPatient() {
     messageApi.success("Datos del paciente copiados al portapapeles.");
   };
 
-
   // Extrae teléfono y correo
   const phone =
-    data?.telecom?.find((t) => t.system?.toLowerCase() === "phone")?.value ??
-    "No registrado";
+    data?.telecom?.find((t) => String(t.system).toLowerCase() === "phone")
+      ?.value ?? "No registrado";
+
   const email =
-    data?.telecom?.find((t) => t.system?.toLowerCase() === "email")?.value ??
-    "No registrado";
+    data?.telecom?.find((t) => String(t.system).toLowerCase() === "email")
+      ?.value ?? "No registrado";
 
   //  Datos del paciente seleccionado
-  const selectedPatient = useMemo(
-    () => ({
-      nombre: data?.name?.[0]?.given?.join(" ") ?? "Desconocido",
-      apellidos: data?.name?.[0]?.family ?? "Desconocido",
-      fechaNacimiento: data?.birthDate
-        ? new Date(data.birthDate).toLocaleDateString("es-HN", {
+  const selectedPatient = useMemo(() => {
+    return {
+      nombre: patient?.name?.[0]?.given?.join(" ") ?? "Desconocido",
+      apellidos: patient?.name?.[0]?.family ?? "Desconocido",
+      tipo: patient?.name?.[0]?.use,
+      fechaNacimiento: patient?.birthDate
+        ? new Date(patient.birthDate).toLocaleDateString("es-HN", {
             day: "2-digit",
             month: "long",
             year: "numeric",
           })
         : "No especificada",
-      edad: data?.birthDate
+      edad: patient?.birthDate
         ? `${Math.floor(
-            (Date.now() - new Date(data.birthDate).getTime()) /
+            (Date.now() - new Date(patient.birthDate).getTime()) /
               (365.25 * 24 * 60 * 60 * 1000)
           )} años`
         : "No especificada",
       genero:
-        data?.gender === 1
-          ? "Masculino"
-          : data?.gender === 2
-          ? "Femenino"
-          : "No especificado",
-      nacionalidad: data?.address?.[0]?.country ?? "No registrada",
-      estadoVital: data?.active ? "Con Vida" : "Sin Vida",
-      dni: data?.identifier?.[0]?.value ?? "No disponible",
-      dniEmisor: data?.identifier?.[0]?.system ?? "Desconocido",
-      pasaporte: data?.identifier?.[1]?.value ?? "No disponible",
-      pasaporteEmisor: data?.identifier?.[1]?.system ?? "Desconocido",
+        typeof patient?.gender === "string"
+          ? patient.gender === "male"
+            ? "Masculino"
+            : patient.gender === "female"
+              ? "Femenino"
+              : patient.gender === "other"
+                ? "Otro"
+                : "Desconocido"
+          : // si tu backend devuelve números aún:
+            patient?.gender === 1
+            ? "Masculino"
+            : patient?.gender === 2
+              ? "Femenino"
+              : patient?.gender === 3
+              ? "Otro"
+              : "No especificado",
+      nacionalidad: patient?.address?.[0]?.country ?? "No registrada",
+      estadoVital: patient?.active ? "Con Vida" : "Sin Vida",
+      dni: patient?.identifier?.[0]?.value ?? "No disponible",
+      dniEmisor: patient?.identifier?.[0]?.system ?? "Desconocido",
+      pasaporte: patient?.identifier?.[1]?.value ?? "No disponible",
+      pasaporteEmisor: patient?.identifier?.[1]?.system ?? "Desconocido",
       movil: phone,
-      preferido: "Preferido",
-      email: email,
-      casaDireccion: data?.address?.[0]?.text ?? "No disponible",
-      casaDetalles: `${data?.address?.[0]?.city ?? ""}, ${
-        data?.address?.[0]?.country ?? ""
-      }`,
-      trabajoDireccion: data?.address?.[1]?.text ?? "No registrada",
-      trabajoDetalles: `${data?.address?.[1]?.city ?? ""}, ${
-        data?.address?.[1]?.country ?? ""
-      }`,
-    }),
-    [data, phone, email]
-  );
+      email,
+      casaDireccion: patient?.address?.[0]?.text ?? "No disponible",
+      casaDetalles: `${patient?.address?.[0]?.city ?? ""}, ${patient?.address?.[0]?.country ?? ""}`,
+      trabajoDireccion: patient?.address?.[1]?.text ?? "No registrada",
+      trabajoDetalles: `${patient?.address?.[1]?.city ?? ""}, ${patient?.address?.[1]?.country ?? ""}`,
+    };
+  }, [data, phone, email]);
 
   // mapeo de pacientes para listado
   const patients = useMemo(
     () =>
-      apiPatients?.map((p: PatientApi, index: number) => ({
+      (apiPatients || []).map((p: PatientDto, index: number) => ({
         id: p.id || String(index),
         key: p.id || String(index),
         nombre:
@@ -112,17 +127,17 @@ export function useDetailsPatient() {
         nacimiento: p.birthDate
           ? new Date(p.birthDate).toLocaleDateString()
           : "-",
-        nacionalidad: p.nationality || "-",
+        nacionalidad: p.address?.[0]?.country || "-",
         genero:
           p.gender === 1
             ? "Masculino"
             : p.gender === 2
-            ? "Femenino"
-            : p.gender === 3
-            ? "Otro"
-            : "No especificado",
-        estadoVital: p.active ? "vivo" : "sin vida",
-      })) || [],
+              ? "Femenino"
+              : p.gender === 3
+                ? "Otro"
+                : "No especificado",
+        estadoVital: p.active ? "Vivo" : "Sin vida",
+      })),
     [apiPatients]
   );
 

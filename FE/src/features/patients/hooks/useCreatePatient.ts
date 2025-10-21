@@ -21,6 +21,7 @@ export default function useCreatePatientForm() {
     },
   });
 
+  
   const handleSubmit = async (values: any): Promise<boolean> => {
     const payload: CreatePatientDto = {
       name: [
@@ -35,7 +36,7 @@ export default function useCreatePatientForm() {
           suffix: [],
         },
       ],
-      gender: Number(values.gender),
+      gender: values.gender,
       birthDate: values.fechanacimiento,
       active: values.estadoVital === 1,
       telecom: values.telecom?.map((item: any, index: number) => ({
@@ -55,6 +56,7 @@ export default function useCreatePatientForm() {
           state: addr.state || "",
           postalCode: addr.postalCode || "",
           country: addr.country || "",
+          rank: index + 1,
         })) || [],
       identifier: [
         {

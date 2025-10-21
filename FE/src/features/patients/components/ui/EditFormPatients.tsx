@@ -19,14 +19,13 @@ import type { CollapseProps } from "antd";
 import { useEditPatient } from "../../hooks";
 
 export default function EditFormPatient() {
-
   const {
     contextHolder,
     handleFinish,
     handleCancel,
     initialValues,
     isPending,
-    messageApi
+    messageApi,
   } = useEditPatient();
 
   const nacionalidadContent = (
@@ -124,8 +123,8 @@ export default function EditFormPatient() {
         placeholder="Legal"
         width="sm"
         options={[
-          { label: "Legal", value: "legal" },
-          { label: "Alias", value: "alias" },
+          { label: "Legal", value: 0 },
+          { label: "Alias", value: 1 },
         ]}
       />
       <ProFormText
@@ -158,9 +157,9 @@ export default function EditFormPatient() {
         placeholder="Seleccione"
         width="sm"
         options={[
-           { label: "Teléfono", value: "phone" },
+          { label: "Teléfono", value: "phone" },
           { label: "Fax", value: "fax" },
-          { label: "Email", value: "email" }, 
+          { label: "Email", value: "email" },
           { label: "Pager", value: "pager" },
           { label: "URL", value: "url" },
           { label: "SMS", value: "sms" },
@@ -171,9 +170,9 @@ export default function EditFormPatient() {
         name={["telecom", 0, "use"]}
         label="Uso"
         options={[
-          { label: "Móvil", value: "mobile" },
-          { label: "Casa", value: "home" },
-          { label: "Trabajo", value: "work" },
+          { label: "Móvil", value: 2 },
+          { label: "Casa", value: 0 },
+          { label: "Trabajo", value: 1 },
         ]}
       />
       <ProFormText

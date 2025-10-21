@@ -1,6 +1,10 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { message } from "antd";
-import { useGetApiPatientsId, usePutApiPatientsId } from "../../../api/patients/patients"
+import {
+  useGetApiPatientsId,
+  usePutApiPatientsId,
+} from "../../../api/patients/patients";
+import type { PatientDto } from "../../../api/models";
 
 export const useEditPatient = () => {
   const { id } = useParams();
@@ -8,8 +12,12 @@ export const useEditPatient = () => {
   const [messageApi, contextHolder] = message.useMessage();
 
   // Obtener paciente por ID
-  const { data } = useGetApiPatientsId(id);
-
+  const { data } = useGetApiPatientsId(id ?? "") as {
+    data?: PatientDto;
+    isLoading: boolean;
+    error?: any;
+  };
+  const patient: PatientDto | undefined = Array.isArray(data) ? data[0] : data;
   // Mutación para actualizar
   const { mutate: updatePatient, isPending } = usePutApiPatientsId({
     mutation: {
@@ -34,33 +42,44 @@ export const useEditPatient = () => {
           use: values.tipoNombre === "legal" ? 0 : 1,
           text: `${values.primerNombre} ${values.apellidos}`,
           family: values.apellidos,
-          given: [values.primerNombre, values.segundoNombre || ""].filter(Boolean),
+          given: [values.primerNombre, values.segundoNombre || ""].filter(
+            Boolean
+          ),
           prefix: [],
           suffix: [],
         },
       ],
-      gender: Number(values.gender),
-      birthDate: values.fechanacimiento,
+      gender: values.gender,
+      birthDate: values.fechanacimiento
+        ? new Date(values.fechanacimiento).toISOString()
+        : undefined,
       active: values.estadoVital === 1,
       telecom: values.telecom?.map((item: any, index: number) => ({
         system: item.system,
-        use: item.use,
+        use:
+          item.use === "Casa"
+            ? 0
+            : item.use === "Trabajo"
+              ? 1
+              : item.use === "Móvil"
+                ? 2
+                : 3,
         value: item.value || "",
         rank: index + 1,
       })),
-      address: [
-        {
+      address:
+        values.address?.map((addr: any, index: number) => ({
           use: 0,
           type: 0,
-          text: values.address?.[0]?.line?.[0] || "",
-          line: [values.address?.[0]?.line?.[0] || ""],
-          city: values.address?.[0]?.city || "",
-          district: "",
-          state: values.address?.[0]?.state || "",
-          postalCode: "",
-          country: values.address?.[0]?.country || "",
-        },
-      ],
+          text: addr.line?.[0] || "",
+          line: addr.line || [],
+          city: addr.city || "",
+          district: addr.district || "",
+          state: addr.state || "",
+          postalCode: addr.postalCode || "",
+          country: addr.country || "",
+          rank: index + 1,
+        })) || [],
       identifier: [
         {
           use: 0,
@@ -81,7 +100,7 @@ export const useEditPatient = () => {
         },
       ],
     };
-
+    console.log("DTO a enviar al backend:", updatePatientDto);
     updatePatient({
       id: id || "",
       data: updatePatientDto,
@@ -95,24 +114,31 @@ export const useEditPatient = () => {
   };
 
   // Valores iniciales
-  const initialValues = data
+  const initialValues = patient
     ? {
-        primerNombre: data.name?.[0]?.given?.[0] || "",
-        segundoNombre: data.name?.[0]?.given?.[1] || "",
-        apellidos: data.name?.[0]?.family || "",
-        gender: data.gender || 0,
-        estadoVital: data.active ? 1 : 0,
-        fechanacimiento: data.birthDate ? new Date(data.birthDate) : null,
-        tipoIdentificacion: data.identifier?.[0]?.type?.text || "",
-        identifier: [{ value: data.identifier?.[0]?.value || "" }],
+        primerNombre: patient.name?.[0]?.given?.[0] || "",
+        segundoNombre: patient.name?.[0]?.given?.[1] || "",
+        apellidos: patient.name?.[0]?.family || "",
+        gender: patient.gender || 0,
+        estadoVital: patient.active ? 1 : 0,
+        fechanacimiento: patient.birthDate ? new Date(patient.birthDate) : null,
+        tipoIdentificacion: patient.identifier?.[0]?.type?.text || "",
+        identifier: [{ value: patient.identifier?.[0]?.value || "" }],
         telecom:
-          data.telecom?.map((t) => ({
-            system: t.system === "Phone" ? 0 : 1,
-            use: t.use?.toLowerCase() || "home",
+          patient.telecom?.map((t) => ({
+            system: t.system,
+            use:
+              t.use === 0
+                ? "Casa"
+                : t.use === 1
+                  ? "Trabajo"
+                  : t.use === 2
+                    ? "Mobile"
+                    : "Otro",
             value: t.value,
           })) || [],
         address:
-          data.address?.map((a) => ({
+          patient.address?.map((a) => ({
             country: a.country || "",
             state: a.state || "",
             city: a.city || "",

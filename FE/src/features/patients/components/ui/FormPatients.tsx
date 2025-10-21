@@ -52,10 +52,9 @@ export default function CreateFormPatient() {
         width="sm"
         rules={[{ required: true, message: "Campo requerido" }]}
         options={[
-          { label: "Masculino", value: 1 },
-          { label: "Femenino", value: 2 },
-          { label: "Otro", value: 3 },
-          { label: "Desconocido", value: 0 },
+           { label: "Masculino", value: 1 },
+           { label: "Femenino", value: 2 },
+           { label: "Otro", value: 3 },
         ]}
       />
       <ProFormSelect
@@ -132,8 +131,8 @@ export default function CreateFormPatient() {
         placeholder="Legal"
         width="sm"
         options={[
-          { label: "Legal", value: "legal" },
-          { label: "Alias", value: "alias" },
+          { label: "Legal", value: 0 },
+          { label: "Alias", value: 1 },
         ]}
       />
       <ProFormText

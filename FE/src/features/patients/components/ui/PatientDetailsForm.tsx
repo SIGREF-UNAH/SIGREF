@@ -289,9 +289,6 @@ export default function PatientDetailsForm() {
                 <div className="text-muted-foreground">
                   {selectedPatient.movil}
                 </div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  {selectedPatient.preferido}
-                </div>
               </div>
               <div className="pt-3">
                 <div className="font-medium mb-1">Email:</div>
