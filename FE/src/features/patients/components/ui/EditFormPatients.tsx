@@ -13,7 +13,6 @@ import {
   UserOutlined,
   PhoneOutlined,
   HomeOutlined,
-  PlusOutlined,
 } from "@ant-design/icons";
 import type { CollapseProps } from "antd";
 import { useEditPatient } from "../../hooks";
@@ -25,7 +24,6 @@ export default function EditFormPatient() {
     handleCancel,
     initialValues,
     isPending,
-    messageApi,
   } = useEditPatient();
 
   const nacionalidadContent = (
@@ -248,19 +246,6 @@ export default function EditFormPatient() {
         </Space>
       ),
       children: nacionalidadContent,
-      extra: (
-        <Button
-          type="primary"
-          size="small"
-          icon={<PlusOutlined />}
-          onClick={(e) => {
-            e.stopPropagation();
-            messageApi.info("Agregar nacionalidad");
-          }}
-        >
-          Agregar
-        </Button>
-      ),
     },
     {
       key: "2",
@@ -271,19 +256,6 @@ export default function EditFormPatient() {
         </Space>
       ),
       children: identificacionesContent,
-      extra: (
-        <Button
-          type="primary"
-          size="small"
-          icon={<PlusOutlined />}
-          onClick={(e) => {
-            e.stopPropagation();
-            messageApi.info("Agregar identificación");
-          }}
-        >
-          Agregar
-        </Button>
-      ),
     },
     {
       key: "3",
@@ -294,19 +266,6 @@ export default function EditFormPatient() {
         </Space>
       ),
       children: nombresContent,
-      extra: (
-        <Button
-          type="primary"
-          size="small"
-          icon={<PlusOutlined />}
-          onClick={(e) => {
-            e.stopPropagation();
-            messageApi.info("Agregar nombre");
-          }}
-        >
-          Agregar
-        </Button>
-      ),
     },
     {
       key: "4",
@@ -317,19 +276,6 @@ export default function EditFormPatient() {
         </Space>
       ),
       children: contactoContent,
-      extra: (
-        <Button
-          type="primary"
-          size="small"
-          icon={<PlusOutlined />}
-          onClick={(e) => {
-            e.stopPropagation();
-            messageApi.info("Agregar contacto");
-          }}
-        >
-          Agregar
-        </Button>
-      ),
     },
     {
       key: "5",
@@ -340,19 +286,6 @@ export default function EditFormPatient() {
         </Space>
       ),
       children: direccionesContent,
-      extra: (
-        <Button
-          type="primary"
-          size="small"
-          icon={<PlusOutlined />}
-          onClick={(e) => {
-            e.stopPropagation();
-            messageApi.info("Agregar dirección");
-          }}
-        >
-          Agregar
-        </Button>
-      ),
     },
   ];
 

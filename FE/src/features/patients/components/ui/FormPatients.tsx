@@ -18,6 +18,7 @@ import {
 import type { CollapseProps } from "antd";
 import useCreatePatientForm from "../../hooks/useCreatePatient";
 import { Link } from "react-router-dom";
+import { ProFormList } from "@ant-design/pro-components";
 
 export default function CreateFormPatient() {
   const { handleSubmit, isSubmitting, error } = useCreatePatientForm();
@@ -52,9 +53,9 @@ export default function CreateFormPatient() {
         width="sm"
         rules={[{ required: true, message: "Campo requerido" }]}
         options={[
-           { label: "Masculino", value: 1 },
-           { label: "Femenino", value: 2 },
-           { label: "Otro", value: 3 },
+          { label: "Masculino", value: 1 },
+          { label: "Femenino", value: 2 },
+          { label: "Otro", value: 3 },
         ]}
       />
       <ProFormSelect
@@ -158,92 +159,129 @@ export default function CreateFormPatient() {
   );
 
   const contactoContent = (
-    <ProFormGroup>
-      <ProFormSelect
-        name={["telecom", 0, "system"]}
-        label="Tipo de contacto"
-        placeholder="Seleccione"
-        width="sm"
-        options={[
-          { label: "Teléfono", value: "phone" },
-          { label: "Fax", value: "fax" },
-          { label: "Email", value: "email" },
-          { label: "Pager", value: "pager" },
-          { label: "URL", value: "url" },
-          { label: "SMS", value: "sms" },
-          { label: "Otro", value: "other" },
-        ]}
-      />
-      <ProFormSelect
-        name={["telecom", 0, "use"]}
-        label="Uso"
-        options={[
-          { label: "Móvil", value: "mobile" },
-          { label: "Casa", value: "home" },
-          { label: "Trabajo", value: "work" },
-        ]}
-      />
-      <ProFormText
-        name="codigoPais"
-        label="Codigo de País"
-        placeholder="+504"
-        width="md"
-      />
-      <ProFormText
-        name={["telecom", 0, "value"]}
-        label="Valor"
-        placeholder="9999-9999 / ejemplo@correo.com"
-        width="md"
-      />
-      <ProFormRadio.Group
-        name="contactoPreferido"
-        label=" "
-        options={[{ label: "Preferido", value: true }]}
-      />
-    </ProFormGroup>
+    <ProFormList
+      name="telecom"
+      creatorButtonProps={{
+        creatorButtonText: "Agregar contacto",
+        icon: <PlusOutlined />,
+      }}
+    >
+      {(field, index, action) => (
+        <ProFormGroup key={field.key}>
+          <ProFormSelect
+            {...field}
+            name="system"
+            label="Tipo de contacto"
+            placeholder="Seleccione"
+            width="sm"
+            options={[
+              { label: "Teléfono", value: "phone" },
+              { label: "Fax", value: "fax" },
+              { label: "Email", value: "email" },
+              { label: "Pager", value: "pager" },
+              { label: "URL", value: "url" },
+              { label: "SMS", value: "sms" },
+              { label: "Otro", value: "other" },
+            ]}
+          />
+
+          <ProFormSelect
+            {...field}
+            name="use"
+            label="Uso"
+            options={[
+              { label: "Móvil", value: 2 },
+              { label: "Casa", value: 0 },
+              { label: "Trabajo", value: 1 },
+            ]}
+          />
+
+          <ProFormText
+            {...field}
+            name="codigoPais"
+            label="Código de País"
+            placeholder="+504"
+            width="sm"
+          />
+
+          <ProFormText
+            {...field}
+            name="value"
+            label="Valor"
+            placeholder="9999-9999 / ejemplo@correo.com"
+            width="md"
+          />
+
+          <ProFormRadio.Group
+            {...field}
+            name="preferido"
+            label="Preferido"
+            options={[{ label: "Sí", value: true }]}
+          />
+
+          <Button type="link" danger onClick={() => action.remove(index)}>
+            Eliminar
+          </Button>
+        </ProFormGroup>
+      )}
+    </ProFormList>
   );
 
   const direccionesContent = (
-    <ProFormGroup>
-      <ProFormSelect
-        name="tipoDireccion"
-        label="Tipo"
-        placeholder="Casa"
-        width="sm"
-        options={[
-          { label: "Casa", value: "casa" },
-          { label: "Trabajo", value: "trabajo" },
-          { label: "Otro", value: "otro" },
-        ]}
-      />
-      <ProFormText
-        name={["address", 0, "country"]}
-        label="Pais"
-        placeholder="Honduras"
-        width="md"
-      />
-      <ProFormText
-        name={["address", 0, "state"]}
-        label="Departamento"
-        placeholder="Copan"
-        width="md"
-      />
-      <ProFormText
-        name={["address", 0, "city"]}
-        label="Ciudad"
-        placeholder="Santa Rosa"
-        width="md"
-      />
-      <ProFormText
-        name={["address", 0, "line", 0]}
-        label="Detalle de Ubicación"
-        placeholder="Ave 13, Calle 7, Casa 2 planta Azul"
-        width="xl"
-        fieldProps={{
-          style: { width: "100%" },
-        }}
-      />
-    </ProFormGroup>
+    <ProFormList
+      name="address"
+      creatorButtonProps={{
+        creatorButtonText: "Agregar dirección",
+        icon: <PlusOutlined />,
+      }}
+    >
+      {(field, index, action) => (
+        <ProFormGroup key={field.key}>
+          <ProFormSelect
+            {...field}
+            name="tipo"
+            label="Tipo"
+            width="sm"
+            options={[
+              { label: "Casa", value: "casa" },
+              { label: "Trabajo", value: "trabajo" },
+              { label: "Otro", value: "otro" },
+            ]}
+          />
+          <ProFormText
+            {...field}
+            name="country"
+            label="País"
+            placeholder="Honduras"
+            width="md"
+          />
+          <ProFormText
+            {...field}
+            name="state"
+            label="Departamento"
+            placeholder="Copan"
+            width="md"
+          />
+          <ProFormText
+            {...field}
+            name="city"
+            label="Ciudad"
+            placeholder="Santa Rosa"
+            width="md"
+          />
+          <ProFormText
+            {...field}
+            name={["line", 0]}
+            label="Detalle de Ubicación"
+            placeholder="Ave 13, Calle 7, Casa 2"
+            width="xl"
+          />
+          <Button type="link" danger onClick={() => action.remove(index)}>
+            Eliminar
+          </Button>
+        </ProFormGroup>
+      )}
+    </ProFormList>
   );
 
   const collapseItems: CollapseProps["items"] = [
@@ -286,18 +324,6 @@ export default function CreateFormPatient() {
         </Space>
       ),
       children: contactoContent,
-      extra: (
-        <Button
-          type="primary"
-          size="small"
-          icon={<PlusOutlined />}
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          Agregar
-        </Button>
-      ),
     },
     {
       key: "5",
@@ -308,18 +334,6 @@ export default function CreateFormPatient() {
         </Space>
       ),
       children: direccionesContent,
-      extra: (
-        <Button
-          type="primary"
-          size="small"
-          icon={<PlusOutlined />}
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          Agregar
-        </Button>
-      ),
     },
   ];
 
