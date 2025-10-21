@@ -1,7 +1,5 @@
 ﻿#nullable enable
 using Hl7.Fhir.Model;
-using Humanizer;
-using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Patient;
 using SIGREF.API.Extensions.Common;
 
@@ -10,9 +8,9 @@ public static class PatientExtensions
 {
 
 
-    public static PatientDTO ToDto(this Patient patient)
+    public static PatientDto ToDto(this Patient patient)
     {
-        return new PatientDTO
+        return new PatientDto
         {
             Id = patient.Id,
             Active = patient.Active ?? true,

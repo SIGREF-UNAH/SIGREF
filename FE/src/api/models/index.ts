@@ -41,3 +41,5 @@ export * from "./updateLocationDto";
 export * from "./updateOrganizationDto";
 export * from "./updatePatientDto";
 export * from "./updatePractitionerDto";
+export * from "./updatePractitionerRoleDto";
+export * from "./patientDto";

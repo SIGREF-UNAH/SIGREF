@@ -4,7 +4,7 @@ export const HealthcaresPageSkeleton = () => {
   return (
     <div>
       {/* Contenido Skeleton */}
-      <div className="p-4 border-2 bg-card border-primary shadow-md rounded-lg">
+      <div className="p-4 border-2 bg-card border-gray-300 shadow-md rounded-lg">
         {/* Filtros Skeleton */}
         <div className="flex justify-end gap-3 mb-4">
           <Skeleton.Input style={{ width: 300, height: 36 }} active />

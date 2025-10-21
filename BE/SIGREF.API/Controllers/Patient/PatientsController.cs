@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos.Patient;
 using SIGREF.API.Services.Patient;
-using System.Net;
 
 namespace SIGREF.API.Controllers.PatientC;
 
@@ -32,6 +31,7 @@ public class PatientsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces("application/json")]
+    [Produces<IEnumerable<PatientDto>>()]
     public async Task<IActionResult> GetFiltered([FromQuery] PatientFilterDto filter)
     {
         var patients = await _patientService.GetFilteredPatientsAsync(filter);
@@ -47,6 +47,7 @@ public class PatientsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Produces("application/json")]
+    [Produces<IEnumerable<PatientDto>>()]
     public async Task<IActionResult> GetById(string id)
     {
         var patient = await _patientService.GetPatientByIdAsync(id);
@@ -65,6 +66,7 @@ public class PatientsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [Produces("application/json")]
+    [Produces<IEnumerable<PatientDto>>()]
     public async Task<IActionResult> CreatePatient([FromBody] CreatePatientDto createPatientDto)
     {
         if (!ModelState.IsValid)
@@ -85,6 +87,7 @@ public class PatientsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [Produces("application/json")]
+    [Produces<IEnumerable<PatientDto>>()]
     public async Task<IActionResult> UpdatePatient(string id, [FromBody] UpdatePatientDto updatePatientDto)
     {
         if (!ModelState.IsValid)

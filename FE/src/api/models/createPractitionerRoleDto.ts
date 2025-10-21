@@ -4,18 +4,20 @@
  * SIGREF.API
  * OpenAPI spec version: 1.0
  */
-import type { CreatePractitionerRoleDtoIdentifierItem } from "./createPractitionerRoleDtoIdentifierItem";
-import type { CreatePractitionerRoleDtoCodeItem } from "./createPractitionerRoleDtoCodeItem";
+import type { IdentifierDto } from "./identifierDto";
+import type { PeriodDto } from "./periodDto";
+import type { ReferenceDto } from "./referenceDto";
+import type { CodeableConceptDto } from "./codeableConceptDto";
 
 export interface CreatePractitionerRoleDto {
+  identifier: IdentifierDto[];
+  period?: PeriodDto;
+  practitioner: ReferenceDto;
+  code: CodeableConceptDto[];
   /** @nullable */
-  identifier?: CreatePractitionerRoleDtoIdentifierItem[] | null;
+  display?: string | null;
+  organization?: ReferenceDto;
+  /** @nullable */
+  location?: ReferenceDto[] | null;
   active?: boolean;
-  code: CreatePractitionerRoleDtoCodeItem[];
-  /** @minLength 1 */
-  practitioner: string;
-  /** @minLength 1 */
-  organization: string;
-  /** @nullable */
-  location?: string[] | null;
 }

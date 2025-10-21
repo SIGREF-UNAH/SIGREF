@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+import { Table, Input, Tag } from "antd";
+import type { ColumnsType } from "antd/es/table";
+import type { CreateHealthcareDto, HealthcareDto, LocationDto, OrganizationDto } from "../../../api/models";
 import {
   ProForm,
   ProFormText,
@@ -7,9 +10,6 @@ import {
   ProFormSelect,
   ProFormSwitch,
 } from "@ant-design/pro-components";
-import { Table, Input, Tag, message } from "antd";
-import type { ColumnsType } from "antd/es/table";
-import type { CreateHealthcareDto, HealthcareDto, LocationDto, OrganizationDto } from "../../../api/models";
 
 interface HealthcareFormProps {
   initialValues?: Partial<HealthcareDto>;
@@ -85,11 +85,6 @@ export const HealthcareForm = ({
 
   // Manejar submit del formulario
   const handleFinish = async (values: any) => {
-    // Validar que se hayan seleccionado ubicaciones
-    if (selectedLocations.length === 0) {
-      message.warning("Se recomienda seleccionar al menos una ubicación");
-    }
-
     // Construir el objeto HealthcareDto
     const healthcareData: CreateHealthcareDto = {
       ...values,

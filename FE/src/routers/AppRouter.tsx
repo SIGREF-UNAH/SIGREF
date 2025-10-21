@@ -1,14 +1,14 @@
 import { Navigate, Route, Routes } from "react-router";
-import LocationsRouter from "../features/locations/routers/LocationsRouter";
 import { Layout } from "../shared/components";
 import { HealthcaresRouter } from "../features/healthcares/routers";
 import { HomePage } from "../shared/pages";
 import { IncomesRouter } from "../features/incomes/routers";
 import { PractitionersRouter } from "../features/practitioners/routers";
-import { PatientsRouter } from "../features/patients/routers";
 import { OrganizationsRouter } from "../features/organizations/routers";
 import { ReportsRouter } from "../features/reports/routers";
 import { EventsRouter } from "../features/events/routers";
+import { PatientsRouter } from "../features/patients/routers";
+import { LocationsRouter } from "../features/locations/routers";
 
  export const AppRouter = () => {
   return (
@@ -17,7 +17,7 @@ import { EventsRouter } from "../features/events/routers";
       <Route element={<Layout />}>
         {/* Página de Inicio */}
         <Route path="/" element={<HomePage />} />
-
+    
         {/* Rutas de Ubicaciones */}
         <Route path="/locations/*" element={<LocationsRouter />} />
 

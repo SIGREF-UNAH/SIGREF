@@ -1,4 +1,4 @@
 export * from './CreateLocationPage';
-export * from './EditLocation';
+export * from './EditLocationPage';
 export * from './LocationDetailsPage';
 export * from './LocationListPage';

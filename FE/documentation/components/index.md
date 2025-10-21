@@ -6,5 +6,7 @@
 ## 📌 Acceso a Documentos Específicos
 
 Componentes para la UI:
+- [PageHeaderTabs](/documentation/components/PageHeaderTabs.md)
 
-- [ProtectedComponent](/documentation/components/ProtectedComponent.md)
+Control de permisos con CASL:
+- [CASL & Keycloak – Control de Permisos](/documentation/components/CASL.md)

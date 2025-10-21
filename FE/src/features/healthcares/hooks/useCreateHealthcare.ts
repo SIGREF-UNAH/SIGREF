@@ -1,24 +1,25 @@
 import { useNavigate } from "react-router";
-import { message } from "antd";
 import type { CreateHealthcareDto } from "../../../api/models";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetApiHealthcaresQueryKey, usePostApiHealthcares } from "../../../api/healthcares/healthcares";
+import { useMessage } from "../../../shared/hooks";
 
 export function useCreateHealthcare() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const msg = useMessage();
 
   // Mutación para crear servicio
   const { mutateAsync: createHealthcare, isPending } = usePostApiHealthcares({
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getGetApiHealthcaresQueryKey() });
-        message.success("Servicio médico creado exitosamente");
+        msg.success("Servicio médico creado correctamente");
         navigate("/healthcares");
       },
       onError: (error: any) => {
         console.error("Error al crear el servicio médico:", error);
-        message.error(
+        msg.error(
           error?.response?.data?.message || "Error al crear el servicio médico"
         );
       },

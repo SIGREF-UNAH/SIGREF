@@ -12,6 +12,10 @@ export interface ContactPointDto {
   /** @nullable */
   value?: string | null;
   use?: ContactPointUse;
-  /** @nullable */
+  /**
+   * @minimum 1
+   * @maximum 2147483647
+   * @nullable
+   */
   rank?: number | null;
 }

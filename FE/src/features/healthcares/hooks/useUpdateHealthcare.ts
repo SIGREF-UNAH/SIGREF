@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { message } from "antd";
 import { useQueryClient } from "@tanstack/react-query";
+import { useMessage } from "../../../shared/hooks";
 import type { UpdateHealthcareDto } from "../../../api/models";
 import {
   getGetApiHealthcaresQueryKey,
@@ -12,6 +12,7 @@ export function useUpdateHealthcare() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const msg = useMessage();
 
   // Obtener datos del servicio a editar
   const { data: healthcare, isLoading } = useGetApiHealthcaresId(id!, {
@@ -27,12 +28,12 @@ export function useUpdateHealthcare() {
         queryClient.invalidateQueries({
           queryKey: getGetApiHealthcaresQueryKey(),
         });
-        message.success("Servicio médico actualizado exitosamente");
+        msg.success("Servicio médico actualizado correctamente");
         navigate("/healthcares");
       },
       onError: (error: any) => {
         console.error("Error al actualizar el servicio médico:", error);
-        message.error(
+        msg.error(
           error?.response?.data?.message ||
             "Error al actualizar el servicio médico"
         );
@@ -43,7 +44,7 @@ export function useUpdateHealthcare() {
   // Función para manejar el submit del formulario
   const handleFinish = async (values: UpdateHealthcareDto) => {
     if (!id) {
-      message.error("ID del servicio no encontrado");
+      msg.error("ID del servicio no encontrado");
       return;
     }
 
