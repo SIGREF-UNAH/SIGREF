@@ -45,41 +45,35 @@ export const useEditPatient = () => {
           given: [values.primerNombre, values.segundoNombre || ""].filter(
             Boolean
           ),
-          prefix: [],
-          suffix: [],
         },
       ],
       gender: values.gender,
-      birthDate: values.fechanacimiento
-        ? new Date(values.fechanacimiento).toISOString()
-        : undefined,
+      birthDate: values.fechanacimiento,
       active: values.estadoVital === 1,
-      telecom: values.telecom?.map((item: any, index: number) => ({
-        system: item.system,
-        use:
-          item.use === "Casa"
-            ? 0
-            : item.use === "Trabajo"
-              ? 1
-              : item.use === "Móvil"
-                ? 2
-                : 3,
-        value: item.value || "",
-        rank: index + 1,
-      })),
+
+      telecom:
+        values.telecom?.map((item: any, index: number) => ({
+          system: item.system,
+          use: item.use,
+          value: item.value || "",
+          rank: index + 1,
+          codigoPais: item.codigoPais || "+504",
+          preferido: item.preferido ?? false,
+        })) || [],
+
       address:
         values.address?.map((addr: any, index: number) => ({
-          use: 0,
+          use: addr.tipoDireccion || "casa",
           type: 0,
-          text: addr.line?.[0] || "",
-          line: addr.line || [],
+          text: addr.line || "",
+          line: addr.line ? [addr.line] : [],
           city: addr.city || "",
-          district: addr.district || "",
           state: addr.state || "",
           postalCode: addr.postalCode || "",
           country: addr.country || "",
           rank: index + 1,
         })) || [],
+
       identifier: [
         {
           use: 0,
@@ -100,7 +94,9 @@ export const useEditPatient = () => {
         },
       ],
     };
+
     console.log("DTO a enviar al backend:", updatePatientDto);
+
     updatePatient({
       id: id || "",
       data: updatePatientDto,
@@ -126,23 +122,20 @@ export const useEditPatient = () => {
         identifier: [{ value: patient.identifier?.[0]?.value || "" }],
         telecom:
           patient.telecom?.map((t) => ({
-            system: t.system,
-            use:
-              t.use === 0
-                ? "Casa"
-                : t.use === 1
-                  ? "Trabajo"
-                  : t.use === 2
-                    ? "Mobile"
-                    : "Otro",
-            value: t.value,
+            system: t.system || "phone",
+            use: t.use === 0 ? 0 : t.use === 1 ? 1 : 2,
+            value: t.value || "",
+            //codigoPais: t.codigoPais || "+504",
+            //contactoPreferido: t.preferido || false,
           })) || [],
         address:
           patient.address?.map((a) => ({
+            tipoDireccion: a.use || "casa",
             country: a.country || "",
             state: a.state || "",
             city: a.city || "",
-            line: a.line || [""],
+            line: a.line?.[0] || "",
+            postalCode: a.postalCode || "",
           })) || [],
       }
     : {};

@@ -5,6 +5,7 @@ import {
   ProFormDatePicker,
   ProFormRadio,
   ProFormGroup,
+  ProFormList,
 } from "@ant-design/pro-components";
 import { Button, Collapse, Space } from "antd";
 import {
@@ -13,6 +14,7 @@ import {
   UserOutlined,
   PhoneOutlined,
   HomeOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
 import type { CollapseProps } from "antd";
 import { useEditPatient } from "../../hooks";
@@ -146,94 +148,121 @@ export default function EditFormPatient() {
       />
     </ProFormGroup>
   );
-
   const contactoContent = (
-    <ProFormGroup>
-      <ProFormSelect
-        name={["telecom", 0, "system"]}
-        label="Tipo de contacto"
-        placeholder="Seleccione"
-        width="sm"
-        options={[
-          { label: "Teléfono", value: "phone" },
-          { label: "Fax", value: "fax" },
-          { label: "Email", value: "email" },
-          { label: "Pager", value: "pager" },
-          { label: "URL", value: "url" },
-          { label: "SMS", value: "sms" },
-          { label: "Otro", value: "other" },
-        ]}
-      />
-      <ProFormSelect
-        name={["telecom", 0, "use"]}
-        label="Uso"
-        options={[
-          { label: "Móvil", value: 2 },
-          { label: "Casa", value: 0 },
-          { label: "Trabajo", value: 1 },
-        ]}
-      />
-      <ProFormText
-        name="codigoPais"
-        label="Codigo de País"
-        placeholder="+504"
-        width="md"
-      />
-      <ProFormText
-        name={["telecom", 0, "value"]}
-        label="Valor"
-        placeholder="9999-9999 / ejemplo@correo.com"
-        width="md"
-      />
-      <ProFormRadio.Group
-        name="contactoPreferido"
-        label=" "
-        options={[{ label: "Preferido", value: true }]}
-      />
-    </ProFormGroup>
-  );
+    <ProFormList
+      name="telecom"
+      creatorButtonProps={{
+        creatorButtonText: "Agregar contacto",
+        icon: <PlusOutlined />,
+      }}
+    >
+      {(field, index, action) => (
+        <ProFormGroup key={field.key}>
+          <ProFormSelect
+            name="system"
+            label="Tipo de contacto"
+            placeholder="Seleccione"
+            width="sm"
+            options={[
+              { label: "Teléfono", value: "phone" },
+              { label: "Fax", value: "fax" },
+              { label: "Email", value: "email" },
+              { label: "Pager", value: "pager" },
+              { label: "URL", value: "url" },
+              { label: "SMS", value: "sms" },
+              { label: "Otro", value: "other" },
+            ]}
+          />
 
+          <ProFormSelect
+            name="use"
+            label="Uso"
+            width="sm"
+            options={[
+              { label: "Casa", value: 0 },
+              { label: "Trabajo", value: 1 },
+              { label: "Móvil", value: 2 },
+            ]}
+          />
+
+          <ProFormText
+            name="codigoPais"
+            label="Código de País"
+            placeholder="+504"
+            width="sm"
+            initialValue="+504"
+          />
+
+          <ProFormText
+            name="value"
+            label="Valor"
+            placeholder="9999-9999 / ejemplo@correo.com"
+            width="md"
+          />
+
+          <ProFormRadio.Group
+            name="preferido"
+            label="Preferido"
+            options={[{ label: "Sí", value: true }]}
+            initialValue={false}
+          />
+
+          <Button type="link" danger onClick={() => action.remove(index)}>
+            Eliminar
+          </Button>
+        </ProFormGroup>
+      )}
+    </ProFormList>
+  );
   const direccionesContent = (
-    <ProFormGroup>
-      <ProFormSelect
-        name="tipoDireccion"
-        label="Tipo"
-        placeholder="Casa"
-        width="sm"
-        options={[
-          { label: "Casa", value: "casa" },
-          { label: "Trabajo", value: "trabajo" },
-          { label: "Otro", value: "otro" },
-        ]}
-      />
-      <ProFormText
-        name={["address", 0, "country"]}
-        label="Pais"
-        placeholder="Honduras"
-        width="md"
-      />
-      <ProFormText
-        name={["address", 0, "state"]}
-        label="Departamento"
-        placeholder="Copan"
-        width="md"
-      />
-      <ProFormText
-        name={["address", 0, "city"]}
-        label="Ciudad"
-        placeholder="Santa Rosa"
-        width="md"
-      />
-      <ProFormText
-        name={["address", 0, "line", 0]}
-        label="Detalle de Ubicación"
-        placeholder="Ave 13, Calle 7, Casa 2 planta Azul"
-        width="xl"
-        fieldProps={{
-          style: { width: "100%" },
-        }}
-      />
-    </ProFormGroup>
+    <ProFormList
+      name="address"
+      creatorButtonProps={{
+        creatorButtonText: "Agregar dirección",
+        icon: <PlusOutlined />,
+      }}
+      initialValue={initialValues.address}
+    >
+      {(field, index, action) => (
+        <ProFormGroup key={field.key}>
+          <ProFormSelect
+            name="tipoDireccion"
+            label="Tipo"
+            placeholder="Casa"
+            width="sm"
+            options={[
+              { label: "Casa", value: "casa" },
+              { label: "Trabajo", value: "trabajo" },
+              { label: "Otro", value: "otro" },
+            ]}
+          />
+
+          <ProFormText name="country" label="País" placeholder="Honduras" />
+
+          <ProFormText name="state" label="Departamento" placeholder="Copán" />
+
+          <ProFormText name="city" label="Ciudad" placeholder="Santa Rosa" />
+
+          <ProFormText
+            name="line"
+            label="Detalle de ubicación"
+            placeholder="Ave 13, Calle 7, Casa 2, planta Azul"
+            width="xl"
+            fieldProps={{ style: { width: "100%" } }}
+          />
+
+          <ProFormText
+            name="postalCode"
+            label="Código Postal"
+            placeholder="XXXXX"
+          />
+
+          <Button type="link" danger onClick={() => action.remove(index)}>
+            Eliminar
+          </Button>
+        </ProFormGroup>
+      )}
+    </ProFormList>
   );
 
   const collapseItems: CollapseProps["items"] = [
