@@ -1,3 +1,4 @@
+using System.Runtime.Serialization;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 using SIGREF.API.Dtos;
@@ -27,7 +28,7 @@ namespace SIGREF.API.Services.Organizations
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creando organización");
+                _logger.LogError(ex, "Error creando organizaciï¿½n");
                 throw;
             }
         }
@@ -42,12 +43,12 @@ namespace SIGREF.API.Services.Organizations
             }
             catch (FhirOperationException ex) when (ex.Status == System.Net.HttpStatusCode.NotFound)
             {
-                _logger.LogWarning("Organización con ID {Id} no encontrada", id);
+                _logger.LogWarning("Organizaciï¿½n con ID {Id} no encontrada", id);
                 return null;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error obteniendo organización con ID {Id}", id);
+                _logger.LogError(ex, "Error obteniendo organizaciï¿½n con ID {Id}", id);
                 throw;
             }
         }
@@ -102,12 +103,12 @@ namespace SIGREF.API.Services.Organizations
             }
             catch (FhirOperationException ex) when (ex.Status == System.Net.HttpStatusCode.NotFound)
             {
-                _logger.LogWarning("Organización con ID {Id} no encontrada para actualizar", id);
+                _logger.LogWarning("Organizaciï¿½n con ID {Id} no encontrada para actualizar", id);
                 return null;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error actualizando organización con ID {Id}", id);
+                _logger.LogError(ex, "Error actualizando organizaciï¿½n con ID {Id}", id);
                 throw;
             }
         }
@@ -121,14 +122,68 @@ namespace SIGREF.API.Services.Organizations
             }
             catch (FhirOperationException ex) when (ex.Status == System.Net.HttpStatusCode.NotFound)
             {
-                _logger.LogWarning("Organización con ID {Id} no encontrada para eliminar", id);
+                _logger.LogWarning("Organizaciï¿½n con ID {Id} no encontrada para eliminar", id);
                 return false;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error eliminando organización con ID {Id}", id);
+                _logger.LogError(ex, "Error eliminando organizaciï¿½n con ID {Id}", id);
                 throw;
             }
+        }
+
+        // Filtros
+        public async Task<IEnumerable<OrganizationDto>> GetFilteredOrganizationsAsync(OrganizationFilterDto filter)
+        {
+            var searchParams = new SearchParams();
+
+            if (!string.IsNullOrWhiteSpace(filter.Name))
+                searchParams.Add("name", filter.Name);
+
+            if (filter.Active.HasValue)
+                searchParams.Add("active", filter.Active.Value.ToString().ToLowerInvariant());
+
+            if (filter.Types != null && filter.Types.Any())
+            {
+                foreach (var type in filter.Types)
+                {
+                    var typeValue = GetEnumMemberValue(type);
+                    searchParams.Add("type", typeValue);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.PartOf))
+                searchParams.Add("partof", filter.PartOf);
+
+            var bundle = await _fhirClient.SearchAsync<Hl7.Fhir.Model.Organization>(searchParams);
+
+            var organizations = new List<OrganizationDto>();
+
+            while (bundle != null)
+            {
+                organizations.AddRange(bundle.Entry
+                    .Where(e => e.Resource is Hl7.Fhir.Model.Organization)
+                    .Select(e => ((Hl7.Fhir.Model.Organization)e.Resource).ToDto()));
+
+                if (bundle.NextLink != null)
+                    bundle = await _fhirClient.ContinueAsync(bundle);
+                else
+                    break;
+            }
+
+            return organizations;
+        }
+
+        // Auxiliar para obtener el valor de EnumMember
+        private static string GetEnumMemberValue(Enum enumValue)
+        {
+            var type = enumValue.GetType();
+            var info = type.GetField(enumValue.ToString());
+            var attr = info?.GetCustomAttributes(typeof(EnumMemberAttribute), false)
+                            .Cast<EnumMemberAttribute>()
+                            .FirstOrDefault();
+
+            return attr?.Value ?? enumValue.ToString().ToLowerInvariant();
         }
     }
 }

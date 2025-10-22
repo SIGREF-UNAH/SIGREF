@@ -9,5 +9,6 @@ namespace SIGREF.API.Services.Organization
         Task<IEnumerable<OrganizationDto>> GetAllOrganizationsAsync();
         Task<OrganizationDto> GetOrganizationByIdAsync(string id);
         Task<OrganizationDto> UpdateOrganizationAsync(string id, UpdateOrganizationDto dto);
+        Task<IEnumerable<OrganizationDto>> GetFilteredOrganizationsAsync(OrganizationFilterDto filter);
     }
 }

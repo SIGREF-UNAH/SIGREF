@@ -311,5 +311,26 @@ public class PractitionerRoleService : IPractitionerRoleService
 
         return true;
     }
+
+    // Filtrar
+    public async Task<IEnumerable<PractitionerRoleDto>> GetFilteredAsync(PractitionerRoleFilterDto filters)
+    {
+        var searchParams = new SearchParams();
+
+        if (filters.Active.HasValue)
+            searchParams.Add("active", filters.Active.Value.ToString().ToLower());
+
+        if (!string.IsNullOrEmpty(filters.OrganizationId))
+            searchParams.Add("organization", $"Organization/{filters.OrganizationId}");
+
+        if (!string.IsNullOrEmpty(filters.Specialty))
+            searchParams.Add("specialty", filters.Specialty);
+
+        var bundle = await _fhirClient.SearchAsync<FhirPractitionerRole>(searchParams);
+
+        return bundle.Entry?
+                    .Select(e => ((FhirPractitionerRole)e.Resource).ToDto())
+                    .ToList() ?? new List<PractitionerRoleDto>();
+    }
 }
 

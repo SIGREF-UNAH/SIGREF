@@ -17,19 +17,11 @@ public class OrganizationsController : ControllerBase
         _logger = logger;
     }
 
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<OrganizationDto>>> GetAllOrganizations()
+    [HttpGet()]
+    public async Task<IActionResult> GetFilteredOrganizations([FromQuery] OrganizationFilterDto filter)
     {
-        try
-        {
-            var organizations = await _organizationService.GetAllOrganizationsAsync();
-            return Ok(organizations);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error obteniendo todas las organizaciones");
-            return StatusCode(500, "Ocurrió un error al recuperar las organizaciones");
-        }
+        var organizations = await _organizationService.GetFilteredOrganizationsAsync(filter);
+        return Ok(organizations);
     }
 
     [HttpGet("{id}")]

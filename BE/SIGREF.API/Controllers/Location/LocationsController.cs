@@ -20,13 +20,18 @@ public class LocationsController(LocationService locationService) : ControllerBa
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    [Produces<IEnumerable<LocationDto>>()]
-    public async Task<IActionResult> Get()
+    [Produces(typeof(IEnumerable<LocationDto>))]
+    public async Task<IActionResult> Get([FromQuery] LocationFilterDto filter)
     {
-        var locations = await locationService.GetAllLocationsAsync();
+        var locations = await locationService.GetFilteredLocationsAsync(filter);
         var locationDtos = locations.Select(location => location.ToDto());
         return Ok(locationDtos);
     }
+
+    private static readonly HashSet<string> ValidStatuses = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "active", "suspended", "inactive"
+    };
 
     // GET api/locations/5
     [HttpGet("{id}")]

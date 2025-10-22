@@ -24,9 +24,9 @@ public class PractitionerRoleController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetFiltered([FromQuery] PractitionerRoleFilterDto filters)
     {
-        var roles = await _prService.GetAllAsync();
+        var roles = await _prService.GetFilteredAsync(filters);
         return Ok(roles);
     }
 

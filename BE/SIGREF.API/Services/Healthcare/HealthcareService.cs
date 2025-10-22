@@ -1,9 +1,8 @@
 ﻿using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 using Task = System.Threading.Tasks.Task;
-
-// Alias para evitar el conflicto de nombres
 using FhirHealthcare = Hl7.Fhir.Model.HealthcareService;
+using SIGREF.API.Dtos.Healthcare;
 
 namespace SIGREF.API.Services.Healthcare
 {
@@ -64,6 +63,36 @@ namespace SIGREF.API.Services.Healthcare
         public async Task DeleteHealthcareAsync(string id)
         {
             await fhirService.DeleteAsync($"HealthcareService/{id}");
+        }
+
+        // Filtrar
+        public async Task<IEnumerable<FhirHealthcare>> GetFilteredHealthcaresAsync(HealthcareFilterDto filter)
+        {
+            var searchParams = new SearchParams();
+
+            if (!string.IsNullOrWhiteSpace(filter.Name))
+                searchParams.Add("name", filter.Name);
+
+            if (filter.Active.HasValue)
+                searchParams.Add("active", filter.Active.Value.ToString().ToLowerInvariant());
+
+            if (!string.IsNullOrWhiteSpace(filter.Specialty))
+                searchParams.Add("specialty", filter.Specialty);
+
+            if (!string.IsNullOrWhiteSpace(filter.ProvidedBy))
+                searchParams.Add("organization", filter.ProvidedBy);
+
+            if (!string.IsNullOrWhiteSpace(filter.Location))
+                searchParams.Add("location", filter.Location);
+
+            var bundle = await fhirService.SearchAsync<FhirHealthcare>(searchParams);
+
+            var healthcares = bundle.Entry?
+                .Where(e => e.Resource is FhirHealthcare)
+                .Select(e => (FhirHealthcare)e.Resource)
+                ?? Enumerable.Empty<FhirHealthcare>();
+
+            return healthcares;
         }
     }
 }

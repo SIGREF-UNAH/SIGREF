@@ -19,5 +19,8 @@ public interface IPractitionerRoleService
 
     // Eliminar
     Task<bool> DeleteAsync(string id);
+
+    // Filtrar
+    Task<IEnumerable<PractitionerRoleDto>> GetFilteredAsync(PractitionerRoleFilterDto filters);
 }
 

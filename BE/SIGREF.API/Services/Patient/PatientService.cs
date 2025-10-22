@@ -3,6 +3,7 @@ using SIGREF.API.Dtos.Patient;
 using FhirPatient = Hl7.Fhir.Model.Patient;
 using SIGREF.API.Extensions;
 using Task = System.Threading.Tasks.Task;
+using System.Runtime.Serialization;
 namespace SIGREF.API.Services.Patient;
 
 /// <summary>
@@ -123,6 +124,38 @@ public class PatientService : IPatientService
     public async Task DeletePatientAsync(string id)
     {
         await _fhirClient.DeleteAsync($"{ResourceType}/{id}");
+    }
+
+    //Filtros
+    public async Task<IEnumerable<PatientDTO>> GetFilteredPatientsAsync(PatientFilterDto filter)
+    {
+        var searchParams = new SearchParams();
+
+        if (!string.IsNullOrWhiteSpace(filter.Name))
+            searchParams.Add("name", filter.Name);
+
+        if (filter.Active.HasValue)
+            searchParams.Add("active", filter.Active.Value.ToString().ToLower());
+
+        if (filter.Gender.HasValue)
+            searchParams.Add("gender", filter.Gender.Value.ToString().ToLower());
+
+        var bundle = await _fhirClient.SearchAsync<FhirPatient>(searchParams);
+
+        return bundle.Entry?
+                    .Select(e => (e.Resource as FhirPatient)?.ToDto())
+                    .Where(dto => dto != null)
+                    .ToList() ?? Enumerable.Empty<PatientDTO>();
+    }
+
+    private static string GetEnumMemberValue(Enum enumValue)
+    {
+        var type = enumValue.GetType();
+        var info = type.GetField(enumValue.ToString());
+        var attr = info?.GetCustomAttributes(typeof(EnumMemberAttribute), false)
+                        .Cast<EnumMemberAttribute>()
+                        .FirstOrDefault();
+        return attr?.Value ?? enumValue.ToString().ToLowerInvariant();
     }
 }
 

@@ -13,5 +13,7 @@ public interface IPractitionerService
     Task<FhirPractitioner> UpdatePractitionerAsync(string id, FhirPractitioner dto);
 
     Task DeletePractitionerAsync(string id);
+
+    Task<IEnumerable<PractitionerDto>> GetFilteredPractitionersAsync(PractitionerFilterDto filter);
 }
 
