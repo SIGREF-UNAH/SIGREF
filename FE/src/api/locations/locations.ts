@@ -22,6 +22,7 @@ import type {
 
 import type {
   CreateLocationDto,
+  GetApiLocationsParams,
   LocationDto,
   ProblemDetails,
   UpdateLocationDto,
@@ -29,33 +30,44 @@ import type {
 
 import { customInstance } from ".././mutator/customInstance";
 
-export const getApiLocations = (signal?: AbortSignal) => {
+export const getApiLocations = (
+  params?: GetApiLocationsParams,
+  signal?: AbortSignal,
+) => {
   return customInstance<LocationDto[]>({
     url: `/api/Locations`,
     method: "GET",
+    params,
     signal,
   });
 };
 
-export const getGetApiLocationsQueryKey = () => {
-  return [`/api/Locations`] as const;
+export const getGetApiLocationsQueryKey = (params?: GetApiLocationsParams) => {
+  return [`/api/Locations`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetApiLocationsQueryOptions = <
   TData = Awaited<ReturnType<typeof getApiLocations>>,
   TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
->(options?: {
-  query?: Partial<
-    UseQueryOptions<Awaited<ReturnType<typeof getApiLocations>>, TError, TData>
-  >;
-}) => {
+>(
+  params?: GetApiLocationsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getApiLocations>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
   const { query: queryOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetApiLocationsQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getGetApiLocationsQueryKey(params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiLocations>>> = ({
     signal,
-  }) => getApiLocations(signal);
+  }) => getApiLocations(params, signal);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getApiLocations>>,
@@ -77,6 +89,7 @@ export function useGetApiLocations<
   TData = Awaited<ReturnType<typeof getApiLocations>>,
   TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
 >(
+  params: undefined | GetApiLocationsParams,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -102,6 +115,7 @@ export function useGetApiLocations<
   TData = Awaited<ReturnType<typeof getApiLocations>>,
   TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
 >(
+  params?: GetApiLocationsParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -127,6 +141,7 @@ export function useGetApiLocations<
   TData = Awaited<ReturnType<typeof getApiLocations>>,
   TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
 >(
+  params?: GetApiLocationsParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -145,6 +160,7 @@ export function useGetApiLocations<
   TData = Awaited<ReturnType<typeof getApiLocations>>,
   TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
 >(
+  params?: GetApiLocationsParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -158,7 +174,7 @@ export function useGetApiLocations<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getGetApiLocationsQueryOptions(options);
+  const queryOptions = getGetApiLocationsQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

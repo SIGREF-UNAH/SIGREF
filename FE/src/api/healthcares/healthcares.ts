@@ -22,6 +22,7 @@ import type {
 
 import type {
   CreateHealthcareDto,
+  GetApiHealthcaresParams,
   HealthcareDto,
   ProblemDetails,
   UpdateHealthcareDto,
@@ -29,37 +30,47 @@ import type {
 
 import { customInstance } from ".././mutator/customInstance";
 
-export const getApiHealthcares = (signal?: AbortSignal) => {
+export const getApiHealthcares = (
+  params?: GetApiHealthcaresParams,
+  signal?: AbortSignal,
+) => {
   return customInstance<HealthcareDto[]>({
     url: `/api/Healthcares`,
     method: "GET",
+    params,
     signal,
   });
 };
 
-export const getGetApiHealthcaresQueryKey = () => {
-  return [`/api/Healthcares`] as const;
+export const getGetApiHealthcaresQueryKey = (
+  params?: GetApiHealthcaresParams,
+) => {
+  return [`/api/Healthcares`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetApiHealthcaresQueryOptions = <
   TData = Awaited<ReturnType<typeof getApiHealthcares>>,
   TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
->(options?: {
-  query?: Partial<
-    UseQueryOptions<
-      Awaited<ReturnType<typeof getApiHealthcares>>,
-      TError,
-      TData
-    >
-  >;
-}) => {
+>(
+  params?: GetApiHealthcaresParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getApiHealthcares>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
   const { query: queryOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetApiHealthcaresQueryKey();
+  const queryKey =
+    queryOptions?.queryKey ?? getGetApiHealthcaresQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof getApiHealthcares>>
-  > = ({ signal }) => getApiHealthcares(signal);
+  > = ({ signal }) => getApiHealthcares(params, signal);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getApiHealthcares>>,
@@ -81,6 +92,7 @@ export function useGetApiHealthcares<
   TData = Awaited<ReturnType<typeof getApiHealthcares>>,
   TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
 >(
+  params: undefined | GetApiHealthcaresParams,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -106,6 +118,7 @@ export function useGetApiHealthcares<
   TData = Awaited<ReturnType<typeof getApiHealthcares>>,
   TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
 >(
+  params?: GetApiHealthcaresParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -131,6 +144,7 @@ export function useGetApiHealthcares<
   TData = Awaited<ReturnType<typeof getApiHealthcares>>,
   TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
 >(
+  params?: GetApiHealthcaresParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -149,6 +163,7 @@ export function useGetApiHealthcares<
   TData = Awaited<ReturnType<typeof getApiHealthcares>>,
   TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
 >(
+  params?: GetApiHealthcaresParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -162,7 +177,7 @@ export function useGetApiHealthcares<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getGetApiHealthcaresQueryOptions(options);
+  const queryOptions = getGetApiHealthcaresQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

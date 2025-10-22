@@ -29,7 +29,7 @@ namespace SIGREF.API.Services.Patient
         /// </summary>
         /// <param name="filter">Parámetros de filtro (nombre, género, estado civil, activo).</param>
         /// <returns>Lista de pacientes que cumplen los criterios.</returns>
-        Task<IEnumerable<PatientDTO>> GetFilteredPatientsAsync(PatientFilterDto filter);
+        Task<IEnumerable<PatientDto>> GetFilteredPatientsAsync(PatientFilterDto filter);
 
         /// <summary>
         /// Actualiza un paciente existente.

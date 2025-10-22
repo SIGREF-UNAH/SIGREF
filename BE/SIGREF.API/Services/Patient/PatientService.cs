@@ -127,7 +127,7 @@ public class PatientService : IPatientService
     }
 
     //Filtros
-    public async Task<IEnumerable<PatientDTO>> GetFilteredPatientsAsync(PatientFilterDto filter)
+    public async Task<IEnumerable<PatientDto>> GetFilteredPatientsAsync(PatientFilterDto filter)
     {
         var searchParams = new SearchParams();
 
@@ -145,7 +145,7 @@ public class PatientService : IPatientService
         return bundle.Entry?
                     .Select(e => (e.Resource as FhirPatient)?.ToDto())
                     .Where(dto => dto != null)
-                    .ToList() ?? Enumerable.Empty<PatientDTO>();
+                    .ToList() ?? Enumerable.Empty<PatientDto>();
     }
 
     private static string GetEnumMemberValue(Enum enumValue)
