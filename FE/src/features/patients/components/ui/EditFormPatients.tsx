@@ -208,7 +208,6 @@ export default function EditFormPatient() {
           />
 
           <Button type="link" danger onClick={() => action.remove(index)}>
-            Eliminar
           </Button>
         </ProFormGroup>
       )}
@@ -231,9 +230,11 @@ export default function EditFormPatient() {
             placeholder="Casa"
             width="sm"
             options={[
-              { label: "Casa", value: "casa" },
-              { label: "Trabajo", value: "trabajo" },
-              { label: "Otro", value: "otro" },
+              { label: "Casa", value: "home" },
+              { label: "Trabajo", value: "work" },
+              { label: "Temporal", value: "temp" },
+              { label: "Antigua", value: "old" },
+              { label: "Facturación", value: "billing" },
             ]}
           />
 
@@ -250,15 +251,7 @@ export default function EditFormPatient() {
             width="xl"
             fieldProps={{ style: { width: "100%" } }}
           />
-
-          <ProFormText
-            name="postalCode"
-            label="Código Postal"
-            placeholder="XXXXX"
-          />
-
-          <Button type="link" danger onClick={() => action.remove(index)}>
-            Eliminar
+          <Button type="link" danger onClick={() => action.remove(index)}>           
           </Button>
         </ProFormGroup>
       )}

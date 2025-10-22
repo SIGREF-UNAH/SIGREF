@@ -18,6 +18,7 @@ import { Badge, Button, Pagination, Spin, Tag, Typography } from "antd";
 import type { ProColumns } from "@ant-design/pro-components";
 import { Link } from "react-router-dom";
 import { useDetailsPatient } from "../../hooks";
+import { BiTrash } from "react-icons/bi";
 
 interface PatientData {
   id: string;
@@ -33,7 +34,7 @@ interface PatientData {
 }
 
 export default function PatientDetailsForm() {
-   const {
+  const {
     id,
     isLoading,
     error,
@@ -62,6 +63,8 @@ export default function PatientDetailsForm() {
         </Typography.Text>
       </div>
     );
+
+  console.log(selectedPatient);
 
   const columns: ProColumns<PatientData>[] = [
     {
@@ -127,7 +130,6 @@ export default function PatientDetailsForm() {
     },
   ];
 
-  
   return (
     <div className="space-y-6">
       {contextHolder}
@@ -143,7 +145,7 @@ export default function PatientDetailsForm() {
               Información del Paciente Seleccionado
             </h2>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 ">
             <Button
               type="primary"
               icon={<CopyOutlined />}
@@ -161,6 +163,14 @@ export default function PatientDetailsForm() {
                 Editar Datos
               </Button>
             </Link>
+            <Button
+              type="primary"
+              icon={<BiTrash />}
+              className="!bg-red-600 !hover:bg-red-400"
+              //onClick={handleDelite}
+            >
+              Eliminar
+            </Button>
           </div>
         </div>
 
@@ -222,25 +232,31 @@ export default function PatientDetailsForm() {
                 <EnvironmentOutlined />
                 <h3 className="font-medium">Direcciones</h3>
               </div>
-              <div className="space-y-3 text-sm">
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                {/* Dirección principal (Casa) */}
                 <div>
                   <div className="font-medium mb-1">Casa:</div>
                   <div className="text-muted-foreground text-xs">
-                    {selectedPatient.casaDireccion}
+                    {selectedPatient.casaDireccion || "No registrada"}
                   </div>
                   <div className="font-medium mt-1">Detalles:</div>
                   <div className="text-muted-foreground text-xs">
-                    {selectedPatient.casaDetalles}
+                    {selectedPatient.casaDetalles || "No registrados"}
                   </div>
                 </div>
+
+                {/* Segunda dirección (Trabajo) */}
                 <div>
-                  <div className="font-medium mb-1">Trabajo:</div>
+                  <div className="font-medium mb-1">
+                    Segunda dirección (Lugar):
+                  </div>
                   <div className="text-muted-foreground text-xs">
-                    {selectedPatient.trabajoDireccion}
+                    {selectedPatient.trabajoDireccion || "No registrada"}
                   </div>
                   <div className="font-medium mt-1">Detalles:</div>
                   <div className="text-muted-foreground text-xs">
-                    {selectedPatient.trabajoDetalles}
+                    {selectedPatient.trabajoDetalles || "No registrados"}
                   </div>
                 </div>
               </div>

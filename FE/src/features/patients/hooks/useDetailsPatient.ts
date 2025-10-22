@@ -27,7 +27,6 @@ export function useDetailsPatient() {
       messageApi.warning("No hay datos del paciente para copiar.");
       return;
     }
-
     // Texto que se copia del paciente
     const info = `
    Nombre: ${selectedPatient.nombre} ${selectedPatient.apellidos}

@@ -115,6 +115,7 @@ export const useEditPatient = () => {
         primerNombre: patient.name?.[0]?.given?.[0] || "",
         segundoNombre: patient.name?.[0]?.given?.[1] || "",
         apellidos: patient.name?.[0]?.family || "",
+        tipoNombre: patient.name?.[0]?.use === 0 ? "alias" : "legal",
         gender: patient.gender || 0,
         estadoVital: patient.active ? 1 : 0,
         fechanacimiento: patient.birthDate ? new Date(patient.birthDate) : null,
@@ -130,7 +131,7 @@ export const useEditPatient = () => {
           })) || [],
         address:
           patient.address?.map((a) => ({
-            tipoDireccion: a.use || "casa",
+            tipoDireccion: a.use || "home",
             country: a.country || "",
             state: a.state || "",
             city: a.city || "",

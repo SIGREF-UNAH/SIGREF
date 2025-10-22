@@ -185,7 +185,7 @@ export default function CreateFormPatient() {
             ]}
           />
 
-          <ProFormSelect
+          {/* <ProFormSelect
             {...field}
             name="use"
             label="Uso"
@@ -194,7 +194,7 @@ export default function CreateFormPatient() {
               { label: "Casa", value: 0 },
               { label: "Trabajo", value: 1 },
             ]}
-          />
+          /> */}
 
           <ProFormText
             {...field}
@@ -220,7 +220,6 @@ export default function CreateFormPatient() {
           />
 
           <Button type="link" danger onClick={() => action.remove(index)}>
-            Eliminar
           </Button>
         </ProFormGroup>
       )}
@@ -236,16 +235,18 @@ export default function CreateFormPatient() {
       }}
     >
       {(field, index, action) => (
-        <ProFormGroup key={field.key}>
+        <ProFormGroup key={field.key}>  
           <ProFormSelect
             {...field}
-            name="tipo"
+            name="tipoDireccion"
             label="Tipo"
             width="sm"
             options={[
-              { label: "Casa", value: "casa" },
-              { label: "Trabajo", value: "trabajo" },
-              { label: "Otro", value: "otro" },
+              { label: "Casa", value: "home" },
+              { label: "Trabajo", value: "work" },
+              { label: "Temporal", value: "temp" },
+              { label: "Antigua", value: "old" },
+              { label: "Facturación", value: "billing" },
             ]}
           />
           <ProFormText
@@ -277,7 +278,6 @@ export default function CreateFormPatient() {
             width="xl"
           />
           <Button type="link" danger onClick={() => action.remove(index)}>
-            Eliminar
           </Button>
         </ProFormGroup>
       )}
