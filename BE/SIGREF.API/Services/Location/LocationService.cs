@@ -5,6 +5,7 @@ using Hl7.Fhir.Model;
 using SIGREF.API.Services.Common;
 using SIGREF.API.Dtos.Location;
 using System.Runtime.Serialization;
+using SIGREF.API.Dtos.Common;
 
 namespace SIGREF.API.Services.Location;
 
@@ -36,29 +37,6 @@ public class LocationService
 
     {
         return _fhirClient.ReadAsync<FhirLocation>($"{ResourceType}/{id}");
-    }
-    /// <summary>
-    /// Obtiene todos los recursos <see cref="FhirLocation"/> disponibles en el servidor FHIR.
-    /// </summary>
-    /// <returns>Una tarea que representa la operación asíncrona. El resultado es una colección de recursos <see cref="FhirLocation"/>.</returns>
-    /// <remarks>
-    /// Este método realiza una búsqueda sin filtros. En entornos con grandes volúmenes de datos, se recomienda paginar o filtrar.
-    /// </remarks>
-    /// <exception cref="FhirOperationException">Se lanza si ocurre un error durante la búsqueda en el servidor FHIR.</exception>
-    /// <example>
-    /// <code>
-    /// var locations = await locationService.GetAllLocationsAsync();
-    /// foreach (var loc in locations)
-    /// {
-    ///     Console.WriteLine(loc.Name);
-    /// }
-    /// </code>
-    /// </example>
-    public async Task<IEnumerable<FhirLocation>> GetAllLocationsAsync()
-    {
-        var searchResult = await _fhirClient.SearchAsync<FhirLocation>();
-        return searchResult.Entry?.Select(e => e.Resource as FhirLocation).Where(l => l != null) ??
-               Enumerable.Empty<FhirLocation>();
     }
     /// <summary>
     /// Crea un nuevo recurso <see cref="FhirLocation"/> en el servidor FHIR.
@@ -155,38 +133,70 @@ public class LocationService
     }
 
     // Filtrado
-    public async Task<IEnumerable<Hl7.Fhir.Model.Location>> GetFilteredLocationsAsync(LocationFilterDto filter)
+    public async Task<PagedResult<FhirLocation>> GetFilteredLocationsAsync(LocationFilterDto filter)
+    {
+        // Validar y normalizar parámetros de paginación
+        var pageNumber = Math.Max(1, filter.PageNumber);
+        var pageSize = filter.PageSize > 0 ? filter.PageSize : 10;
+        var offset = (pageNumber - 1) * pageSize;
+
+        var searchParams = new SearchParams();
+
+        if (!string.IsNullOrWhiteSpace(filter.Name))
+            searchParams.Add("name", filter.Name);
+
+        if (filter.Status.HasValue)
         {
-            var searchParams = new SearchParams();
-
-            if (!string.IsNullOrWhiteSpace(filter.Name))
-                searchParams.Add("name", filter.Name);
-
-            if (filter.Status.HasValue)
-            {
-                var statusValue = GetEnumMemberValue(filter.Status.Value);
-                searchParams.Add("status", statusValue);
-            }
-
-            var bundle = await _fhirClient.SearchAsync<Hl7.Fhir.Model.Location>(searchParams);
-
-            var locations = bundle.Entry
-                .Where(e => e.Resource is Hl7.Fhir.Model.Location)
-                .Select(e => (Hl7.Fhir.Model.Location)e.Resource)
-                .ToList();
-
-            return locations;
+            var statusValue = GetEnumMemberValue(filter.Status.Value);
+            searchParams.Add("status", statusValue);
         }
 
-        // Auxiliar para obtener el valor de [EnumMember]
-        private static string GetEnumMemberValue(Enum enumValue)
-        {
-            var type = enumValue.GetType();
-            var info = type.GetField(enumValue.ToString());
-            var attr = info?.GetCustomAttributes(typeof(EnumMemberAttribute), false)
-                            .Cast<EnumMemberAttribute>()
-                            .FirstOrDefault();
+        // Parametros de paginación
+        searchParams.Count = pageSize;
+        searchParams.Add("_offset", offset.ToString());
+        
+        // Solicitar conteo total
+        searchParams.Add("_total", "accurate");
 
-            return attr?.Value ?? enumValue.ToString().ToLowerInvariant();
-        }
+        // Realizar la búsqueda
+        var bundle = await _fhirClient.SearchAsync<FhirLocation>(searchParams);
+
+        // Obtener los recursos
+        var locations = bundle.Entry
+            .Where(e => e.Resource is FhirLocation)
+            .Select(e => (FhirLocation)e.Resource)
+            .ToList();
+
+        // Calcular paginación
+        var totalItems = bundle.Total ?? locations.Count;
+        var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+        var pagination = new PaginationDto
+        {
+            CurrentPage = pageNumber,
+            PageSize = pageSize,
+            TotalItems = totalItems,
+            TotalPages = totalPages,
+            HasPrevious = pageNumber > 1,
+            HasNext = bundle.NextLink != null || pageNumber < totalPages
+        };
+
+        return new PagedResult<FhirLocation>
+        {
+            Items = locations,
+            Pagination = pagination
+        };
+    }
+
+    // Auxiliar para obtener el valor de [EnumMember]
+    private static string GetEnumMemberValue(Enum enumValue)
+    {
+        var type = enumValue.GetType();
+        var info = type.GetField(enumValue.ToString());
+        var attr = info?.GetCustomAttributes(typeof(EnumMemberAttribute), false)
+                        .Cast<EnumMemberAttribute>()
+                        .FirstOrDefault();
+
+        return attr?.Value ?? enumValue.ToString().ToLowerInvariant();
+    }
 }

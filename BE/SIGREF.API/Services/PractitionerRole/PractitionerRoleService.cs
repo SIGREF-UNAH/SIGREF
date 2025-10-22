@@ -78,14 +78,6 @@ public class PractitionerRoleService : IPractitionerRoleService
         }
     }
 
-    public async Task<IEnumerable<PractitionerRoleDto>> GetAllAsync()
-    {
-        var bundle = await _fhirClient.SearchAsync<FhirPractitionerRole>();
-        return bundle.Entry?
-                     .Select(e => ((FhirPractitionerRole)e.Resource).ToDto())
-                     .ToList() ?? new List<PractitionerRoleDto>() ?? [];
-    }
-
     public async Task<ServiceResult<PractitionerRoleDto>> UpdateAsync(string id, UpdatePractitionerRoleDto dto)
     {
         // 1. Verificar que el recurso exista
@@ -313,12 +305,18 @@ public class PractitionerRoleService : IPractitionerRoleService
     }
 
     // Filtrar
-    public async Task<IEnumerable<PractitionerRoleDto>> GetFilteredAsync(PractitionerRoleFilterDto filters)
+    public async Task<PagedResult<PractitionerRoleDto>> GetFilteredAsync(PractitionerRoleFilterDto filters)
     {
+        // Validar y normalizar parámetros de paginación
+        var pageNumber = Math.Max(1, filters.PageNumber);
+        var pageSize = filters.PageSize > 0 ? filters.PageSize : 10;
+        var offset = (pageNumber - 1) * pageSize;
+
         var searchParams = new SearchParams();
 
+        // Filtros
         if (filters.Active.HasValue)
-            searchParams.Add("active", filters.Active.Value.ToString().ToLower());
+            searchParams.Add("active", filters.Active.Value.ToString().ToLowerInvariant());
 
         if (!string.IsNullOrEmpty(filters.OrganizationId))
             searchParams.Add("organization", $"Organization/{filters.OrganizationId}");
@@ -326,11 +324,40 @@ public class PractitionerRoleService : IPractitionerRoleService
         if (!string.IsNullOrEmpty(filters.Specialty))
             searchParams.Add("specialty", filters.Specialty);
 
+        // Paginación FHIR
+        searchParams.Count = pageSize;
+        searchParams.Add("_offset", offset.ToString());
+        searchParams.Add("_total", "accurate");
+
+        // Ejecutar búsqueda
         var bundle = await _fhirClient.SearchAsync<FhirPractitionerRole>(searchParams);
 
-        return bundle.Entry?
-                    .Select(e => ((FhirPractitionerRole)e.Resource).ToDto())
-                    .ToList() ?? new List<PractitionerRoleDto>();
+        // Mapear resultados a DTO
+        var roles = bundle.Entry?
+            .Where(e => e.Resource is FhirPractitionerRole)
+            .Select(e => ((FhirPractitionerRole)e.Resource).ToDto())
+            .ToList() ?? new List<PractitionerRoleDto>();
+
+        // Calcular totales
+        var totalItems = bundle.Total ?? roles.Count;
+        var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+        var pagination = new PaginationDto
+        {
+            CurrentPage = pageNumber,
+            PageSize = pageSize,
+            TotalItems = totalItems,
+            TotalPages = totalPages,
+            HasPrevious = pageNumber > 1,
+            HasNext = bundle.NextLink != null || pageNumber < totalPages
+        };
+
+        // Retornar resultado paginado
+        return new PagedResult<PractitionerRoleDto>
+        {
+            Items = roles,
+            Pagination = pagination
+        };
     }
 }
 

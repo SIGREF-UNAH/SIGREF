@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos;
+using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Patient;
 using SIGREF.API.Dtos.Practitioner;
 using SIGREF.API.Extensions;
@@ -19,16 +20,22 @@ public class PractitionerController : ControllerBase
         _practitionerService = practitionerService;
     }
 
-
     // GET: api/practitioner
-    [HttpGet()]
+    [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces("application/json")]
     public async Task<IActionResult> GetFiltered([FromQuery] PractitionerFilterDto filter)
     {
-        var practitioners = await _practitionerService.GetFilteredPractitionersAsync(filter);
-        return Ok(practitioners);
+        var pagedPractitioners = await _practitionerService.GetFilteredPractitionersAsync(filter);
+
+        var pagedPractitionerDtos = new PagedResultDto<PractitionerDto>
+        {
+            Items = pagedPractitioners.Items,
+            Pagination = pagedPractitioners.Pagination
+        };
+
+        return Ok(pagedPractitionerDtos);
     }
     
     // GET: api/practitioner/{id}
