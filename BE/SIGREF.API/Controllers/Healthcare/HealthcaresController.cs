@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Healthcare;
 using SIGREF.API.Extensions;
 using SIGREF.API.Services.Healthcare;
@@ -15,12 +16,18 @@ namespace SIGREF.API.Controllers.Healthcare
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [Produces(typeof(IEnumerable<HealthcareDto>))]
+        [Produces(typeof(PagedResultDto<HealthcareDto>))]
         public async Task<IActionResult> GetFiltered([FromQuery] HealthcareFilterDto filter)
         {
-            var healthcares = await healthcareService.GetFilteredHealthcaresAsync(filter);
-            var healthcareDtos = healthcares.Select(h => h.ToDto());
-            return Ok(healthcareDtos);
+            var pagedHealthcares = await healthcareService.GetFilteredHealthcaresAsync(filter);
+
+            var pagedHealthcareDtos = new PagedResultDto<HealthcareDto>
+            {
+                Items = pagedHealthcares.Items.Select(h => h.ToDto()),
+                Pagination = pagedHealthcares.Pagination
+            };
+
+            return Ok(pagedHealthcareDtos);
         }
 
         [HttpGet("{id}")]

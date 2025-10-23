@@ -4,6 +4,7 @@ using FhirPatient = Hl7.Fhir.Model.Patient;
 using SIGREF.API.Extensions;
 using Task = System.Threading.Tasks.Task;
 using System.Runtime.Serialization;
+using SIGREF.API.Dtos.Common;
 namespace SIGREF.API.Services.Patient;
 
 /// <summary>
@@ -36,8 +37,6 @@ public class PatientService : IPatientService
     {
         _fhirClient = fhirClient ?? throw new System.ArgumentNullException(nameof(fhirClient));
     }
-
-
 
     /// <summary>
     /// Crea un nuevo paciente en el servidor FHIR.
@@ -84,14 +83,6 @@ public class PatientService : IPatientService
         return patient.ToDto();
     }
 
-    public async Task<IEnumerable<PatientDto>> GetAllPatientsAsync()
-    {
-        var bundle = await _fhirClient.SearchAsync<FhirPatient>();
-        return bundle.Entry?
-                   .Select(e => (e.Resource as FhirPatient)?.ToDto())
-                   .Where(dto => dto != null)
-                   .ToList() ?? Enumerable.Empty<PatientDto>();
-    }
     /// <summary>
     /// Actualiza un paciente existente en el servidor FHIR.
     /// </summary>
@@ -127,25 +118,59 @@ public class PatientService : IPatientService
     }
 
     //Filtros
-    public async Task<IEnumerable<PatientDto>> GetFilteredPatientsAsync(PatientFilterDto filter)
+    public async Task<PagedResult<PatientDto>> GetFilteredPatientsAsync(PatientFilterDto filter)
     {
+        // Validar y normalizar parámetros de paginación
+        var pageNumber = Math.Max(1, filter.PageNumber);
+        var pageSize = filter.PageSize > 0 ? filter.PageSize : 10;
+        var offset = (pageNumber - 1) * pageSize;
+
         var searchParams = new SearchParams();
 
+        // Filtros
         if (!string.IsNullOrWhiteSpace(filter.Name))
             searchParams.Add("name", filter.Name);
 
         if (filter.Active.HasValue)
-            searchParams.Add("active", filter.Active.Value.ToString().ToLower());
+            searchParams.Add("active", filter.Active.Value.ToString().ToLowerInvariant());
 
         if (filter.Gender.HasValue)
-            searchParams.Add("gender", filter.Gender.Value.ToString().ToLower());
+            searchParams.Add("gender", filter.Gender.Value.ToString().ToLowerInvariant());
 
+        // Paginación FHIR
+        searchParams.Count = pageSize;
+        searchParams.Add("_offset", offset.ToString());
+        searchParams.Add("_total", "accurate");
+
+        // Realizar búsqueda
         var bundle = await _fhirClient.SearchAsync<FhirPatient>(searchParams);
 
-        return bundle.Entry?
-                    .Select(e => (e.Resource as FhirPatient)?.ToDto())
-                    .Where(dto => dto != null)
-                    .ToList() ?? Enumerable.Empty<PatientDto>();
+        // Mapear resultados
+        var patients = bundle.Entry?
+            .Select(e => (e.Resource as FhirPatient)?.ToDto())
+            .Where(dto => dto != null)
+            .ToList() ?? new List<PatientDto>();
+
+        // Calcular paginación
+        var totalItems = bundle.Total ?? patients.Count;
+        var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+        var pagination = new PaginationDto
+        {
+            CurrentPage = pageNumber,
+            PageSize = pageSize,
+            TotalItems = totalItems,
+            TotalPages = totalPages,
+            HasPrevious = pageNumber > 1,
+            HasNext = bundle.NextLink != null || pageNumber < totalPages
+        };
+
+        // Devolver resultado paginado
+        return new PagedResult<PatientDto>
+        {
+            Items = patients,
+            Pagination = pagination
+        };
     }
 
     private static string GetEnumMemberValue(Enum enumValue)

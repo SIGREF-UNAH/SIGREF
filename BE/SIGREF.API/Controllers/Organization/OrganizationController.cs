@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos;
+using SIGREF.API.Dtos.Common;
 using SIGREF.API.Services.Organization;
 
 namespace SIGREF.API.Controllers;
@@ -20,8 +21,15 @@ public class OrganizationsController : ControllerBase
     [HttpGet()]
     public async Task<IActionResult> GetFilteredOrganizations([FromQuery] OrganizationFilterDto filter)
     {
-        var organizations = await _organizationService.GetFilteredOrganizationsAsync(filter);
-        return Ok(organizations);
+        var pagedOrganizations = await _organizationService.GetFilteredOrganizationsAsync(filter);
+
+        var pagedOrganizationDtos = new PagedResultDto<OrganizationDto>
+        {
+            Items = pagedOrganizations.Items,
+            Pagination = pagedOrganizations.Pagination
+        };
+
+        return Ok(pagedOrganizationDtos);
     }
 
     [HttpGet("{id}")]

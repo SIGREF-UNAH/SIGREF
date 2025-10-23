@@ -1,5 +1,6 @@
 ﻿using Hl7.Fhir.Model.CdsHooks;
 using Microsoft.AspNetCore.Mvc;
+using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.PractitionerRole;
 using SIGREF.API.Services.PractitionerRole;
 
@@ -19,15 +20,22 @@ public class PractitionerRoleController : ControllerBase
     // GET ALL
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Produces(typeof(PagedResultDto<PractitionerRoleDto>))]
     public async Task<IActionResult> GetFiltered([FromQuery] PractitionerRoleFilterDto filters)
     {
-        var roles = await _prService.GetFilteredAsync(filters);
-        return Ok(roles);
+        var pagedRoles = await _prService.GetFilteredAsync(filters);
+
+        var pagedRoleDtos = new PagedResultDto<PractitionerRoleDto>
+        {
+            Items = pagedRoles.Items,
+            Pagination = pagedRoles.Pagination
+        };
+
+        return Ok(pagedRoleDtos);
     }
 
     // GET BY ID 
@@ -75,7 +83,6 @@ public class PractitionerRoleController : ControllerBase
 
         return CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, result.Data);
     }
-
 
     // UPDATE
     [HttpPut("{id}")]

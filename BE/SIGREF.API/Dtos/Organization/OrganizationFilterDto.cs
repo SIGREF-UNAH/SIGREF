@@ -13,6 +13,10 @@ namespace SIGREF.API.Dtos
         public List<OrganizationTypeEnum>? Types { get; set; }
 
         public string? PartOf { get; set; }
+
+        // Paginación
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
     }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]

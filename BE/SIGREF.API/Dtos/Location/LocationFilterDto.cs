@@ -11,6 +11,10 @@ namespace SIGREF.API.Dtos.Location
         /// Estado de la ubicación (active, suspended, inactive).
         /// </summary>
         public LocationFilterStatus? Status { get; set; }
+
+        // Paginación
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
     }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]

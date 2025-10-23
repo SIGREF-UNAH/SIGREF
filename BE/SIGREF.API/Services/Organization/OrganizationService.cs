@@ -2,6 +2,7 @@ using System.Runtime.Serialization;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 using SIGREF.API.Dtos;
+using SIGREF.API.Dtos.Common;
 using SIGREF.API.Extensions;
 using SIGREF.API.Services.Organization;
 
@@ -53,39 +54,6 @@ namespace SIGREF.API.Services.Organizations
             }
         }
 
-        public async Task<IEnumerable<OrganizationDto>> GetAllOrganizationsAsync()
-        {
-            try
-            {
-                // USAR EL TIPO COMPLETAMENTE CALIFICADO
-                var bundle = await _fhirClient.SearchAsync<Hl7.Fhir.Model.Organization>();
-                var organizations = new List<OrganizationDto>();
-
-                while (bundle != null)
-                {
-                    organizations.AddRange(bundle.Entry
-                        .Where(e => e.Resource is Hl7.Fhir.Model.Organization)
-                        .Select(e => ((Hl7.Fhir.Model.Organization)e.Resource).ToDto()));
-
-                    if (bundle.NextLink != null)
-                    {
-                        bundle = await _fhirClient.ContinueAsync(bundle);
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                return organizations;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error obteniendo todas las organizaciones");
-                throw;
-            }
-        }
-
         public async Task<OrganizationDto> UpdateOrganizationAsync(string id, UpdateOrganizationDto dto)
         {
             try
@@ -133,10 +101,16 @@ namespace SIGREF.API.Services.Organizations
         }
 
         // Filtros
-        public async Task<IEnumerable<OrganizationDto>> GetFilteredOrganizationsAsync(OrganizationFilterDto filter)
+        public async Task<PagedResult<OrganizationDto>> GetFilteredOrganizationsAsync(OrganizationFilterDto filter)
         {
+            // Validar y normalizar parámetros de paginación
+            var pageNumber = Math.Max(1, filter.PageNumber);
+            var pageSize = filter.PageSize > 0 ? filter.PageSize : 10;
+            var offset = (pageNumber - 1) * pageSize;
+
             var searchParams = new SearchParams();
 
+            // Filtros
             if (!string.IsNullOrWhiteSpace(filter.Name))
                 searchParams.Add("name", filter.Name);
 
@@ -155,23 +129,38 @@ namespace SIGREF.API.Services.Organizations
             if (!string.IsNullOrWhiteSpace(filter.PartOf))
                 searchParams.Add("partof", filter.PartOf);
 
+            // Parámetros de paginación FHIR
+            searchParams.Count = pageSize;
+            searchParams.Add("_offset", offset.ToString());
+            searchParams.Add("_total", "accurate");
+
+            // Ejecutar búsqueda
             var bundle = await _fhirClient.SearchAsync<Hl7.Fhir.Model.Organization>(searchParams);
 
-            var organizations = new List<OrganizationDto>();
+            var organizations = bundle.Entry
+                .Where(e => e.Resource is Hl7.Fhir.Model.Organization)
+                .Select(e => ((Hl7.Fhir.Model.Organization)e.Resource).ToDto())
+                .ToList();
 
-            while (bundle != null)
+            // Calcular totales
+            var totalItems = bundle.Total ?? organizations.Count;
+            var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+            var pagination = new PaginationDto
             {
-                organizations.AddRange(bundle.Entry
-                    .Where(e => e.Resource is Hl7.Fhir.Model.Organization)
-                    .Select(e => ((Hl7.Fhir.Model.Organization)e.Resource).ToDto()));
+                CurrentPage = pageNumber,
+                PageSize = pageSize,
+                TotalItems = totalItems,
+                TotalPages = totalPages,
+                HasPrevious = pageNumber > 1,
+                HasNext = bundle.NextLink != null || pageNumber < totalPages
+            };
 
-                if (bundle.NextLink != null)
-                    bundle = await _fhirClient.ContinueAsync(bundle);
-                else
-                    break;
-            }
-
-            return organizations;
+            return new PagedResult<OrganizationDto>
+            {
+                Items = organizations,
+                Pagination = pagination
+            };
         }
 
         // Auxiliar para obtener el valor de EnumMember

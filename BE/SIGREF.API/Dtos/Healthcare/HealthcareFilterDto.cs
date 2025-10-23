@@ -15,5 +15,9 @@ namespace SIGREF.API.Dtos.Healthcare
         public string? ProvidedBy { get; set; }
 
         public string? Location { get; set; }
+
+        // Paginación
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
     }
 }

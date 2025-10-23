@@ -3,6 +3,7 @@ using Hl7.Fhir.Rest;
 using Task = System.Threading.Tasks.Task;
 using FhirHealthcare = Hl7.Fhir.Model.HealthcareService;
 using SIGREF.API.Dtos.Healthcare;
+using SIGREF.API.Dtos.Common;
 
 namespace SIGREF.API.Services.Healthcare
 {
@@ -12,14 +13,6 @@ namespace SIGREF.API.Services.Healthcare
         public Task<FhirHealthcare> GetHealthcareByIdAsync(string id)
         {
             return fhirService.ReadAsync<FhirHealthcare>($"HealthcareService/{id}");
-        }
-
-        // Obtener todos los servicios médicos
-        public async Task<IEnumerable<FhirHealthcare>> GetAllHealthcaresAsync()
-        {
-            var searchResult = await fhirService.SearchAsync<FhirHealthcare>();
-            return searchResult.Entry?.Select(e =>
-                e.Resource as FhirHealthcare).Where(l => l != null) ?? Enumerable.Empty<FhirHealthcare>();
         }
 
         // Crear un servicio médico
@@ -66,10 +59,16 @@ namespace SIGREF.API.Services.Healthcare
         }
 
         // Filtrar
-        public async Task<IEnumerable<FhirHealthcare>> GetFilteredHealthcaresAsync(HealthcareFilterDto filter)
+        public async Task<PagedResult<FhirHealthcare>> GetFilteredHealthcaresAsync(HealthcareFilterDto filter)
         {
+            // Validar y normalizar parámetros de paginación
+            var pageNumber = Math.Max(1, filter.PageNumber);
+            var pageSize = filter.PageSize > 0 ? filter.PageSize : 10;
+            var offset = (pageNumber - 1) * pageSize;
+
             var searchParams = new SearchParams();
 
+            // Filtros
             if (!string.IsNullOrWhiteSpace(filter.Name))
                 searchParams.Add("name", filter.Name);
 
@@ -85,14 +84,40 @@ namespace SIGREF.API.Services.Healthcare
             if (!string.IsNullOrWhiteSpace(filter.Location))
                 searchParams.Add("location", filter.Location);
 
+            // Paginación FHIR
+            searchParams.Count = pageSize;
+            searchParams.Add("_offset", offset.ToString());
+            searchParams.Add("_total", "accurate");
+
+            // Buscar en FHIR
             var bundle = await fhirService.SearchAsync<FhirHealthcare>(searchParams);
 
+            // Extraer recursos
             var healthcares = bundle.Entry?
                 .Where(e => e.Resource is FhirHealthcare)
                 .Select(e => (FhirHealthcare)e.Resource)
-                ?? Enumerable.Empty<FhirHealthcare>();
+                .ToList() ?? new List<FhirHealthcare>();
 
-            return healthcares;
+            // Calcular paginación
+            var totalItems = bundle.Total ?? healthcares.Count;
+            var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+            var pagination = new PaginationDto
+            {
+                CurrentPage = pageNumber,
+                PageSize = pageSize,
+                TotalItems = totalItems,
+                TotalPages = totalPages,
+                HasPrevious = pageNumber > 1,
+                HasNext = bundle.NextLink != null || pageNumber < totalPages
+            };
+
+            // Devolver resultado paginado
+            return new PagedResult<FhirHealthcare>
+            {
+                Items = healthcares,
+                Pagination = pagination
+            };
         }
     }
 }

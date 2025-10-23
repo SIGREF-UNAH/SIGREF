@@ -1,5 +1,6 @@
 ﻿using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
+using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Practitioner;
 using SIGREF.API.Extensions;
 using FhirPractitioner = Hl7.Fhir.Model.Practitioner;
@@ -37,13 +38,6 @@ public class PractitionerService : IPractitionerService
         await _fhirClient.DeleteAsync($"{ResourceType}/{id}");
     }
 
-    public async Task<IEnumerable<FhirPractitioner>> GetAllPractitionersAsync()
-    {
-        var searchResult = await _fhirClient.SearchAsync<FhirPractitioner>();
-        return searchResult.Entry?.Select(e => e.Resource as FhirPractitioner).Where(p => p != null) ??
-               Enumerable.Empty<FhirPractitioner>();
-    }
-
     public Task<FhirPractitioner> GetPractitionerByIdAsync(string id)
     {
         return _fhirClient.ReadAsync<FhirPractitioner>($"{ResourceType}/{id}");
@@ -74,10 +68,16 @@ public class PractitionerService : IPractitionerService
     }
 
     // Filtrar
-    public async Task<IEnumerable<PractitionerDto>> GetFilteredPractitionersAsync(PractitionerFilterDto filter)
+    public async Task<PagedResult<PractitionerDto>> GetFilteredPractitionersAsync(PractitionerFilterDto filter)
     {
+        // Validar y normalizar parámetros de paginación
+        var pageNumber = Math.Max(1, filter.PageNumber);
+        var pageSize = filter.PageSize > 0 ? filter.PageSize : 10;
+        var offset = (pageNumber - 1) * pageSize;
+
         var searchParams = new SearchParams();
 
+        // Filtros básicos
         if (!string.IsNullOrWhiteSpace(filter.Name))
             searchParams.Add("name", filter.Name);
 
@@ -87,12 +87,40 @@ public class PractitionerService : IPractitionerService
         if (filter.Gender.HasValue)
             searchParams.Add("gender", filter.Gender.Value.ToString().ToLowerInvariant());
 
+        // Parámetros de paginación FHIR
+        searchParams.Count = pageSize;
+        searchParams.Add("_offset", offset.ToString());
+        searchParams.Add("_total", "accurate");
+
+        // Ejecutar búsqueda
         var bundle = await _fhirClient.SearchAsync<FhirPractitioner>(searchParams);
 
-        return bundle.Entry?
-                .Select(e => (e.Resource as FhirPractitioner)?.ToDto())
-                .Where(dto => dto != null)
-                .ToList() ?? Enumerable.Empty<PractitionerDto>();
+        // Mapear resultados a DTO
+        var practitioners = bundle.Entry?
+            .Select(e => (e.Resource as FhirPractitioner)?.ToDto())
+            .Where(dto => dto != null)
+            .ToList() ?? new List<PractitionerDto>();
+
+        // Calcular totales
+        var totalItems = bundle.Total ?? practitioners.Count;
+        var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+        var pagination = new PaginationDto
+        {
+            CurrentPage = pageNumber,
+            PageSize = pageSize,
+            TotalItems = totalItems,
+            TotalPages = totalPages,
+            HasPrevious = pageNumber > 1,
+            HasNext = bundle.NextLink != null || pageNumber < totalPages
+        };
+
+        // Retornar resultado paginado
+        return new PagedResult<PractitionerDto>
+        {
+            Items = practitioners,
+            Pagination = pagination
+        };
     }
 }
 
