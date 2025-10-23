@@ -4,6 +4,7 @@ using SIGREF.API.Constants;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.PractitionerRole;
 using SIGREF.API.Extensions;
+using SIGREF.API.Helpers;
 using SIGREF.API.Services.Common;
 using FhirPractitionerRole = Hl7.Fhir.Model.PractitionerRole;
 namespace SIGREF.API.Services.PractitionerRole;
@@ -307,10 +308,8 @@ public class PractitionerRoleService : IPractitionerRoleService
     // Filtrar
     public async Task<PagedResult<PractitionerRoleDto>> GetFilteredAsync(PractitionerRoleFilterDto filters)
     {
-        // Validar y normalizar parámetros de paginación
-        var pageNumber = Math.Max(1, filters.PageNumber);
-        var pageSize = filters.PageSize > 0 ? filters.PageSize : 10;
-        var offset = (pageNumber - 1) * pageSize;
+        // Normalizar paginación usando el helper
+        var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filters.PageNumber, filters.PageSize);
 
         var searchParams = new SearchParams();
 
@@ -332,32 +331,18 @@ public class PractitionerRoleService : IPractitionerRoleService
         // Ejecutar búsqueda
         var bundle = await _fhirClient.SearchAsync<FhirPractitionerRole>(searchParams);
 
-        // Mapear resultados a DTO
-        var roles = bundle.Entry?
-            .Where(e => e.Resource is FhirPractitionerRole)
-            .Select(e => ((FhirPractitionerRole)e.Resource).ToDto())
-            .ToList() ?? new List<PractitionerRoleDto>();
+        // Obtener PagedResult del helper
+        var pagedResult = FhirPaginationHelper.ToPagedResult<FhirPractitionerRole>(bundle, pageNumber, pageSize);
 
-        // Calcular totales
-        var totalItems = bundle.Total ?? roles.Count;
-        var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
-
-        var pagination = new PaginationDto
+        // Convertir Items a DTO
+        var resultDto = new PagedResult<PractitionerRoleDto>
         {
-            CurrentPage = pageNumber,
-            PageSize = pageSize,
-            TotalItems = totalItems,
-            TotalPages = totalPages,
-            HasPrevious = pageNumber > 1,
-            HasNext = bundle.NextLink != null || pageNumber < totalPages
+            Items = pagedResult.Items
+                    .Select(r => r.ToDto())
+                    .ToList(),
+            Pagination = pagedResult.Pagination
         };
 
-        // Retornar resultado paginado
-        return new PagedResult<PractitionerRoleDto>
-        {
-            Items = roles,
-            Pagination = pagination
-        };
+        return resultDto;
     }
 }
-

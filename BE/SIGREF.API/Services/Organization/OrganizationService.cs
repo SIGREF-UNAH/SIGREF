@@ -4,6 +4,7 @@ using Hl7.Fhir.Rest;
 using SIGREF.API.Dtos;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Extensions;
+using SIGREF.API.Helpers;
 using SIGREF.API.Services.Organization;
 
 namespace SIGREF.API.Services.Organizations
@@ -103,10 +104,8 @@ namespace SIGREF.API.Services.Organizations
         // Filtros
         public async Task<PagedResult<OrganizationDto>> GetFilteredOrganizationsAsync(OrganizationFilterDto filter)
         {
-            // Validar y normalizar parámetros de paginación
-            var pageNumber = Math.Max(1, filter.PageNumber);
-            var pageSize = filter.PageSize > 0 ? filter.PageSize : 10;
-            var offset = (pageNumber - 1) * pageSize;
+            // Normalizar paginación usando el helper
+            var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
 
             var searchParams = new SearchParams();
 
@@ -137,30 +136,17 @@ namespace SIGREF.API.Services.Organizations
             // Ejecutar búsqueda
             var bundle = await _fhirClient.SearchAsync<Hl7.Fhir.Model.Organization>(searchParams);
 
-            var organizations = bundle.Entry
-                .Where(e => e.Resource is Hl7.Fhir.Model.Organization)
-                .Select(e => ((Hl7.Fhir.Model.Organization)e.Resource).ToDto())
-                .ToList();
+            // Obtener PagedResult del helper
+            var pagedResult = FhirPaginationHelper.ToPagedResult<Hl7.Fhir.Model.Organization>(bundle, pageNumber, pageSize);
 
-            // Calcular totales
-            var totalItems = bundle.Total ?? organizations.Count;
-            var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
-
-            var pagination = new PaginationDto
+            // Convertir Items a DTO
+            var resultDto = new PagedResult<OrganizationDto>
             {
-                CurrentPage = pageNumber,
-                PageSize = pageSize,
-                TotalItems = totalItems,
-                TotalPages = totalPages,
-                HasPrevious = pageNumber > 1,
-                HasNext = bundle.NextLink != null || pageNumber < totalPages
+                Items = pagedResult.Items.Select(o => o.ToDto()).ToList(),
+                Pagination = pagedResult.Pagination
             };
 
-            return new PagedResult<OrganizationDto>
-            {
-                Items = organizations,
-                Pagination = pagination
-            };
+            return resultDto;
         }
 
         // Auxiliar para obtener el valor de EnumMember

@@ -6,7 +6,7 @@ using SIGREF.API.Services.Common;
 using SIGREF.API.Dtos.Location;
 using System.Runtime.Serialization;
 using SIGREF.API.Dtos.Common;
-
+using SIGREF.API.Helpers;
 namespace SIGREF.API.Services.Location;
 
 public class LocationService
@@ -135,10 +135,7 @@ public class LocationService
     // Filtrado
     public async Task<PagedResult<FhirLocation>> GetFilteredLocationsAsync(LocationFilterDto filter)
     {
-        // Validar y normalizar parámetros de paginación
-        var pageNumber = Math.Max(1, filter.PageNumber);
-        var pageSize = filter.PageSize > 0 ? filter.PageSize : 10;
-        var offset = (pageNumber - 1) * pageSize;
+        var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
 
         var searchParams = new SearchParams();
 
@@ -146,46 +143,15 @@ public class LocationService
             searchParams.Add("name", filter.Name);
 
         if (filter.Status.HasValue)
-        {
-            var statusValue = GetEnumMemberValue(filter.Status.Value);
-            searchParams.Add("status", statusValue);
-        }
+            searchParams.Add("status", GetEnumMemberValue(filter.Status.Value));
 
-        // Parametros de paginación
         searchParams.Count = pageSize;
         searchParams.Add("_offset", offset.ToString());
-        
-        // Solicitar conteo total
         searchParams.Add("_total", "accurate");
 
-        // Realizar la búsqueda
         var bundle = await _fhirClient.SearchAsync<FhirLocation>(searchParams);
 
-        // Obtener los recursos
-        var locations = bundle.Entry
-            .Where(e => e.Resource is FhirLocation)
-            .Select(e => (FhirLocation)e.Resource)
-            .ToList();
-
-        // Calcular paginación
-        var totalItems = bundle.Total ?? locations.Count;
-        var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
-
-        var pagination = new PaginationDto
-        {
-            CurrentPage = pageNumber,
-            PageSize = pageSize,
-            TotalItems = totalItems,
-            TotalPages = totalPages,
-            HasPrevious = pageNumber > 1,
-            HasNext = bundle.NextLink != null || pageNumber < totalPages
-        };
-
-        return new PagedResult<FhirLocation>
-        {
-            Items = locations,
-            Pagination = pagination
-        };
+        return FhirPaginationHelper.ToPagedResult<FhirLocation>(bundle, pageNumber, pageSize);
     }
 
     // Auxiliar para obtener el valor de [EnumMember]

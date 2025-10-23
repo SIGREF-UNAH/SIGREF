@@ -1,20 +1,17 @@
 #nullable enable
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
+using SIGREF.API.Dtos.Common;
 
 namespace SIGREF.API.Dtos.Location
 {
-    public class LocationFilterDto
+    public class LocationFilterDto : PagedFilterBase
     {
         public string? Name { get; set; }
         /// <summary>
         /// Estado de la ubicación (active, suspended, inactive).
         /// </summary>
         public LocationFilterStatus? Status { get; set; }
-
-        // Paginación
-        public int PageNumber { get; set; }
-        public int PageSize { get; set; }
     }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]

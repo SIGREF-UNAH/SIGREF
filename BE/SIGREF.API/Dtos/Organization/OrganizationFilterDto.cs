@@ -1,10 +1,11 @@
 #nullable enable
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
+using SIGREF.API.Dtos.Common;
 
 namespace SIGREF.API.Dtos
 {
-    public class OrganizationFilterDto
+    public class OrganizationFilterDto : PagedFilterBase
     {
         public string? Name { get; set; }
 
@@ -13,10 +14,6 @@ namespace SIGREF.API.Dtos
         public List<OrganizationTypeEnum>? Types { get; set; }
 
         public string? PartOf { get; set; }
-
-        // Paginación
-        public int PageNumber { get; set; }
-        public int PageSize { get; set; }
     }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
