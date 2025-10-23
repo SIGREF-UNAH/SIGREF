@@ -20,9 +20,10 @@ var hapiDb = postgres.AddDatabase("hapi");
 
 // Keycloak con realm configurado automáticamente usando método más confiable
 var keycloak = builder.AddKeycloakWithAutoSetup(
-    "keycloak-server", 
-    postgres, 
-    "keycloak");
+    "keycloak-server",
+    postgres,
+    "keycloak")
+    .WithBindMount("../keycloak-theme/mytheme", "/opt/keycloak/themes/mytheme"); //theme local
 
 // HAPI FHIR
 _ = builder.AddContainer("hapi-fhir", "hapiproject/hapi", "latest")
