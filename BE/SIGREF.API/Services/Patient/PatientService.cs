@@ -159,15 +159,5 @@ public class PatientService : IPatientService
 
         return resultDto;
     }
-
-    private static string GetEnumMemberValue(Enum enumValue)
-    {
-        var type = enumValue.GetType();
-        var info = type.GetField(enumValue.ToString());
-        var attr = info?.GetCustomAttributes(typeof(EnumMemberAttribute), false)
-                        .Cast<EnumMemberAttribute>()
-                        .FirstOrDefault();
-        return attr?.Value ?? enumValue.ToString().ToLowerInvariant();
-    }
 }
 
