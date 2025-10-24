@@ -5,6 +5,7 @@ using SIGREF.API.Extensions;
 using Task = System.Threading.Tasks.Task;
 using System.Runtime.Serialization;
 using SIGREF.API.Dtos.Common;
+using SIGREF.API.Helpers;
 namespace SIGREF.API.Services.Patient;
 
 /// <summary>
@@ -117,13 +118,11 @@ public class PatientService : IPatientService
         await _fhirClient.DeleteAsync($"{ResourceType}/{id}");
     }
 
-    //Filtros
+    // Filtros
     public async Task<PagedResult<PatientDto>> GetFilteredPatientsAsync(PatientFilterDto filter)
     {
-        // Validar y normalizar parámetros de paginación
-        var pageNumber = Math.Max(1, filter.PageNumber);
-        var pageSize = filter.PageSize > 0 ? filter.PageSize : 10;
-        var offset = (pageNumber - 1) * pageSize;
+        // Normalizar paginación usando el helper
+        var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
 
         var searchParams = new SearchParams();
 
@@ -145,32 +144,20 @@ public class PatientService : IPatientService
         // Realizar búsqueda
         var bundle = await _fhirClient.SearchAsync<FhirPatient>(searchParams);
 
-        // Mapear resultados
-        var patients = bundle.Entry?
-            .Select(e => (e.Resource as FhirPatient)?.ToDto())
-            .Where(dto => dto != null)
-            .ToList() ?? new List<PatientDto>();
+        // Obtener PagedResult del helper
+        var pagedResult = FhirPaginationHelper.ToPagedResult<FhirPatient>(bundle, pageNumber, pageSize);
 
-        // Calcular paginación
-        var totalItems = bundle.Total ?? patients.Count;
-        var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
-
-        var pagination = new PaginationDto
+        // Convertir Items a DTO
+        var resultDto = new PagedResult<PatientDto>
         {
-            CurrentPage = pageNumber,
-            PageSize = pageSize,
-            TotalItems = totalItems,
-            TotalPages = totalPages,
-            HasPrevious = pageNumber > 1,
-            HasNext = bundle.NextLink != null || pageNumber < totalPages
+            Items = pagedResult.Items
+                    .Select(p => p.ToDto())
+                    .Where(dto => dto != null)
+                    .ToList()!,
+            Pagination = pagedResult.Pagination
         };
 
-        // Devolver resultado paginado
-        return new PagedResult<PatientDto>
-        {
-            Items = patients,
-            Pagination = pagination
-        };
+        return resultDto;
     }
 
     private static string GetEnumMemberValue(Enum enumValue)

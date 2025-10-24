@@ -4,6 +4,7 @@ using Task = System.Threading.Tasks.Task;
 using FhirHealthcare = Hl7.Fhir.Model.HealthcareService;
 using SIGREF.API.Dtos.Healthcare;
 using SIGREF.API.Dtos.Common;
+using SIGREF.API.Helpers;
 
 namespace SIGREF.API.Services.Healthcare
 {
@@ -61,10 +62,8 @@ namespace SIGREF.API.Services.Healthcare
         // Filtrar
         public async Task<PagedResult<FhirHealthcare>> GetFilteredHealthcaresAsync(HealthcareFilterDto filter)
         {
-            // Validar y normalizar parámetros de paginación
-            var pageNumber = Math.Max(1, filter.PageNumber);
-            var pageSize = filter.PageSize > 0 ? filter.PageSize : 10;
-            var offset = (pageNumber - 1) * pageSize;
+            // Normalizar paginación
+            var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
 
             var searchParams = new SearchParams();
 
@@ -92,32 +91,8 @@ namespace SIGREF.API.Services.Healthcare
             // Buscar en FHIR
             var bundle = await fhirService.SearchAsync<FhirHealthcare>(searchParams);
 
-            // Extraer recursos
-            var healthcares = bundle.Entry?
-                .Where(e => e.Resource is FhirHealthcare)
-                .Select(e => (FhirHealthcare)e.Resource)
-                .ToList() ?? new List<FhirHealthcare>();
-
-            // Calcular paginación
-            var totalItems = bundle.Total ?? healthcares.Count;
-            var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
-
-            var pagination = new PaginationDto
-            {
-                CurrentPage = pageNumber,
-                PageSize = pageSize,
-                TotalItems = totalItems,
-                TotalPages = totalPages,
-                HasPrevious = pageNumber > 1,
-                HasNext = bundle.NextLink != null || pageNumber < totalPages
-            };
-
-            // Devolver resultado paginado
-            return new PagedResult<FhirHealthcare>
-            {
-                Items = healthcares,
-                Pagination = pagination
-            };
+            // Convertir a PagedResult usando el helper
+            return FhirPaginationHelper.ToPagedResult<FhirHealthcare>(bundle, pageNumber, pageSize);
         }
     }
 }
