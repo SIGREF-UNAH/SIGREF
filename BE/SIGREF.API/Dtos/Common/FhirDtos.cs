@@ -19,12 +19,23 @@ namespace SIGREF.API.Dtos.Common
         public string? System { get; set; } // URI del sistema emisor
         public string? Value { get; set; } // Valor del ID
     }
+
     public class ReferenceDto // Para relaciones entre recursos
     {
         public string? Type { get; set; }
         public IdentifierDto? Identifier { get; set; }
         public string? Reference { get; set; }
         public string? Display { get; set; }
+    }
+
+    public class ExtensionDto // Para extensiones personalizadas
+    {
+        public string Url { get; set; } = string.Empty;
+        public CodeableConceptDto? ValueCodeableConcept { get; set; }
+        public string? ValueString { get; set; }
+        public bool? ValueBoolean { get; set; }
+        public int? ValueInteger { get; set; }
+        public DateTime? ValueDate { get; set; }
     }
 
     public class HumanNameDto

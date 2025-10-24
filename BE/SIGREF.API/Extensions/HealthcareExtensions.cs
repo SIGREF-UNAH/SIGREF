@@ -2,6 +2,7 @@
 using Hl7.Fhir.Model;
 using SIGREF.API.Dtos.Healthcare;
 using SIGREF.API.Extensions.Common;
+using SIGREF.API.Helpers;
 
 namespace SIGREF.API.Extensions;
 
@@ -100,26 +101,5 @@ public static class HealthcareExtensions
         existing.Meta.VersionId = FhirInfrastructureExtensions.IncrementVersion(existing.Meta.VersionId);
 
         return existing;
-    }
-
-    // ──────────────────────────────────────────────────
-    // HELPERS
-    // ──────────────────────────────────────────────────
-
-    // Obtener valor string de extensiones personalizadas
-    private static string? GetStringExtension(this DomainResource resource, string url) =>
-        (resource.Extension?.FirstOrDefault(e => e.Url == url)?.Value as FhirString)?.Value;
-
-    // Obtener valor decimal de extensiones personalizadas
-    private static decimal? GetDecimalExtension(this DomainResource resource, string url) =>
-        (resource.Extension?.FirstOrDefault(e => e.Url == url)?.Value as FhirDecimal)?.Value;
-
-    // Añadir o actualizar una extensión personalizada
-    private static void AddOrUpdateExtension(this DomainResource resource, string url, DataType value)
-    {
-        resource.Extension ??= [];
-        var existing = resource.Extension.FirstOrDefault(e => e.Url == url);
-        if (existing is not null) existing.Value = value;
-        else resource.Extension.Add(new Extension(url, value));
     }
 }
