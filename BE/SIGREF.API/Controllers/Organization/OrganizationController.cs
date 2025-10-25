@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos;
 using SIGREF.API.Dtos.Common;
+using SIGREF.API.Dtos.Healthcare;
 using SIGREF.API.Services.Organization;
 
 namespace SIGREF.API.Controllers;
@@ -19,6 +20,7 @@ public class OrganizationsController : ControllerBase
     }
 
     [HttpGet()]
+    [Produces(typeof(PagedResultDto<OrganizationDto>))]
     public async Task<IActionResult> GetFilteredOrganizations([FromQuery] OrganizationFilterDto filter)
     {
         var pagedOrganizations = await _organizationService.GetFilteredOrganizationsAsync(filter);
@@ -33,6 +35,7 @@ public class OrganizationsController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Produces<OrganizationDto>()]
     public async Task<ActionResult<OrganizationDto>> GetOrganizationById(string id)
     {
         try
@@ -52,6 +55,7 @@ public class OrganizationsController : ControllerBase
     }
 
     [HttpPost]
+    [Produces<OrganizationDto>()]
     public async Task<ActionResult<OrganizationDto>> CreateOrganization([FromBody] CreateOrganizationDto createDto)
     {
         try
@@ -72,6 +76,7 @@ public class OrganizationsController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Produces<OrganizationDto>()]
     public async Task<ActionResult<OrganizationDto>> UpdateOrganization(string id, [FromBody] UpdateOrganizationDto updateDto)
     {
         try

@@ -5,15 +5,13 @@
  * OpenAPI spec version: 1.0
  */
 
-export interface CodingDto {
+export interface AvailableTimeDto {
   /** @nullable */
-  system?: string | null;
+  daysOfWeek?: string[] | null;
   /** @nullable */
-  version?: string | null;
+  allDay?: boolean | null;
   /** @nullable */
-  code?: string | null;
+  avalaibleStartTime?: string | null;
   /** @nullable */
-  display?: string | null;
-  /** @nullable */
-  userSelected?: boolean | null;
+  avalaibleEndTime?: string | null;
 }

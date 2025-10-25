@@ -1,11 +1,11 @@
 import { Table, Button, Input, Select, Space, Popconfirm, Alert, Tag } from "antd";
-import type { ColumnsType } from "antd/es/table";
 import { useHealthcaresList } from "../hooks";
 import { HealthcareHeader } from "../components/ui";
-import type { HealthcareDto } from "../../../api/models";
 import { HealthcaresPageSkeleton } from "../components/skeletons";
 import { HealthcareDetailsModal } from "../components/modals";
 import { PageHeaderTabs } from "../../../shared/components/ui";
+import type { ColumnsType } from "antd/es/table";
+import type { HealthcareDto } from "../../../api/models";
 import {
   EditOutlined,
   DeleteOutlined,
@@ -19,19 +19,24 @@ const { Search } = Input;
 export const HealthcaresPage = () => {
   const {
     filters,
-    departments,
-    filteredData,
+    locations,
+    healthcares,
     paginationConfig,
     isLoading,
+    isFetching,
     isError,
     selectedHealthcare,
     isModalOpen,
+    searchInput,
     handleCreate,
     handleEdit,
     handleDelete,
     handleViewDetails,
     setFilter,
     handleCloseModal,
+    handleSearchInputChange,
+    handleSearch,
+    handleClearSearch,
   } = useHealthcaresList();
 
   // Columnas de la tabla
@@ -152,24 +157,28 @@ export const HealthcaresPage = () => {
         <HealthcaresPageSkeleton />
       ) : (
         <div className="p-4 border-2 bg-card border-gray-300 shadow-md rounded-lg">
-          {/* Busqueda y filtros */}
+          {/* Búsqueda y filtros */}
           <div className="flex justify-end gap-3 mb-4">
             <Search
-              placeholder="Buscar por nombre o abreviatura"
+              placeholder="Buscar por nombre"
               allowClear
               style={{ width: 300 }}
-              value={filters.search}
-              onChange={(e) => setFilter("search", e.target.value)}
-              onSearch={(value) => setFilter("search", value)}
+              value={searchInput}
+              onChange={(e) => handleSearchInputChange(e.target.value)}
+              onSearch={handleSearch}
+              onClear={handleClearSearch}
             />
             <Select
-              placeholder="Por Departamento"
+              placeholder="Por Ubicación"
               allowClear
               suffixIcon={<FilterOutlined />}
               style={{ width: 200, height: 36 }}
-              value={filters.department}
-              onChange={(value) => setFilter("department", value)}
-              options={departments.map((dept) => ({ label: dept, value: dept }))}
+              value={filters.location}
+              onChange={(value) => setFilter("location", value)}
+              options={locations.map((loc) => ({ 
+                label: loc.display, 
+                value: loc.reference 
+              }))}
             />
             <Select
               placeholder="Por Estado"
@@ -187,11 +196,11 @@ export const HealthcaresPage = () => {
           {/* Lista de servicios */}
           <Table
             columns={columns}
-            dataSource={filteredData}
+            dataSource={healthcares}
             rowKey="id"
             pagination={paginationConfig}
             bordered
-            loading={isLoading}
+            loading={isFetching}
           />
         </div>
       )}
