@@ -3,7 +3,6 @@ import {
   ProFormText,
   ProFormSelect,
   ProFormDatePicker,
-  ProFormRadio,
   ProFormGroup,
   ProFormList,
 } from "@ant-design/pro-components";
@@ -31,7 +30,7 @@ export default function EditFormPatient() {
   const nacionalidadContent = (
     <ProFormGroup>
       <ProFormText
-        name="paisNacionalidad"
+        name="nacionalidad"
         label="País de Nacionalidad"
         placeholder="Honduras"
         width="md"
@@ -101,17 +100,7 @@ export default function EditFormPatient() {
         width="md"
       />
       <ProFormText name="emisor" label="Emisor" placeholder="SRNP" width="sm" />
-      <ProFormDatePicker
-        name="fechaExpedicion"
-        label="Fecha Expedición"
-        placeholder="dd / mm / yyyy"
-        width="md"
-      />
-      <ProFormRadio.Group
-        name="identificacionPreferida"
-        label=" "
-        options={[{ label: "Preferido", value: true }]}
-      />
+      
     </ProFormGroup>
   );
 
@@ -184,14 +173,7 @@ export default function EditFormPatient() {
               { label: "Móvil", value: 2 },
             ]}
           />
-
-          <ProFormText
-            name="codigoPais"
-            label="Código de País"
-            placeholder="+504"
-            width="sm"
-            initialValue="+504"
-          />
+ 
 
           <ProFormText
             name="value"
@@ -199,13 +181,7 @@ export default function EditFormPatient() {
             placeholder="9999-9999 / ejemplo@correo.com"
             width="md"
           />
-
-          <ProFormRadio.Group
-            name="preferido"
-            label="Preferido"
-            options={[{ label: "Sí", value: true }]}
-            initialValue={false}
-          />
+ 
 
           <Button type="link" danger onClick={() => action.remove(index)}>
           </Button>

@@ -50,6 +50,31 @@ export const useEditPatient = () => {
       gender: values.gender,
       birthDate: values.fechanacimiento,
       active: values.estadoVital === 1,
+        maritalStatus: {
+        coding: [
+          {
+            system: "http://terminology.hl7.org/CodeSystem/v3-MaritalStatus",
+            code: values.estadoCivilCodigo || "UNK",
+            display: values.estadoCivil || "Desconocido",
+          },
+        ],
+        text: values.estadoCivil || "Desconocido",
+      },
+      extension: [
+        {
+          url: "http://hl7.org/fhir/StructureDefinition/patient-nationality",
+          valueCodeableConcept: {
+            coding: [
+              {
+                system: "urn:iso:std:iso:3166",
+                code: values.nacionalidadCodigo || "HN",
+                display: values.nacionalidad || "Honduras",
+              },
+            ],
+            text: values.nacionalidad || "Honduras",
+          },
+        },
+      ],
 
       telecom:
         values.telecom?.map((item: any, index: number) => ({
@@ -89,7 +114,7 @@ export const useEditPatient = () => {
             ],
             text: values.tipoIdentificacion,
           },
-          system: "https://example.com/identifiers",
+          system: values.emisor || "",
           value: values.identifier?.[0]?.value || "",
         },
       ],
@@ -118,16 +143,25 @@ export const useEditPatient = () => {
         tipoNombre: patient.name?.[0]?.use === 0 ? "alias" : "legal",
         gender: patient.gender || 0,
         estadoVital: patient.active ? 1 : 0,
+         estadoCivil:
+        patient?.maritalStatus?.text ||
+        patient?.maritalStatus?.coding?.[0]?.display ||
+        "No registrado",
+      nacionalidad:
+        patient?.extension?.find(
+          (ext) =>
+            ext.url ===
+            "http://hl7.org/fhir/StructureDefinition/patient-nationality"
+        )?.valueCodeableConcept?.text || "No registrada",
         fechanacimiento: patient.birthDate ? new Date(patient.birthDate) : null,
         tipoIdentificacion: patient.identifier?.[0]?.type?.text || "",
         identifier: [{ value: patient.identifier?.[0]?.value || "" }],
+        emisor: patient.identifier?.[0]?.system || "No registrado",
         telecom:
           patient.telecom?.map((t) => ({
             system: t.system || "phone",
             use: t.use === 0 ? 0 : t.use === 1 ? 1 : 2,
             value: t.value || "",
-            //codigoPais: t.codigoPais || "+504",
-            //contactoPreferido: t.preferido || false,
           })) || [],
         address:
           patient.address?.map((a) => ({

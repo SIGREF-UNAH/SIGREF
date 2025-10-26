@@ -22,6 +22,7 @@ import type {
 
 import type {
   CreatePatientDto,
+  GetApiPatientsParams,
   PatientDto,
   ProblemDetails,
   UpdatePatientDto,
@@ -29,33 +30,40 @@ import type {
 
 import { customInstance } from ".././mutator/customInstance";
 
-export const getApiPatients = (signal?: AbortSignal) => {
+export const getApiPatients = (
+  params?: GetApiPatientsParams,
+  signal?: AbortSignal,
+) => {
   return customInstance<PatientDto[]>({
     url: `/api/Patients`,
     method: "GET",
+    params,
     signal,
   });
 };
 
-export const getGetApiPatientsQueryKey = () => {
-  return [`/api/Patients`] as const;
+export const getGetApiPatientsQueryKey = (params?: GetApiPatientsParams) => {
+  return [`/api/Patients`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetApiPatientsQueryOptions = <
   TData = Awaited<ReturnType<typeof getApiPatients>>,
   TError = void,
->(options?: {
-  query?: Partial<
-    UseQueryOptions<Awaited<ReturnType<typeof getApiPatients>>, TError, TData>
-  >;
-}) => {
+>(
+  params?: GetApiPatientsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getApiPatients>>, TError, TData>
+    >;
+  },
+) => {
   const { query: queryOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetApiPatientsQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getGetApiPatientsQueryKey(params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiPatients>>> = ({
     signal,
-  }) => getApiPatients(signal);
+  }) => getApiPatients(params, signal);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getApiPatients>>,
@@ -73,6 +81,7 @@ export function useGetApiPatients<
   TData = Awaited<ReturnType<typeof getApiPatients>>,
   TError = void,
 >(
+  params: undefined | GetApiPatientsParams,
   options: {
     query: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getApiPatients>>, TError, TData>
@@ -94,6 +103,7 @@ export function useGetApiPatients<
   TData = Awaited<ReturnType<typeof getApiPatients>>,
   TError = void,
 >(
+  params?: GetApiPatientsParams,
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getApiPatients>>, TError, TData>
@@ -115,6 +125,7 @@ export function useGetApiPatients<
   TData = Awaited<ReturnType<typeof getApiPatients>>,
   TError = void,
 >(
+  params?: GetApiPatientsParams,
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getApiPatients>>, TError, TData>
@@ -129,6 +140,7 @@ export function useGetApiPatients<
   TData = Awaited<ReturnType<typeof getApiPatients>>,
   TError = void,
 >(
+  params?: GetApiPatientsParams,
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getApiPatients>>, TError, TData>
@@ -138,7 +150,7 @@ export function useGetApiPatients<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getGetApiPatientsQueryOptions(options);
+  const queryOptions = getGetApiPatientsQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

@@ -110,12 +110,6 @@ export default function CreateFormPatient() {
         width="md"
       />
       <ProFormText name="emisor" label="Emisor" placeholder="SRNP" width="sm" />
-      <ProFormDatePicker
-        name="fechaExpedicion"
-        label="Fecha Expedición"
-        placeholder="dd / mm / yyyy"
-        width="md"
-      />
       <ProFormRadio.Group
         name="identificacionPreferida"
         label=" "
@@ -185,7 +179,7 @@ export default function CreateFormPatient() {
             ]}
           />
 
-          {/* <ProFormSelect
+           <ProFormSelect
             {...field}
             name="use"
             label="Uso"
@@ -194,15 +188,7 @@ export default function CreateFormPatient() {
               { label: "Casa", value: 0 },
               { label: "Trabajo", value: 1 },
             ]}
-          /> */}
-
-          <ProFormText
-            {...field}
-            name="codigoPais"
-            label="Código de País"
-            placeholder="+504"
-            width="sm"
-          />
+          /> 
 
           <ProFormText
             {...field}
@@ -210,13 +196,6 @@ export default function CreateFormPatient() {
             label="Valor"
             placeholder="9999-9999 / ejemplo@correo.com"
             width="md"
-          />
-
-          <ProFormRadio.Group
-            {...field}
-            name="preferido"
-            label="Preferido"
-            options={[{ label: "Sí", value: true }]}
           />
 
           <Button type="link" danger onClick={() => action.remove(index)}>

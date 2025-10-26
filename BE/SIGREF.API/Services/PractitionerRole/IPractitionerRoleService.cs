@@ -1,4 +1,5 @@
 ﻿#nullable enable
+using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.PractitionerRole;
 using SIGREF.API.Services.Common;
 
@@ -11,13 +12,13 @@ public interface IPractitionerRoleService
     // Obtener un PractitionerRole por Id
     Task<PractitionerRoleDto?> GetByIdAsync(string id);
 
-    // Obtener todos
-    Task<IEnumerable<PractitionerRoleDto>> GetAllAsync();
-
     // Actualizar
     Task<ServiceResult<PractitionerRoleDto?>> UpdateAsync(string id, UpdatePractitionerRoleDto dto);
 
     // Eliminar
     Task<bool> DeleteAsync(string id);
+
+    // Filtrar
+    Task<PagedResult<PractitionerRoleDto>> GetFilteredAsync(PractitionerRoleFilterDto filters);
 }
 

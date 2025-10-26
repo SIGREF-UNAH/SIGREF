@@ -22,43 +22,54 @@ import type {
 
 import type {
   CreateOrganizationDto,
+  GetApiOrganizationsParams,
   OrganizationDto,
   UpdateOrganizationDto,
 } from ".././models";
 
 import { customInstance } from ".././mutator/customInstance";
 
-export const getApiOrganizations = (signal?: AbortSignal) => {
-  return customInstance<OrganizationDto[]>({
+export const getApiOrganizations = (
+  params?: GetApiOrganizationsParams,
+  signal?: AbortSignal,
+) => {
+  return customInstance<void>({
     url: `/api/Organizations`,
     method: "GET",
+    params,
     signal,
   });
 };
 
-export const getGetApiOrganizationsQueryKey = () => {
-  return [`/api/Organizations`] as const;
+export const getGetApiOrganizationsQueryKey = (
+  params?: GetApiOrganizationsParams,
+) => {
+  return [`/api/Organizations`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetApiOrganizationsQueryOptions = <
   TData = Awaited<ReturnType<typeof getApiOrganizations>>,
   TError = unknown,
->(options?: {
-  query?: Partial<
-    UseQueryOptions<
-      Awaited<ReturnType<typeof getApiOrganizations>>,
-      TError,
-      TData
-    >
-  >;
-}) => {
+>(
+  params?: GetApiOrganizationsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getApiOrganizations>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
   const { query: queryOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetApiOrganizationsQueryKey();
+  const queryKey =
+    queryOptions?.queryKey ?? getGetApiOrganizationsQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof getApiOrganizations>>
-  > = ({ signal }) => getApiOrganizations(signal);
+  > = ({ signal }) => getApiOrganizations(params, signal);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getApiOrganizations>>,
@@ -76,6 +87,7 @@ export function useGetApiOrganizations<
   TData = Awaited<ReturnType<typeof getApiOrganizations>>,
   TError = unknown,
 >(
+  params: undefined | GetApiOrganizationsParams,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -101,6 +113,7 @@ export function useGetApiOrganizations<
   TData = Awaited<ReturnType<typeof getApiOrganizations>>,
   TError = unknown,
 >(
+  params?: GetApiOrganizationsParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -126,6 +139,7 @@ export function useGetApiOrganizations<
   TData = Awaited<ReturnType<typeof getApiOrganizations>>,
   TError = unknown,
 >(
+  params?: GetApiOrganizationsParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -144,6 +158,7 @@ export function useGetApiOrganizations<
   TData = Awaited<ReturnType<typeof getApiOrganizations>>,
   TError = unknown,
 >(
+  params?: GetApiOrganizationsParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -157,7 +172,7 @@ export function useGetApiOrganizations<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getGetApiOrganizationsQueryOptions(options);
+  const queryOptions = getGetApiOrganizationsQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

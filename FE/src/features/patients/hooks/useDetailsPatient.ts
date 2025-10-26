@@ -1,7 +1,8 @@
-import { useParams } from "react-router";
+import {  useNavigate, useParams } from "react-router";
 import { useState, useMemo } from "react";
 import { message } from "antd";
 import {
+  useDeleteApiPatientsId,
   useGetApiPatients,
   useGetApiPatientsId,
 } from "../../../api/patients/patients";
@@ -10,6 +11,7 @@ import type { PatientDto } from "../../../api/models";
 export function useDetailsPatient() {
   const { id } = useParams();
   const [messageApi, contextHolder] = message.useMessage();
+   const navigate = useNavigate();
 
   const { data, isLoading, error } = useGetApiPatientsId(id ?? "") as {
     data?: PatientDto;
@@ -50,6 +52,21 @@ export function useDetailsPatient() {
     messageApi.success("Datos del paciente copiados al portapapeles.");
   };
 
+  // eliminar pacientes
+  const { mutate: deletePatient } = useDeleteApiPatientsId({
+    mutation: {
+      onSuccess: () => {
+        messageApi.success("Paciente eliminado correctamente");
+         navigate("/patients/list");
+      },
+      onError: (error) => {
+        messageApi.error(
+          "Error al eliminar paciente: " + (error?.message || "Desconocido")
+        );
+      },
+    },
+  });
+
   // Extrae teléfono y correo
   const phone =
     data?.telecom?.find((t) => String(t.system).toLowerCase() === "phone")
@@ -62,6 +79,7 @@ export function useDetailsPatient() {
   //  Datos del paciente seleccionado
   const selectedPatient = useMemo(() => {
     return {
+      id: patient?.id ?? "",
       nombre: patient?.name?.[0]?.given?.join(" ") ?? "Desconocido",
       apellidos: patient?.name?.[0]?.family ?? "Desconocido",
       tipo: patient?.name?.[0]?.use,
@@ -78,6 +96,7 @@ export function useDetailsPatient() {
               (365.25 * 24 * 60 * 60 * 1000)
           )} años`
         : "No especificada",
+
       genero:
         typeof patient?.gender === "string"
           ? patient.gender === "male"
@@ -93,9 +112,18 @@ export function useDetailsPatient() {
             : patient?.gender === 2
               ? "Femenino"
               : patient?.gender === 3
-              ? "Otro"
-              : "No especificado",
-      nacionalidad: patient?.address?.[0]?.country ?? "No registrada",
+                ? "Otro"
+                : "No especificado",
+      estadoCivil:
+        patient?.maritalStatus?.text ||
+        patient?.maritalStatus?.coding?.[0]?.display ||
+        "No registrado",
+      nacionalidad:
+        patient?.extension?.find(
+          (ext) =>
+            ext.url ===
+            "http://hl7.org/fhir/StructureDefinition/patient-nationality"
+        )?.valueCodeableConcept?.text || "No registrada",
       estadoVital: patient?.active ? "Con Vida" : "Sin Vida",
       dni: patient?.identifier?.[0]?.value ?? "No disponible",
       dniEmisor: patient?.identifier?.[0]?.system ?? "Desconocido",
@@ -111,34 +139,35 @@ export function useDetailsPatient() {
   }, [data, phone, email]);
 
   // mapeo de pacientes para listado
-  const patients = useMemo(
-    () =>
-      (apiPatients || []).map((p: PatientDto, index: number) => ({
-        id: p.id || String(index),
-        key: p.id || String(index),
-        nombre:
-          p.name?.[0]?.text ??
-          p.name?.[0]?.given?.join(" ") ??
-          "Nombre no disponible",
-        identificadorTipo: p.identifier?.[0]?.type?.text ?? "DNI",
-        identificador: p.identifier?.[0]?.value || "-",
-        contacto: p.telecom?.[0]?.value || "-",
-        nacimiento: p.birthDate
-          ? new Date(p.birthDate).toLocaleDateString()
-          : "-",
-        nacionalidad: p.address?.[0]?.country || "-",
-        genero:
-          p.gender === 1
-            ? "Masculino"
-            : p.gender === 2
-              ? "Femenino"
-              : p.gender === 3
-                ? "Otro"
-                : "No especificado",
-        estadoVital: p.active ? "Vivo" : "Sin vida",
-      })),
-    [apiPatients]
-  );
+  const patients = useMemo(() => {
+    const items = Array.isArray(apiPatients)
+      ? apiPatients
+      : apiPatients?.items || [];
+    return items.map((p: PatientDto, index: number) => ({
+      id: p.id || String(index),
+      key: p.id || String(index),
+      nombre:
+        p.name?.[0]?.text ??
+        p.name?.[0]?.given?.join(" ") ??
+        "Nombre no disponible",
+      identificadorTipo: p.identifier?.[0]?.type?.text ?? "DNI",
+      identificador: p.identifier?.[0]?.value || "-",
+      contacto: p.telecom?.[0]?.value || "-",
+      nacimiento: p.birthDate
+        ? new Date(p.birthDate).toLocaleDateString()
+        : "-",
+      nacionalidad: p.address?.[0]?.country || "-",
+      genero:
+        p.gender === 1
+          ? "Masculino"
+          : p.gender === 2
+            ? "Femenino"
+            : p.gender === 3
+              ? "Otro"
+              : "No especificado",
+      estadoVital: p.active ? "Vivo" : "Sin vida",
+    }));
+  }, [apiPatients]);
 
   return {
     id,
@@ -154,5 +183,6 @@ export function useDetailsPatient() {
     messageApi,
     contextHolder,
     handleCopyData,
+    deletePatient,
   };
 }

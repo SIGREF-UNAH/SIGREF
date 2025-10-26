@@ -1,9 +1,10 @@
 ﻿using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 using Task = System.Threading.Tasks.Task;
-
-// Alias para evitar el conflicto de nombres
 using FhirHealthcare = Hl7.Fhir.Model.HealthcareService;
+using SIGREF.API.Dtos.Healthcare;
+using SIGREF.API.Dtos.Common;
+using SIGREF.API.Helpers;
 
 namespace SIGREF.API.Services.Healthcare
 {
@@ -13,14 +14,6 @@ namespace SIGREF.API.Services.Healthcare
         public Task<FhirHealthcare> GetHealthcareByIdAsync(string id)
         {
             return fhirService.ReadAsync<FhirHealthcare>($"HealthcareService/{id}");
-        }
-
-        // Obtener todos los servicios médicos
-        public async Task<IEnumerable<FhirHealthcare>> GetAllHealthcaresAsync()
-        {
-            var searchResult = await fhirService.SearchAsync<FhirHealthcare>();
-            return searchResult.Entry?.Select(e =>
-                e.Resource as FhirHealthcare).Where(l => l != null) ?? Enumerable.Empty<FhirHealthcare>();
         }
 
         // Crear un servicio médico
@@ -64,6 +57,42 @@ namespace SIGREF.API.Services.Healthcare
         public async Task DeleteHealthcareAsync(string id)
         {
             await fhirService.DeleteAsync($"HealthcareService/{id}");
+        }
+
+        // Filtrar
+        public async Task<PagedResult<FhirHealthcare>> GetFilteredHealthcaresAsync(HealthcareFilterDto filter)
+        {
+            // Normalizar paginación
+            var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
+
+            var searchParams = new SearchParams();
+
+            // Filtros
+            if (!string.IsNullOrWhiteSpace(filter.Name))
+                searchParams.Add("name", filter.Name);
+
+            if (filter.Active.HasValue)
+                searchParams.Add("active", filter.Active.Value.ToString().ToLowerInvariant());
+
+            if (!string.IsNullOrWhiteSpace(filter.Specialty))
+                searchParams.Add("specialty", filter.Specialty);
+
+            if (!string.IsNullOrWhiteSpace(filter.ProvidedBy))
+                searchParams.Add("organization", filter.ProvidedBy);
+
+            if (!string.IsNullOrWhiteSpace(filter.Location))
+                searchParams.Add("location", filter.Location);
+
+            // Paginación FHIR
+            searchParams.Count = pageSize;
+            searchParams.Add("_offset", offset.ToString());
+            searchParams.Add("_total", "accurate");
+
+            // Buscar en FHIR
+            var bundle = await fhirService.SearchAsync<FhirHealthcare>(searchParams);
+
+            // Convertir a PagedResult usando el helper
+            return FhirPaginationHelper.ToPagedResult<FhirHealthcare>(bundle, pageNumber, pageSize);
         }
     }
 }

@@ -22,44 +22,54 @@ import type {
 
 import type {
   CreatePractitionerRoleDto,
+  GetApiPractitionerRoleParams,
   ProblemDetails,
   UpdatePractitionerRoleDto,
 } from ".././models";
 
 import { customInstance } from ".././mutator/customInstance";
 
-export const getApiPractitionerRole = (signal?: AbortSignal) => {
+export const getApiPractitionerRole = (
+  params?: GetApiPractitionerRoleParams,
+  signal?: AbortSignal,
+) => {
   return customInstance<void>({
     url: `/api/PractitionerRole`,
     method: "GET",
+    params,
     signal,
   });
 };
 
-export const getGetApiPractitionerRoleQueryKey = () => {
-  return [`/api/PractitionerRole`] as const;
+export const getGetApiPractitionerRoleQueryKey = (
+  params?: GetApiPractitionerRoleParams,
+) => {
+  return [`/api/PractitionerRole`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetApiPractitionerRoleQueryOptions = <
   TData = Awaited<ReturnType<typeof getApiPractitionerRole>>,
   TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
->(options?: {
-  query?: Partial<
-    UseQueryOptions<
-      Awaited<ReturnType<typeof getApiPractitionerRole>>,
-      TError,
-      TData
-    >
-  >;
-}) => {
+>(
+  params?: GetApiPractitionerRoleParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getApiPractitionerRole>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
   const { query: queryOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ?? getGetApiPractitionerRoleQueryKey();
+    queryOptions?.queryKey ?? getGetApiPractitionerRoleQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof getApiPractitionerRole>>
-  > = ({ signal }) => getApiPractitionerRole(signal);
+  > = ({ signal }) => getApiPractitionerRole(params, signal);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getApiPractitionerRole>>,
@@ -81,6 +91,7 @@ export function useGetApiPractitionerRole<
   TData = Awaited<ReturnType<typeof getApiPractitionerRole>>,
   TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
 >(
+  params: undefined | GetApiPractitionerRoleParams,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -106,6 +117,7 @@ export function useGetApiPractitionerRole<
   TData = Awaited<ReturnType<typeof getApiPractitionerRole>>,
   TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
 >(
+  params?: GetApiPractitionerRoleParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -131,6 +143,7 @@ export function useGetApiPractitionerRole<
   TData = Awaited<ReturnType<typeof getApiPractitionerRole>>,
   TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
 >(
+  params?: GetApiPractitionerRoleParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -149,6 +162,7 @@ export function useGetApiPractitionerRole<
   TData = Awaited<ReturnType<typeof getApiPractitionerRole>>,
   TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
 >(
+  params?: GetApiPractitionerRoleParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -162,7 +176,7 @@ export function useGetApiPractitionerRole<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getGetApiPractitionerRoleQueryOptions(options);
+  const queryOptions = getGetApiPractitionerRoleQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

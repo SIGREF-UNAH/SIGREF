@@ -10,37 +10,35 @@ export function useListPatients() {
 
   // Hook generado por Orval para obtener los pacientes
   const { data: apiPatients, isLoading, isError } = useGetApiPatients({});
-
+console.log('apiPatients', apiPatients);
   // Mapeo de datos para la tabla
-  const patients = useMemo(
-    () =>
-      (apiPatients || []).map((p: PatientDto, index: number) => ({
-        id: p.id || String(index),
-        key: p.id || String(index),
-        nombre:
-          p.name?.[0]?.text ??
-          p.name?.[0]?.given?.join(" ") ??
-          "Nombre no disponible",
-        identificadorTipo: p.identifier?.[0]?.type?.text ?? "DNI",
-        identificador: p.identifier?.[0]?.value || "-",
-        contacto: p.telecom?.[0]?.value || "-",
-        nacimiento: p.birthDate
-          ? new Date(p.birthDate).toLocaleDateString()
-          : "-",
-        nacionalidad: p.address?.[0]?.country || "-",
-        genero:
-          p.gender === 1
-            ? "Masculino"
-            : p.gender === 2
-            ? "Femenino"
-            : p.gender === 3
-            ? "Otro"
-            : "No especificado",
-        estadoVital: p.active ? "Vivo" : "Sin vida",
-      })),
-    [apiPatients]
-  );
-
+   const patients = useMemo(() => {
+    const items = Array.isArray(apiPatients) ? apiPatients : apiPatients?.items|| []; 
+    return items.map((p: PatientDto, index: number) => ({
+      id: p.id || String(index),
+      key: p.id || String(index),
+      nombre:
+        p.name?.[0]?.text ??
+        p.name?.[0]?.given?.join(" ") ??
+        "Nombre no disponible",
+      identificadorTipo: p.identifier?.[0]?.type?.text ?? "DNI",
+      identificador: p.identifier?.[0]?.value || "-",
+      contacto: p.telecom?.[0]?.value || "-",
+      nacimiento: p.birthDate
+        ? new Date(p.birthDate).toLocaleDateString()
+        : "-",
+      nacionalidad: p.address?.[0]?.country || "-",
+      genero:
+        p.gender === 1
+          ? "Masculino"
+          : p.gender === 2
+          ? "Femenino"
+          : p.gender === 3
+          ? "Otro"
+          : "No especificado",
+      estadoVital: p.active ? "Vivo" : "Sin vida",
+    }));
+  }, [apiPatients]);
   // Configuración de paginación para usar en la tabla
   const paginationConfig: TablePaginationConfig = {
     current: currentPage,

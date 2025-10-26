@@ -21,7 +21,6 @@ export default function useCreatePatientForm() {
     },
   });
 
-  
   const handleSubmit = async (values: any): Promise<boolean> => {
     const payload: CreatePatientDto = {
       name: [
@@ -39,12 +38,40 @@ export default function useCreatePatientForm() {
       gender: values.gender,
       birthDate: values.fechanacimiento,
       active: values.estadoVital === 1,
-      telecom: values.telecom?.map((item: any, index: number) => ({
-        system: item.system,
-        use: item.use,
-        value: item.value || "",
-        rank: index + 1,
-      })),
+      maritalStatus: {
+        coding: [
+          {
+            system: "http://terminology.hl7.org/CodeSystem/v3-MaritalStatus",
+            code: values.estadoCivilCodigo || "UNK",
+            display: values.estadoCivil || "Desconocido",
+          },
+        ],
+        text: values.estadoCivil || "Desconocido",
+      },
+      extension: [
+        {
+          url: "http://hl7.org/fhir/StructureDefinition/patient-nationality",
+          valueCodeableConcept: {
+            coding: [
+              {
+                system: "urn:iso:std:iso:3166",
+                code: values.nacionalidadCodigo || "HN",
+                display: values.nacionalidad || "Honduras",
+              },
+            ],
+            text: values.nacionalidad || "Honduras",
+          },
+        },
+      ],
+
+      telecom:
+        values.telecom?.map((item: any, index: number) => ({
+          system: item.system,
+          use: item.use,
+          value: item.value || "",
+          rank: index + 1,
+        })) || [],
+
       address:
         values.address?.map((addr: any, index: number) => ({
           use: 0,
@@ -58,6 +85,7 @@ export default function useCreatePatientForm() {
           country: addr.country || "",
           rank: index + 1,
         })) || [],
+
       identifier: [
         {
           use: 0,
@@ -73,7 +101,7 @@ export default function useCreatePatientForm() {
             ],
             text: values.tipoIdentificacion,
           },
-          system: "https://example.com/identifiers",
+          system: values.emisor || "",
           value: values.identifier?.[0]?.value || "",
         },
       ],

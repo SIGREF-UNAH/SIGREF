@@ -11,7 +11,7 @@ import {
   PhoneOutlined,
   EnvironmentOutlined,
   FilterOutlined,
-  CopyOutlined,
+  CopyOutlined, 
   EditOutlined,
 } from "@ant-design/icons";
 import { Badge, Button, Pagination, Spin, Tag, Typography } from "antd";
@@ -46,6 +46,7 @@ export default function PatientDetailsForm() {
     setPageSize,
     contextHolder,
     handleCopyData,
+    deletePatient
   } = useDetailsPatient();
 
   if (isLoading)
@@ -167,7 +168,8 @@ export default function PatientDetailsForm() {
               type="primary"
               icon={<BiTrash />}
               className="!bg-red-600 !hover:bg-red-400"
-              //onClick={handleDelite}
+              danger
+              onClick={() => deletePatient({ id: (selectedPatient as any).id })}
             >
               Eliminar
             </Button>

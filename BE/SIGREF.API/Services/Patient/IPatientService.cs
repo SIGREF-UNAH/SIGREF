@@ -1,4 +1,5 @@
-﻿using SIGREF.API.Dtos.Patient;
+﻿using SIGREF.API.Dtos.Common;
+using SIGREF.API.Dtos.Patient;
 
 namespace SIGREF.API.Services.Patient
 {
@@ -19,10 +20,11 @@ namespace SIGREF.API.Services.Patient
         Task<PatientDto> GetPatientByIdAsync(string id);
 
         /// <summary>
-        /// Obtiene todos los pacientes (con paginación en futuras versiones).
+        /// Aplica filtros para obtener pacientes desde el servidor FHIR.
         /// </summary>
-        /// <returns>Lista de pacientes.</returns>
-        Task<IEnumerable<PatientDto>> GetAllPatientsAsync();
+        /// <param name="filter">Parámetros de filtro (nombre, género, estado civil, activo).</param>
+        /// <returns>Lista de pacientes que cumplen los criterios.</returns>
+        Task<PagedResult<PatientDto>> GetFilteredPatientsAsync(PatientFilterDto filter);
 
         /// <summary>
         /// Actualiza un paciente existente.
