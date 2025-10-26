@@ -6,3 +6,5 @@
 ## 📌 Acceso a Documentos Específicos
 
 Componentes para la UI:
+
+- [ProtectedComponent](/documentation/components/ProtectedComponent.md)

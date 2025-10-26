@@ -4,17 +4,175 @@
  * SIGREF.API
  * OpenAPI spec version: 1.0
  */
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
+  DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
+  QueryFunction,
+  QueryKey,
+  UndefinedInitialDataOptions,
   UseMutationOptions,
   UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { CreatePractitionerRoleDto } from ".././models";
+import type {
+  CreatePractitionerRoleDto,
+  ProblemDetails,
+  UpdatePractitionerRoleDto,
+} from ".././models";
 
 import { customInstance } from ".././mutator/customInstance";
+
+export const getApiPractitionerRole = (signal?: AbortSignal) => {
+  return customInstance<void>({
+    url: `/api/PractitionerRole`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getGetApiPractitionerRoleQueryKey = () => {
+  return [`/api/PractitionerRole`] as const;
+};
+
+export const getGetApiPractitionerRoleQueryOptions = <
+  TData = Awaited<ReturnType<typeof getApiPractitionerRole>>,
+  TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof getApiPractitionerRole>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetApiPractitionerRoleQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getApiPractitionerRole>>
+  > = ({ signal }) => getApiPractitionerRole(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getApiPractitionerRole>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetApiPractitionerRoleQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getApiPractitionerRole>>
+>;
+export type GetApiPractitionerRoleQueryError =
+  | ProblemDetails
+  | ProblemDetails
+  | ProblemDetails
+  | void;
+
+export function useGetApiPractitionerRole<
+  TData = Awaited<ReturnType<typeof getApiPractitionerRole>>,
+  TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getApiPractitionerRole>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiPractitionerRole>>,
+          TError,
+          Awaited<ReturnType<typeof getApiPractitionerRole>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiPractitionerRole<
+  TData = Awaited<ReturnType<typeof getApiPractitionerRole>>,
+  TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getApiPractitionerRole>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiPractitionerRole>>,
+          TError,
+          Awaited<ReturnType<typeof getApiPractitionerRole>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiPractitionerRole<
+  TData = Awaited<ReturnType<typeof getApiPractitionerRole>>,
+  TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getApiPractitionerRole>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useGetApiPractitionerRole<
+  TData = Awaited<ReturnType<typeof getApiPractitionerRole>>,
+  TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getApiPractitionerRole>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getGetApiPractitionerRoleQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
 
 export const postApiPractitionerRole = (
   createPractitionerRoleDto: CreatePractitionerRoleDto,
@@ -30,7 +188,7 @@ export const postApiPractitionerRole = (
 };
 
 export const getPostApiPractitionerRoleMutationOptions = <
-  TError = unknown,
+  TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -70,10 +228,14 @@ export type PostApiPractitionerRoleMutationResult = NonNullable<
   Awaited<ReturnType<typeof postApiPractitionerRole>>
 >;
 export type PostApiPractitionerRoleMutationBody = CreatePractitionerRoleDto;
-export type PostApiPractitionerRoleMutationError = unknown;
+export type PostApiPractitionerRoleMutationError =
+  | ProblemDetails
+  | ProblemDetails
+  | ProblemDetails
+  | void;
 
 export const usePostApiPractitionerRole = <
-  TError = unknown,
+  TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
   TContext = unknown,
 >(
   options?: {
@@ -92,6 +254,372 @@ export const usePostApiPractitionerRole = <
   TContext
 > => {
   const mutationOptions = getPostApiPractitionerRoleMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+export const getApiPractitionerRoleId = (id: string, signal?: AbortSignal) => {
+  return customInstance<void>({
+    url: `/api/PractitionerRole/${id}`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getGetApiPractitionerRoleIdQueryKey = (id?: string) => {
+  return [`/api/PractitionerRole/${id}`] as const;
+};
+
+export const getGetApiPractitionerRoleIdQueryOptions = <
+  TData = Awaited<ReturnType<typeof getApiPractitionerRoleId>>,
+  TError =
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | void,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getApiPractitionerRoleId>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetApiPractitionerRoleIdQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getApiPractitionerRoleId>>
+  > = ({ signal }) => getApiPractitionerRoleId(id, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getApiPractitionerRoleId>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetApiPractitionerRoleIdQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getApiPractitionerRoleId>>
+>;
+export type GetApiPractitionerRoleIdQueryError =
+  | ProblemDetails
+  | ProblemDetails
+  | ProblemDetails
+  | ProblemDetails
+  | void;
+
+export function useGetApiPractitionerRoleId<
+  TData = Awaited<ReturnType<typeof getApiPractitionerRoleId>>,
+  TError =
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | void,
+>(
+  id: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getApiPractitionerRoleId>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiPractitionerRoleId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiPractitionerRoleId>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiPractitionerRoleId<
+  TData = Awaited<ReturnType<typeof getApiPractitionerRoleId>>,
+  TError =
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | void,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getApiPractitionerRoleId>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiPractitionerRoleId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiPractitionerRoleId>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiPractitionerRoleId<
+  TData = Awaited<ReturnType<typeof getApiPractitionerRoleId>>,
+  TError =
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | void,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getApiPractitionerRoleId>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useGetApiPractitionerRoleId<
+  TData = Awaited<ReturnType<typeof getApiPractitionerRoleId>>,
+  TError =
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | void,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getApiPractitionerRoleId>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getGetApiPractitionerRoleIdQueryOptions(id, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const putApiPractitionerRoleId = (
+  id: string,
+  updatePractitionerRoleDto: UpdatePractitionerRoleDto,
+) => {
+  return customInstance<void>({
+    url: `/api/PractitionerRole/${id}`,
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    data: updatePractitionerRoleDto,
+  });
+};
+
+export const getPutApiPractitionerRoleIdMutationOptions = <
+  TError =
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | void,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof putApiPractitionerRoleId>>,
+    TError,
+    { id: string; data: UpdatePractitionerRoleDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof putApiPractitionerRoleId>>,
+  TError,
+  { id: string; data: UpdatePractitionerRoleDto },
+  TContext
+> => {
+  const mutationKey = ["putApiPractitionerRoleId"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof putApiPractitionerRoleId>>,
+    { id: string; data: UpdatePractitionerRoleDto }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return putApiPractitionerRoleId(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PutApiPractitionerRoleIdMutationResult = NonNullable<
+  Awaited<ReturnType<typeof putApiPractitionerRoleId>>
+>;
+export type PutApiPractitionerRoleIdMutationBody = UpdatePractitionerRoleDto;
+export type PutApiPractitionerRoleIdMutationError =
+  | ProblemDetails
+  | ProblemDetails
+  | ProblemDetails
+  | ProblemDetails
+  | void;
+
+export const usePutApiPractitionerRoleId = <
+  TError =
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | void,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof putApiPractitionerRoleId>>,
+      TError,
+      { id: string; data: UpdatePractitionerRoleDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof putApiPractitionerRoleId>>,
+  TError,
+  { id: string; data: UpdatePractitionerRoleDto },
+  TContext
+> => {
+  const mutationOptions = getPutApiPractitionerRoleIdMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+export const deleteApiPractitionerRoleId = (id: string) => {
+  return customInstance<void | void>({
+    url: `/api/PractitionerRole/${id}`,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteApiPractitionerRoleIdMutationOptions = <
+  TError =
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | void,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteApiPractitionerRoleId>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteApiPractitionerRoleId>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["deleteApiPractitionerRoleId"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteApiPractitionerRoleId>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteApiPractitionerRoleId(id);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteApiPractitionerRoleIdMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteApiPractitionerRoleId>>
+>;
+
+export type DeleteApiPractitionerRoleIdMutationError =
+  | ProblemDetails
+  | ProblemDetails
+  | ProblemDetails
+  | ProblemDetails
+  | void;
+
+export const useDeleteApiPractitionerRoleId = <
+  TError =
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | void,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteApiPractitionerRoleId>>,
+      TError,
+      { id: string },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteApiPractitionerRoleId>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationOptions =
+    getDeleteApiPractitionerRoleIdMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };
