@@ -94,7 +94,7 @@ public class Startup
             // Aquí mapeamos los roles
             options.Events = new JwtBearerEvents
             {
-                OnTokenValidated = context =>
+                OnTokenValidated = async context =>
                 {
                     var identity = context.Principal.Identity as ClaimsIdentity;
 
@@ -144,8 +144,39 @@ public class Startup
                                 }
                             }
                         }
+
+                        // --- Registrar inicio de sesión en MongoDB ---
+                        try
+                        {
+                            var auditLogService = context.HttpContext.RequestServices.GetRequiredService<IAuditLogService>();
+                            var userId = context.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? 
+                                        context.Principal.FindFirst("sub")?.Value ?? "unknown";
+                            var username = context.Principal.FindFirst("preferred_username")?.Value ?? 
+                                          context.Principal.Identity?.Name ?? "unknown";
+                            var ipAddress = context.HttpContext.Connection.RemoteIpAddress?.ToString();
+                            var userAgent = context.HttpContext.Request.Headers["User-Agent"].ToString();
+                            var roles = string.Join(", ", identity.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value));
+
+                            await auditLogService.LogActionAsync(
+                                userId: userId,
+                                username: username,
+                                action: $"Inicio de sesión exitoso - Roles: {roles}",
+                                actionType: "LOGIN",
+                                endpoint: context.HttpContext.Request.Path,
+                                httpMethod: "POST",
+                                statusCode: 200,
+                                ipAddress: ipAddress,
+                                userAgent: userAgent,
+                                additionalData: $"Roles asignados: {roles}"
+                            );
+                        }
+                        catch (Exception ex)
+                        {
+                            // No fallar la autenticación si falla el log
+                            var logger = context.HttpContext.RequestServices.GetService<ILogger<Startup>>();
+                            logger?.LogError(ex, "Error al registrar inicio de sesión en auditoría");
+                        }
                     }
-                    return Task.CompletedTask;
                 }
             };
 
@@ -178,6 +209,10 @@ public class Startup
         app.UseCors("CorsPolicy");
 
         app.UseRouting();
+
+        // Serilog: Log de cada petición HTTP (se guarda automáticamente en MongoDB)
+        // Nota: Serilog ya está configurado en Program.cs y el logging se maneja automáticamente
+        // app.UseSerilogRequestLogging();
 
         app.UseAuthentication();
 

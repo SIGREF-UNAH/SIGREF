@@ -67,13 +67,29 @@ public static class CommonExtensions
     // ────────────────────────────────────────────────
 
     public static ResourceReference ToFhirReference(this ReferenceDto dto)
-        => new(dto.Reference, dto.Display);
+    {
+        var reference = new ResourceReference
+        {
+            Reference = dto.Reference,
+            Display = dto.Display,
+            Type = dto.Type
+        };
+
+        if (dto.Identifier != null)
+        {
+            reference.Identifier = dto.Identifier.ToFhirIdentifier();
+        }
+
+        return reference;
+    }
 
     public static ReferenceDto ToReferenceDto(this ResourceReference reference)
         => new()
         {
             Reference = reference.Reference,
-            Display = reference.Display
+            Display = reference.Display,
+            Type = reference.Type,
+            Identifier = reference.Identifier?.ToDto()
         };
 
     // ────────────────────────────────────────────────

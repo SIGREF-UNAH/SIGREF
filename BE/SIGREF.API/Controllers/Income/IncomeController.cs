@@ -9,6 +9,7 @@ namespace SIGREF.API.Controllers.IncomeC
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     public class IncomeController : ControllerBase
     {
         private readonly IIncomeService _incomeService;
@@ -70,8 +71,15 @@ namespace SIGREF.API.Controllers.IncomeC
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var income = await _incomeService.CreateIncomeAsync(createIncomeDto);
-            return CreatedAtAction(nameof(GetById), new { id = income.Id }, income);
+            try
+            {
+                var income = await _incomeService.CreateIncomeAsync(createIncomeDto);
+                return CreatedAtAction(nameof(GetById), new { id = income.Id }, income);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Error al crear el ingreso", details = ex.Message, innerException = ex.InnerException?.Message });
+            }
         }
 
         /// <summary>

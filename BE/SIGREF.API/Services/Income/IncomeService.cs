@@ -1,5 +1,6 @@
 ﻿using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
+using Microsoft.Extensions.Logging;
 using SIGREF.API.Dtos.Income;
 using SIGREF.API.Extensions;
 using System;

@@ -1,68 +1,69 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace SIGREF.API.Database
 {
-    [Table("audit_logs")]
     public class AuditLog
     {
-        [Key]
-        [Column("id")]
-        public int Id { get; set; }
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public ObjectId Id { get; set; }
 
-        [Required]
-        [Column("user_id")]
-        [MaxLength(255)]
+        [BsonElement("user_id")]
+        [BsonRequired]
         public string UserId { get; set; } = string.Empty;
 
-        [Required]
-        [Column("username")]
-        [MaxLength(255)]
+        [BsonElement("username")]
+        [BsonRequired]
         public string Username { get; set; } = string.Empty;
 
-        [Required]
-        [Column("action")]
-        [MaxLength(500)]
+        [BsonElement("action")]
+        [BsonRequired]
         public string Action { get; set; } = string.Empty;
 
-        [Required]
-        [Column("action_type")]
-        [MaxLength(50)]
-        public string ActionType { get; set; } = string.Empty; // CREATE, READ, UPDATE, DELETE, ERROR
+        [BsonElement("action_type")]
+        [BsonRequired]
+        public string ActionType { get; set; } = string.Empty;
 
-        [Column("endpoint")]
-        [MaxLength(500)]
+        [BsonElement("endpoint")]
+        [BsonIgnoreIfNull]
         public string? Endpoint { get; set; }
 
-        [Column("http_method")]
-        [MaxLength(10)]
+        [BsonElement("http_method")]
+        [BsonIgnoreIfNull]
         public string? HttpMethod { get; set; }
 
-        [Column("status_code")]
+        [BsonElement("status_code")]
+        [BsonIgnoreIfNull]
         public int? StatusCode { get; set; }
 
-        [Column("error_message")]
+        [BsonElement("error_message")]
+        [BsonIgnoreIfNull]
         public string? ErrorMessage { get; set; }
 
-        [Column("request_body")]
+        [BsonElement("request_body")]
+        [BsonIgnoreIfNull]
         public string? RequestBody { get; set; }
 
-        [Column("response_body")]
+        [BsonElement("response_body")]
+        [BsonIgnoreIfNull]
         public string? ResponseBody { get; set; }
 
-        [Column("ip_address")]
-        [MaxLength(45)]
+        [BsonElement("ip_address")]
+        [BsonIgnoreIfNull]
         public string? IpAddress { get; set; }
 
-        [Column("user_agent")]
-        [MaxLength(500)]
+        [BsonElement("user_agent")]
+        [BsonIgnoreIfNull]
         public string? UserAgent { get; set; }
 
-        [Required]
-        [Column("timestamp")]
+        [BsonElement("timestamp")]
+        [BsonRequired]
+        [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 
-        [Column("additional_data")]
+        [BsonElement("additional_data")]
+        [BsonIgnoreIfNull]
         public string? AdditionalData { get; set; }
     }
 }

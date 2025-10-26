@@ -29,11 +29,19 @@ namespace SIGREF.API.Middleware
             {
                 await _next(context);
 
+                // Logging para diagnóstico
+                _logger.LogInformation($"[AuditLog] Petición: {context.Request.Method} {context.Request.Path} - Autenticado: {context.User.Identity?.IsAuthenticated}");
+
                 // Solo registrar si el usuario está autenticado
                 if (context.User.Identity?.IsAuthenticated == true)
                 {
                     var responseBodyText = await GetResponseBodyAsync(context.Response);
                     await LogRequestAsync(context, auditLogService, requestBody, responseBodyText, null);
+                    _logger.LogInformation($"[AuditLog] Log registrado para: {context.Request.Method} {context.Request.Path}");
+                }
+                else
+                {
+                    _logger.LogWarning($"[AuditLog] Petición NO registrada (usuario no autenticado): {context.Request.Method} {context.Request.Path}");
                 }
             }
             catch (Exception ex)
