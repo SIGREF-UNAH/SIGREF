@@ -2,7 +2,6 @@ import {
   ProForm,
   ProFormText,
   ProFormSelect,
-  ProFormDatePicker,
   ProTable,
 } from "@ant-design/pro-components";
 import {
@@ -11,7 +10,7 @@ import {
   PhoneOutlined,
   EnvironmentOutlined,
   FilterOutlined,
-  CopyOutlined, 
+  CopyOutlined,
   EditOutlined,
 } from "@ant-design/icons";
 import { Badge, Button, Spin, Tag, Typography } from "antd";
@@ -46,7 +45,7 @@ export default function PatientDetailsForm() {
     handleCopyData,
     deletePatient,
     filters,
-    setFilter
+    setFilter,
   } = useDetailsPatient();
 
   if (isLoading)
@@ -328,95 +327,78 @@ export default function PatientDetailsForm() {
           </span>
         </div>
 
-         <ProForm
-            submitter={false}
-            layout="horizontal"
-            className="patient-filters"
-            initialValues={filters}
-            onValuesChange={(changedValues, allValues) => {
-              Object.keys(changedValues).forEach((key) => {
-                setFilter(key as keyof typeof filters, allValues[key]);
-              });
-            }}
-          >
-            <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2 lg:grid-cols-4">
-              <ProFormText
-                name="nombreCompleto"
-                label="Nombres del Paciente"
-                placeholder="Nombre Completo"
-              />
+        <ProForm
+          submitter={false}
+          layout="horizontal"
+          className="patient-filters"
+          initialValues={filters}
+          onValuesChange={(changedValues, allValues) => {
+            Object.keys(changedValues).forEach((key) => {
+              setFilter(key as keyof typeof filters, allValues[key]);
+            });
+          }}
+        >
+          <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2 lg:grid-cols-4">
+            <ProFormText
+              name="nombreCompleto"
+              label="Nombres del Paciente"
+              placeholder="Nombre Completo"
+            />
 
-              <ProFormSelect
-                name="tipoIdentificador"
-                label="Tipo de Identificador"
-                options={[
-                  { label: "DNI", value: "DNI" },
-                  { label: "PST", value: "PST" },
-                  { label: "ID", value: "ID" },
-                ]}
-                placeholder="DNI"
-              />
+            <ProFormSelect
+              name="tipoIdentificador"
+              label="Tipo de Identificador"
+              options={[
+                { label: "DNI", value: "dni_hn" },
+                { label: "PST", value: "pasaporte" },
+                { label: "CDL", value: "cedula" },
+              ]}
+              placeholder="DNI"
+            />
 
-              <ProFormText
-                name="identificador"
-                label="Identificador"
-                placeholder="—"
-              />
+            <ProFormText
+              name="identificador"
+              label="Identificador"
+              placeholder="—"
+            />
 
-              <ProFormSelect
-                name="genero"
-                label="Género"
-                options={[
-                  { label: "Todos", value: "todos" },
-                  { label: "H", value: "H" },
-                  { label: "M", value: "M" },
-                  { label: "D", value: "D" },
-                ]}
-                placeholder="Todos"
-              />
+            <ProFormSelect
+              name="genero"
+              label="Género"
+              options={[
+                { label: "Todos", value: "todos" },
+                { label: "H", value: "H" },
+                { label: "M", value: "M" },
+                { label: "D", value: "D" },
+              ]}
+              placeholder="Todos"
+            />
 
-              <ProFormText
-                name="nacionalidad"
-                label="Nacionalidad"
-                placeholder="Todos"
-              />
+            {/* <ProFormText
+              name="nacionalidad"
+              label="Nacionalidad"
+              placeholder="Todos"
+            /> */}
 
-              <ProFormSelect
-                name="estadoVital"
-                label="Estado Vital"
-                options={[
-                  { label: "Todos", value: "todos" },
-                  { label: "Vivo", value: "Vivo" },
-                  { label: "Sin vida", value: "Sin vida" },
-                ]}
-                placeholder="Todos"
-              />
+            <ProFormSelect
+              name="estadoVital"
+              label="Estado Vital"
+              options={[
+                { label: "Todos", value: "todos" },
+                { label: "Vivo", value: "Vivo" },
+                { label: "Sin vida", value: "Fallecido" },
+              ]}
+              placeholder="Todos"
+            />
 
-              <ProFormDatePicker
-                name="fechaNacimiento"
-                label="Fecha Nacimiento"
-                placeholder="DD / MM / YYYY"
-                fieldProps={{ format: "DD/MM/YYYY" }}
-              />
-
-              {/* <ProFormSelect
-                name="tipoContacto"
-                label="Tipo Contacto"
-                options={[
-                  { label: "Todos", value: "todos" },
-                  { label: "Teléfono", value: "telefono" },
-                  { label: "Email", value: "email" },
-                ]}
-                placeholder="Todos"
-              />
-
-              <ProFormText
-                name="contacto"
-                label="Contacto"
-                placeholder="50499919292329"
-              /> */}
-            </div>
-          </ProForm>
+            {/* <ProFormDatePicker
+              name="fechaNacimiento"
+              label="Fecha Nacimiento"
+              placeholder="DD / MM / YYYY"
+              fieldProps={{ format: "DD/MM/YYYY" }}
+            /> */}
+          </div>
+        </ProForm>
       </div>
 
       {/* Registro de Pacientes */}
@@ -428,15 +410,14 @@ export default function PatientDetailsForm() {
         </div>
 
         <ProTable
-               columns={columns}
-            dataSource={patients}
-            search={false}
-            options={false}
-            loading={isLoading || loadingPatients} 
-            pagination={paginationConfig}
-            scroll={{ x: 1200 }}
+          columns={columns}
+          dataSource={patients}
+          search={false}
+          options={false}
+          loading={isLoading || loadingPatients}
+          pagination={paginationConfig}
+          scroll={{ x: 1200 }}
         />
-
       </div>
     </div>
   );

@@ -59,31 +59,60 @@ export function useListPatients() {
       pageSize: filters.pageSize,
     };
 
-  if (filters.nombreCompleto) params.name = filters.nombreCompleto;
- 
+    if (filters.nombreCompleto) params.name = filters.nombreCompleto;
 
-  if (filters.genero && filters.genero !== "todos") {
-    params.gender =
-      filters.genero === "D" ? 0 : filters.genero === "H" ? 1 : filters.genero === "M" ? 2 : undefined;
-  }
+    if (filters.genero && filters.genero !== "todos") {
+      params.gender =
+        filters.genero === "D"
+          ? 0
+          : filters.genero === "H"
+            ? 1
+            : filters.genero === "M"
+              ? 2
+              : undefined;
+    }
 
-  if (filters.estadoVital && filters.estadoVital !== "todos") {
-    params.active =
-      filters.estadoVital === "Vivo"
-        ? true
-        : filters.estadoVital === "Sin vida"
-        ? false
-        : undefined;
-  }
-   
-  return params;
-}, [filters]);
+    if (filters.estadoVital && filters.estadoVital !== "todos") {
+      params.active =
+        filters.estadoVital === "Vivo"
+          ? true
+          : filters.estadoVital === "Sin vida"
+            ? false
+            : undefined;
+    }
+
+    if (filters.tipoIdentificador && filters.tipoIdentificador !== "todos")
+      params.IdentifierType = filters.tipoIdentificador;
+
+    if (filters.identificador) params.IdentifierValue = filters.identificador;
+
+    if (filters.fechaNacimiento) {
+      const f = filters.fechaNacimiento as any;
+
+      if (typeof f?.format === "function") {
+        // dayjs
+        params.BirthDate = f.format("YYYY-MM-DD");
+      } else if (f instanceof Date) {
+        // Date nativo
+        params.BirthDate = f.toISOString().split("T")[0];
+      } else if (typeof f === "string" && /^\d{4}-\d{2}-\d{2}$/.test(f)) {
+        // string ya formateada
+        params.BirthDate = f;
+      }
+    }
+
+    return params;
+  }, [filters]);
 
   // Llamada a la API
-  const { data: response, isLoading, isFetching, isError } = useGetApiPatients<PatientsResponse>(
-    queryParams,
-    { query: { placeholderData: (prev) => prev } }
-  );
+  const {
+    data: response,
+    isLoading,
+    isFetching,
+    isError,
+  } = useGetApiPatients<PatientsResponse>(queryParams, {
+    query: { placeholderData: (prev) => prev },
+  });
 
   // Datos de la tabla
   const patients = useMemo(() => {
@@ -91,20 +120,25 @@ export function useListPatients() {
     return items.map((p: PatientDto, index: number) => ({
       id: p.id || String(index),
       key: p.id || String(index),
-      nombre: p.name?.[0]?.text ?? p.name?.[0]?.given?.join(" ") ?? "Nombre no disponible",
+      nombre:
+        p.name?.[0]?.text ??
+        p.name?.[0]?.given?.join(" ") ??
+        "Nombre no disponible",
       identificadorTipo: p.identifier?.[0]?.type?.text ?? "DNI",
       identificador: p.identifier?.[0]?.value || "-",
       contacto: p.telecom?.[0]?.value || "-",
-      nacimiento: p.birthDate ? new Date(p.birthDate).toLocaleDateString() : "-",
+      nacimiento: p.birthDate
+        ? new Date(p.birthDate).toLocaleDateString()
+        : "-",
       nacionalidad: p.address?.[0]?.country || "-",
       genero:
         p.gender === 1
           ? "Masculino"
           : p.gender === 2
-          ? "Femenino"
-          : p.gender === 3
-          ? "Otro"
-          : "No especificado",
+            ? "Femenino"
+            : p.gender === 3
+              ? "Otro"
+              : "No especificado",
       estadoVital: p.active ? "Vivo" : "Sin vida",
     }));
   }, [response]);
@@ -127,7 +161,6 @@ export function useListPatients() {
     setSearchInput("");
     setFilter("search", "");
   };
-
 
   const getIdentificadorColor = (tipo: string) => {
     switch (tipo) {

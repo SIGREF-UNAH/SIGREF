@@ -2,7 +2,6 @@ import {
   ProForm,
   ProFormText,
   ProFormSelect,
-  ProFormDatePicker,
   ProTable,
   type ProColumns,
 } from "@ant-design/pro-components";
@@ -136,9 +135,9 @@ export default function ListFormPatients() {
                 name="tipoIdentificador"
                 label="Tipo de Identificador"
                 options={[
-                  { label: "DNI", value: "DNI" },
-                  { label: "PST", value: "PST" },
-                  { label: "ID", value: "ID" },
+                  { label: "DNI", value: "dni_hn" },
+                  { label: "PST", value: "pasaporte" },
+                  { label: "CDL", value: "cedula" },
                 ]}
                 placeholder="DNI"
               />
@@ -161,11 +160,11 @@ export default function ListFormPatients() {
                 placeholder="Todos"
               />
 
-              <ProFormText
+              {/* <ProFormText
                 name="nacionalidad"
                 label="Nacionalidad"
                 placeholder="Todos"
-              />
+              /> */}
 
               <ProFormSelect
                 name="estadoVital"
@@ -178,28 +177,11 @@ export default function ListFormPatients() {
                 placeholder="Todos"
               />
 
-              <ProFormDatePicker
+              {/* <ProFormDatePicker
                 name="fechaNacimiento"
                 label="Fecha Nacimiento"
                 placeholder="DD / MM / YYYY"
                 fieldProps={{ format: "DD/MM/YYYY" }}
-              />
-{/* 
-              <ProFormSelect
-                name="tipoContacto"
-                label="Tipo Contacto"
-                options={[
-                  { label: "Todos", value: "todos" },
-                  { label: "Teléfono", value: "telefono" },
-                  { label: "Email", value: "email" },
-                ]}
-                placeholder="Todos"
-              />
-
-              <ProFormText
-                name="contacto"
-                label="Contacto"
-                placeholder="50499919292329"
               /> */}
             </div>
           </ProForm>
