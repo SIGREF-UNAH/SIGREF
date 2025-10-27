@@ -86,8 +86,8 @@ const LocationDetailsPage: React.FC = () => {
   const renderStatusOptions = [
     { label: "Seleccionar estado", value: "" },
     { label: "Activo", value: LocationStatus.NUMBER_0 },
-    { label: "Inactivo", value: LocationStatus.NUMBER_1 },
-    { label: "Suspendido", value: LocationStatus.NUMBER_2 },
+    { label: "Suspendido", value: LocationStatus.NUMBER_1 },
+    { label: "Inactivo", value: LocationStatus.NUMBER_2 },
   ];
 
   const getModeLabel = (mode: number | undefined) => {
