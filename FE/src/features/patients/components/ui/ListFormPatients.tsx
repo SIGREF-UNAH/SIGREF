@@ -6,7 +6,7 @@ import {
   ProTable,
   type ProColumns,
 } from "@ant-design/pro-components";
-import { Tag, Pagination } from "antd";
+import { Tag } from "antd";
 import { FilterOutlined } from "@ant-design/icons";
 import { Link } from "react-router";
 import { useListPatients } from "../../hooks";
@@ -26,11 +26,11 @@ interface Patient {
 
 export default function ListFormPatients() {
   const {
+    filters,
+    setFilter,
     patients,
-    currentPage,
-    setCurrentPage,
-    pageSize,
-    setPageSize,
+    paginationConfig,
+    isLoading,
     getIdentificadorColor,
   } = useListPatients();
 
@@ -118,8 +118,13 @@ export default function ListFormPatients() {
             submitter={false}
             layout="horizontal"
             className="patient-filters"
+            initialValues={filters}
+            onValuesChange={(changedValues, allValues) => {
+              Object.keys(changedValues).forEach((key) => {
+                setFilter(key as keyof typeof filters, allValues[key]);
+              });
+            }}
           >
-            {/* Contenedor de los filtros */}
             <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2 lg:grid-cols-4">
               <ProFormText
                 name="nombreCompleto"
@@ -151,6 +156,7 @@ export default function ListFormPatients() {
                   { label: "Todos", value: "todos" },
                   { label: "H", value: "H" },
                   { label: "M", value: "M" },
+                  { label: "D", value: "D" },
                 ]}
                 placeholder="Todos"
               />
@@ -166,8 +172,8 @@ export default function ListFormPatients() {
                 label="Estado Vital"
                 options={[
                   { label: "Todos", value: "todos" },
-                  { label: "Vivo", value: "vivo" },
-                  { label: "Sin vida", value: "sin vida" },
+                  { label: "Vivo", value: "Vivo" },
+                  { label: "Sin vida", value: "Sin vida" },
                 ]}
                 placeholder="Todos"
               />
@@ -176,11 +182,9 @@ export default function ListFormPatients() {
                 name="fechaNacimiento"
                 label="Fecha Nacimiento"
                 placeholder="DD / MM / YYYY"
-                fieldProps={{
-                  format: "DD/MM/YYYY",
-                }}
+                fieldProps={{ format: "DD/MM/YYYY" }}
               />
-
+{/* 
               <ProFormSelect
                 name="tipoContacto"
                 label="Tipo Contacto"
@@ -196,7 +200,7 @@ export default function ListFormPatients() {
                 name="contacto"
                 label="Contacto"
                 placeholder="50499919292329"
-              />
+              /> */}
             </div>
           </ProForm>
         </div>
@@ -214,34 +218,10 @@ export default function ListFormPatients() {
             dataSource={patients}
             search={false}
             options={false}
-            pagination={false}
+            loading={isLoading}
+            pagination={paginationConfig}
             scroll={{ x: 1200 }}
           />
-
-          <div className="mt-4 flex items-center justify-between">
-            <span className="text-sm text-gray-600">1-50 of 1,250</span>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">
-                Registros por Página
-              </span>
-              <select
-                value={pageSize}
-                onChange={(e) => setPageSize(Number(e.target.value))}
-                className="rounded border border-gray-300 px-3 py-1"
-              >
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-              <Pagination
-                current={currentPage}
-                total={1250}
-                pageSize={pageSize}
-                onChange={setCurrentPage}
-                showSizeChanger={false}
-              />
-            </div>
-          </div>
         </div>
       </div>
     </div>

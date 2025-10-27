@@ -24,6 +24,7 @@ import type {
   CreateOrganizationDto,
   GetApiOrganizationsParams,
   OrganizationDto,
+  OrganizationDtoPagedResultDto,
   UpdateOrganizationDto,
 } from ".././models";
 
@@ -33,7 +34,7 @@ export const getApiOrganizations = (
   params?: GetApiOrganizationsParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<void>({
+  return customInstance<OrganizationDtoPagedResultDto>({
     url: `/api/Organizations`,
     method: "GET",
     params,

@@ -34,7 +34,7 @@ export const getApiPatients = (
   params?: GetApiPatientsParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<PatientDto[]>({
+  return customInstance<void>({
     url: `/api/Patients`,
     method: "GET",
     params,

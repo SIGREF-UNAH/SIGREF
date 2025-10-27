@@ -23,6 +23,7 @@ import type {
 import type {
   CreatePractitionerRoleDto,
   GetApiPractitionerRoleParams,
+  PractitionerRoleDtoPagedResultDto,
   ProblemDetails,
   UpdatePractitionerRoleDto,
 } from ".././models";
@@ -33,7 +34,7 @@ export const getApiPractitionerRole = (
   params?: GetApiPractitionerRoleParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<void>({
+  return customInstance<PractitionerRoleDtoPagedResultDto>({
     url: `/api/PractitionerRole`,
     method: "GET",
     params,

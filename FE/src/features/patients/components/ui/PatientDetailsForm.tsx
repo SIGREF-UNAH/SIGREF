@@ -14,7 +14,7 @@ import {
   CopyOutlined, 
   EditOutlined,
 } from "@ant-design/icons";
-import { Badge, Button, Pagination, Spin, Tag, Typography } from "antd";
+import { Badge, Button, Spin, Tag, Typography } from "antd";
 import type { ProColumns } from "@ant-design/pro-components";
 import { Link } from "react-router-dom";
 import { useDetailsPatient } from "../../hooks";
@@ -40,13 +40,13 @@ export default function PatientDetailsForm() {
     error,
     selectedPatient,
     patients,
-    currentPage,
-    setCurrentPage,
-    pageSize,
-    setPageSize,
+    loadingPatients,
+    paginationConfig,
     contextHolder,
     handleCopyData,
-    deletePatient
+    deletePatient,
+    filters,
+    setFilter
   } = useDetailsPatient();
 
   if (isLoading)
@@ -328,91 +328,95 @@ export default function PatientDetailsForm() {
           </span>
         </div>
 
-        <ProForm
-          submitter={false}
-          layout="horizontal"
-          className="patient-filters"
-        >
-          {/* Contenedor de los filtros */}
-          <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2 lg:grid-cols-4">
-            <ProFormText
-              name="nombreCompleto"
-              label="Nombres del Paciente"
-              placeholder="Nombre Completo"
-            />
+         <ProForm
+            submitter={false}
+            layout="horizontal"
+            className="patient-filters"
+            initialValues={filters}
+            onValuesChange={(changedValues, allValues) => {
+              Object.keys(changedValues).forEach((key) => {
+                setFilter(key as keyof typeof filters, allValues[key]);
+              });
+            }}
+          >
+            <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2 lg:grid-cols-4">
+              <ProFormText
+                name="nombreCompleto"
+                label="Nombres del Paciente"
+                placeholder="Nombre Completo"
+              />
 
-            <ProFormSelect
-              name="tipoIdentificador"
-              label="Tipo de Identificador"
-              options={[
-                { label: "DNI", value: "DNI" },
-                { label: "PST", value: "PST" },
-                { label: "ID", value: "ID" },
-              ]}
-              placeholder="DNI"
-            />
+              <ProFormSelect
+                name="tipoIdentificador"
+                label="Tipo de Identificador"
+                options={[
+                  { label: "DNI", value: "DNI" },
+                  { label: "PST", value: "PST" },
+                  { label: "ID", value: "ID" },
+                ]}
+                placeholder="DNI"
+              />
 
-            <ProFormText
-              name="identificador"
-              label="Identificador"
-              placeholder="—"
-            />
+              <ProFormText
+                name="identificador"
+                label="Identificador"
+                placeholder="—"
+              />
 
-            <ProFormSelect
-              name="genero"
-              label="Género"
-              options={[
-                { label: "Todos", value: "todos" },
-                { label: "H", value: "H" },
-                { label: "M", value: "M" },
-              ]}
-              placeholder="Todos"
-            />
+              <ProFormSelect
+                name="genero"
+                label="Género"
+                options={[
+                  { label: "Todos", value: "todos" },
+                  { label: "H", value: "H" },
+                  { label: "M", value: "M" },
+                  { label: "D", value: "D" },
+                ]}
+                placeholder="Todos"
+              />
 
-            <ProFormText
-              name="nacionalidad"
-              label="Nacionalidad"
-              placeholder="Todos"
-            />
+              <ProFormText
+                name="nacionalidad"
+                label="Nacionalidad"
+                placeholder="Todos"
+              />
 
-            <ProFormSelect
-              name="estadoVital"
-              label="Estado Vital"
-              options={[
-                { label: "Todos", value: "todos" },
-                { label: "Vivo", value: "vivo" },
-                { label: "Sin vida", value: "sin vida" },
-              ]}
-              placeholder="Todos"
-            />
+              <ProFormSelect
+                name="estadoVital"
+                label="Estado Vital"
+                options={[
+                  { label: "Todos", value: "todos" },
+                  { label: "Vivo", value: "Vivo" },
+                  { label: "Sin vida", value: "Sin vida" },
+                ]}
+                placeholder="Todos"
+              />
 
-            <ProFormDatePicker
-              name="fechaNacimiento"
-              label="Fecha Nacimiento"
-              placeholder="DD / MM / YYYY"
-              fieldProps={{
-                format: "DD/MM/YYYY",
-              }}
-            />
+              <ProFormDatePicker
+                name="fechaNacimiento"
+                label="Fecha Nacimiento"
+                placeholder="DD / MM / YYYY"
+                fieldProps={{ format: "DD/MM/YYYY" }}
+              />
 
-            <ProFormSelect
-              name="tipoContacto"
-              label="Tipo Contacto"
-              options={[
-                { label: "Todos", value: "todos" },
-                { label: "Teléfono", value: "telefono" },
-                { label: "Email", value: "email" },
-              ]}
-              placeholder="Todos"
-            />
+              {/* <ProFormSelect
+                name="tipoContacto"
+                label="Tipo Contacto"
+                options={[
+                  { label: "Todos", value: "todos" },
+                  { label: "Teléfono", value: "telefono" },
+                  { label: "Email", value: "email" },
+                ]}
+                placeholder="Todos"
+              />
 
-            <ProFormText
-              name="contacto"
-              label="Contacto"
-              placeholder="50499919292329"
-            />
-          </div>
-        </ProForm>
+              <ProFormText
+                name="contacto"
+                label="Contacto"
+                placeholder="50499919292329"
+              /> */}
+            </div>
+          </ProForm>
       </div>
 
       {/* Registro de Pacientes */}
@@ -424,37 +428,15 @@ export default function PatientDetailsForm() {
         </div>
 
         <ProTable
-          columns={columns}
-          dataSource={patients}
-          pagination={false}
-          scroll={{ x: 1200 }}
-          className="patient-table"
-          search={false}
-          options={false}
+               columns={columns}
+            dataSource={patients}
+            search={false}
+            options={false}
+            loading={isLoading || loadingPatients} 
+            pagination={paginationConfig}
+            scroll={{ x: 1200 }}
         />
 
-        <div className="mt-4 flex items-center justify-between">
-          <span className="text-sm text-gray-600">1-50 of 1,250</span>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">Registros por Página</span>
-            <select
-              value={pageSize}
-              onChange={(e) => setPageSize(Number(e.target.value))}
-              className="rounded border border-gray-300 px-3 py-1"
-            >
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-            </select>
-            <Pagination
-              current={currentPage}
-              total={1250}
-              pageSize={pageSize}
-              onChange={setCurrentPage}
-              showSizeChanger={false}
-            />
-          </div>
-        </div>
       </div>
     </div>
   );

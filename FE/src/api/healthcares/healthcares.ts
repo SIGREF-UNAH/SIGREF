@@ -24,6 +24,7 @@ import type {
   CreateHealthcareDto,
   GetApiHealthcaresParams,
   HealthcareDto,
+  HealthcareDtoPagedResultDto,
   ProblemDetails,
   UpdateHealthcareDto,
 } from ".././models";
@@ -34,7 +35,7 @@ export const getApiHealthcares = (
   params?: GetApiHealthcaresParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<HealthcareDto[]>({
+  return customInstance<HealthcareDtoPagedResultDto>({
     url: `/api/Healthcares`,
     method: "GET",
     params,

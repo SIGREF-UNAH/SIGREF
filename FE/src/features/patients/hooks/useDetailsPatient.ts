@@ -1,5 +1,5 @@
-import {  useNavigate, useParams } from "react-router";
-import { useState, useMemo } from "react";
+import { useNavigate, useParams } from "react-router";
+import { useMemo } from "react";
 import { message } from "antd";
 import {
   useDeleteApiPatientsId,
@@ -7,67 +7,87 @@ import {
   useGetApiPatientsId,
 } from "../../../api/patients/patients";
 import type { PatientDto } from "../../../api/models";
+import { useUrlFilters } from "../../../shared/hooks";
+import type { TablePaginationConfig } from "antd";
+
+export type PaginationDto = {
+  currentPage: number;
+  pageSize: number;
+  totalItems: number;
+};
+
+type PatientsResponse = {
+  items: PatientDto[];
+  pagination: PaginationDto;
+};
 
 export function useDetailsPatient() {
   const { id } = useParams();
   const [messageApi, contextHolder] = message.useMessage();
-   const navigate = useNavigate();
+  const navigate = useNavigate();
 
-  const { data, isLoading, error } = useGetApiPatientsId(id ?? "") as {
+  // Detalle del paciente
+  const {
+    data,
+    isLoading: loadingPatientDetail,
+    error,
+  } = useGetApiPatientsId(id ?? "") as {
     data?: PatientDto;
     isLoading: boolean;
     error?: any;
   };
-  const { data: apiPatients } = useGetApiPatients();
-  const patient: PatientDto | undefined = Array.isArray(data) ? data[0] : data;
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-
-  const handleCopyData = () => {
-    if (!data) {
-      messageApi.warning("No hay datos del paciente para copiar.");
-      return;
-    }
-    // Texto que se copia del paciente
-    const info = `
-   Nombre: ${selectedPatient.nombre} ${selectedPatient.apellidos}
-   Fecha de Nacimiento: ${selectedPatient.fechaNacimiento}
-   Edad: ${selectedPatient.edad}
-   Género: ${selectedPatient.genero}
-   Nacionalidad: ${selectedPatient.nacionalidad}
-   Estado Vital: ${selectedPatient.estadoVital}
-
-   DNI: ${selectedPatient.dni} (${selectedPatient.dniEmisor})
-   Pasaporte: ${selectedPatient.pasaporte} (${selectedPatient.pasaporteEmisor})
-
-   Móvil: ${selectedPatient.movil}
-   Email: ${selectedPatient.email}
-
-   Dirección Casa: ${selectedPatient.casaDireccion}
-   Dirección Trabajo: ${selectedPatient.trabajoDireccion}
-  `.trim();
-
-    navigator.clipboard.writeText(info);
-    messageApi.success("Datos del paciente copiados al portapapeles.");
-  };
-
-  // eliminar pacientes
-  const { mutate: deletePatient } = useDeleteApiPatientsId({
-    mutation: {
-      onSuccess: () => {
-        messageApi.success("Paciente eliminado correctamente");
-         navigate("/patients/list");
-      },
-      onError: (error) => {
-        messageApi.error(
-          "Error al eliminar paciente: " + (error?.message || "Desconocido")
-        );
-      },
+  // Filtros y paginación
+  const { filters, setFilters, setFilter } = useUrlFilters({
+    defaultValues: {
+      search: "",
+      pageNumber: 1,
+      pageSize: 10,
+      nombreCompleto: "",
+      genero: "todos",
+      estadoVital: "todos",
     },
   });
 
-  // Extrae teléfono y correo
+  // Construcción de queryParams con filtros que el backend soporta
+  const queryParams = useMemo(() => {
+    const params: any = {
+      pageNumber: filters.pageNumber,
+      pageSize: filters.pageSize,
+    };
+
+    if (filters.nombreCompleto) params.name = filters.nombreCompleto;
+
+    if (filters.genero && filters.genero !== "todos") {
+      params.gender =
+        filters.genero === "H" ? 1 : filters.genero === "M" ? 2 : undefined;
+    }
+
+    if (filters.estadoVital && filters.estadoVital !== "todos") {
+      params.active =
+        filters.estadoVital === "Vivo"
+          ? true
+          : filters.estadoVital === "Sin vida"
+            ? false
+            : undefined;
+    }
+
+    if (filters.search) params.search = filters.search;
+
+    return params;
+  }, [filters]);
+
+  // Lista de pacientes con paginación
+  const { data: response, isLoading: loadingPatients } =
+    useGetApiPatients<PatientsResponse>(queryParams, {
+      query: {
+        placeholderData: (prev) => prev,
+      },
+    });
+
+  const patient: PatientDto | undefined = Array.isArray(data) ? data[0] : data;
+
+  // Mapeo de paciente actual
   const phone =
     data?.telecom?.find((t) => String(t.system).toLowerCase() === "phone")
       ?.value ?? "No registrado";
@@ -76,7 +96,6 @@ export function useDetailsPatient() {
     data?.telecom?.find((t) => String(t.system).toLowerCase() === "email")
       ?.value ?? "No registrado";
 
-  //  Datos del paciente seleccionado
   const selectedPatient = useMemo(() => {
     return {
       id: patient?.id ?? "",
@@ -96,7 +115,6 @@ export function useDetailsPatient() {
               (365.25 * 24 * 60 * 60 * 1000)
           )} años`
         : "No especificada",
-
       genero:
         typeof patient?.gender === "string"
           ? patient.gender === "male"
@@ -106,8 +124,7 @@ export function useDetailsPatient() {
               : patient.gender === "other"
                 ? "Otro"
                 : "Desconocido"
-          : // si tu backend devuelve números aún:
-            patient?.gender === 1
+          : patient?.gender === 1
             ? "Masculino"
             : patient?.gender === 2
               ? "Femenino"
@@ -132,17 +149,19 @@ export function useDetailsPatient() {
       movil: phone,
       email,
       casaDireccion: patient?.address?.[0]?.text ?? "No disponible",
-      casaDetalles: `${patient?.address?.[0]?.city ?? ""}, ${patient?.address?.[0]?.country ?? ""}`,
+      casaDetalles: `${patient?.address?.[0]?.city ?? ""}, ${
+        patient?.address?.[0]?.country ?? ""
+      }`,
       trabajoDireccion: patient?.address?.[1]?.text ?? "No registrada",
-      trabajoDetalles: `${patient?.address?.[1]?.city ?? ""}, ${patient?.address?.[1]?.country ?? ""}`,
+      trabajoDetalles: `${patient?.address?.[1]?.city ?? ""}, ${
+        patient?.address?.[1]?.country ?? ""
+      }`,
     };
   }, [data, phone, email]);
 
-  // mapeo de pacientes para listado
+  // Mapeo de pacientes para tabla
   const patients = useMemo(() => {
-    const items = Array.isArray(apiPatients)
-      ? apiPatients
-      : apiPatients?.items || [];
+    const items = Array.isArray(response) ? response : response?.items || [];
     return items.map((p: PatientDto, index: number) => ({
       id: p.id || String(index),
       key: p.id || String(index),
@@ -167,22 +186,97 @@ export function useDetailsPatient() {
               : "No especificado",
       estadoVital: p.active ? "Vivo" : "Sin vida",
     }));
-  }, [apiPatients]);
+  }, [response]);
+
+  // Configuración de paginación
+  const paginationConfig: TablePaginationConfig = {
+    current: response?.pagination?.currentPage || filters.pageNumber || 1,
+    pageSize: response?.pagination?.pageSize || filters.pageSize || 10,
+    total: response?.pagination?.totalItems || 0,
+    showSizeChanger: true,
+    pageSizeOptions: ["10", "20", "50"],
+    onChange: (page, pageSize) => {
+      setFilters({ pageNumber: page, pageSize });
+    },
+    showTotal: (total, range) => `${range[0]}-${range[1]} de ${total}`,
+  };
+
+  // Eliminar paciente
+  const { mutate: deletePatient } = useDeleteApiPatientsId({
+    mutation: {
+      onSuccess: () => {
+        messageApi.success("Paciente eliminado correctamente");
+        setTimeout(() => {
+          navigate("/patients/list");
+        }, 500);
+      },
+      onError: (error) => {
+        messageApi.error(
+          "Error al eliminar paciente: " + (error?.message || "Desconocido")
+        );
+      },
+    },
+  });
+
+  // Copiar datos del paciente
+  const handleCopyData = () => {
+    if (!selectedPatient) {
+      messageApi.warning("No hay datos del paciente para copiar.");
+      return;
+    }
+
+    const info = `
+Nombre: ${selectedPatient.nombre} ${selectedPatient.apellidos}
+Fecha de Nacimiento: ${selectedPatient.fechaNacimiento}
+Edad: ${selectedPatient.edad}
+Género: ${selectedPatient.genero}
+Nacionalidad: ${selectedPatient.nacionalidad}
+Estado Vital: ${selectedPatient.estadoVital}
+
+DNI: ${selectedPatient.dni} (${selectedPatient.dniEmisor})
+Pasaporte: ${selectedPatient.pasaporte} (${selectedPatient.pasaporteEmisor})
+
+Móvil: ${selectedPatient.movil}
+Email: ${selectedPatient.email}
+
+Dirección Casa: ${selectedPatient.casaDireccion}
+Dirección Trabajo: ${selectedPatient.trabajoDireccion}
+`.trim();
+
+    navigator.clipboard.writeText(info);
+    messageApi.success("Datos del paciente copiados al portapapeles.");
+  };
+
+  // Color para tipo de identificador
+  const getIdentificadorColor = (tipo: string) => {
+    switch (tipo) {
+      case "DNI":
+        return "blue";
+      case "PST":
+        return "purple";
+      case "ID":
+        return "red";
+      default:
+        return "default";
+    }
+  };
 
   return {
     id,
     data,
-    isLoading,
+    isLoading: loadingPatientDetail || loadingPatients,
     error,
     selectedPatient,
     patients,
-    currentPage,
-    setCurrentPage,
-    pageSize,
-    setPageSize,
+    paginationConfig,
+    filters,
+    setFilter,
+    setFilters,
+    loadingPatients,
     messageApi,
     contextHolder,
     handleCopyData,
     deletePatient,
+    getIdentificadorColor,
   };
 }

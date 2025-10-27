@@ -24,6 +24,7 @@ import type {
   CreateLocationDto,
   GetApiLocationsParams,
   LocationDto,
+  LocationDtoPagedResultDto,
   ProblemDetails,
   UpdateLocationDto,
 } from ".././models";
@@ -34,7 +35,7 @@ export const getApiLocations = (
   params?: GetApiLocationsParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<LocationDto[]>({
+  return customInstance<LocationDtoPagedResultDto>({
     url: `/api/Locations`,
     method: "GET",
     params,

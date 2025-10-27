@@ -9,6 +9,8 @@ import type { AdministrativeGender } from "./administrativeGender";
 import type { ContactPointDto } from "./contactPointDto";
 import type { AddressDto } from "./addressDto";
 import type { IdentifierDto } from "./identifierDto";
+import type { CodeableConceptDto } from "./codeableConceptDto";
+import type { ExtensionDto } from "./extensionDto";
 
 export interface PatientDto {
   /** @nullable */
@@ -25,8 +27,9 @@ export interface PatientDto {
   address?: AddressDto[] | null;
   /** @nullable */
   identifier?: IdentifierDto[] | null;
+  maritalStatus?: CodeableConceptDto;
   /** @nullable */
-  maritalStatus?: string | null;
+  extension?: ExtensionDto[] | null;
   /** @nullable */
   lastUpdated?: string | null;
 }
