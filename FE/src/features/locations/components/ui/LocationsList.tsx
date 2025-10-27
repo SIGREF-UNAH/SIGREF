@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ProForm, ProFormText, ProFormSelect } from "@ant-design/pro-components";
 import { Table, Card, Button, Space, Tag, message } from "antd";
 import type { ColumnsType } from "antd/es/table";
@@ -12,33 +12,40 @@ import DeleteLocationModal from "../modals/DeleteLocationModal";
 
 const LocationList: React.FC = () => {
   const queryClient = useQueryClient();
-  const { data: locations, isLoading, isError } = useGetApiLocations({});
+  const [searchName, setSearchName] = useState<string>("");
+  const [searchMode, setSearchMode] = useState<LocationMode | undefined>(undefined);
+  const [searchStatus, setSearchStatus] = useState<LocationStatus | undefined>(undefined);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<{ id: number; name: string } | null>(null);
+
+  const params = {
+    ...(searchName && { name: searchName }),
+    ...(searchMode !== undefined && { mode: searchMode }),
+    ...(searchStatus !== undefined && { status: searchStatus }),
+    pageNumber: currentPage,
+    pageSize: pageSize,
+  };
+
+  const { data: locations, isLoading, isError } = useGetApiLocations(params);
   const { mutate: deleteLocation } = useDeleteApiLocationsId({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetApiLocationsQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetApiLocationsQueryKey(params) });
         message.success("Ubicación eliminada exitosamente");
       },
       onError: () => message.error("Error al eliminar la ubicación"),
     },
   });
-  const [searchName, setSearchName] = useState<string>("");
-  const [searchMode, setSearchMode] = useState<LocationMode | undefined>(undefined);
-  const [searchStatus, setSearchStatus] = useState<LocationStatus | undefined>(undefined);
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<{ id: number; name: string } | null>(null);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchName, searchMode, searchStatus]);
 
   if (isError) {
     return <div>Error al cargar datos</div>;
   }
-
-  // Filtrar datos localmente
-  const filteredData = locations?.filter((loc) => {
-    const nameMatch = loc.name.toLowerCase().includes(searchName.toLowerCase());
-    const modeMatch = searchMode === undefined || loc.mode === searchMode;
-    const statusMatch = searchStatus === undefined || loc.status === searchStatus;
-    return nameMatch && modeMatch && statusMatch;
-  }) || [];
 
   // Renderizar tag para status
   const renderStatusTag = (status: LocationStatus) => {
@@ -49,8 +56,8 @@ const LocationList: React.FC = () => {
     };
     const labelMap = {
       [LocationStatus.NUMBER_0]: "Activo",
-      [LocationStatus.NUMBER_1]: "Inactivo",
-      [LocationStatus.NUMBER_2]: "Suspendido",
+      [LocationStatus.NUMBER_1]: "Suspendido",
+      [LocationStatus.NUMBER_2]: "Inactivo",
     };
 
     return <Tag color={colorMap[status]}>{labelMap[status]}</Tag>;
@@ -187,7 +194,6 @@ const LocationList: React.FC = () => {
               name="mode"
               label={<span className="text-[#616161] font-medium">Modo</span>}
               options={[
-                { label: "Todos", value: undefined },
                 { label: "Kind", value: LocationMode.NUMBER_0 },
                 { label: "Instance", value: LocationMode.NUMBER_1 },
               ]}
@@ -201,10 +207,9 @@ const LocationList: React.FC = () => {
               name="status"
               label={<span className="text-[#616161] font-medium">Estado</span>}
               options={[
-                { label: "Todos", value: undefined },
                 { label: "Activo", value: LocationStatus.NUMBER_0 },
-                { label: "Inactivo", value: LocationStatus.NUMBER_1 },
-                { label: "Suspendido", value: LocationStatus.NUMBER_2 },
+                { label: "Suspendido", value: LocationStatus.NUMBER_1 },
+                { label: "Inactivo", value: LocationStatus.NUMBER_2 },
               ]}
               fieldProps={{
                 value: searchStatus,
@@ -227,16 +232,21 @@ const LocationList: React.FC = () => {
 
         <Table<LocationDto>
           columns={columns}
-          dataSource={filteredData}
+          dataSource={locations?.items || []}
           rowKey="id"
           loading={isLoading}
           pagination={{
-            pageSize: 10,
-            total: filteredData.length,
+            current: currentPage,
+            pageSize: pageSize,
+            total: locations?.pagination?.totalItems || 0,
             showSizeChanger: true,
             showQuickJumper: true,
             pageSizeOptions: ["10", "20", "50", "100"],
             showTotal: (total, range) => `${range[0]}-${range[1]} de ${total}`,
+            onChange: (page, pageSize) => {
+              setCurrentPage(page);
+              setPageSize(pageSize);
+            },
           }}
           scroll={{ x: "max-content" }}
           style={{ marginTop: "16px" }}
