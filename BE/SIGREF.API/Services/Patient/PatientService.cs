@@ -121,39 +121,50 @@ public class PatientService : IPatientService
     // Filtros
     public async Task<PagedResult<PatientDto>> GetFilteredPatientsAsync(PatientFilterDto filter)
     {
-        // Normalizar paginación usando el helper
         var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
 
         var searchParams = new SearchParams();
 
-        // Filtros
+        // 1. Nombre
         if (!string.IsNullOrWhiteSpace(filter.Name))
-            searchParams.Add("name", filter.Name);
+            searchParams.Add("name", filter.Name.Trim());
 
-        if (filter.Active.HasValue)
-            searchParams.Add("active", filter.Active.Value.ToString().ToLowerInvariant());
-
+        // 2. Género
         if (filter.Gender.HasValue)
             searchParams.Add("gender", filter.Gender.Value.ToString().ToLowerInvariant());
 
-        // Paginación FHIR
+        // 3. Identificador (tipo + valor)
+        if (!string.IsNullOrWhiteSpace(filter.IdentifierType) && !string.IsNullOrWhiteSpace(filter.IdentifierValue))
+        {
+            searchParams.Add("identifier", $"{filter.IdentifierType}|{filter.IdentifierValue}");
+        }
+        else if (!string.IsNullOrWhiteSpace(filter.IdentifierValue))
+        {
+            searchParams.Add("identifier", filter.IdentifierValue);
+        }
+
+        // 4. Fecha de nacimiento
+        if (filter.BirthDate.HasValue)
+        {
+            var date = filter.BirthDate.Value.ToString("yyyy-MM-dd");
+            searchParams.Add("birthdate", $"eq{date}");
+        }
+
+        // Paginación
         searchParams.Count = pageSize;
         searchParams.Add("_offset", offset.ToString());
         searchParams.Add("_total", "accurate");
 
-        // Realizar búsqueda
         var bundle = await _fhirClient.SearchAsync<FhirPatient>(searchParams);
 
-        // Obtener PagedResult del helper
         var pagedResult = FhirPaginationHelper.ToPagedResult<FhirPatient>(bundle, pageNumber, pageSize);
 
-        // Convertir Items a DTO
         var resultDto = new PagedResult<PatientDto>
         {
             Items = pagedResult.Items
                     .Select(p => p.ToDto())
-                    .Where(dto => dto != null)
-                    .ToList()!,
+                    .Where(dto => dto != null)!
+                    .ToList(),
             Pagination = pagedResult.Pagination
         };
 

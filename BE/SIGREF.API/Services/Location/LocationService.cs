@@ -18,7 +18,7 @@ public class LocationService
         _fhirClient = fhirService.GetFhirClient();
     }
 
-    private const string ResourceType = nameof(FhirLocation);
+    private const string ResourceType = "Location";
     /// <summary>
     /// Obtiene un recurso <see cref="FhirLocation"/> por su identificador único.
     /// </summary>
