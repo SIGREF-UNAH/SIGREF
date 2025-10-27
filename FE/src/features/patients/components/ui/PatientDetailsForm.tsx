@@ -3,6 +3,7 @@ import {
   ProFormText,
   ProFormSelect,
   ProTable,
+  ProFormDatePicker,
 } from "@ant-design/pro-components";
 import {
   UserOutlined,
@@ -391,12 +392,12 @@ export default function PatientDetailsForm() {
               placeholder="Todos"
             />
 
-            {/* <ProFormDatePicker
+            <ProFormDatePicker
               name="fechaNacimiento"
               label="Fecha Nacimiento"
               placeholder="DD / MM / YYYY"
               fieldProps={{ format: "DD/MM/YYYY" }}
-            /> */}
+            />
           </div>
         </ProForm>
       </div>

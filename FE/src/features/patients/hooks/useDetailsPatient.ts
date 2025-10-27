@@ -82,19 +82,17 @@ export function useDetailsPatient() {
     if (filters.identificador) params.IdentifierValue = filters.identificador;
 
     if (filters.fechaNacimiento) {
-      const f = filters.fechaNacimiento as any;
+  let f = filters.fechaNacimiento;
 
-      if (typeof f?.format === "function") {
-        // dayjs
-        params.BirthDate = f.format("YYYY-MM-DD");
-      } else if (f instanceof Date) {
-        // Date nativo
-        params.BirthDate = f.toISOString().split("T")[0];
-      } else if (typeof f === "string" && /^\d{4}-\d{2}-\d{2}$/.test(f)) {
-        // string ya formateada
-        params.BirthDate = f;
-      }
-    }
+  // Si es string en formato DD/MM/YYYY
+  if (typeof f === "string" && /^\d{2}\/\d{2}\/\d{4}$/.test(f)) {
+    const [day, month, year] = f.split("/"); 
+    f = `${year}-${month.padStart(2,"0")}-${day.padStart(2,"0")}`; 
+  }
+
+  // Asignar al queryParams
+  params.BirthDate = f;
+}
 
     if (filters.search) params.search = filters.search;
 
