@@ -150,6 +150,11 @@ public class PatientService : IPatientService
             searchParams.Add("birthdate", $"eq{date}");
         }
 
+        // 5 .Estado vital
+        if (filter.Active.HasValue)
+            searchParams.Add("active", filter.Active.Value.ToString().
+                ToLowerInvariant());
+
         // Paginación
         searchParams.Count = pageSize;
         searchParams.Add("_offset", offset.ToString());
