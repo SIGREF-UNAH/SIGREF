@@ -50,7 +50,7 @@ export const useEditPatient = () => {
       gender: values.gender,
       birthDate: values.fechanacimiento,
       active: values.estadoVital === 1,
-        maritalStatus: {
+      maritalStatus: {
         coding: [
           {
             system: "http://terminology.hl7.org/CodeSystem/v3-MaritalStatus",
@@ -106,15 +106,19 @@ export const useEditPatient = () => {
             coding: [
               {
                 system: "http://terminology.hl7.org/CodeSystem/v2-0203",
-                version: "2.9",
-                code: "ID",
-                display: values.tipoIdentificacion,
+                code: values.tipoIdentificacion,
+                display:
+                  values.tipoIdentificacion === "PPN"
+                    ? "Número de Pasaporte"
+                    : values.tipoIdentificacion === "NI"
+                      ? "Identificador Único Nacional"
+                      : "Documento Nacional de Identidad",
                 userSelected: true,
               },
             ],
             text: values.tipoIdentificacion,
           },
-          system: values.emisor || "",
+          system: values.emisor || "https://registro.gob.hn/identifiers",
           value: values.identifier?.[0]?.value || "",
         },
       ],
@@ -143,18 +147,24 @@ export const useEditPatient = () => {
         tipoNombre: patient.name?.[0]?.use === 0 ? "alias" : "legal",
         gender: patient.gender || 0,
         estadoVital: patient.active ? 1 : 0,
-         estadoCivil:
-        patient?.maritalStatus?.text ||
-        patient?.maritalStatus?.coding?.[0]?.display ||
-        "No registrado",
-      nacionalidad:
-        patient?.extension?.find(
-          (ext) =>
-            ext.url ===
-            "http://hl7.org/fhir/StructureDefinition/patient-nationality"
-        )?.valueCodeableConcept?.text || "No registrada",
+        estadoCivil:
+          patient?.maritalStatus?.text ||
+          patient?.maritalStatus?.coding?.[0]?.display ||
+          "No registrado",
+        nacionalidad:
+          patient?.extension?.find(
+            (ext) =>
+              ext.url ===
+              "http://hl7.org/fhir/StructureDefinition/patient-nationality"
+          )?.valueCodeableConcept?.text || "No registrada",
         fechanacimiento: patient.birthDate ? new Date(patient.birthDate) : null,
-        tipoIdentificacion: patient.identifier?.[0]?.type?.text || "",
+        tipoIdentificacion: (() => {
+          const code =
+            patient.identifier?.[0]?.type?.coding?.[0]?.code || "DNI";
+          if (code === "PPN") return "PPN";
+          if (code === "NI") return "NI";
+          return "DNI";
+        })(),
         identifier: [{ value: patient.identifier?.[0]?.value || "" }],
         emisor: patient.identifier?.[0]?.system || "No registrado",
         telecom:

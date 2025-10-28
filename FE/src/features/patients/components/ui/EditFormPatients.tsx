@@ -88,9 +88,9 @@ export default function EditFormPatient() {
         placeholder="DNI HN"
         width="sm"
         options={[
-          { label: "DNI HN", value: "dni_hn" },
-          { label: "Pasaporte", value: "pasaporte" },
-          { label: "Cédula", value: "cedula" },
+          { label: "DNI HN", value: "DNI" },
+          { label: "Pasaporte", value: "PPN" },
+          { label: "Cédula", value: "NI" },
         ]}
       />
       <ProFormText

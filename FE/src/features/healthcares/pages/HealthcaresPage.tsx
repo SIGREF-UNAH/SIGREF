@@ -1,5 +1,5 @@
 import { Table, Button, Input, Select, Space, Popconfirm, Alert, Tag } from "antd";
-import { useHealthcaresList } from "../hooks/";
+import { useHealthcaresList } from "../hooks";
 import { HealthcareHeader } from "../components/ui";
 import { HealthcaresPageSkeleton } from "../components/skeletons";
 import { HealthcareDetailsModal } from "../components/modals";

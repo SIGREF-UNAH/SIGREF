@@ -93,15 +93,19 @@ export default function useCreatePatientForm() {
             coding: [
               {
                 system: "http://terminology.hl7.org/CodeSystem/v2-0203",
-                version: "2.9",
-                code: "ID",
-                display: values.tipoIdentificacion,
+                code: values.tipoIdentificacion,
+                display:
+                  values.tipoIdentificacion === "PPN"
+                    ? "Número de Pasaporte"
+                    : values.tipoIdentificacion === "NI"
+                      ? "Identificador Único Nacional"
+                      : "Documento Nacional de Identidad",
                 userSelected: true,
               },
             ],
             text: values.tipoIdentificacion,
           },
-          system: values.emisor || "",
+          system: values.emisor || "https://registro.gob.hn/identifiers",
           value: values.identifier?.[0]?.value || "",
         },
       ],

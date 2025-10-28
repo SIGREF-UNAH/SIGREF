@@ -72,6 +72,12 @@ export function useListPatients() {
               : undefined;
     }
 
+    if (filters.tipoIdentificador && filters.tipoIdentificador !== "todos") {
+      params.IdentifierTypeCode = filters.tipoIdentificador;
+    }
+
+    if (filters.identificador) params.IdentifierValue = filters.identificador;
+
     if (filters.estadoVital && filters.estadoVital !== "todos") {
       params.active =
         filters.estadoVital === "Vivo"
@@ -164,9 +170,9 @@ export function useListPatients() {
     switch (tipo) {
       case "DNI":
         return "blue";
-      case "PST":
+      case "PPT":
         return "purple";
-      case "ID":
+      case "NI":
         return "red";
       default:
         return "default";

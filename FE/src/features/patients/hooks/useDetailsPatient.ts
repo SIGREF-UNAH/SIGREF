@@ -82,17 +82,17 @@ export function useDetailsPatient() {
     if (filters.identificador) params.IdentifierValue = filters.identificador;
 
     if (filters.fechaNacimiento) {
-  let f = filters.fechaNacimiento;
+      let f = filters.fechaNacimiento;
 
-  // Si es string en formato DD/MM/YYYY
-  if (typeof f === "string" && /^\d{2}\/\d{2}\/\d{4}$/.test(f)) {
-    const [day, month, year] = f.split("/"); 
-    f = `${year}-${month.padStart(2,"0")}-${day.padStart(2,"0")}`; 
-  }
+      // Si es string en formato DD/MM/YYYY
+      if (typeof f === "string" && /^\d{2}\/\d{2}\/\d{4}$/.test(f)) {
+        const [day, month, year] = f.split("/");
+        f = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+      }
 
-  // Asignar al queryParams
-  params.BirthDate = f;
-}
+      // Asignar al queryParams
+      params.BirthDate = f;
+    }
 
     if (filters.search) params.search = filters.search;
 
@@ -117,6 +117,26 @@ export function useDetailsPatient() {
   const email =
     data?.telecom?.find((t) => String(t.system).toLowerCase() === "email")
       ?.value ?? "No registrado";
+
+  const fax =
+    data?.telecom?.find((t) => String(t.system).toLowerCase() === "fax")
+      ?.value ?? "No registrado";
+
+  const pager =
+    data?.telecom?.find((t) => String(t.system).toLowerCase() === "pager")
+      ?.value ?? "No registrado";
+
+  const url =
+    data?.telecom?.find((t) => String(t.system).toLowerCase() === "url")
+      ?.value ?? "No registrado";
+
+  const sms =
+    data?.telecom?.find((t) => String(t.system).toLowerCase() === "sms")
+      ?.value ?? "No registrado";
+
+  const other = data?.telecom?.find(
+    (t) => String(t.system).toLowerCase() === "other"
+  );
 
   const selectedPatient = useMemo(() => {
     return {
@@ -164,12 +184,15 @@ export function useDetailsPatient() {
             "http://hl7.org/fhir/StructureDefinition/patient-nationality"
         )?.valueCodeableConcept?.text || "No registrada",
       estadoVital: patient?.active ? "Con Vida" : "Sin Vida",
-      dni: patient?.identifier?.[0]?.value ?? "No disponible",
-      dniEmisor: patient?.identifier?.[0]?.system ?? "Desconocido",
-      pasaporte: patient?.identifier?.[1]?.value ?? "No disponible",
-      pasaporteEmisor: patient?.identifier?.[1]?.system ?? "Desconocido",
+      identificadores:
+        patient?.identifier?.map((id) => ({
+          tipo: id.type?.coding?.[0]?.display || id.type?.text || "Desconocido",
+          valor: id.value || "No disponible",
+          emisor: id.system || "Desconocido",
+        })) || [],
       movil: phone,
       email,
+      fax, pager, url, sms, other,
       casaDireccion: patient?.address?.[0]?.text ?? "No disponible",
       casaDetalles: `${patient?.address?.[0]?.city ?? ""}, ${
         patient?.address?.[0]?.country ?? ""
@@ -191,7 +214,13 @@ export function useDetailsPatient() {
         p.name?.[0]?.text ??
         p.name?.[0]?.given?.join(" ") ??
         "Nombre no disponible",
-      identificadorTipo: p.identifier?.[0]?.type?.text ?? "DNI",
+      identificadorTipo: (() => {
+        const code =
+          p.identifier?.[0]?.type?.coding?.[0]?.code?.toUpperCase() ?? "DNI";
+        if (code === "PPN") return "PST";
+        if (code === "NI") return "ID";
+        return "DNI";
+      })(),
       identificador: p.identifier?.[0]?.value || "-",
       contacto: p.telecom?.[0]?.value || "-",
       nacimiento: p.birthDate
@@ -255,8 +284,9 @@ Género: ${selectedPatient.genero}
 Nacionalidad: ${selectedPatient.nacionalidad}
 Estado Vital: ${selectedPatient.estadoVital}
 
-DNI: ${selectedPatient.dni} (${selectedPatient.dniEmisor})
-Pasaporte: ${selectedPatient.pasaporte} (${selectedPatient.pasaporteEmisor})
+${selectedPatient.identificadores
+  .map((id) => `${id.tipo}: ${id.valor} (${id.emisor})`)
+  .join("\n")}
 
 Móvil: ${selectedPatient.movil}
 Email: ${selectedPatient.email}
@@ -274,9 +304,9 @@ Dirección Trabajo: ${selectedPatient.trabajoDireccion}
     switch (tipo) {
       case "DNI":
         return "blue";
-      case "PST":
+      case "PPT":
         return "purple";
-      case "ID":
+      case "NI":
         return "red";
       default:
         return "default";

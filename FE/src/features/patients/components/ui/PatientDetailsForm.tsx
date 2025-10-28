@@ -14,7 +14,7 @@ import {
   CopyOutlined,
   EditOutlined,
 } from "@ant-design/icons";
-import { Badge, Button, Spin, Tag, Typography } from "antd";
+import { Button, Spin, Tag, Typography } from "antd";
 import type { ProColumns } from "@ant-design/pro-components";
 import { Link } from "react-router-dom";
 import { useDetailsPatient } from "../../hooks";
@@ -24,7 +24,7 @@ interface PatientData {
   id: string;
   key: string;
   nombre: string;
-  tipoId?: string;
+  identificadorTipo: "DNI" | "PST" | "ID";
   identificador?: string;
   contacto?: string;
   nacimiento?: string;
@@ -47,6 +47,7 @@ export default function PatientDetailsForm() {
     deletePatient,
     filters,
     setFilter,
+    getIdentificadorColor,
   } = useDetailsPatient();
 
   if (isLoading)
@@ -84,10 +85,12 @@ export default function PatientDetailsForm() {
       key: "identificador",
       width: 180,
       render: (_, record) => (
-        <div className="flex items-center gap-2">
-          <Tag color="blue">{record.tipoId}</Tag>
-          <span className="text-sm">{record.identificador}</span>
-        </div>
+        <span>
+          <Tag color={getIdentificadorColor(record.identificadorTipo)}>
+            {record.identificadorTipo}:
+          </Tag>
+          {record.identificador}
+        </span>
       ),
     },
     {
@@ -119,15 +122,14 @@ export default function PatientDetailsForm() {
       dataIndex: "estadoVital",
       key: "estadoVital",
       width: 120,
-      render: (_, record) => (
-        <Badge
-          status={record.estadoVital === "vivo" ? "success" : "error"}
-          text={record.estadoVital}
-          className={
-            record.estadoVital === "vivo" ? "text-green-600" : "text-red-600"
-          }
-        />
-      ),
+      render: (_, record) => {
+        const estado = record.estadoVital?.trim().toLowerCase();
+        return (
+          <Tag color={estado === "vivo" ? "green" : "red"}>
+            {record.estadoVital}
+          </Tag>
+        );
+      },
     },
   ];
 
@@ -272,26 +274,14 @@ export default function PatientDetailsForm() {
               <h3 className="font-medium">Identificadores</h3>
             </div>
             <div className="space-y-3 text-sm">
-              <div>
-                <div className="font-medium mb-1">DNI:</div>
-                <div className="text-muted-foreground">
-                  {selectedPatient.dni}
+              {selectedPatient.identificadores.map((id, idx) => (
+                <div key={idx}>
+                  <div className="font-medium mb-1">{id.tipo}:</div>
+                  <div className="text-muted-foreground">{id.valor}</div>
+                  <div className="font-medium mt-1">Emisor:</div>
+                  <div className="text-muted-foreground">{id.emisor}</div>
                 </div>
-                <div className="font-medium mt-1">Emisor:</div>
-                <div className="text-muted-foreground">
-                  {selectedPatient.dniEmisor}
-                </div>
-              </div>
-              <div className="pt-3">
-                <div className="font-medium mb-1">Pasaporte:</div>
-                <div className="text-muted-foreground">
-                  {selectedPatient.pasaporte}
-                </div>
-                <div className="font-medium mt-1">Emisor:</div>
-                <div className="text-muted-foreground">
-                  {selectedPatient.pasaporteEmisor}
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
@@ -302,18 +292,22 @@ export default function PatientDetailsForm() {
               <h3 className="font-medium">Contacto</h3>
             </div>
             <div className="space-y-3 text-sm">
-              <div>
-                <div className="font-medium mb-1">Móvil:</div>
-                <div className="text-muted-foreground">
-                  {selectedPatient.movil}
-                </div>
-              </div>
-              <div className="pt-3">
-                <div className="font-medium mb-1">Email:</div>
-                <div className="text-muted-foreground">
-                  {selectedPatient.email}
-                </div>
-              </div>
+              {[
+                { label: "Móvil", value: selectedPatient.movil },
+                { label: "Email", value: selectedPatient.email },
+                { label: "Fax", value: selectedPatient.fax },
+                { label: "Pager", value: selectedPatient.pager },
+                { label: "URL", value: selectedPatient.url },
+                { label: "SMS", value: selectedPatient.sms },
+                { label: "Otro", value: selectedPatient.other },
+              ]
+                .filter((item) => item.value && item.value !== "No registrado")
+                .map((item) => (
+                  <div key={item.label}>
+                    <div className="font-medium mb-1">{item.label}:</div>
+                    <div className="text-muted-foreground">{item.value}</div>
+                  </div>
+                ))}
             </div>
           </div>
         </div>
@@ -350,9 +344,9 @@ export default function PatientDetailsForm() {
               name="tipoIdentificador"
               label="Tipo de Identificador"
               options={[
-                { label: "DNI", value: "dni_hn" },
-                { label: "PST", value: "pasaporte" },
-                { label: "CDL", value: "cedula" },
+                { label: "DNI", value: "DNI" },
+                { label: "PST", value: "PPT" },
+                { label: "CDL", value: "NI" },
               ]}
               placeholder="DNI"
             />
@@ -387,7 +381,7 @@ export default function PatientDetailsForm() {
               options={[
                 { label: "Todos", value: "todos" },
                 { label: "Vivo", value: "Vivo" },
-                { label: "Sin vida", value: "Fallecido" },
+                { label: "Sin vida", value: "Sin vida" },
               ]}
               placeholder="Todos"
             />

@@ -94,11 +94,14 @@ export default function ListFormPatients() {
       key: "estadoVital",
       valueType: "text",
       width: 120,
-      render: (_, record) => (
-        <Tag color={record.estadoVital === "vivo" ? "green" : "red"}>
-          {record.estadoVital}
-        </Tag>
-      ),
+      render: (_, record) => {
+        const estado = record.estadoVital?.trim().toLowerCase();
+        return (
+          <Tag color={estado === "vivo" ? "green" : "red"}>
+            {record.estadoVital}
+          </Tag>
+        );
+      },
     },
   ];
 
@@ -136,9 +139,9 @@ export default function ListFormPatients() {
                 name="tipoIdentificador"
                 label="Tipo de Identificador"
                 options={[
-                  { label: "DNI", value: "dni_hn" },
-                  { label: "PST", value: "pasaporte" },
-                  { label: "CDL", value: "cedula" },
+                  { label: "DNI", value: "DNI" },
+                  { label: "PST", value: "PPT" },
+                  { label: "CDL", value: "NI" },
                 ]}
                 placeholder="DNI"
               />
