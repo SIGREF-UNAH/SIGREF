@@ -10,6 +10,7 @@ import {
   ProFormSelect,
   ProFormSwitch,
 } from "@ant-design/pro-components";
+import { HealthcareExtensionsUrls } from "../../../shared/constants";
 
 interface HealthcareFormProps {
   initialValues?: Partial<HealthcareDto>;
@@ -136,8 +137,12 @@ export const HealthcareForm = ({
       grid
       initialValues={{
         name: initialValues?.name || "",
-        abbreviation: initialValues?.abbreviation || "",
-        cost: initialValues?.cost || 0,
+        abbreviation: initialValues?.extension?.find(ext => 
+          ext.url === HealthcareExtensionsUrls.abbreviation // validar que la url sea correcta
+        )?.valueString || "",
+        cost: initialValues?.extension?.find(ext => 
+          ext.url === HealthcareExtensionsUrls.cost // validar que la url sea correcta
+        )?.valueDecimal || 0,
         comment: initialValues?.comment || "",
         active: initialValues?.active ?? true,
         providedBy: organizationId,

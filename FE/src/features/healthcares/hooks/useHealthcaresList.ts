@@ -6,6 +6,7 @@ import { useMessage } from "../../../shared/hooks";
 import type { TablePaginationConfig } from "antd";
 import type { HealthcareDto } from "../../../api/models";
 import { useGetApiLocations } from "../../../api/locations/locations";
+import { HealthcareExtensionsUrls } from "../../../shared/constants";
 import {
   getGetApiHealthcaresQueryKey,
   useDeleteApiHealthcaresId,
@@ -79,6 +80,27 @@ export function useHealthcaresList() {
   const healthcares = response?.items || [];
   const pagination = response?.pagination;
 
+  // Procesar los datos para extraer abbreviation y cost desde extension
+  const processedHealthcares = useMemo(() => {
+    return healthcares.map((healthcare) => {
+      // Extraer abreviatura
+      const abbreviationExt = healthcare.extension?.find(
+        (ext) => ext.url === HealthcareExtensionsUrls.abbreviation
+      );
+      
+      // Extraer costo
+      const costExt = healthcare.extension?.find(
+        (ext) => ext.url === HealthcareExtensionsUrls.cost
+      );
+
+      return {
+        ...healthcare,
+        abbreviation: abbreviationExt?.valueString || "-",
+        cost: costExt?.valueDecimal || 0,
+      };
+    });
+  }, [healthcares]);
+
   // Mutación para eliminar
   const { mutate: deleteHealthcare } = useDeleteApiHealthcaresId({
     mutation: {
@@ -129,7 +151,7 @@ export function useHealthcaresList() {
     setFilter("search", searchInput);
   };
 
-  // Limpiar búsqueda
+  // Limpiar búsqueda al presionar el icono X
   const handleClearSearch = () => {
     setSearchInput("");
     setFilter("search", "");
@@ -160,7 +182,7 @@ export function useHealthcaresList() {
   return {
     filters,
     locations,
-    healthcares,
+    healthcares: processedHealthcares,
     paginationConfig,
     isLoading,
     isFetching,

@@ -17,5 +17,7 @@ export interface ExtensionDto {
   /** @nullable */
   valueInteger?: number | null;
   /** @nullable */
+  valueDecimal?: number | null;
+  /** @nullable */
   valueDate?: string | null;
 }
