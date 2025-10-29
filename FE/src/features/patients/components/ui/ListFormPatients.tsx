@@ -7,7 +7,7 @@ import {
   ProFormDatePicker,
 } from "@ant-design/pro-components";
 import { Tag } from "antd";
-import { FilterOutlined } from "@ant-design/icons";
+import { FilterOutlined, UserOutlined } from "@ant-design/icons";
 import { Link } from "react-router";
 import { useListPatients } from "../../hooks";
 
@@ -23,6 +23,9 @@ interface Patient {
   genero: string;
   estadoVital: "vivo" | "sin vida";
 }
+
+// TODO: Quitar filtro de Tipo de Idetnificador
+// BUG: Filtro de Identificador no funciona
 
 export default function ListFormPatients() {
   const {
@@ -106,109 +109,108 @@ export default function ListFormPatients() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="mx-auto max-w-7xl">
-        {/* Filtros de Búsqueda */}
-        <div className="mb-6 rounded-lg border border-gray-300 bg-white p-6">
-          <div className="mb-4 flex items-center gap-2">
-            <FilterOutlined className="text-gray-600" />
-            <span className="text-lg font-medium text-blue-600">
-              Filtros de Búsqueda
-            </span>
-          </div>
+    <div>
+      {/* Filtros de Búsqueda */}
+      <div className="mb-6 rounded-lg border border-gray-300 bg-white p-6">
+        <div className="mb-4 flex items-center gap-2">
+          <FilterOutlined className="text-gray-600" />
+          <span className="text-lg font-medium text-blue-600">
+            Filtros de Búsqueda
+          </span>
+        </div>
 
-          <ProForm
-            submitter={false}
-            layout="horizontal"
-            className="patient-filters"
-            initialValues={filters}
-            onValuesChange={(changedValues, allValues) => {
-              Object.keys(changedValues).forEach((key) => {
-                setFilter(key as keyof typeof filters, allValues[key]);
-              });
-            }}
-          >
-            <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2 lg:grid-cols-4">
-              <ProFormText
-                name="nombreCompleto"
-                label="Nombres del Paciente"
-                placeholder="Nombre Completo"
-              />
+        <ProForm
+          submitter={false}
+          layout="horizontal"
+          className="patient-filters"
+          initialValues={filters}
+          onValuesChange={(changedValues, allValues) => {
+            Object.keys(changedValues).forEach((key) => {
+              setFilter(key as keyof typeof filters, allValues[key]);
+            });
+          }}
+        >
+          <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2 lg:grid-cols-4">
+            <ProFormText
+              name="nombreCompleto"
+              label="Nombres del Paciente"
+              placeholder="Nombre Completo"
+            />
 
-              <ProFormSelect
-                name="tipoIdentificador"
-                label="Tipo de Identificador"
-                options={[
-                  { label: "DNI", value: "DNI" },
-                  { label: "PST", value: "PPT" },
-                  { label: "CDL", value: "NI" },
-                ]}
-                placeholder="DNI"
-              />
+            <ProFormSelect
+              name="tipoIdentificador"
+              label="Tipo de Identificador"
+              options={[
+                { label: "DNI", value: "DNI" },
+                { label: "PST", value: "PPT" },
+                { label: "CDL", value: "NI" },
+              ]}
+              placeholder="DNI"
+            />
 
-              <ProFormText
-                name="identificador"
-                label="Identificador"
-                placeholder="—"
-              />
+            <ProFormText
+              name="identificador"
+              label="Identificador"
+              placeholder="—"
+            />
 
-              <ProFormSelect
-                name="genero"
-                label="Género"
-                options={[
-                  { label: "Todos", value: "todos" },
-                  { label: "H", value: "H" },
-                  { label: "M", value: "M" },
-                  { label: "D", value: "D" },
-                ]}
-                placeholder="Todos"
-              />
+            <ProFormSelect
+              name="genero"
+              label="Género"
+              options={[
+                { label: "Todos", value: "todos" },
+                { label: "H", value: "H" },
+                { label: "M", value: "M" },
+                { label: "D", value: "D" },
+              ]}
+              placeholder="Todos"
+            />
 
-              {/* <ProFormText
+            {/* <ProFormText
                 name="nacionalidad"
                 label="Nacionalidad"
                 placeholder="Todos"
               /> */}
 
-              <ProFormSelect
-                name="estadoVital"
-                label="Estado Vital"
-                options={[
-                  { label: "Todos", value: "todos" },
-                  { label: "Vivo", value: "Vivo" },
-                  { label: "Sin vida", value: "Sin vida" },
-                ]}
-                placeholder="Todos"
-              />
+            <ProFormSelect
+              name="estadoVital"
+              label="Estado Vital"
+              options={[
+                { label: "Todos", value: "todos" },
+                { label: "Vivo", value: "Vivo" },
+                { label: "Sin vida", value: "Sin vida" },
+              ]}
+              placeholder="Todos"
+            />
 
-              <ProFormDatePicker
-                name="fechaNacimiento"
-                label="Fecha Nacimiento"
-                placeholder="DD / MM / YYYY"
-                fieldProps={{ format: "DD/MM/YYYY" }}
-              />
-            </div>
-          </ProForm>
-        </div>
-
-        {/* Registro de Pacientes */}
-        <div className="rounded-lg border border-gray-300 bg-white p-6">
-          <div className="mb-4 flex items-center gap-2">
-            <span className="text-lg font-medium text-blue-600">
-              📋 Registro de Pacientes
-            </span>
+            <ProFormDatePicker
+              name="fechaNacimiento"
+              label="Fecha Nacimiento"
+              placeholder="DD / MM / YYYY"
+              fieldProps={{ format: "DD/MM/YYYY" }}
+            />
           </div>
+        </ProForm>
+      </div>
 
-          <ProTable
-            columns={columns}
-            dataSource={patients}
-            search={false}
-            options={false}
-            loading={isLoading}
-            pagination={paginationConfig}
-            scroll={{ x: 1200 }}
-          />
+      {/* Registro de Pacientes */}
+      <div className="rounded-lg border border-gray-300 bg-white p-6">
+        <div className="mb-4 flex items-center gap-2">
+          <UserOutlined className="text-gray-600" />
+          <span className="text-lg font-medium text-blue-600">
+            Lista de Pacientes
+          </span>
         </div>
+
+        <ProTable
+          columns={columns}
+          dataSource={patients}
+          search={false}
+          options={false}
+          loading={isLoading}
+          pagination={paginationConfig}
+          scroll={{ x: 1200 }}
+        />
       </div>
     </div>
   );

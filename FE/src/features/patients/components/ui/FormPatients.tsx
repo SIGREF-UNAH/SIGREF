@@ -279,7 +279,7 @@ export default function CreateFormPatient() {
       label: (
         <Space>
           <IdcardOutlined style={{ color: "#ef4444" }} />
-          <span>Identificaciones</span>
+          <span>Identificación</span>
         </Space>
       ),
       children: identificacionesContent,
@@ -289,7 +289,7 @@ export default function CreateFormPatient() {
       label: (
         <Space>
           <UserOutlined style={{ color: "#6366f1" }} />
-          <span>Nombres</span>
+          <span>Nombre</span>
         </Space>
       ),
       children: nombresContent,
@@ -299,7 +299,7 @@ export default function CreateFormPatient() {
       label: (
         <Space>
           <PhoneOutlined style={{ color: "#f97316" }} />
-          <span>Contacto</span>
+          <span>Contactos</span>
         </Space>
       ),
       children: contactoContent,
@@ -320,7 +320,7 @@ export default function CreateFormPatient() {
     <div className="flex flex-col min-h-screen bg-gray-50">
       {contextHolder}
 
-      <main className="flex-1 w-full p-8">
+      <main className="flex-1 w-full">
         <ProForm
           onFinish={onFinish}
           submitter={{

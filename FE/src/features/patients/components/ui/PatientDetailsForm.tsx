@@ -33,6 +33,8 @@ interface PatientData {
   estadoVital?: string;
 }
 
+// TODO: Confirmacion de eliminación
+
 export default function PatientDetailsForm() {
   const {
     id,
@@ -140,7 +142,7 @@ export default function PatientDetailsForm() {
       <div className="flex items-center justify-between"></div>
 
       {/* Patient Information Card */}
-      <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
+      <div className="bg-card border border-gray-300 rounded-lg p-6 shadow-sm">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2 text-primary">
             <UserOutlined className="text-lg" />

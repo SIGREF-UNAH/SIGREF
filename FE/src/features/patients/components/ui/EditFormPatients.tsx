@@ -100,7 +100,6 @@ export default function EditFormPatient() {
         width="md"
       />
       <ProFormText name="emisor" label="Emisor" placeholder="SRNP" width="sm" />
-      
     </ProFormGroup>
   );
 
@@ -173,7 +172,6 @@ export default function EditFormPatient() {
               { label: "Móvil", value: 2 },
             ]}
           />
- 
 
           <ProFormText
             name="value"
@@ -181,10 +179,12 @@ export default function EditFormPatient() {
             placeholder="9999-9999 / ejemplo@correo.com"
             width="md"
           />
- 
 
-          <Button type="link" danger onClick={() => action.remove(index)}>
-          </Button>
+          <Button
+            type="link"
+            danger
+            onClick={() => action.remove(index)}
+          ></Button>
         </ProFormGroup>
       )}
     </ProFormList>
@@ -227,8 +227,11 @@ export default function EditFormPatient() {
             width="xl"
             fieldProps={{ style: { width: "100%" } }}
           />
-          <Button type="link" danger onClick={() => action.remove(index)}>           
-          </Button>
+          <Button
+            type="link"
+            danger
+            onClick={() => action.remove(index)}
+          ></Button>
         </ProFormGroup>
       )}
     </ProFormList>
@@ -291,11 +294,7 @@ export default function EditFormPatient() {
     <div className="flex flex-col min-h-screen bg-gray-50">
       {contextHolder}
 
-      <main className="flex-1 w-full p-8">
-        <h1 className="text-3xl font-bold text-[#333333] mb-8">
-          Gestión de Pacientes
-        </h1>
-
+      <main className="flex-1 w-full">
         <ProForm
           onFinish={handleFinish}
           initialValues={initialValues}
