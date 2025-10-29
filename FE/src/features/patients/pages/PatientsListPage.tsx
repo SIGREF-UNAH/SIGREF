@@ -1,7 +1,7 @@
-import CreateFormPatient from "../components/ui/FormPatients";
+import ListFormPatients from "../components/ui/ListFormPatients";
 import { PageHeaderTabs } from "../../../shared/components";
 
-export const CreatePatient = () => {
+export const PatientsListPage = () => {
   return (
     <div>
       {/* Header */}
@@ -19,12 +19,12 @@ export const CreatePatient = () => {
             path: "/patients/create",
           },
         ]}
-        defaultActive="listar"
+        defaultActive="crear"
       />
 
       {/* Formulario */}
       <div className="p-6 border-2 bg-card border-gray-300 shadow-md rounded-lg">
-        <CreateFormPatient />
+        <ListFormPatients />
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import { PageHeaderTabs } from "../../../shared/components";
 import EditFormPatient from "../components/ui/EditFormPatients";
 
-export const UpdatePatient = () => {
+export const UpdatePatientPage = () => {
   return (
     <div>
       {/* Header */}
