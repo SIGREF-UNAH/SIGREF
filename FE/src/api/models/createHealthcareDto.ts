@@ -18,24 +18,17 @@ export interface CreateHealthcareDto {
    */
   name: string;
   /**
-   * @minLength 1
-   * @maxLength 20
-   * @pattern ^[A-Z]+$
-   */
-  abbreviation: string;
-  /**
    * @maxLength 255
    * @nullable
    */
   comment?: string | null;
-  /**
-   * @minimum 0
-   * @nullable
-   */
-  cost?: number | null;
   /** @nullable */
   specialty?: CodeableConceptDto[] | null;
   providedBy?: ReferenceDto;
   /** @nullable */
   location?: ReferenceDto[] | null;
+  /** @nullable */
+  abbreviation?: string | null;
+  /** @nullable */
+  cost?: number | null;
 }

@@ -130,6 +130,9 @@ public static class CommonExtensions
             case Integer integer:
                 dto.ValueInteger = integer.Value;
                 break;
+            case FhirDecimal fhirDecimal:
+                dto.ValueDecimal = fhirDecimal.Value;
+                break;
             case Date date:
                 dto.ValueDate = date.ToDateTime();
                 break;
@@ -157,6 +160,10 @@ public static class CommonExtensions
         else if (dto.ValueInteger.HasValue)
         {
             extension.Value = new Integer(dto.ValueInteger.Value);
+        }
+        else if (dto.ValueDecimal.HasValue)
+        {
+            extension.Value = new FhirDecimal(dto.ValueDecimal.Value);
         }
 
         return extension;
