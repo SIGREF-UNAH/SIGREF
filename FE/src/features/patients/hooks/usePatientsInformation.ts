@@ -21,7 +21,7 @@ type PatientsResponse = {
   pagination: PaginationDto;
 };
 
-export function useDetailsPatient() {
+export function usePatientsInformation() {
   const { id } = useParams();
   const [messageApi, contextHolder] = message.useMessage();
   const navigate = useNavigate();
@@ -192,7 +192,11 @@ export function useDetailsPatient() {
         })) || [],
       movil: phone,
       email,
-      fax, pager, url, sms, other,
+      fax,
+      pager,
+      url,
+      sms,
+      other,
       casaDireccion: patient?.address?.[0]?.text ?? "No disponible",
       casaDetalles: `${patient?.address?.[0]?.city ?? ""}, ${
         patient?.address?.[0]?.country ?? ""
@@ -316,17 +320,17 @@ Dirección Trabajo: ${selectedPatient.trabajoDireccion}
   return {
     id,
     data,
-    isLoading: loadingPatientDetail || loadingPatients,
     error,
     selectedPatient,
     patients,
     paginationConfig,
     filters,
-    setFilter,
-    setFilters,
     loadingPatients,
     messageApi,
     contextHolder,
+    isLoading: loadingPatientDetail || loadingPatients,
+    setFilter,
+    setFilters,
     handleCopyData,
     deletePatient,
     getIdentificadorColor,

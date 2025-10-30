@@ -1,5 +1,5 @@
-import ListFormPatients from "../components/ui/ListFormPatients";
 import { PageHeaderTabs } from "../../../shared/components";
+import PatientsInformation from "../components/ui/PatientsInformation";
 
 export const PatientsListPage = () => {
   return (
@@ -24,7 +24,7 @@ export const PatientsListPage = () => {
 
       {/* Formulario */}
       <div className="p-6 border-2 bg-card border-gray-300 shadow-md rounded-lg">
-        <ListFormPatients />
+        <PatientsInformation />
       </div>
     </div>
   );
