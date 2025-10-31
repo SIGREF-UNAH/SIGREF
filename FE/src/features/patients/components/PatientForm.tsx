@@ -5,32 +5,52 @@ import {
   ProFormDatePicker,
   ProFormRadio,
   ProFormGroup,
+  ProFormList,
 } from "@ant-design/pro-components";
-import { Button, Collapse, message, Space } from "antd";
 import {
-  GlobalOutlined,
-  IdcardOutlined,
-  UserOutlined,
-  PhoneOutlined,
-  HomeOutlined,
-  PlusOutlined,
+    GlobalOutlined,
+    IdcardOutlined,
+    UserOutlined,
+    PhoneOutlined,
+    HomeOutlined,
+    PlusOutlined,
 } from "@ant-design/icons";
+import { Button, Collapse, message, Space } from "antd";
 import type { CollapseProps } from "antd";
-import useCreatePatientForm from "../../hooks/useCreatePatient";
 import { Link } from "react-router-dom";
-import { ProFormList } from "@ant-design/pro-components";
 
-export default function CreateFormPatient() {
-  const { handleSubmit, isSubmitting, error } = useCreatePatientForm();
+interface PatientFormProps {
+  mode: "create" | "edit";
+  initialValues?: any;
+  onSubmit: (values: any) => Promise<boolean>;
+  isSubmitting: boolean;
+  error?: string | null;
+}
 
+export default function PatientForm({
+  mode,
+  initialValues,
+  onSubmit,
+  isSubmitting,
+  error,
+}: PatientFormProps) {
   const [messageApi, contextHolder] = message.useMessage();
 
   const onFinish = async (values: any) => {
-    const success = await handleSubmit(values);
+    const success = await onSubmit(values);
     if (success) {
-      messageApi.success("Paciente creado exitosamente");
+      messageApi.success(
+        mode === "create"
+          ? "Paciente creado exitosamente"
+          : "Paciente actualizado exitosamente"
+      );
     } else {
-      messageApi.error(error ?? "Error al crear el paciente");
+      messageApi.error(
+        error ??
+          (mode === "create"
+            ? "Error al crear el paciente"
+            : "Error al actualizar el paciente")
+      );
     }
   };
 
@@ -41,7 +61,7 @@ export default function CreateFormPatient() {
   const nacionalidadContent = (
     <ProFormGroup>
       <ProFormText
-        name="paisNacionalidad"
+        name={mode === "create" ? "paisNacionalidad" : "nacionalidad"}
         label="País de Nacionalidad"
         placeholder="Honduras"
         width="md"
@@ -56,6 +76,7 @@ export default function CreateFormPatient() {
           { label: "Masculino", value: 1 },
           { label: "Femenino", value: 2 },
           { label: "Otro", value: 3 },
+          ...(mode === "edit" ? [{ label: "Desconocido", value: 0 }] : []),
         ]}
       />
       <ProFormSelect
@@ -110,11 +131,13 @@ export default function CreateFormPatient() {
         width="md"
       />
       <ProFormText name="emisor" label="Emisor" placeholder="SRNP" width="sm" />
-      <ProFormRadio.Group
-        name="identificacionPreferida"
-        label=" "
-        options={[{ label: "Preferido", value: true }]}
-      />
+      {mode === "create" && (
+        <ProFormRadio.Group
+          name="identificacionPreferida"
+          label=" "
+          options={[{ label: "Preferido", value: true }]}
+        />
+      )}
     </ProFormGroup>
   );
 
@@ -163,7 +186,7 @@ export default function CreateFormPatient() {
       {(field, index, action) => (
         <ProFormGroup key={field.key}>
           <ProFormSelect
-            {...field}
+            {...(mode === "create" ? field : {})}
             name="system"
             label="Tipo de contacto"
             placeholder="Seleccione"
@@ -179,19 +202,20 @@ export default function CreateFormPatient() {
             ]}
           />
 
-           <ProFormSelect
-            {...field}
+          <ProFormSelect
+            {...(mode === "create" ? field : {})}
             name="use"
             label="Uso"
+            width="sm"
             options={[
-              { label: "Móvil", value: 2 },
               { label: "Casa", value: 0 },
               { label: "Trabajo", value: 1 },
+              { label: "Móvil", value: 2 },
             ]}
-          /> 
+          />
 
           <ProFormText
-            {...field}
+            {...(mode === "create" ? field : {})}
             name="value"
             label="Valor"
             placeholder="9999-9999 / ejemplo@correo.com"
@@ -199,6 +223,7 @@ export default function CreateFormPatient() {
           />
 
           <Button type="link" danger onClick={() => action.remove(index)}>
+            Eliminar
           </Button>
         </ProFormGroup>
       )}
@@ -212,13 +237,17 @@ export default function CreateFormPatient() {
         creatorButtonText: "Agregar dirección",
         icon: <PlusOutlined />,
       }}
+      {...(mode === "edit" && initialValues?.address
+        ? { initialValue: initialValues.address }
+        : {})}
     >
       {(field, index, action) => (
-        <ProFormGroup key={field.key}>  
+        <ProFormGroup key={field.key}>
           <ProFormSelect
-            {...field}
+            {...(mode === "create" ? field : {})}
             name="tipoDireccion"
             label="Tipo"
+            placeholder="Casa"
             width="sm"
             options={[
               { label: "Casa", value: "home" },
@@ -229,34 +258,46 @@ export default function CreateFormPatient() {
             ]}
           />
           <ProFormText
-            {...field}
+            {...(mode === "create" ? field : {})}
             name="country"
             label="País"
             placeholder="Honduras"
             width="md"
           />
           <ProFormText
-            {...field}
+            {...(mode === "create" ? field : {})}
             name="state"
             label="Departamento"
-            placeholder="Copan"
+            placeholder={mode === "create" ? "Copan" : "Copán"}
             width="md"
           />
           <ProFormText
-            {...field}
+            {...(mode === "create" ? field : {})}
             name="city"
             label="Ciudad"
             placeholder="Santa Rosa"
             width="md"
           />
           <ProFormText
-            {...field}
-            name={["line", 0]}
-            label="Detalle de Ubicación"
-            placeholder="Ave 13, Calle 7, Casa 2"
+            {...(mode === "create" ? field : {})}
+            name={mode === "create" ? ["line", 0] : "line"}
+            label={
+              mode === "create"
+                ? "Detalle de Ubicación"
+                : "Detalle de ubicación"
+            }
+            placeholder={
+              mode === "create"
+                ? "Ave 13, Calle 7, Casa 2"
+                : "Ave 13, Calle 7, Casa 2, planta Azul"
+            }
             width="xl"
+            {...(mode === "edit"
+              ? { fieldProps: { style: { width: "100%" } } }
+              : {})}
           />
           <Button type="link" danger onClick={() => action.remove(index)}>
+            Eliminar
           </Button>
         </ProFormGroup>
       )}
@@ -279,7 +320,9 @@ export default function CreateFormPatient() {
       label: (
         <Space>
           <IdcardOutlined style={{ color: "#ef4444" }} />
-          <span>Identificación</span>
+          <span>
+            {mode === "create" ? "Identificación" : "Identificaciones"}
+          </span>
         </Space>
       ),
       children: identificacionesContent,
@@ -289,7 +332,7 @@ export default function CreateFormPatient() {
       label: (
         <Space>
           <UserOutlined style={{ color: "#6366f1" }} />
-          <span>Nombre</span>
+          <span>{mode === "create" ? "Nombre" : "Nombres"}</span>
         </Space>
       ),
       children: nombresContent,
@@ -299,7 +342,7 @@ export default function CreateFormPatient() {
       label: (
         <Space>
           <PhoneOutlined style={{ color: "#f97316" }} />
-          <span>Contactos</span>
+          <span>{mode === "create" ? "Contactos" : "Contacto"}</span>
         </Space>
       ),
       children: contactoContent,
@@ -323,6 +366,7 @@ export default function CreateFormPatient() {
       <main className="flex-1 w-full">
         <ProForm
           onFinish={onFinish}
+          {...(mode === "edit" && initialValues ? { initialValues } : {})}
           submitter={{
             render: (_) => (
               <div className="flex justify-end gap-3 mt-6">
@@ -337,7 +381,7 @@ export default function CreateFormPatient() {
                   htmlType="submit"
                   loading={isSubmitting}
                 >
-                  Guardar
+                  {mode === "create" ? "Guardar" : "Guardar Cambios"}
                 </Button>
               </div>
             ),

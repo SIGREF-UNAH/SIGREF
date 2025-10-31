@@ -18,12 +18,12 @@ import {
   ClearOutlined,
 } from "@ant-design/icons";
 import type { ProColumns } from "@ant-design/pro-components";
+import type { FormInstance } from "antd";
 import { Button, Tag, Typography, Popconfirm } from "antd";
 import { Link } from "react-router-dom";
-import { usePatientsInformation } from "../../hooks";
 import { BiTrash } from "react-icons/bi";
 import { useRef, useEffect } from "react";
-import type { FormInstance } from "antd";
+import { usePatientsInformation } from "../hooks";
 import dayjs from "dayjs";
 
 interface PatientData {

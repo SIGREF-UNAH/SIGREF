@@ -1,5 +1,5 @@
 import { PageHeaderTabs } from "../../../shared/components";
-import PatientsInformation from "../components/ui/PatientsInformation";
+import PatientsInformation from "../components/PatientsInformation";
 
 export const PatientsListPage = () => {
   return (

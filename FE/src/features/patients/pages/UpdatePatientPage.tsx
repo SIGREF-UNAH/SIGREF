@@ -1,7 +1,10 @@
 import { PageHeaderTabs } from "../../../shared/components";
-import EditFormPatient from "../components/ui/EditFormPatients";
+import { useEditPatient } from "../hooks";
+import PatientForm from "../components/PatientForm";
 
 export const UpdatePatientPage = () => {
+  const { handleFinish, initialValues, isPending } = useEditPatient();
+
   return (
     <div>
       {/* Header */}
@@ -24,7 +27,12 @@ export const UpdatePatientPage = () => {
 
       {/* Formulario */}
       <div className="p-6 border-2 bg-card border-gray-300 shadow-md rounded-lg">
-        <EditFormPatient />
+        <PatientForm
+          mode="edit"
+          onSubmit={handleFinish as any}
+          isSubmitting={isPending}
+          initialValues={initialValues}
+        />
       </div>
     </div>
   );

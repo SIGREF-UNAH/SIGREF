@@ -1,7 +1,10 @@
-import CreateFormPatient from "../components/ui/FormPatients";
 import { PageHeaderTabs } from "../../../shared/components";
+import PatientForm from "../components/PatientForm";
+import useCreatePatientForm from "../hooks/useCreatePatient";
 
 export const CreatePatientPage = () => {
+  const { handleSubmit, isSubmitting, error } = useCreatePatientForm();
+
   return (
     <div>
       {/* Header */}
@@ -24,7 +27,12 @@ export const CreatePatientPage = () => {
 
       {/* Formulario */}
       <div className="p-6 border-2 bg-card border-gray-300 shadow-md rounded-lg">
-        <CreateFormPatient />
+        <PatientForm
+          mode="create"
+          onSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
+          error={error}
+        />
       </div>
     </div>
   );
