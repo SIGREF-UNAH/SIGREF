@@ -13,14 +13,18 @@ import {
   FilterOutlined,
   CopyOutlined,
   EditOutlined,
+  ExclamationCircleOutlined,
+  QuestionCircleOutlined,
+  ClearOutlined,
 } from "@ant-design/icons";
-import { Button, Spin, Tag, Typography } from "antd";
 import type { ProColumns } from "@ant-design/pro-components";
+import { Button, Tag, Typography, Popconfirm } from "antd";
 import { Link } from "react-router-dom";
 import { usePatientsInformation } from "../../hooks";
 import { BiTrash } from "react-icons/bi";
-
-// TODO: Confirmacion de eliminación
+import { useRef, useEffect } from "react";
+import type { FormInstance } from "antd";
+import dayjs from "dayjs";
 
 interface PatientData {
   id: string;
@@ -35,9 +39,17 @@ interface PatientData {
   estadoVital?: string;
 }
 
-export default function PatientsInformation () {
+// TODO: Usar ProDescriptions para la información de los pacientes
+// TODO: Corregir campos del formulario de creacion y edicion
+//! En el campo de nacionalidad solo devuelve Honduras
+//! Limpiar Fecha de Nacimiento no funciona
+
+export default function PatientsInformation() {
+  const patientInfoRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<FormInstance>(null);
+  
   const {
-    id,
+    selectedPatientId,
     isLoading,
     error,
     selectedPatient,
@@ -47,18 +59,63 @@ export default function PatientsInformation () {
     contextHolder,
     filters,
     handleCopyData,
+    handleSelectPatient,
     deletePatient,
     setFilter,
+    clearAllFilters,
     getIdentificadorColor,
   } = usePatientsInformation();
 
-  if (isLoading)
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Spin size="large" tip="Cargando paciente..." />
-      </div>
-    );
+  // Scroll automático cuando se selecciona un paciente
+  useEffect(() => {
+    if (selectedPatientId && patientInfoRef.current) {
+      patientInfoRef.current.scrollIntoView({ 
+        behavior: "smooth", 
+        block: "center" 
+      });
+    }
+  }, [selectedPatientId]);
 
+  // Sincronizar formulario con filtros
+  useEffect(() => {
+    if (formRef.current) {
+      const formValues: any = {
+        fechaNacimiento: filters.fechaNacimiento ? dayjs(filters.fechaNacimiento) : undefined,
+        genero: filters.genero || undefined,
+        tipoIdentificador: filters.tipoIdentificador || undefined,
+        estadoVital: filters.estadoVital || undefined,
+      };
+      formRef.current.setFieldsValue(formValues);
+    }
+  }, [filters]);
+
+  const handleDeleteConfirm = () => {
+    if (selectedPatient?.id) {
+      deletePatient({ id: selectedPatient.id });
+    }
+  };
+
+  const handleClearAllFilters = () => {
+    clearAllFilters();
+    formRef.current?.resetFields();
+  };
+
+  // Función para limpiar un filtro individual
+  const handleClearFilter = (filterName: string) => {
+    setFilter(filterName as keyof typeof filters, null as any);
+    formRef.current?.setFieldValue(filterName, undefined);
+  };
+
+  // Verificar si hay filtros activos
+  const hasActiveFilters = 
+    filters.nombreCompleto || 
+    filters.identificador || 
+    filters.fechaNacimiento || 
+    filters.genero || 
+    filters.tipoIdentificador || 
+    filters.estadoVital;
+
+  // Manejo de errores
   if (error)
     return (
       <div className="p-8">
@@ -77,9 +134,13 @@ export default function PatientsInformation () {
       width: 200,
       fixed: "left",
       render: (_, record) => (
-        // TODO: Modificar logica para que en lugar de redireccionar, se actualice la información de paciente
-        // TODO: Cambiar forma de obtener id, ya no usar useParams
-        <Link to={`/patients/list/${record.id}`}>{record.nombre}</Link>
+        <Button
+          type="link"
+          onClick={() => handleSelectPatient(record.id)}
+          className="p-0"
+        >
+          {record.nombre}
+        </Button>
       ),
     },
     {
@@ -90,7 +151,7 @@ export default function PatientsInformation () {
       render: (_, record) => (
         <span>
           <Tag color={getIdentificadorColor(record.identificadorTipo)}>
-            {record.identificadorTipo}:
+            {record.identificadorTipo}
           </Tag>
           {record.identificador}
         </span>
@@ -141,15 +202,16 @@ export default function PatientsInformation () {
       {contextHolder}
 
       {/* Información del Paciente */}
-      <div className="rounded-lg border border-gray-300 bg-white p-6">
+      <div ref={patientInfoRef} className="rounded-lg border border-gray-300 bg-white p-6">
         {selectedPatient.id !== "" ? (
           <div>
+            {/* Encabezado y Botones */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2 text-primary">
-                <UserOutlined className="text-lg" />
-                <h2 className="text-base font-medium">
+                <QuestionCircleOutlined className="text-lg" style={{color: "var(--color-primary)"}}/>
+                <span className="text-lg font-medium text-primary">
                   Información del Paciente Seleccionado
-                </h2>
+                </span>
               </div>
               <div className="flex gap-2 ">
                 <Button
@@ -160,7 +222,7 @@ export default function PatientsInformation () {
                 >
                   Copiar Datos
                 </Button>
-                <Link to={`/patients/update/${id}`}>
+                <Link to={`/patients/update/${selectedPatientId}`}>
                   <Button
                     type="primary"
                     icon={<EditOutlined />}
@@ -169,20 +231,40 @@ export default function PatientsInformation () {
                     Editar Datos
                   </Button>
                 </Link>
-                <Button
-                  type="primary"
-                  icon={<BiTrash />}
-                  className="!bg-red-600 !hover:bg-red-400"
-                  danger
-                  onClick={() => deletePatient({ id: (selectedPatient as any).id })}
+                <Popconfirm
+                  title="Eliminar Paciente"
+                  description={
+                    <div className="max-w-xs">
+                      <p className="mb-2">
+                        ¿Está seguro de que desea eliminar este paciente?
+                      </p>
+                      <p className="text-gray-500 text-sm">
+                        Esta acción no se puede deshacer.
+                      </p>
+                    </div>
+                  }
+                  onConfirm={handleDeleteConfirm}
+                  okText="Sí, eliminar"
+                  cancelText="Cancelar"
+                  okButtonProps={{
+                    danger: true,
+                  }}
+                  icon={<ExclamationCircleOutlined style={{ color: "red" }} />}
                 >
-                  Eliminar
-                </Button>
+                  <Button
+                    type="primary"
+                    icon={<BiTrash />}
+                    className="!bg-red-600 hover:!bg-red-700"
+                    danger
+                  >
+                    Eliminar
+                  </Button>
+                </Popconfirm>
               </div>
             </div>
 
+            {/* Información */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Personal Information */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-foreground mb-3">
                   <UserOutlined />
@@ -317,6 +399,7 @@ export default function PatientsInformation () {
           </div>
         ) : (
           <Typography.Text type="secondary">
+            <QuestionCircleOutlined className="mr-2" />
             No hay paciente seleccionado. Por favor, seleccione un paciente de la
             lista para ver su información.
           </Typography.Text>
@@ -325,76 +408,118 @@ export default function PatientsInformation () {
 
       {/* Busqueda y Filtros */}
       <div className="rounded-lg border border-gray-300 bg-white p-6">
-        <div className="mb-4 flex items-center gap-2">
-          <FilterOutlined className="text-gray-600" />
-          <span className="text-lg font-medium text-blue-600">
-            Filtros de Búsqueda
-          </span>
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <FilterOutlined className="text-lg" style={{color: "var(--color-primary)"}}/>
+            <span className="text-lg font-medium text-primary">
+              Filtros de Búsqueda
+            </span>
+            {hasActiveFilters && (
+              <Tag color="blue">
+                {Object.values(filters).filter(v => v && v !== '' && v !== null).length - 2} activos
+              </Tag>
+            )}
+          </div>
+          {hasActiveFilters && (
+            <Button
+              icon={<ClearOutlined />}
+              onClick={handleClearAllFilters}
+              size="small"
+            >
+              Limpiar Todos
+            </Button>
+          )}
         </div>
 
         <ProForm
+          formRef={formRef}
           submitter={false}
           layout="horizontal"
           className="patient-filters"
-          initialValues={filters}
           onValuesChange={(changedValues, allValues) => {
             Object.keys(changedValues).forEach((key) => {
-              setFilter(key as keyof typeof filters, allValues[key]);
+              let value = allValues[key];
+              
+              // Manejo especial para fechas
+              if (key === 'fechaNacimiento' && value) {
+                value = dayjs(value).format('DD-MM-YYYY');
+              }
+              
+              // Si el valor es undefined, null o string vacío, limpiar el filtro
+              if (value === undefined || value === null || value === '') {
+                setFilter(key as keyof typeof filters, null as any);
+              } else {
+                setFilter(key as keyof typeof filters, value);
+              }
             });
           }}
         >
-          <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-y-2 gap-x-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             <ProFormText
               name="nombreCompleto"
-              label="Nombres del Paciente"
-              placeholder="Nombre Completo"
-            />
-
-            <ProFormSelect
-              name="tipoIdentificador"
-              label="Tipo de Identificador"
-              options={[
-                { label: "DNI", value: "DNI" },
-                { label: "PST", value: "PPT" },
-                { label: "CDL", value: "NI" },
-              ]}
-              placeholder="DNI"
+              label="Nombre"
+              placeholder="Ej. Juan Perez"
             />
 
             <ProFormText
               name="identificador"
-              label="Identificador"
-              placeholder="—"
+              label="Identificación"
+              placeholder="Ej. 0401202501031"
+            />
+
+            <ProFormDatePicker
+              name="fechaNacimiento"
+              label="Fecha de Nacimiento"
+              placeholder="Ej. 23/09/2001"
+              width="100%"
+              allowClear
+              fieldProps={{ 
+                format: "DD-MM-YYYY",
+                onClear: () => handleClearFilter('fechaNacimiento'),
+              }}
             />
 
             <ProFormSelect
               name="genero"
               label="Género"
               options={[
-                { label: "Todos", value: "todos" },
-                { label: "H", value: "H" },
-                { label: "M", value: "M" },
-                { label: "D", value: "D" },
+                { label: "Masculino", value: "Masculino" },
+                { label: "Femenino", value: "Femenino" },
               ]}
-              placeholder="Todos"
+              placeholder="Por género"
+              allowClear
+              fieldProps={{
+                onClear: () => handleClearFilter('genero'),
+              }}
+            />
+
+            <ProFormSelect
+              name="tipoIdentificador"
+              label="Tipo de Identificación"
+              options={[
+                { label: "DNI", value: "DNI" },
+                { label: "Pasaporte", value: "PPN" },
+                { label: "Otro", value: "NI" },
+              ]}
+              placeholder="Por tipo de identificación"
+              allowClear
+              fieldProps={{
+                onClear: () => handleClearFilter('tipoIdentificador'),
+              }}
             />
 
             <ProFormSelect
               name="estadoVital"
               label="Estado Vital"
               options={[
-                { label: "Todos", value: "todos" },
                 { label: "Vivo", value: "Vivo" },
-                { label: "Sin vida", value: "Sin vida" },
+                { label: "Fallecido", value: "Fallecido" },
               ]}
-              placeholder="Todos"
-            />
-
-            <ProFormDatePicker
-              name="fechaNacimiento"
-              label="Fecha Nacimiento"
-              placeholder="DD / MM / YYYY"
-              fieldProps={{ format: "DD/MM/YYYY" }}
+              placeholder="Por estado vital"
+              allowClear
+              fieldProps={{
+                onClear: () => handleClearFilter('estadoVital'),
+              }}
             />
           </div>
         </ProForm>
@@ -403,8 +528,8 @@ export default function PatientsInformation () {
       {/* Lista de Pacientes */}
       <div className="rounded-lg border border-gray-300 bg-white p-6">
         <div className="mb-4 flex items-center gap-2">
-          <UserOutlined className="text-gray-600" />
-          <span className="text-lg font-medium text-blue-600">
+          <UserOutlined className="text-lg" style={{color: "var(--color-primary)"}}/>
+          <span className="text-lg font-medium text-primary">
             Lista de Pacientes
           </span>
         </div>

@@ -5,8 +5,10 @@ import {
   getGetApiPatientsQueryKey,
 } from "../../../api/patients/patients";
 import type { CreatePatientDto } from "../../../api/models";
+import { useNavigate } from "react-router";
 
 export default function useCreatePatientForm() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -111,7 +113,7 @@ export default function useCreatePatientForm() {
       ],
     };
 
-    console.log("Datos enviados al backend:", payload);
+    // console.log("Datos enviados al backend:", payload);
 
     setIsSubmitting(true);
     setError(null);
@@ -119,6 +121,7 @@ export default function useCreatePatientForm() {
     try {
       await createPatient({ data: payload });
       setIsSubmitting(false);
+      navigate("/patients/list");
       return true;
     } catch (err: any) {
       setError(err.message || "Error al crear paciente");

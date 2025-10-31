@@ -1,14 +1,13 @@
-import { useNavigate, useParams } from "react-router";
-import { useMemo } from "react";
-import { message } from "antd";
 import {
   useDeleteApiPatientsId,
   useGetApiPatients,
   useGetApiPatientsId,
 } from "../../../api/patients/patients";
-import type { PatientDto } from "../../../api/models";
-import { useUrlFilters } from "../../../shared/hooks";
 import type { TablePaginationConfig } from "antd";
+import type { PatientDto } from "../../../api/models";
+import { useMemo, useState } from "react";
+import { message } from "antd";
+import { useUrlFilters } from "../../../shared/hooks";
 
 export type PaginationDto = {
   currentPage: number;
@@ -21,17 +20,34 @@ type PatientsResponse = {
   pagination: PaginationDto;
 };
 
+const defaultFilters = {
+  search: "",
+  pageNumber: 1,
+  pageSize: 10,
+  nombreCompleto: null as string | null,
+  genero: null as string | null,
+  estadoVital: null as string | null,
+  tipoIdentificador: null as string | null,
+  identificador: null as string | null,
+  fechaNacimiento: null as string | null,
+};
+
 export function usePatientsInformation() {
-  const { id } = useParams();
   const [messageApi, contextHolder] = message.useMessage();
-  const navigate = useNavigate();
+  
+  // Estado local para el ID del paciente seleccionado
+  const [selectedPatientId, setSelectedPatientId] = useState<string>("");
 
   // Detalle del paciente
   const {
     data,
     isLoading: loadingPatientDetail,
     error,
-  } = useGetApiPatientsId(id ?? "") as {
+  } = useGetApiPatientsId(selectedPatientId, {
+    query: {
+      enabled: !!selectedPatientId, // Solo hacer la petición si hay un ID
+    },
+  }) as {
     data?: PatientDto;
     isLoading: boolean;
     error?: any;
@@ -39,18 +55,7 @@ export function usePatientsInformation() {
 
   // Filtros y paginación
   const { filters, setFilters, setFilter } = useUrlFilters({
-    defaultValues: {
-      search: "",
-      pageNumber: 1,
-      pageSize: 10,
-      nombreCompleto: "",
-      genero: "todos",
-      estadoVital: "todos",
-      tipoIdentificador: "",
-      identificador: "",
-      fechaNacimiento: "",
-      nacionalidad: "",
-    },
+    defaultValues: defaultFilters,
   });
 
   // Construcción de queryParams con filtros que el backend soporta
@@ -60,47 +65,63 @@ export function usePatientsInformation() {
       pageSize: filters.pageSize,
     };
 
-    if (filters.nombreCompleto) params.name = filters.nombreCompleto;
-
-    if (filters.genero && filters.genero !== "todos") {
-      params.gender =
-        filters.genero === "H" ? 1 : filters.genero === "M" ? 2 : undefined;
+    // Nombre
+    if (filters.nombreCompleto && filters.nombreCompleto.trim()) {
+      params.name = filters.nombreCompleto.trim();
     }
 
-    if (filters.estadoVital && filters.estadoVital !== "todos") {
+    // Género
+    if (filters.genero) {
+      params.gender =
+        filters.genero === "Masculino" ? 1 : filters.genero === "Femenino" ? 2 : undefined;
+    }
+
+    // Estado vital
+    if (filters.estadoVital) {
       params.active =
         filters.estadoVital === "Vivo"
           ? true
-          : filters.estadoVital === "Sin vida"
+          : filters.estadoVital === "Fallecido"
             ? false
             : undefined;
     }
 
-    if (filters.tipoIdentificador && filters.tipoIdentificador !== "todos")
+    // Tipo de identificador
+    if (filters.tipoIdentificador) {
       params.IdentifierType = filters.tipoIdentificador;
-
-    if (filters.identificador) params.IdentifierValue = filters.identificador;
-
-    if (filters.fechaNacimiento) {
-      let f = filters.fechaNacimiento;
-
-      // Si es string en formato DD/MM/YYYY
-      if (typeof f === "string" && /^\d{2}\/\d{2}\/\d{4}$/.test(f)) {
-        const [day, month, year] = f.split("/");
-        f = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-      }
-
-      // Asignar al queryParams
-      params.BirthDate = f;
     }
 
-    if (filters.search) params.search = filters.search;
+    // Identificador
+    if (filters.identificador && filters.identificador.trim()) {
+      params.IdentifierValue = filters.identificador.trim();
+    }
+
+    // Fecha de nacimiento
+    if (filters.fechaNacimiento) {
+      let dateString = filters.fechaNacimiento;
+
+      // Si es string en formato DD/MM/YYYY, convertir a YYYY-MM-DD
+      if (typeof dateString === "string" && /^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+        const [day, month, year] = dateString.split("/");
+        dateString = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+      }
+      // Si ya está en formato YYYY-MM-DD, usar directamente
+      else if (typeof dateString === "string" && /^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        // No hacer nada, ya está en el formato correcto
+      }
+
+      params.BirthDate = dateString;
+    }
+
+    if (filters.search && filters.search.trim()) {
+      params.search = filters.search.trim();
+    }
 
     return params;
   }, [filters]);
 
   // Lista de pacientes con paginación
-  const { data: response, isLoading: loadingPatients } =
+  const { data: response, isLoading: loadingPatients, refetch } =
     useGetApiPatients<PatientsResponse>(queryParams, {
       query: {
         placeholderData: (prev) => prev,
@@ -221,7 +242,7 @@ export function usePatientsInformation() {
       identificadorTipo: (() => {
         const code =
           p.identifier?.[0]?.type?.coding?.[0]?.code?.toUpperCase() ?? "DNI";
-        if (code === "PPN") return "PST";
+        if (code === "PPN") return "PPN";
         if (code === "NI") return "ID";
         return "DNI";
       })(),
@@ -239,7 +260,7 @@ export function usePatientsInformation() {
             : p.gender === 3
               ? "Otro"
               : "No especificado",
-      estadoVital: p.active ? "Vivo" : "Sin vida",
+      estadoVital: p.active ? "Vivo" : "Fallecido",
     }));
   }, [response]);
 
@@ -261,9 +282,9 @@ export function usePatientsInformation() {
     mutation: {
       onSuccess: () => {
         messageApi.success("Paciente eliminado correctamente");
-        setTimeout(() => {
-          navigate("/patients/list");
-        }, 500);
+        setSelectedPatientId(""); // Limpiar selección
+        // Forzar actualización de la lista
+        refetch();
       },
       onError: (error) => {
         messageApi.error(
@@ -275,32 +296,46 @@ export function usePatientsInformation() {
 
   // Copiar datos del paciente
   const handleCopyData = () => {
-    if (!selectedPatient) {
+    if (!selectedPatient || !selectedPatient.id) {
       messageApi.warning("No hay datos del paciente para copiar.");
       return;
     }
 
     const info = `
-Nombre: ${selectedPatient.nombre} ${selectedPatient.apellidos}
-Fecha de Nacimiento: ${selectedPatient.fechaNacimiento}
-Edad: ${selectedPatient.edad}
-Género: ${selectedPatient.genero}
-Nacionalidad: ${selectedPatient.nacionalidad}
-Estado Vital: ${selectedPatient.estadoVital}
+      Nombre: ${selectedPatient.nombre} ${selectedPatient.apellidos}
+      Fecha de Nacimiento: ${selectedPatient.fechaNacimiento}
+      Edad: ${selectedPatient.edad}
+      Género: ${selectedPatient.genero}
+      Nacionalidad: ${selectedPatient.nacionalidad}
+      Estado Vital: ${selectedPatient.estadoVital}
 
-${selectedPatient.identificadores
-  .map((id) => `${id.tipo}: ${id.valor} (${id.emisor})`)
-  .join("\n")}
+      ${selectedPatient.identificadores
+        .map((id) => `${id.tipo}: ${id.valor} (${id.emisor})`)
+        .join("\n")}
 
-Móvil: ${selectedPatient.movil}
-Email: ${selectedPatient.email}
+      Móvil: ${selectedPatient.movil}
+      Email: ${selectedPatient.email}
 
-Dirección Casa: ${selectedPatient.casaDireccion}
-Dirección Trabajo: ${selectedPatient.trabajoDireccion}
-`.trim();
+      Dirección Casa: ${selectedPatient.casaDireccion}
+      Dirección Trabajo: ${selectedPatient.trabajoDireccion}
+    `.trim();
 
     navigator.clipboard.writeText(info);
     messageApi.success("Datos del paciente copiados al portapapeles.");
+  };
+
+  // Función para seleccionar un paciente
+  const handleSelectPatient = (patientId: string) => {
+    setSelectedPatientId(patientId);
+  };
+
+  // Función para limpiar todos los filtros
+  const clearAllFilters = () => {
+    setFilters({
+      ...defaultFilters,
+      pageNumber: 1,
+      pageSize: filters.pageSize, // Mantener el tamaño de página actual
+    });
   };
 
   // Color para tipo de identificador
@@ -308,9 +343,9 @@ Dirección Trabajo: ${selectedPatient.trabajoDireccion}
     switch (tipo) {
       case "DNI":
         return "blue";
-      case "PPT":
+      case "PPN":
         return "purple";
-      case "NI":
+      case "ID":
         return "red";
       default:
         return "default";
@@ -318,7 +353,7 @@ Dirección Trabajo: ${selectedPatient.trabajoDireccion}
   };
 
   return {
-    id,
+    selectedPatientId,
     data,
     error,
     selectedPatient,
@@ -331,7 +366,9 @@ Dirección Trabajo: ${selectedPatient.trabajoDireccion}
     isLoading: loadingPatientDetail || loadingPatients,
     setFilter,
     setFilters,
+    clearAllFilters,
     handleCopyData,
+    handleSelectPatient,
     deletePatient,
     getIdentificadorColor,
   };
