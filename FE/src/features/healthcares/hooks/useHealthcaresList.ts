@@ -1,10 +1,14 @@
-import { useState } from "react";
+
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router";
-import type { TablePaginationConfig } from "antd";
 import { useUrlFilters } from "../../../shared/hooks";
 import { useQueryClient } from "@tanstack/react-query";
-import { useMessage } from "../../../shared/components";
+import { useMessage } from "../../../shared/hooks";
+import type { TablePaginationConfig } from "antd";
 import type { HealthcareDto } from "../../../api/models";
+import { useGetApiLocations } from "../../../api/locations/locations";
+import { HealthcareExtensionsUrls } from "../../../shared/constants";
+
 import {
   getGetApiHealthcaresQueryKey,
   useDeleteApiHealthcaresId,
@@ -20,8 +24,84 @@ export function useHealthcaresList() {
   const [selectedHealthcare, setSelectedHealthcare] = useState<HealthcareDto | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Obtener datos de la API
-  const { data: healthcares, isLoading, isError } = useGetApiHealthcares({});
+  // Estado local para el input de búsqueda (antes de aplicar el filtro)
+  const [searchInput, setSearchInput] = useState("");
+
+  // Manejar todos los filtros en la URL
+  const { filters, setFilter, setFilters } = useUrlFilters({
+    defaultValues: {
+      search: "",
+      location: undefined as string | undefined,
+      status: undefined as string | undefined,
+      pageNumber: 1,
+      pageSize: 10,
+    },
+  });
+
+  // Construir parámetros para la petición al backend
+  const queryParams = useMemo(() => {
+    const params: any = {
+      pageNumber: filters.pageNumber,
+      pageSize: filters.pageSize,
+    };
+
+    // Filtro de búsqueda por nombre
+    if (filters.search) {
+      params.name = filters.search;
+    }
+
+    // Filtro por ubicación
+    if (filters.location) {
+      params.location = filters.location;
+    }
+
+    // Filtro por estado
+    if (filters.status === "active") {
+      params.active = true;
+    } else if (filters.status === "inactive") {
+      params.active = false;
+    }
+
+    return params;
+  }, [filters]);
+
+  // Obtener datos de la API con filtros
+  const { data: response, isLoading, isFetching, isError } = useGetApiHealthcares(queryParams, {
+    query: {
+      placeholderData: (previousData) => previousData, // Mantener datos previos mientras se cargan los nuevos
+    }
+  });
+
+  // Obtener todas las ubicaciones para el filtro
+  const { data: locationsResponse } = useGetApiLocations({
+    PageNumber: 1,
+    PageSize: 9999, // Obtener 9999 ubicaciones
+  });
+
+  // Extraer datos de la respuesta
+  const healthcares = response?.items || [];
+  const pagination = response?.pagination;
+
+  // Procesar los datos para extraer abbreviation y cost desde extension
+  const processedHealthcares = useMemo(() => {
+    return healthcares.map((healthcare) => {
+      // Extraer abreviatura
+      const abbreviationExt = healthcare.extension?.find(
+        (ext) => ext.url === HealthcareExtensionsUrls.abbreviation
+      );
+      
+      // Extraer costo
+      const costExt = healthcare.extension?.find(
+        (ext) => ext.url === HealthcareExtensionsUrls.cost
+      );
+
+      return {
+        ...healthcare,
+        abbreviation: abbreviationExt?.valueString || "-",
+        cost: costExt?.valueDecimal || 0,
+      };
+    });
+  }, [healthcares]);
 
   // Mutación para eliminar
   const { mutate: deleteHealthcare } = useDeleteApiHealthcaresId({
@@ -34,35 +114,6 @@ export function useHealthcaresList() {
       },
       onError: () => msg.error("Error al eliminar el servicio médico"),
     },
-  });
-
-  // Manejar todos los filtros en la URL
-  const { filters, setFilter, setFilters } = useUrlFilters({
-    defaultValues: {
-      search: "",
-      department: undefined as string | undefined,
-      status: undefined as string | undefined,
-      page: 1,
-      pageSize: 10,
-    },
-  });
-
-  // Filtrar datos basados en búsqueda, ubicación y estado
-  const filteredData = (healthcares || []).filter((item) => {
-    const matchesSearch =
-      item.name?.toLowerCase().includes(filters.search.toLowerCase()) ||
-      item.abbreviation?.toLowerCase().includes(filters.search.toLowerCase());
-
-    const matchesDepartment =
-      !filters.department ||
-      item.location?.some((loc) => loc.display === filters.department);
-
-    const matchesStatus =
-      !filters.status ||
-      (filters.status === "active" && item.active) ||
-      (filters.status === "inactive" && !item.active);
-
-    return matchesSearch && matchesDepartment && matchesStatus;
   });
 
   // Crear
@@ -92,42 +143,63 @@ export function useHealthcaresList() {
     setSelectedHealthcare(null);
   };
 
-  // Configuración de paginación
-  const paginationConfig: TablePaginationConfig = {
-    current: filters.page,
-    pageSize: filters.pageSize,
-    showSizeChanger: true,
-    pageSizeOptions: ["10", "20", "50", "100"],
-    total: filteredData.length,
-    onChange: (page, pageSize) => {
-      setFilters({ page, pageSize });
-    },
-    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total}`,
+  // Manejar cambio en el input de búsqueda
+  const handleSearchInputChange = (value: string) => {
+    setSearchInput(value);
   };
 
-  // Obtener las ubicaciones únicas para filtro
-  const departments = Array.from(
-    new Set(
-      (healthcares || [])
-        .flatMap((item) => item.location?.map((loc) => loc.display) || [])
-        .filter(Boolean)
-    )
-  );
+  // Aplicar búsqueda al presionar el botón
+  const handleSearch = () => {
+    setFilter("search", searchInput);
+  };
+
+  // Limpiar búsqueda al presionar el icono X
+  const handleClearSearch = () => {
+    setSearchInput("");
+    setFilter("search", "");
+  };
+
+  // Configuración de paginación con datos del backend
+  const paginationConfig: TablePaginationConfig = {
+    current: pagination?.currentPage || 1,
+    pageSize: pagination?.pageSize || 10,
+    showSizeChanger: true,
+    pageSizeOptions: ["10", "20", "50", "100"],
+    total: pagination?.totalItems || 0,
+    onChange: (page, pageSize) => {
+      setFilters({ pageNumber: page, pageSize });
+    },
+    showTotal: (total, range) => `${range[0]}-${range[1]} de ${total}`,
+  };
+
+  // Obtener las ubicaciones únicas para filtro desde el endpoint de locations
+  const locations = useMemo(() => {
+    const allLocations = locationsResponse?.items || [];
+    return allLocations.map((loc) => ({
+      reference: loc.id || "",
+      display: loc.name || ""
+    }));
+  }, [locationsResponse]);
 
   return {
     filters,
-    departments,
-    filteredData,
+    locations,
+    healthcares: processedHealthcares,
     paginationConfig,
     isLoading,
+    isFetching,
     isError,
     selectedHealthcare,
     isModalOpen,
+    searchInput,
     handleCreate,
     handleEdit,
     handleDelete,
     setFilter,
     handleViewDetails,
     handleCloseModal,
+    handleSearchInputChange,
+    handleSearch,
+    handleClearSearch,
   };
 }

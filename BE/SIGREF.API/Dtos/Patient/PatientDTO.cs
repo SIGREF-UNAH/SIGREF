@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace SIGREF.API.Dtos.Patient
 {
-    public class PatientDTO
+    public class PatientDto
     {
         [JsonPropertyName("id")]
         public string? Id { get; set; }
@@ -32,7 +32,10 @@ namespace SIGREF.API.Dtos.Patient
         public List<IdentifierDto>? Identifier { get; set; }
 
         [JsonPropertyName("maritalStatus")]
-        public string? MaritalStatus { get; set; }
+        public CodeableConceptDto? MaritalStatus { get; set; }
+
+        [JsonPropertyName("extension")]
+        public List<ExtensionDto>? Extension { get; set; }
 
         [JsonPropertyName("lastUpdated")]
         public DateTime? LastUpdated { get; set; }

@@ -20,7 +20,14 @@ public class UpdatePatientDto
     public AdministrativeGender? Gender { get; set; }
 
     public DateTime? BirthDate { get; set; }
+
+    public CodeableConceptDto? MaritalStatus { get; set; }
+
+    public List<ExtensionDto>? Extension { get; set; }
+
     public List<ContactPointDto>? Telecom { get; set; }
+
     public List<AddressDto>? Address { get; set; }
+
     public List<IdentifierDto>? Identifier { get; set; }
 }

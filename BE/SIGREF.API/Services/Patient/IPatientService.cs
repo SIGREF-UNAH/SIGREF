@@ -1,4 +1,5 @@
-﻿using SIGREF.API.Dtos.Patient;
+﻿using SIGREF.API.Dtos.Common;
+using SIGREF.API.Dtos.Patient;
 
 namespace SIGREF.API.Services.Patient
 {
@@ -9,20 +10,21 @@ namespace SIGREF.API.Services.Patient
         /// </summary>
         /// <param name="dto">Datos del paciente a crear.</param>
         /// <returns>El paciente creado, con ID y metadatos asignados.</returns>
-        Task<PatientDTO> CreatePatientAsync(CreatePatientDto dto);
+        Task<PatientDto> CreatePatientAsync(CreatePatientDto dto);
 
         /// <summary>
         /// Obtiene un paciente por su ID.
         /// </summary>
         /// <param name="id">ID del paciente.</param>
         /// <returns>El paciente solicitado.</returns>
-        Task<PatientDTO> GetPatientByIdAsync(string id);
+        Task<PatientDto> GetPatientByIdAsync(string id);
 
         /// <summary>
-        /// Obtiene todos los pacientes (con paginación en futuras versiones).
+        /// Aplica filtros para obtener pacientes desde el servidor FHIR.
         /// </summary>
-        /// <returns>Lista de pacientes.</returns>
-        Task<IEnumerable<PatientDTO>> GetAllPatientsAsync();
+        /// <param name="filter">Parámetros de filtro (nombre, género, estado civil, activo).</param>
+        /// <returns>Lista de pacientes que cumplen los criterios.</returns>
+        Task<PagedResult<PatientDto>> GetFilteredPatientsAsync(PatientFilterDto filter);
 
         /// <summary>
         /// Actualiza un paciente existente.
@@ -30,7 +32,7 @@ namespace SIGREF.API.Services.Patient
         /// <param name="id">ID del paciente a actualizar.</param>
         /// <param name="dto">Datos a actualizar.</param>
         /// <returns>El paciente actualizado.</returns>
-        Task<PatientDTO> UpdatePatientAsync(string id, UpdatePatientDto dto);
+        Task<PatientDto> UpdatePatientAsync(string id, UpdatePatientDto dto);
 
         /// <summary>
         /// Elimina un paciente por su ID.

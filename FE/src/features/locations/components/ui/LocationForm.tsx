@@ -110,16 +110,17 @@ export default function LocationForm() {
             <ProFormSelect
               name="status"
               label="Estado"
+              initialValue={LocationStatus.NUMBER_0}
+              rules={[{ required: true, message: "El estado es obligatorio" }]}
               options={[
                 { label: "Activo", value: LocationStatus.NUMBER_0 },
-                { label: "Inactivo", value: LocationStatus.NUMBER_1 },
-                { label: "Suspendido", value: LocationStatus.NUMBER_2 },
+                { label: "Suspendido", value: LocationStatus.NUMBER_1 },
+                { label: "Inactivo", value: LocationStatus.NUMBER_2 },
               ]}
-              rules={[{ required: true, message: "El estado es obligatorio" }]}
+
               fieldProps={{
-                suffixIcon: (
-                  <BiChevronDown className="w-4 h-4 text-[#616161]" />
-                ),
+                suffixIcon: <BiChevronDown className="w-4 h-4 text-[#616161]" />,
+
               }}
             />
           </div>

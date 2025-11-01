@@ -7,4 +7,8 @@
 
 Componentes para la UI:
 
-- [ProtectedComponent](/documentation/components/ProtectedComponent.md)
+- [PageHeaderTabs](/documentation/components/PageHeaderTabs.md)
+
+Control de permisos con CASL:
+- [CASL & Keycloak – Control de Permisos](/documentation/components/CASL.md)
+

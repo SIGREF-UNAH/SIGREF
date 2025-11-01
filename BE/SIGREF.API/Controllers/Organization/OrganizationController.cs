@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos;
+using SIGREF.API.Dtos.Common;
+using SIGREF.API.Dtos.Healthcare;
 using SIGREF.API.Services.Organization;
 
 namespace SIGREF.API.Controllers;
@@ -17,22 +19,23 @@ public class OrganizationsController : ControllerBase
         _logger = logger;
     }
 
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<OrganizationDto>>> GetAllOrganizations()
+    [HttpGet()]
+    [Produces(typeof(PagedResultDto<OrganizationDto>))]
+    public async Task<IActionResult> GetFilteredOrganizations([FromQuery] OrganizationFilterDto filter)
     {
-        try
+        var pagedOrganizations = await _organizationService.GetFilteredOrganizationsAsync(filter);
+
+        var pagedOrganizationDtos = new PagedResultDto<OrganizationDto>
         {
-            var organizations = await _organizationService.GetAllOrganizationsAsync();
-            return Ok(organizations);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error obteniendo todas las organizaciones");
-            return StatusCode(500, "Ocurrió un error al recuperar las organizaciones");
-        }
+            Items = pagedOrganizations.Items,
+            Pagination = pagedOrganizations.Pagination
+        };
+
+        return Ok(pagedOrganizationDtos);
     }
 
     [HttpGet("{id}")]
+    [Produces<OrganizationDto>()]
     public async Task<ActionResult<OrganizationDto>> GetOrganizationById(string id)
     {
         try
@@ -52,6 +55,7 @@ public class OrganizationsController : ControllerBase
     }
 
     [HttpPost]
+    [Produces<OrganizationDto>()]
     public async Task<ActionResult<OrganizationDto>> CreateOrganization([FromBody] CreateOrganizationDto createDto)
     {
         try
@@ -72,6 +76,7 @@ public class OrganizationsController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Produces<OrganizationDto>()]
     public async Task<ActionResult<OrganizationDto>> UpdateOrganization(string id, [FromBody] UpdateOrganizationDto updateDto)
     {
         try

@@ -1,6 +1,5 @@
 ﻿#nullable enable
 using Hl7.Fhir.Model;
-using FhirPatient = Hl7.Fhir.Model.Patient;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Common.ValidationAtributes;
 using System.ComponentModel.DataAnnotations;
@@ -21,11 +20,17 @@ public class CreatePatientDto
     [Required(ErrorMessage = "La fecha de nacimiento es obligatoria.")]
     public DateTime? BirthDate { get; set; }
 
-    // Pasar a CodeableConcept para estandarizar con otros campos
-    // Agregar MaritalStatus
+    // code puede ser A, D, I, L, M, P, S, T, U, W, UNK 
+    public CodeableConceptDto? MaritalStatus { get; set; }
+
+    public List<ExtensionDto>? Extension { get; set; }
+
     public bool Active { get; set; } = true;
+
     public List<ContactPointDto>? Telecom { get; set; }
+
     public List<AddressDto>? Address { get; set; }
+
     public List<IdentifierDto>? Identifier { get; set; }
 }
 
