@@ -3,17 +3,16 @@ import {
   ProFormText,
   ProFormSelect,
   ProFormDatePicker,
-  ProFormRadio,
   ProFormGroup,
   ProFormList,
 } from "@ant-design/pro-components";
 import {
-    GlobalOutlined,
-    IdcardOutlined,
-    UserOutlined,
-    PhoneOutlined,
-    HomeOutlined,
-    PlusOutlined,
+  GlobalOutlined,
+  IdcardOutlined,
+  UserOutlined,
+  PhoneOutlined,
+  HomeOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
 import { Button, Collapse, message, Space } from "antd";
 import type { CollapseProps } from "antd";
@@ -27,15 +26,19 @@ interface PatientFormProps {
   error?: string | null;
 }
 
+// TODO: Implementar una librería para seleccionar el país
+// TODO: Implementar una librería para el ingreso de un numero de telefono
+
 export default function PatientForm({
   mode,
   initialValues,
-  onSubmit,
   isSubmitting,
   error,
+  onSubmit,
 }: PatientFormProps) {
   const [messageApi, contextHolder] = message.useMessage();
 
+  // Función para enviar el formulario
   const onFinish = async (values: any) => {
     const success = await onSubmit(values);
     if (success) {
@@ -54,47 +57,49 @@ export default function PatientForm({
     }
   };
 
+  // Función para cancelar
   const onCancel = () => {
     messageApi.info("Operación cancelada");
   };
 
+  // Sección de nacionalidad
   const nacionalidadContent = (
     <ProFormGroup>
       <ProFormText
         name={mode === "create" ? "paisNacionalidad" : "nacionalidad"}
         label="País de Nacionalidad"
-        placeholder="Honduras"
+        placeholder="Ej. Honduras"
         width="md"
       />
       <ProFormSelect
         name="gender"
         label="Género"
-        placeholder="Seleccione"
+        placeholder="Seleccionar"
         width="sm"
         rules={[{ required: true, message: "Campo requerido" }]}
         options={[
           { label: "Masculino", value: 1 },
           { label: "Femenino", value: 2 },
-          { label: "Otro", value: 3 },
-          ...(mode === "edit" ? [{ label: "Desconocido", value: 0 }] : []),
         ]}
       />
       <ProFormSelect
         name="estadoCivil"
         label="Estado Civil"
-        placeholder="Seleccione"
+        placeholder="Seleccionar"
         width="sm"
         options={[
-          { label: "Soltero/a", value: "soltero" },
-          { label: "Casado/a", value: "casado" },
-          { label: "Divorciado/a", value: "divorciado" },
-          { label: "Viudo/a", value: "viudo" },
+          { label: "Soltero/a", value: "U" },
+          { label: "Casado/a", value: "M" },
+          { label: "Divorciado/a", value: "D" },
+          { label: "Viudo/a", value: "W" },
+          { label: "Unión de hechos", value: "T" },
+          { label: "Desconocido", value: "UNK" },
         ]}
       />
       <ProFormSelect
         name="estadoVital"
         label="Estado Vital"
-        placeholder="VIVO"
+        placeholder="Seleccionar"
         width="sm"
         options={[
           { label: "Vivo", value: 1 },
@@ -104,49 +109,49 @@ export default function PatientForm({
       <ProFormDatePicker
         name="fechanacimiento"
         label="Fecha de Nacimiento"
-        placeholder="dd / mm / yyyy"
+        placeholder="Ej. 31/12/1999"
         width="md"
         rules={[{ required: true, message: "Campo requerido" }]}
       />
     </ProFormGroup>
   );
 
+  // Sección de identificacion
   const identificacionesContent = (
     <ProFormGroup>
       <ProFormSelect
         name="tipoIdentificacion"
-        label="Tipo"
-        placeholder="DNI HN"
+        label="Tipo de Identificación"
+        placeholder="Seleccionar"
         width="sm"
         options={[
-          { label: "DNI HN", value: "DNI" },
+          { label: "DNI", value: "DNI" },
           { label: "Pasaporte", value: "PPN" },
-          { label: "Cédula", value: "NI" },
+          { label: "Otro", value: "NI" },
         ]}
       />
       <ProFormText
         name={["identifier", 0, "value"]}
-        label="Número"
-        placeholder="0000000000000"
+        label="Número / Código"
+        placeholder="Ej. 0401202501031"
         width="md"
       />
-      <ProFormText name="emisor" label="Emisor" placeholder="SRNP" width="sm" />
-      {mode === "create" && (
-        <ProFormRadio.Group
-          name="identificacionPreferida"
-          label=" "
-          options={[{ label: "Preferido", value: true }]}
-        />
-      )}
+      <ProFormText
+        name="emisor"
+        label="Emisor"
+        placeholder="Ej. RNP"
+        width="sm"
+      />
     </ProFormGroup>
   );
 
+  // Sección de nombre
   const nombresContent = (
     <ProFormGroup>
       <ProFormSelect
         name="tipoNombre"
         label="Tipo"
-        placeholder="Legal"
+        placeholder="Seleccionar"
         width="sm"
         options={[
           { label: "Legal", value: 0 },
@@ -156,25 +161,26 @@ export default function PatientForm({
       <ProFormText
         name="primerNombre"
         label="Primer Nombre"
-        placeholder="Nombre"
+        placeholder="Ej. Juan"
         width="md"
         rules={[{ required: true, message: "Campo requerido" }]}
       />
       <ProFormText
         name="segundoNombre"
         label="Segundo Nombre"
-        placeholder="Nombre"
+        placeholder="Ej. Ernesto"
         width="md"
       />
       <ProFormText
         name="apellidos"
         label="Apellidos"
-        placeholder="Apellido Díaz"
+        placeholder="Ej. Perez Lopez"
         width="md"
       />
     </ProFormGroup>
   );
 
+  // Sección de contactos
   const contactoContent = (
     <ProFormList
       name="telecom"
@@ -183,21 +189,19 @@ export default function PatientForm({
         icon: <PlusOutlined />,
       }}
     >
-      {(field, index, action) => (
+      {(field) => (
         <ProFormGroup key={field.key}>
           <ProFormSelect
             {...(mode === "create" ? field : {})}
             name="system"
             label="Tipo de contacto"
-            placeholder="Seleccione"
+            placeholder="Seleccionar"
             width="sm"
             options={[
               { label: "Teléfono", value: "phone" },
-              { label: "Fax", value: "fax" },
               { label: "Email", value: "email" },
-              { label: "Pager", value: "pager" },
               { label: "URL", value: "url" },
-              { label: "SMS", value: "sms" },
+              { label: "Fax", value: "fax" },
               { label: "Otro", value: "other" },
             ]}
           />
@@ -206,11 +210,13 @@ export default function PatientForm({
             {...(mode === "create" ? field : {})}
             name="use"
             label="Uso"
+            placeholder="Seleccionar"
             width="sm"
             options={[
-              { label: "Casa", value: 0 },
-              { label: "Trabajo", value: 1 },
-              { label: "Móvil", value: 2 },
+              { label: "Personal", value: "personal" },
+              { label: "Casa", value: "home" },
+              { label: "Trabajo", value: "work" },
+              { label: "Temporal", value: "temp" },
             ]}
           />
 
@@ -218,18 +224,15 @@ export default function PatientForm({
             {...(mode === "create" ? field : {})}
             name="value"
             label="Valor"
-            placeholder="9999-9999 / ejemplo@correo.com"
+            placeholder="Ej. 9999-9999 / ejemplo@correo.com"
             width="md"
           />
-
-          <Button type="link" danger onClick={() => action.remove(index)}>
-            Eliminar
-          </Button>
         </ProFormGroup>
       )}
     </ProFormList>
   );
 
+  // Sección de direcciones
   const direccionesContent = (
     <ProFormList
       name="address"
@@ -241,64 +244,52 @@ export default function PatientForm({
         ? { initialValue: initialValues.address }
         : {})}
     >
-      {(field, index, action) => (
+      {(field) => (
         <ProFormGroup key={field.key}>
           <ProFormSelect
             {...(mode === "create" ? field : {})}
             name="tipoDireccion"
             label="Tipo"
-            placeholder="Casa"
+            placeholder="Seleccionar"
             width="sm"
             options={[
               { label: "Casa", value: "home" },
               { label: "Trabajo", value: "work" },
-              { label: "Temporal", value: "temp" },
               { label: "Antigua", value: "old" },
-              { label: "Facturación", value: "billing" },
+              { label: "Temporal", value: "temp" },
             ]}
           />
           <ProFormText
             {...(mode === "create" ? field : {})}
             name="country"
             label="País"
-            placeholder="Honduras"
+            placeholder="Ej. Honduras"
             width="md"
           />
           <ProFormText
             {...(mode === "create" ? field : {})}
             name="state"
             label="Departamento"
-            placeholder={mode === "create" ? "Copan" : "Copán"}
+            placeholder="Ej. Copán"
             width="md"
           />
           <ProFormText
             {...(mode === "create" ? field : {})}
             name="city"
             label="Ciudad"
-            placeholder="Santa Rosa"
+            placeholder="Ej. Santa Rosa de Copán"
             width="md"
           />
           <ProFormText
             {...(mode === "create" ? field : {})}
             name={mode === "create" ? ["line", 0] : "line"}
-            label={
-              mode === "create"
-                ? "Detalle de Ubicación"
-                : "Detalle de ubicación"
-            }
-            placeholder={
-              mode === "create"
-                ? "Ave 13, Calle 7, Casa 2"
-                : "Ave 13, Calle 7, Casa 2, planta Azul"
-            }
+            label="Detalles"
+            placeholder="Ej. Ave 13, Calle 7, Casa 2"
             width="xl"
             {...(mode === "edit"
               ? { fieldProps: { style: { width: "100%" } } }
               : {})}
           />
-          <Button type="link" danger onClick={() => action.remove(index)}>
-            Eliminar
-          </Button>
         </ProFormGroup>
       )}
     </ProFormList>

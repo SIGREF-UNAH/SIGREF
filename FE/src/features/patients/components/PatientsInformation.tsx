@@ -40,7 +40,6 @@ interface PatientData {
 }
 
 // TODO: Usar ProDescriptions para la información de los pacientes
-// TODO: Corregir campos del formulario de creacion y edicion
 //! En el campo de nacionalidad solo devuelve Honduras
 //! Limpiar Fecha de Nacimiento no funciona
 
@@ -486,7 +485,7 @@ export default function PatientsInformation() {
                 { label: "Masculino", value: "Masculino" },
                 { label: "Femenino", value: "Femenino" },
               ]}
-              placeholder="Por género"
+              placeholder="Seleccionar"
               allowClear
               fieldProps={{
                 onClear: () => handleClearFilter('genero'),
@@ -501,7 +500,7 @@ export default function PatientsInformation() {
                 { label: "Pasaporte", value: "PPN" },
                 { label: "Otro", value: "NI" },
               ]}
-              placeholder="Por tipo de identificación"
+              placeholder="Seleccionar"
               allowClear
               fieldProps={{
                 onClear: () => handleClearFilter('tipoIdentificador'),
@@ -515,7 +514,7 @@ export default function PatientsInformation() {
                 { label: "Vivo", value: "Vivo" },
                 { label: "Fallecido", value: "Fallecido" },
               ]}
-              placeholder="Por estado vital"
+              placeholder="Seleccionar"
               allowClear
               fieldProps={{
                 onClear: () => handleClearFilter('estadoVital'),
