@@ -8,15 +8,20 @@ namespace SIGREF.API.Dtos.Location;
 public class LocationDto
 {
     public string? Id { get; set; }
+
     public string? Identifier { get; set; }
 
     [Required]
     public string Name { get; set; } = string.Empty;
 
+    public string[] Alias { get; set; } = [];
+
     public string? Description { get; set; }
 
     [Required]
     public string Status { get; set; } = "active";
+
+    public string? Mode { get; set; } = "instance";
 
     public AddressDto? Address { get; set; }
 
@@ -26,5 +31,12 @@ public class LocationDto
     public string? Type { get; set; }
 
     public DateTime? LastUpdated { get; set; }
+
+    public string? PartOfId { get; set; }
+
+    public string? PartOfName { get; set; }
+
+    public string? ManagingOrganizationId { get; set; }
+    public string? ManagingOrganizationName { get; set; }
 }
 

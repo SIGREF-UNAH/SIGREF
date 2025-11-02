@@ -29,5 +29,9 @@ export interface CreateLocationDto {
   /** @nullable */
   partOfId?: string | null;
   /** @nullable */
-  managingOrganizationIds?: string | null;
+  partOfName?: string | null;
+  /** @nullable */
+  managingOrganizationId?: string | null;
+  /** @nullable */
+  managingOrganizationName?: string | null;
 }

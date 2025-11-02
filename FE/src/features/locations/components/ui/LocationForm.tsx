@@ -10,34 +10,123 @@ import { FaCheck } from "react-icons/fa";
 import { LocationStatus, LocationMode } from "../../../../api/models";
 import { useNavigate } from "react-router-dom";
 import useLocationForm from "../../hooks/useLocationForm";
-import { useRef, useState } from "react";
+import { useRef, useState, useMemo, useEffect } from "react";
 import { BsBuilding, BsGeoAltFill, BsPersonFill } from "react-icons/bs";
 import { Button } from "antd";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import type { ProFormInstance } from "@ant-design/pro-components";
+import { useGetApiLocations } from "../../../../api/locations/locations";
+import { useGetApiOrganizations } from "../../../../api/organizations/organizations";
+import ccsj from "countrycitystatejson";
+
+interface CountryOption {
+  label: string;
+  value: string;
+}
+
+interface StateOption {
+  label: string;
+  value: string;
+}
+
+interface CityOption {
+  label: string;
+  value: string;
+}
 
 export default function LocationForm() {
   const navigate = useNavigate();
   const { handleSubmit, isSubmitting } = useLocationForm();
-   const [contacts, setContacts] = useState([{ id: "1", name: "", phone: "", email: "" }]);
-  const formRef = useRef<any>();
+  const formRef = useRef<ProFormInstance>(null);
 
+  // Estado de contactos dinámicos
+  const [contacts, setContacts] = useState<
+    { id: string; system?: number; value?: string }[]
+  >([{ id: "1", system: undefined, value: "" }]);
+
+  // Cargar las organizaciones
+  const {
+    data: orgsData,
+    isLoading: orgsLoading,
+    isError: orgsError,
+  } = useGetApiOrganizations(undefined, {
+    query: {
+      select: (data) => data.items || [],
+    },
+  });
+
+  // Opciones para país, estado y ciudad
+  const [countryOptions, setCountryOptions] = useState<CountryOption[]>([]);
+  const [stateOptions, setStateOptions] = useState<StateOption[]>([]);
+  const [cityOptions, setCityOptions] = useState<CityOption[]>([]);
+
+  useEffect(() => {
+    const countries = ccsj.getCountries().map((c: any) => ({
+      label: `${c.name}`,
+      value: c.shortName,
+    }));
+    setCountryOptions(countries);
+  }, []);
+
+  // Cargar las ubicaciones
+  const {
+    data: locationsData,
+    isLoading: locationsLoading,
+    isError: locationsError,
+  } = useGetApiLocations(undefined, {
+    query: {
+      select: (data) => data.items || [],
+    },
+  });
+
+  // Opciones para selects
+  const organizationOptions = useMemo(
+    () =>
+      (orgsData || []).map((org) => ({
+        label: org.name,
+        value: org.id,
+      })),
+    [orgsData]
+  );
+
+  const locationOptions = useMemo(
+    () =>
+      (locationsData || []).map((loc) => ({
+        label: loc.name,
+        value: loc.id,
+      })),
+    [locationsData]
+  );
+
+  // Envío del formulario
   const onFinish = async (values: any) => {
-    const success = await handleSubmit(values);
+    const payload = {
+      ...values,
+      telecom: contacts.map((c) => ({
+        system: c.system,
+        value: c.value,
+      })),
+    };
+
+    const success = await handleSubmit(payload);
     if (success) {
       formRef.current?.resetFields();
       navigate("/locations/list");
     } else {
-      console.log("Creado correctamente");
+      console.error("Error al crear la ubicación");
     }
   };
 
-   const addContact = () => {
-    setContacts([...contacts, { id: Date.now().toString(), name: "", phone: "", email: "" }]);
+  const addContact = () => {
+    setContacts((prev) => [
+      ...prev,
+      { id: Date.now().toString(), system: undefined, value: "" },
+    ]);
   };
 
   const removeContact = (id: string) => {
     if (contacts.length > 1) {
-      setContacts(contacts.filter((contact) => contact.id !== id));
+      setContacts((prev) => prev.filter((c) => c.id !== id));
     }
   };
 
@@ -95,41 +184,58 @@ export default function LocationForm() {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8 md:gap-16 lg:gap-32 mb-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-2">
             <ProFormText
               name="name"
               label="Nombre de la ubicación"
               placeholder="Ej. Sala de emergencias"
-              rules={[{ required: true, message: "El nombre es obligatorio" }]}
+              rules={[
+                { required: true, message: "El nombre es obligatorio" },
+                { min: 3, message: "Debe tener al menos 3 caracteres" },
+              ]}
             />
-            <ProFormText
+
+            <ProFormSelect
               name="alias"
               label="Alias"
-              placeholder="Ej. Emergencias, ER"
+              mode="tags"
+              placeholder="Ej. Emergencias, ER (Presione Enter para agregar)"
+              fieldProps={{ tokenSeparators: [","] }}
+              rules={[
+                {
+                  validator: (_, value) =>
+                    value && value.length > 5
+                      ? Promise.reject("Máximo 5 alias permitidos")
+                      : Promise.resolve(),
+                },
+              ]}
             />
+
             <ProFormSelect
               name="status"
               label="Estado"
               initialValue={LocationStatus.NUMBER_0}
-              rules={[{ required: true, message: "El estado es obligatorio" }]}
               options={[
                 { label: "Activo", value: LocationStatus.NUMBER_0 },
                 { label: "Suspendido", value: LocationStatus.NUMBER_1 },
                 { label: "Inactivo", value: LocationStatus.NUMBER_2 },
               ]}
+              rules={[{ required: true, message: "El estado es obligatorio" }]}
               fieldProps={{
-                suffixIcon: <BiChevronDown className="w-4 h-4 text-[#616161]" />,
+                suffixIcon: (
+                  <BiChevronDown className="w-4 h-4 text-[#616161]" />
+                ),
               }}
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8 md:gap-16 lg:gap-32 mb-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-2">
             <ProFormSelect
               name="mode"
               label="Modo"
               options={[
-                { label: "Kind", value: LocationMode.NUMBER_0 },
-                { label: "Instance", value: LocationMode.NUMBER_1 },
+                { label: "Instance", value: LocationMode.NUMBER_0 },
+                { label: "Kind", value: LocationMode.NUMBER_1 },
               ]}
               rules={[{ required: true, message: "El modo es obligatorio" }]}
               fieldProps={{
@@ -168,20 +274,92 @@ export default function LocationForm() {
             placeholder="Ej. Avenida principal 123"
             rules={[{ required: true, message: "La dirección es obligatoria" }]}
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 md:gap-16 lg:gap-32 mb-2">
-            <ProFormText name={["address", "city"]} label="Ciudad" />
-            <ProFormText name={["address", "state"]} label="Estado/Provincia" />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 md:gap-16 lg:gap-32">
-            <ProFormText
-              name={["address", "postalCode"]}
-              label="Código Postal"
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <ProFormSelect
+              name={["address", "country"]}
+              label="País"
+              placeholder="Seleccione país"
+              options={countryOptions}
+              showSearch
+              allowClear
+              fieldProps={{
+                onChange: (countryShort?: string) => {
+                  if (!countryShort || typeof countryShort !== "string") {
+                    setStateOptions([]);
+                    setCityOptions([]);
+                    formRef.current?.setFieldValue(["address", "state"], null);
+                    formRef.current?.setFieldValue(["address", "city"], null);
+                    return;
+                  }
+
+                  const states = ccsj.getStatesByShort(countryShort) ?? [];
+                  setStateOptions(
+                    states.map((s: string) => ({ label: s, value: s }))
+                  );
+                  setCityOptions([]);
+                  formRef.current?.setFieldValue(["address", "state"], null);
+                  formRef.current?.setFieldValue(["address", "city"], null);
+                },
+                suffixIcon: (
+                  <BiChevronDown className="w-4 h-4 text-[#616161]" />
+                ),
+              }}
             />
-            <ProFormText name={["address", "country"]} label="País" />
+
+            <ProFormSelect
+              name={["address", "state"]}
+              label="Estado / Provincia"
+              placeholder="Seleccione estado"
+              options={stateOptions}
+              showSearch
+              allowClear
+              fieldProps={{
+                onChange: (stateName?: string) => {
+                  const countryShort = formRef.current?.getFieldValue([
+                    "address",
+                    "country",
+                  ]);
+                  if (
+                    !countryShort ||
+                    typeof countryShort !== "string" ||
+                    !stateName
+                  ) {
+                    setCityOptions([]);
+                    formRef.current?.setFieldValue(["address", "city"], null);
+                    return;
+                  }
+
+                  const cities = ccsj.getCities(countryShort, stateName) ?? [];
+                  setCityOptions(
+                    cities.map((c: string) => ({ label: c, value: c }))
+                  );
+                  formRef.current?.setFieldValue(["address", "city"], null);
+                },
+                suffixIcon: (
+                  <BiChevronDown className="w-4 h-4 text-[#616161]" />
+                ),
+              }}
+            />
+
+            <ProFormSelect
+              name={["address", "city"]}
+              label="Ciudad"
+              placeholder="Seleccione ciudad"
+              options={cityOptions}
+              showSearch
+              allowClear
+              fieldProps={{
+                suffixIcon: (
+                  <BiChevronDown className="w-4 h-4 text-[#616161]" />
+                ),
+              }}
+            />
           </div>
         </section>
 
-        <div className="mb-8 border-t pt-6">
+        {/* Información de contacto */}
+        <section className="mb-8 border-t pt-6">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <BsPersonFill className="w-8 h-8 text-blue-500" />
@@ -195,69 +373,124 @@ export default function LocationForm() {
               onClick={addContact}
               className="bg-green-500 hover:bg-green-600"
             >
-              Agregar Contacto
+              Agregar contacto
             </Button>
           </div>
-          <div className="space-y-4">
+
+          <div className="space-y-6">
             {contacts.map((contact, index) => (
               <div
                 key={contact.id}
-                className="grid grid-cols-[1fr_1fr_1fr_auto] items-end gap-4"
+                className="grid grid-cols-[1fr_2fr_auto] items-end gap-4 border-b pb-4"
               >
-                <ProFormText
-                  name={`contacto_nombre_${contact.id}`}
-                  label={index === 0 ? "Nombre de contacto" : undefined}
-                  placeholder="Ej. Juan"
-                  initialValue={contact.name}
-                  onChange={(e) =>
-                    setContacts((prev) =>
-                      prev.map((c) =>
-                        c.id === contact.id ? { ...c, name: e.target.value } : c
-                      )
-                    )
-                  }
+                <ProFormSelect
+                  name={["telecom", index, "system"]}
+                  label={index === 0 ? "Tipo de contacto" : undefined}
+                  placeholder="Seleccione tipo"
+                  options={[
+                    { label: "Teléfono", value: 0 },
+                    { label: "Fax", value: 1 },
+                    { label: "Correo electrónico", value: 2 },
+                    { label: "Pager", value: 3 },
+                    { label: "Dirección web", value: 4 },
+                    { label: "Mensaje de texto", value: 5 },
+                    { label: "Otro", value: 6 },
+                  ]}
+                  fieldProps={{
+                    value: contact.system,
+                    onChange: (value) =>
+                      setContacts((prev) =>
+                        prev.map((c) =>
+                          c.id === contact.id
+                            ? { ...c, system: value, value: "" }
+                            : c
+                        )
+                      ),
+                    suffixIcon: (
+                      <BiChevronDown className="w-4 h-4 text-[#616161]" />
+                    ),
+                  }}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Seleccione el tipo de contacto",
+                    },
+                  ]}
                 />
+
                 <ProFormText
-                  name={`contacto_telefono_${contact.id}`}
-                  label={index === 0 ? "Teléfono" : undefined}
-                  placeholder="Ej. +504 4864-5945"
-                  initialValue={contact.phone}
-                  onChange={(e) =>
-                    setContacts((prev) =>
-                      prev.map((c) =>
-                        c.id === contact.id
-                          ? { ...c, phone: e.target.value }
-                          : c
-                      )
-                    )
+                  name={["telecom", index, "value"]}
+                  label={index === 0 ? "Valor" : undefined}
+                  placeholder={
+                    contact.system === 0
+                      ? "Ej. +504 2550-1234"
+                      : contact.system === 2
+                        ? "Ej. correo@dominio.com"
+                        : contact.system === 4
+                          ? "Ej. https://miweb.com"
+                          : "Ingrese valor"
                   }
+                  fieldProps={{
+                    value: contact.value,
+                    type:
+                      contact.system === 2
+                        ? "email"
+                        : contact.system === 4
+                          ? "url"
+                          : "text",
+                    onChange: (e) =>
+                      setContacts((prev) =>
+                        prev.map((c) =>
+                          c.id === contact.id
+                            ? { ...c, value: e.target.value }
+                            : c
+                        )
+                      ),
+                  }}
+                  rules={[
+                    { required: true, message: "Ingrese el valor" },
+                    {
+                      validator: (_, value) => {
+                        if (!value) return Promise.resolve();
+                        if (
+                          contact.system === 2 &&
+                          !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+                        ) {
+                          return Promise.reject(
+                            "Ingrese un correo electrónico válido"
+                          );
+                        }
+                        if (
+                          contact.system === 4 &&
+                          !/^https?:\/\/.+/.test(value)
+                        ) {
+                          return Promise.reject("Ingrese una URL válida");
+                        }
+                        if (
+                          contact.system === 0 &&
+                          !/^[+0-9\s-]{6,}$/.test(value)
+                        ) {
+                          return Promise.reject(
+                            "Ingrese un número de teléfono válido"
+                          );
+                        }
+                        return Promise.resolve();
+                      },
+                    },
+                  ]}
                 />
-                <ProFormText
-                  name={`contacto_email_${contact.id}`}
-                  label={index === 0 ? "Correo electrónico" : undefined}
-                  placeholder="Ej. contacto@hospital.cr"
-                  initialValue={contact.email}
-                  onChange={(e) =>
-                    setContacts((prev) =>
-                      prev.map((c) =>
-                        c.id === contact.id
-                          ? { ...c, email: e.target.value }
-                          : c
-                      )
-                    )
-                  }
-                />
+
                 <Button
                   danger
                   icon={<DeleteOutlined />}
                   onClick={() => removeContact(contact.id)}
                   disabled={contacts.length === 1}
-                  className="mb-6"
+                  className="mb-1"
                 />
               </div>
             ))}
           </div>
-        </div>
+        </section>
 
         {/* Jerarquía */}
         <section className="mt-6">
@@ -268,12 +501,76 @@ export default function LocationForm() {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 md:gap-16 lg:gap-32">
-            <ProFormText
-              name="managingOrganizationIds"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ProFormSelect
+              name="managingOrganizationId"
               label="Organización responsable"
+              placeholder="Seleccione una organización"
+              options={organizationOptions}
+              showSearch
+              allowClear
+              fieldProps={{
+                loading: orgsLoading,
+                suffixIcon: (
+                  <BiChevronDown className="w-4 h-4 text-[#616161]" />
+                ),
+                optionFilterProp: "label",
+                filterOption: (input, option) =>
+                  (option?.label ?? "")
+                    .toLowerCase()
+                    .includes(input.toLowerCase()),
+                onChange: (value, option) => {
+                  const opt = option as {
+                    label: string;
+                    value: string | null | undefined;
+                  };
+                  formRef.current?.setFieldValue(
+                    "managingOrganizationName",
+                    opt?.label ?? null
+                  );
+                },
+              }}
+              tooltip={orgsError ? "Error al cargar organizaciones" : undefined}
             />
-            <ProFormText name="partOfId" label="Parte de (ubicación padre)" />
+
+            {/* Campo oculto para enviar el nombre */}
+            <ProFormText name="managingOrganizationName" hidden />
+
+            <ProFormSelect
+              name="partOfId"
+              label="Parte de (ubicación padre)"
+              placeholder="Seleccione ubicación padre"
+              options={locationOptions}
+              showSearch
+              allowClear
+              fieldProps={{
+                loading: locationsLoading,
+                suffixIcon: (
+                  <BiChevronDown className="w-4 h-4 text-[#616161]" />
+                ),
+                optionFilterProp: "label",
+                filterOption: (input, option) =>
+                  (option?.label ?? "")
+                    .toLowerCase()
+                    .includes(input.toLowerCase()),
+                onChange: (value, option) => {
+                  const opt = option as {
+                    label: string;
+                    value: string | null | undefined;
+                  };
+                  formRef.current?.setFieldValue(
+                    "partOfName",
+                    opt?.label ?? null
+                  );
+                },
+              }}
+              tooltip={
+                locationsError ? "Error al cargar ubicaciones" : undefined
+              }
+            />
+
+            {/* Campo oculto para enviar el nombre del padre */}
+            <ProFormText name="partOfName" hidden />
           </div>
         </section>
       </ProForm>

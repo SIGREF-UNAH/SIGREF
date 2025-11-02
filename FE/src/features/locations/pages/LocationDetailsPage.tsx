@@ -22,8 +22,19 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { BsBuilding, BsGeoAltFill, BsPersonFill } from "react-icons/bs";
 import { BiChevronDown } from "react-icons/bi";
-import { LocationMode, LocationStatus } from "../../../api/models";
+import { LocationStatus, ContactPointSystem } from "../../../api/models";
 import { PageHeaderTabs } from "../../../shared/components/ui";
+
+// Mapeo de ContactPointSystem a etiquetas legibles
+const TelecomLabels: Record<number, string> = {
+  [ContactPointSystem.NUMBER_0]: "Teléfono",
+  [ContactPointSystem.NUMBER_1]: "Fax",
+  [ContactPointSystem.NUMBER_2]: "Correo Electrónico",
+  [ContactPointSystem.NUMBER_3]: "Pager",
+  [ContactPointSystem.NUMBER_4]: "URL",
+  [ContactPointSystem.NUMBER_5]: "SMS",
+  [ContactPointSystem.NUMBER_6]: "Otro",
+};
 
 const LocationDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -34,6 +45,7 @@ const LocationDetailsPage: React.FC = () => {
     isLoading,
     isError,
   } = useGetApiLocationsId(Number(id));
+
   const { mutate: deleteLocation } = useDeleteApiLocationsId({
     mutation: {
       onSuccess: () => {
@@ -46,11 +58,10 @@ const LocationDetailsPage: React.FC = () => {
       onError: () => message.error("Error al eliminar la ubicación"),
     },
   });
+
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
-  const handleDeleteClick = () => {
-    setDeleteModalVisible(true);
-  };
+  const handleDeleteClick = () => setDeleteModalVisible(true);
 
   const handleDelete = async (locationId: number) => {
     try {
@@ -59,6 +70,12 @@ const LocationDetailsPage: React.FC = () => {
     } catch {
       return false;
     }
+  };
+
+  // Helper para modo
+  const getModeLabel = (mode?: string | null): string => {
+    if (!mode) return "—";
+    return mode === "Kind" ? "Tipo" : mode === "Instance" ? "Instancia" : mode;
   };
 
   if (isError) {
@@ -90,12 +107,6 @@ const LocationDetailsPage: React.FC = () => {
     { label: "Inactivo", value: LocationStatus.NUMBER_2 },
   ];
 
-  const getModeLabel = (mode: number | undefined) => {
-    if (mode === LocationMode.NUMBER_0) return "Kind";
-    if (mode === LocationMode.NUMBER_1) return "Instance";
-    return "";
-  };
-
   const initialValues = {
     name: location.name || "",
     alias: location.alias?.join(", ") || "",
@@ -110,19 +121,24 @@ const LocationDetailsPage: React.FC = () => {
       postalCode: location.address?.postalCode || "",
       country: location.address?.country || "",
     },
-    managingOrganizationIds: location.managingOrganizationIds || "",
-    partOfId: location.partOfId || "",
   };
 
   return (
     <div>
       <main>
-        {/* Header */}
         <PageHeaderTabs
           title="Gestión de Ubicaciones"
           tabs={[
-            { key: "listar", label: "Lista de Ubicaciones", path: "/locations/list" },
-            { key: "crear", label: "Crear Ubicación", path: "/locations/create" },
+            {
+              key: "listar",
+              label: "Lista de Ubicaciones",
+              path: "/locations/list",
+            },
+            {
+              key: "crear",
+              label: "Crear Ubicación",
+              path: "/locations/create",
+            },
           ]}
           defaultActive="null"
         />
@@ -156,9 +172,7 @@ const LocationDetailsPage: React.FC = () => {
                       </span>
                     }
                     readonly
-                    fieldProps={{
-                      value: location.name || "",
-                    }}
+                    fieldProps={{ value: location.name || "" }}
                   />
                   <ProFormText
                     name="alias"
@@ -166,9 +180,7 @@ const LocationDetailsPage: React.FC = () => {
                       <span className="text-[#616161] font-medium">Alias</span>
                     }
                     readonly
-                    fieldProps={{
-                      value: location.alias?.join(", ") || "",
-                    }}
+                    fieldProps={{ value: location.alias?.join(", ") || "" }}
                   />
                 </div>
 
@@ -193,9 +205,7 @@ const LocationDetailsPage: React.FC = () => {
                       <span className="text-[#616161] font-medium">Modo</span>
                     }
                     readonly
-                    fieldProps={{
-                      value: getModeLabel(location.mode) || "",
-                    }}
+                    fieldProps={{ value: getModeLabel(location.mode) }}
                   />
                   <ProFormText
                     name="type"
@@ -205,9 +215,7 @@ const LocationDetailsPage: React.FC = () => {
                       </span>
                     }
                     readonly
-                    fieldProps={{
-                      value: location.type || "",
-                    }}
+                    fieldProps={{ value: location.type || "" }}
                   />
                 </div>
 
@@ -219,10 +227,7 @@ const LocationDetailsPage: React.FC = () => {
                     </span>
                   }
                   readonly
-                  fieldProps={{
-                    value: location.description || "",
-                    rows: 2,
-                  }}
+                  fieldProps={{ value: location.description || "", rows: 2 }}
                 />
               </section>
 
@@ -245,21 +250,17 @@ const LocationDetailsPage: React.FC = () => {
                     </span>
                   }
                   readonly
-                  fieldProps={{
-                    value: location.address?.line?.[0] || "",
-                  }}
+                  fieldProps={{ value: location.address?.line?.[0] || "" }}
                 />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 md:gap-16 lg:gap-32 mb-2">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8 md:gap-16 lg:gap-32 mb-2">
                   <ProFormText
                     name="address.city"
                     label={
                       <span className="text-[#616161] font-medium">Ciudad</span>
                     }
                     readonly
-                    fieldProps={{
-                      value: location.address?.city || "",
-                    }}
+                    fieldProps={{ value: location.address?.city || "" }}
                   />
                   <ProFormText
                     name="address.state"
@@ -269,24 +270,7 @@ const LocationDetailsPage: React.FC = () => {
                       </span>
                     }
                     readonly
-                    fieldProps={{
-                      value: location.address?.state || "",
-                    }}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 md:gap-16 lg:gap-32">
-                  <ProFormText
-                    name="address.postalCode"
-                    label={
-                      <span className="text-[#616161] font-medium">
-                        Código Postal
-                      </span>
-                    }
-                    readonly
-                    fieldProps={{
-                      value: location.address?.postalCode || "",
-                    }}
+                    fieldProps={{ value: location.address?.state || "" }}
                   />
                   <ProFormText
                     name="address.country"
@@ -294,14 +278,12 @@ const LocationDetailsPage: React.FC = () => {
                       <span className="text-[#616161] font-medium">País</span>
                     }
                     readonly
-                    fieldProps={{
-                      value: location.address?.country || "",
-                    }}
+                    fieldProps={{ value: location.address?.country || "" }}
                   />
                 </div>
               </section>
 
-              <hr className="border-[#000] mt-2 mb-8" />
+              <hr className="border-[#000] my-8" />
 
               {/* Información de contacto */}
               <section>
@@ -312,54 +294,45 @@ const LocationDetailsPage: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8 md:gap-16 lg:gap-32">
-                  <ProFormText
-                    name="managingOrganizationIds"
-                    label={
-                      <span className="text-[#616161] font-medium">
-                        Nombre de contacto
-                      </span>
-                    }
-                    readonly
-                    fieldProps={{
-                      value: location.managingOrganizationIds || "",
-                    }}
-                  />
-                  <ProFormText
-                    name="phone"
-                    label={
-                      <span className="text-[#616161] font-medium">
-                        Teléfono
-                      </span>
-                    }
-                    readonly
-                    fieldProps={{
-                      value:
-                        (location.telecom || []).find(
-                          (t) => t.system?.toLowerCase() === "phone"
-                        )?.value || "No disponible",
-                    }}
-                  />
-                  <ProFormText
-                    name="email"
-                    label={
-                      <span className="text-[#616161] font-medium">
-                        Correo Electrónico
-                      </span>
-                    }
-                    readonly
-                    fieldProps={{
-                      type: "email",
-                      value:
-                        (location.telecom || []).find(
-                          (t) => t.system?.toLowerCase() === "email"
-                        )?.value || "No disponible",
-                    }}
-                  />
+                <div className="space-y-4">
+                  {/* Telecoms dinámicos */}
+                  {location.telecom && location.telecom.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {location.telecom.map((t, index) => {
+                        const label =
+                          t.system !== undefined && TelecomLabels[t.system]
+                            ? TelecomLabels[t.system]
+                            : `Contacto (${t.system ?? "desconocido"})`;
+                        return (
+                          <ProFormText
+                            key={index}
+                            name={`telecom_${t.system}`}
+                            label={
+                              <span className="text-[#616161] font-medium">
+                                {label}
+                              </span>
+                            }
+                            readonly
+                            fieldProps={{
+                              value: t.value || "—",
+                              type:
+                                t.system === ContactPointSystem.NUMBER_2
+                                  ? "email"
+                                  : undefined,
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-gray-500 text-sm">
+                      No hay información de contacto disponible
+                    </div>
+                  )}
                 </div>
               </section>
 
-              <hr className="border-[#000] mt-2 mb-8" />
+              <hr className="border-[#000] my-8" />
 
               {/* Organización y jerarquía */}
               <section>
@@ -372,7 +345,7 @@ const LocationDetailsPage: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 md:gap-16 lg:gap-32">
                   <ProFormText
-                    name="managingOrganizationIds"
+                    name="managingOrganization"
                     label={
                       <span className="text-[#616161] font-medium">
                         Organización responsable
@@ -380,11 +353,14 @@ const LocationDetailsPage: React.FC = () => {
                     }
                     readonly
                     fieldProps={{
-                      value: location.managingOrganizationIds || "",
+                      value:
+                        location.managingOrganizationName ||
+                        location.managingOrganizationId ||
+                        "No disponible",
                     }}
                   />
                   <ProFormText
-                    name="partOfId"
+                    name="partOf"
                     label={
                       <span className="text-[#616161] font-medium">
                         Parte de (ubicación padre)
@@ -392,16 +368,17 @@ const LocationDetailsPage: React.FC = () => {
                     }
                     readonly
                     fieldProps={{
-                      value: location.partOfId || "",
+                      value:
+                        location.partOfName || location.partOfId || "Ninguna",
                     }}
                   />
                 </div>
               </section>
 
               {/* Botones de acciones */}
-              <div className="flex justify-end pt-2 pb-2">
+              <div className="flex justify-end pt-6">
                 <Space size="middle">
-                  <Link to="/locations">
+                  <Link to="/locations/list">
                     <Button
                       size="large"
                       style={{
@@ -414,7 +391,7 @@ const LocationDetailsPage: React.FC = () => {
                       <ArrowLeftOutlined /> Volver
                     </Button>
                   </Link>
-                  <Link to={`/locations/edit/${location.id}`}>
+                  <Link to={`/locations/update/${location.id}`}>
                     <Button
                       type="primary"
                       size="large"
@@ -433,9 +410,8 @@ const LocationDetailsPage: React.FC = () => {
                     type="primary"
                     size="large"
                     icon={<DeleteOutlined />}
+                    danger
                     style={{
-                      backgroundColor: "#f5222d",
-                      borderColor: "#f5222d",
                       borderRadius: 6,
                       boxShadow: "0 2px 8px rgba(245, 34, 45, 0.3)",
                     }}
@@ -452,7 +428,7 @@ const LocationDetailsPage: React.FC = () => {
         <DeleteLocationModal
           visible={deleteModalVisible}
           onVisibleChange={setDeleteModalVisible}
-          locationId={location.id}
+          locationId={location.id ? Number(location.id) : null}
           locationName={location.name}
           onDelete={handleDelete}
         />

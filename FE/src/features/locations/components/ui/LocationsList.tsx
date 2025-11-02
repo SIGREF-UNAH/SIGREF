@@ -1,10 +1,28 @@
 import React, { useState, useEffect } from "react";
-import { ProForm, ProFormText, ProFormSelect } from "@ant-design/pro-components";
+import {
+  ProForm,
+  ProFormText,
+  ProFormSelect,
+} from "@ant-design/pro-components";
 import { Table, Card, Button, Space, Tag, message } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { FilterOutlined, EditOutlined, DeleteOutlined, BookOutlined, EyeOutlined } from "@ant-design/icons";
-import { useGetApiLocations, useDeleteApiLocationsId, getGetApiLocationsQueryKey } from "../../../../api/locations/locations";
-import { type LocationDto, LocationMode, LocationStatus } from "../../../../api/models";
+import {
+  FilterOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  BookOutlined,
+  EyeOutlined,
+} from "@ant-design/icons";
+import {
+  useGetApiLocations,
+  useDeleteApiLocationsId,
+  getGetApiLocationsQueryKey,
+} from "../../../../api/locations/locations";
+import {
+  type LocationDto,
+  LocationMode,
+  LocationStatus,
+} from "../../../../api/models";
 import { BiChevronDown } from "react-icons/bi";
 import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -13,16 +31,23 @@ import DeleteLocationModal from "../modals/DeleteLocationModal";
 const LocationList: React.FC = () => {
   const queryClient = useQueryClient();
   const [searchName, setSearchName] = useState<string>("");
-  const [searchMode, setSearchMode] = useState<LocationMode | undefined>(undefined);
-  const [searchStatus, setSearchStatus] = useState<LocationStatus | undefined>(undefined);
+  const [searchMode, setSearchMode] = useState<LocationMode | undefined>(
+    undefined
+  );
+  const [searchStatus, setSearchStatus] = useState<LocationStatus | undefined>(
+    undefined
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<{ id: number; name: string } | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{
+    id: number;
+    name: string;
+  } | null>(null);
 
   const params = {
-    ...(searchName && { name: searchName }),
-    ...(searchMode !== undefined && { mode: searchMode }),
+    ...(searchName && { Name: searchName }),
+    ...(searchMode !== undefined && { Mode: searchMode }),
     ...(searchStatus !== undefined && { status: searchStatus }),
     pageNumber: currentPage,
     pageSize: pageSize,
@@ -32,7 +57,9 @@ const LocationList: React.FC = () => {
   const { mutate: deleteLocation } = useDeleteApiLocationsId({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetApiLocationsQueryKey(params) });
+        queryClient.invalidateQueries({
+          queryKey: getGetApiLocationsQueryKey(params),
+        });
         message.success("Ubicación eliminada exitosamente");
       },
       onError: () => message.error("Error al eliminar la ubicación"),
@@ -47,30 +74,9 @@ const LocationList: React.FC = () => {
     return <div>Error al cargar datos</div>;
   }
 
-  // Renderizar tag para status
-  const renderStatusTag = (status: LocationStatus) => {
-    const colorMap = {
-      [LocationStatus.NUMBER_0]: "#52c41a",
-      [LocationStatus.NUMBER_1]: "#faad14",
-      [LocationStatus.NUMBER_2]: "#f5222d",
-    };
-    const labelMap = {
-      [LocationStatus.NUMBER_0]: "Activo",
-      [LocationStatus.NUMBER_1]: "Suspendido",
-      [LocationStatus.NUMBER_2]: "Inactivo",
-    };
-
-    return <Tag color={colorMap[status]}>{labelMap[status]}</Tag>;
-  };
-
   const handleDeleteClick = (id: number, name: string) => {
     setSelectedLocation({ id, name });
     setDeleteModalVisible(true);
-  };
-
-  const handleDeleteCancel = () => {
-    setDeleteModalVisible(false);
-    setSelectedLocation(null);
   };
 
   const handleDelete = async (id: number) => {
@@ -84,49 +90,80 @@ const LocationList: React.FC = () => {
 
   const columns: ColumnsType<LocationDto> = [
     {
-      title: <span style={{ textAlign: "center", display: "block" }}>Nombre</span>,
+      title: (
+        <span style={{ textAlign: "center", display: "block" }}>Nombre</span>
+      ),
       dataIndex: "name",
       key: "name",
       width: 220,
       align: "center",
     },
     {
-      title: <span style={{ textAlign: "center", display: "block" }}>Estado</span>,
+      title: (
+        <span style={{ textAlign: "center", display: "block" }}>Estado</span>
+      ),
       dataIndex: "status",
       key: "status",
       width: 150,
       align: "center",
-      render: (status) => renderStatusTag(status as LocationStatus),
+      render: (status) => {
+        const normalized = status.toLowerCase();
+        if (normalized === "active") return <Tag color="#52c41a">Activo</Tag>;
+        if (normalized === "suspended")
+          return <Tag color="#faad14">Suspendido</Tag>;
+        if (normalized === "inactive")
+          return <Tag color="#f5222d">Inactivo</Tag>;
+      },
     },
     {
-      title: <span style={{ textAlign: "center", display: "block" }}>Modo</span>,
+      title: (
+        <span style={{ textAlign: "center", display: "block" }}>Modo</span>
+      ),
       dataIndex: "mode",
       key: "mode",
       width: 150,
       align: "center",
-      render: (mode) => (mode === LocationMode.NUMBER_0 ? "Kind" : "Instance"),
+      render: (mode) => {
+        if (mode.toLowerCase() === "instance") return "Instance";
+        if (mode.toLowerCase() === "kind") return "Kind";
+        return "-";
+      },
     },
     {
-      title: <span style={{ textAlign: "center", display: "block" }}>Dirección</span>,
+      title: (
+        <span style={{ textAlign: "center", display: "block" }}>Dirección</span>
+      ),
       key: "address",
       width: 250,
       align: "center",
-      render: (_, record) => (Array.isArray(record.address?.line) ? record.address.line.join(", ") : record.address?.line || "-"),
+      render: (_, record) =>
+        Array.isArray(record.address?.line)
+          ? record.address.line.join(", ")
+          : record.address?.line || "-",
     },
     {
-      title: <span style={{ textAlign: "center", display: "block" }}>Organización responsable</span>,
-      dataIndex: "managingOrganizationIds",
-      key: "managingOrganizationIds",
-      width: 200,
+      title: (
+        <span style={{ textAlign: "center", display: "block" }}>
+          Organización responsable
+        </span>
+      ),
+      dataIndex: "managingOrganizationName",
+      key: "managingOrganizationName",
+      width: 220,
       align: "center",
-      render: (org) => org || "-",
+      render: (text, record) => record.managingOrganizationName || "-",
     },
     {
-      title: <span style={{ textAlign: "center", display: "block" }}>Acciones</span>,
+      title: (
+        <span style={{ textAlign: "center", display: "block" }}>Acciones</span>
+      ),
       key: "actions",
       width: 220,
       render: (_, record) => (
-        <Space size="middle" style={{ display: "flex", justifyContent: "center" }}>
+        <Space
+          size="middle"
+          style={{ display: "flex", justifyContent: "center" }}
+        >
           <Link to={`/locations/details/${record.id}`}>
             <Button
               type="primary"
@@ -164,7 +201,10 @@ const LocationList: React.FC = () => {
   return (
     <div className="bg-[#FAFAFA] rounded-lg border-2 border-[#D9D9D9] p-6">
       {/* Filtros de Búsqueda */}
-      <Card style={{ marginBottom: "16px", borderRadius: "8px" }} bodyStyle={{ padding: "24px" }}>
+      <Card
+        style={{ marginBottom: "16px", borderRadius: "8px" }}
+        bodyStyle={{ padding: "24px" }}
+      >
         <div className="flex items-center gap-3 mb-6">
           <FilterOutlined className="w-8 h-8 text-blue-500" />
           <span className="text-lg font-semibold text-[#333333]">
@@ -176,14 +216,20 @@ const LocationList: React.FC = () => {
           submitter={false}
           onValuesChange={(changedValues) => {
             if (changedValues.name) setSearchName(changedValues.name);
-            if (changedValues.mode !== undefined) setSearchMode(changedValues.mode);
-            if (changedValues.status !== undefined) setSearchStatus(changedValues.status);
+            if (changedValues.mode !== undefined)
+              setSearchMode(changedValues.mode);
+            if (changedValues.status !== undefined)
+              setSearchStatus(changedValues.status);
           }}
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8 md:gap-16 lg:gap-32">
             <ProFormText
               name="name"
-              label={<span className="text-[#616161] font-medium">Nombre/Alias de la ubicación</span>}
+              label={
+                <span className="text-[#616161] font-medium">
+                  Nombre/Alias de la ubicación
+                </span>
+              }
               placeholder="Nombre/Alias ubicación"
               fieldProps={{
                 value: searchName,
@@ -200,7 +246,9 @@ const LocationList: React.FC = () => {
               fieldProps={{
                 value: searchMode,
                 onChange: (value) => setSearchMode(value),
-                suffixIcon: <BiChevronDown className="w-4 h-4 text-[#616161]" />,
+                suffixIcon: (
+                  <BiChevronDown className="w-4 h-4 text-[#616161]" />
+                ),
               }}
             />
             <ProFormSelect
@@ -214,7 +262,9 @@ const LocationList: React.FC = () => {
               fieldProps={{
                 value: searchStatus,
                 onChange: (value) => setSearchStatus(value),
-                suffixIcon: <BiChevronDown className="w-4 h-4 text-[#616161]" />,
+                suffixIcon: (
+                  <BiChevronDown className="w-4 h-4 text-[#616161]" />
+                ),
               }}
             />
           </div>

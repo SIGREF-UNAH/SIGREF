@@ -21,6 +21,7 @@
     "@tanstack/react-query": "^5.90.2",
     "antd": "^5.27.4",
     "axios": "^1.12.2",
+    "countrycitystatejson": "^25.8.101",
     "dotenv": "^17.2.3",
     "formik": "^2.4.6",
     "keycloak-js": "^26.2.0",

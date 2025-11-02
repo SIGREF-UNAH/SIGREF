@@ -29,12 +29,15 @@ public class CreateLocationDto
 
     public string? Type { get; set; }
     public string? PartOfId { get; set; }
-    public string? ManagingOrganizationIds { get; set; }
+    public string? PartOfName { get; set; }
+    public string? ManagingOrganizationId { get; set; }
+    public string? ManagingOrganizationName { get; set; }
 }
 
 public class UpdateLocationDto
 {
     [StringLength(255)] public string? Name { get; set; }
+    public List<string>? Alias { get; set; }
 
     public string? Description { get; set; }
 
@@ -50,4 +53,8 @@ public class UpdateLocationDto
     public List<ContactPointDto>? Telecom { get; set; }
 
     public string? Type { get; set; }
+    public string? PartOfId { get; set; }
+    public string? PartOfName { get; set; }
+    public string? ManagingOrganizationId { get; set; }
+    public string? ManagingOrganizationName { get; set; }
 }

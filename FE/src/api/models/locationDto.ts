@@ -15,9 +15,13 @@ export interface LocationDto {
   /** @minLength 1 */
   name: string;
   /** @nullable */
+  alias?: string[] | null;
+  /** @nullable */
   description?: string | null;
   /** @minLength 1 */
   status: string;
+  /** @nullable */
+  mode?: string | null;
   address?: AddressDto;
   /** @nullable */
   telecom?: ContactPointDto[] | null;
@@ -25,4 +29,12 @@ export interface LocationDto {
   type?: string | null;
   /** @nullable */
   lastUpdated?: string | null;
+  /** @nullable */
+  partOfId?: string | null;
+  /** @nullable */
+  partOfName?: string | null;
+  /** @nullable */
+  managingOrganizationId?: string | null;
+  /** @nullable */
+  managingOrganizationName?: string | null;
 }
