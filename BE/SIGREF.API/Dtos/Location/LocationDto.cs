@@ -32,11 +32,7 @@ public class LocationDto
 
     public DateTime? LastUpdated { get; set; }
 
-    public string? PartOfId { get; set; }
-
-    public string? PartOfName { get; set; }
-
-    public string? ManagingOrganizationId { get; set; }
-    public string? ManagingOrganizationName { get; set; }
+    public ReferenceDto? PartOf { get; set; }
+    public ReferenceDto? ManagingOrganization { get; set; }
 }
 

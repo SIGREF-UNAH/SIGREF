@@ -6,6 +6,7 @@
  */
 import type { AddressDto } from "./addressDto";
 import type { ContactPointDto } from "./contactPointDto";
+import type { ReferenceDto } from "./referenceDto";
 
 export interface LocationDto {
   /** @nullable */
@@ -29,12 +30,6 @@ export interface LocationDto {
   type?: string | null;
   /** @nullable */
   lastUpdated?: string | null;
-  /** @nullable */
-  partOfId?: string | null;
-  /** @nullable */
-  partOfName?: string | null;
-  /** @nullable */
-  managingOrganizationId?: string | null;
-  /** @nullable */
-  managingOrganizationName?: string | null;
+  partOf?: ReferenceDto;
+  managingOrganization?: ReferenceDto;
 }

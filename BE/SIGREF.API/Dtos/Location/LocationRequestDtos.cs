@@ -28,10 +28,8 @@ public class CreateLocationDto
     public List<ContactPointDto> Telecom { get; set; } = new();
 
     public string? Type { get; set; }
-    public string? PartOfId { get; set; }
-    public string? PartOfName { get; set; }
-    public string? ManagingOrganizationId { get; set; }
-    public string? ManagingOrganizationName { get; set; }
+    public ReferenceDto? PartOf { get; set; }
+    public ReferenceDto? ManagingOrganization { get; set; }
 }
 
 public class UpdateLocationDto
@@ -53,8 +51,6 @@ public class UpdateLocationDto
     public List<ContactPointDto>? Telecom { get; set; }
 
     public string? Type { get; set; }
-    public string? PartOfId { get; set; }
-    public string? PartOfName { get; set; }
-    public string? ManagingOrganizationId { get; set; }
-    public string? ManagingOrganizationName { get; set; }
+    public ReferenceDto? PartOf { get; set; }
+    public ReferenceDto? ManagingOrganization { get; set; }
 }

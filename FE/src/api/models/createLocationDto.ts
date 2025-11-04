@@ -8,6 +8,7 @@ import type { LocationStatus } from "./locationStatus";
 import type { LocationMode } from "./locationMode";
 import type { AddressDto } from "./addressDto";
 import type { ContactPointDto } from "./contactPointDto";
+import type { ReferenceDto } from "./referenceDto";
 
 export interface CreateLocationDto {
   /**
@@ -26,12 +27,6 @@ export interface CreateLocationDto {
   telecom?: ContactPointDto[] | null;
   /** @nullable */
   type?: string | null;
-  /** @nullable */
-  partOfId?: string | null;
-  /** @nullable */
-  partOfName?: string | null;
-  /** @nullable */
-  managingOrganizationId?: string | null;
-  /** @nullable */
-  managingOrganizationName?: string | null;
+  partOf?: ReferenceDto;
+  managingOrganization?: ReferenceDto;
 }

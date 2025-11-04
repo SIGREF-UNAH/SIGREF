@@ -21,10 +21,8 @@ public static class LocationExtensions
             LastUpdated = location.Meta?.LastUpdated?.DateTime,
             Address = location.Address?.ToDto(),
             Telecom = location.Telecom?.Select(t => t.ToDto()).ToList() ?? new List<ContactPointDto>(),
-            PartOfId = location.PartOf?.Reference?.Replace("Location/", ""),
-            PartOfName = location.PartOf?.Display,
-            ManagingOrganizationId = location.ManagingOrganization?.Reference?.Replace("Organization/", ""),
-            ManagingOrganizationName = location.ManagingOrganization?.Display
+            PartOf = location.PartOf?.ToReferenceDto(),
+            ManagingOrganization = location.ManagingOrganization?.ToReferenceDto()
         };
     }
 
@@ -43,20 +41,8 @@ public static class LocationExtensions
             Address = createDto.Address?.ToFhirAddress(),
             Telecom = createDto.Telecom?.Select(t => t.ToFhirContactPoint()).ToList() ?? [],
             //TODO: Revisar PartOf y ManagingOrganization si funciona la relación
-            PartOf = !string.IsNullOrEmpty(createDto.PartOfId)
-                ? new ResourceReference
-                {
-                    Reference = "Location/" + createDto.PartOfId,
-                    Display = createDto.PartOfName
-                }
-                : null,
-            ManagingOrganization = !string.IsNullOrEmpty(createDto.ManagingOrganizationId)
-                ? new ResourceReference
-                {
-                    Reference = "Organization/" + createDto.ManagingOrganizationId,
-                    Display = createDto.ManagingOrganizationName
-                }
-                : null,
+            PartOf = createDto.PartOf?.ToFhirReference(),
+            ManagingOrganization = createDto.ManagingOrganization?.ToFhirReference(),
             Meta = new Meta
             {
                 LastUpdated = DateTimeOffset.Now,
@@ -81,7 +67,7 @@ public static class LocationExtensions
 
         if (updateDto.Alias != null)
         {
-            existingLocation.Alias = updateDto.Alias?.ToList(); 
+            existingLocation.Alias = updateDto.Alias?.ToList();
         }
 
         if (updateDto.Type != null)
@@ -93,36 +79,22 @@ public static class LocationExtensions
         if (updateDto.Telecom != null)
             existingLocation.Telecom = updateDto.Telecom.Select(t => t.ToFhirContactPoint()).ToList();
 
-        if (updateDto.PartOfId != null)
+        if (updateDto.PartOf != null)
         {
-            if (!string.IsNullOrEmpty(updateDto.PartOfId))
-            {
-                existingLocation.PartOf = new ResourceReference
-                {
-                    Reference = "Location/" + updateDto.PartOfId,
-                    Display = updateDto.PartOfName
-                };
-            }
-            else
-            {
-                existingLocation.PartOf = null;
-            }
+            existingLocation.PartOf = updateDto.PartOf.ToFhirReference();
+        }
+        else if (updateDto.PartOf == null && updateDto.GetType().GetProperty(nameof(updateDto.PartOf))?.GetValue(updateDto) != null)
+        {
+            existingLocation.PartOf = null;
         }
 
-        if (updateDto.ManagingOrganizationId != null)
+        if (updateDto.ManagingOrganization != null)
         {
-            if (!string.IsNullOrEmpty(updateDto.ManagingOrganizationId))
-            {
-                existingLocation.ManagingOrganization = new ResourceReference
-                {
-                    Reference = "Organization/" + updateDto.ManagingOrganizationId,
-                    Display = updateDto.ManagingOrganizationName
-                };
-            }
-            else
-            {
-                existingLocation.ManagingOrganization = null;
-            }
+            existingLocation.ManagingOrganization = updateDto.ManagingOrganization.ToFhirReference();
+        }
+        else if (updateDto.ManagingOrganization == null && updateDto.GetType().GetProperty(nameof(updateDto.ManagingOrganization))?.GetValue(updateDto) != null)
+        {
+            existingLocation.ManagingOrganization = null;
         }
 
         // Actualizar metadatos

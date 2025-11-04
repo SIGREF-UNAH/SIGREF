@@ -8,6 +8,7 @@ import type { LocationStatus } from "./locationStatus";
 import type { LocationMode } from "./locationMode";
 import type { AddressDto } from "./addressDto";
 import type { ContactPointDto } from "./contactPointDto";
+import type { ReferenceDto } from "./referenceDto";
 
 export interface UpdateLocationDto {
   /**
@@ -17,6 +18,8 @@ export interface UpdateLocationDto {
    */
   name?: string | null;
   /** @nullable */
+  alias?: string[] | null;
+  /** @nullable */
   description?: string | null;
   status?: LocationStatus;
   mode?: LocationMode;
@@ -25,4 +28,6 @@ export interface UpdateLocationDto {
   telecom?: ContactPointDto[] | null;
   /** @nullable */
   type?: string | null;
+  partOf?: ReferenceDto;
+  managingOrganization?: ReferenceDto;
 }

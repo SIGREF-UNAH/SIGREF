@@ -8,136 +8,63 @@ import { BiChevronDown } from "react-icons/bi";
 import { MdOutlineAddLocationAlt } from "react-icons/md";
 import { FaCheck } from "react-icons/fa";
 import { LocationStatus, LocationMode } from "../../../../api/models";
-import { useNavigate } from "react-router-dom";
-import useLocationForm from "../../hooks/useLocationForm";
-import { useRef, useState, useMemo, useEffect } from "react";
 import { BsBuilding, BsGeoAltFill, BsPersonFill } from "react-icons/bs";
-import { Button } from "antd";
+import { Button, Spin } from "antd";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
-import type { ProFormInstance } from "@ant-design/pro-components";
-import { useGetApiLocations } from "../../../../api/locations/locations";
-import { useGetApiOrganizations } from "../../../../api/organizations/organizations";
-import ccsj from "countrycitystatejson";
+import useLocationForm from "../../hooks/useLocationForm";
 
-interface CountryOption {
-  label: string;
-  value: string;
+interface LocationFormProps {
+  mode: "create" | "edit";
 }
 
-interface StateOption {
-  label: string;
-  value: string;
-}
-
-interface CityOption {
-  label: string;
-  value: string;
-}
-
-export default function LocationForm() {
-  const navigate = useNavigate();
-  const { handleSubmit, isSubmitting } = useLocationForm();
-  const formRef = useRef<ProFormInstance>(null);
-
-  // Estado de contactos dinámicos
-  const [contacts, setContacts] = useState<
-    { id: string; system?: number; value?: string }[]
-  >([{ id: "1", system: undefined, value: "" }]);
-
-  // Cargar las organizaciones
+export default function LocationForm({ mode }: LocationFormProps) {
   const {
-    data: orgsData,
-    isLoading: orgsLoading,
-    isError: orgsError,
-  } = useGetApiOrganizations(undefined, {
-    query: {
-      select: (data) => data.items || [],
-    },
-  });
+    formRef,
+    onFinish,
+    isSubmitting,
+    contacts,
+    countryOptions,
+    stateOptions,
+    cityOptions,
+    organizationOptions,
+    locationOptions,
+    locationLoading,
+    locationError,
+    orgsLoading,
+    orgsError,
+    handleCountryChange,
+    handleStateChange,
+    addContact,
+    removeContact,
+    updateContact,
+    isEdit,
+    title,
+  } = useLocationForm({ mode });
 
-  // Opciones para país, estado y ciudad
-  const [countryOptions, setCountryOptions] = useState<CountryOption[]>([]);
-  const [stateOptions, setStateOptions] = useState<StateOption[]>([]);
-  const [cityOptions, setCityOptions] = useState<CityOption[]>([]);
+  if (isEdit && locationLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Spin size="large" />
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    const countries = ccsj.getCountries().map((c: any) => ({
-      label: `${c.name}`,
-      value: c.shortName,
-    }));
-    setCountryOptions(countries);
-  }, []);
-
-  // Cargar las ubicaciones
-  const {
-    data: locationsData,
-    isLoading: locationsLoading,
-    isError: locationsError,
-  } = useGetApiLocations(undefined, {
-    query: {
-      select: (data) => data.items || [],
-    },
-  });
-
-  // Opciones para selects
-  const organizationOptions = useMemo(
-    () =>
-      (orgsData || []).map((org) => ({
-        label: org.name,
-        value: org.id,
-      })),
-    [orgsData]
-  );
-
-  const locationOptions = useMemo(
-    () =>
-      (locationsData || []).map((loc) => ({
-        label: loc.name,
-        value: loc.id,
-      })),
-    [locationsData]
-  );
-
-  // Envío del formulario
-  const onFinish = async (values: any) => {
-    const payload = {
-      ...values,
-      telecom: contacts.map((c) => ({
-        system: c.system,
-        value: c.value,
-      })),
-    };
-
-    const success = await handleSubmit(payload);
-    if (success) {
-      formRef.current?.resetFields();
-      navigate("/locations/list");
-    } else {
-      console.error("Error al crear la ubicación");
-    }
-  };
-
-  const addContact = () => {
-    setContacts((prev) => [
-      ...prev,
-      { id: Date.now().toString(), system: undefined, value: "" },
-    ]);
-  };
-
-  const removeContact = (id: string) => {
-    if (contacts.length > 1) {
-      setContacts((prev) => prev.filter((c) => c.id !== id));
-    }
-  };
+  if (isEdit && locationError) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-red-500 mb-4">Error al cargar la ubicación</p>
+        <Button type="primary" onClick={() => window.history.back()}>
+          Volver
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#FAFAFA] rounded-lg border-2 border-[#D9D9D9] p-6">
-      {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <MdOutlineAddLocationAlt className="w-10 h-10 text-blue-500" />
-        <span className="text-xl font-semibold text-[#333333]">
-          Crear Ubicación
-        </span>
+        <span className="text-xl font-semibold text-[#333333]">{title}</span>
       </div>
 
       <ProForm
@@ -156,13 +83,13 @@ export default function LocationForm() {
             postalCode: null,
             country: null,
           },
-          telecom: [],
           type: null,
-          partOfId: null,
-          managingOrganizationIds: null,
+          partOf: null,
+          managingOrganization: null,
+          telecom: [],
         }}
         submitter={{
-          searchConfig: { submitText: "Crear Ubicación" },
+          searchConfig: { submitText: isEdit ? "Actualizar" : "Crear" },
           resetButtonProps: false,
           submitButtonProps: {
             loading: isSubmitting,
@@ -170,9 +97,17 @@ export default function LocationForm() {
             className:
               "px-6 py-2 !bg-green-500 hover:!bg-green-600 text-white font-medium rounded-md transition-colors duration-200 flex items-center gap-2",
           },
-          render: (_, dom) => (
-            <div className="flex justify-end pt-2 pb-2">{dom[0]}</div>
-          ),
+          render: (_, dom) =>
+            isEdit ? (
+              <div className="flex justify-end gap-4 pt-2 pb-2">
+                <Button type="default" onClick={() => window.history.back()}>
+                  Cancelar
+                </Button>
+                {dom[0]}
+              </div>
+            ) : (
+              <div className="flex justify-end pt-2 pb-2">{dom[0]}</div>
+            ),
         }}
       >
         {/* Información Básica */}
@@ -187,40 +122,31 @@ export default function LocationForm() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-2">
             <ProFormText
               name="name"
-              label="Nombre de la ubicación"
+              label="Nombre"
               placeholder="Ej. Sala de emergencias"
-              rules={[
-                { required: true, message: "El nombre es obligatorio" },
-                { min: 3, message: "Debe tener al menos 3 caracteres" },
-              ]}
+              rules={[{ required: true }, { min: 3 }]}
             />
-
             <ProFormSelect
               name="alias"
               label="Alias"
               mode="tags"
-              placeholder="Ej. Emergencias, ER (Presione Enter para agregar)"
-              fieldProps={{ tokenSeparators: [","] }}
+              placeholder="Presione Enter"
               rules={[
                 {
-                  validator: (_, value) =>
-                    value && value.length > 5
-                      ? Promise.reject("Máximo 5 alias permitidos")
-                      : Promise.resolve(),
+                  validator: (_, v) =>
+                    v?.length > 5 ? Promise.reject("Máx 5") : Promise.resolve(),
                 },
               ]}
             />
-
             <ProFormSelect
               name="status"
               label="Estado"
-              initialValue={LocationStatus.NUMBER_0}
               options={[
                 { label: "Activo", value: LocationStatus.NUMBER_0 },
                 { label: "Suspendido", value: LocationStatus.NUMBER_1 },
                 { label: "Inactivo", value: LocationStatus.NUMBER_2 },
               ]}
-              rules={[{ required: true, message: "El estado es obligatorio" }]}
+              rules={[{ required: true }]}
               fieldProps={{
                 suffixIcon: (
                   <BiChevronDown className="w-4 h-4 text-[#616161]" />
@@ -234,118 +160,66 @@ export default function LocationForm() {
               name="mode"
               label="Modo"
               options={[
-                { label: "Instance", value: LocationMode.NUMBER_0 },
-                { label: "Kind", value: LocationMode.NUMBER_1 },
+                { label: "Instancia", value: LocationMode.NUMBER_0 },
+                { label: "Tipo", value: LocationMode.NUMBER_1 },
               ]}
-              rules={[{ required: true, message: "El modo es obligatorio" }]}
+              rules={[{ required: true }]}
               fieldProps={{
                 suffixIcon: (
                   <BiChevronDown className="w-4 h-4 text-[#616161]" />
                 ),
               }}
             />
-            <ProFormText
-              name="type"
-              label="Tipo de función"
-              placeholder="Ej. Cuarto de emergencias"
-            />
+            <ProFormText name="type" label="Tipo de función" />
           </div>
 
           <ProFormTextArea
             name="description"
             label="Descripción"
-            placeholder="Descripción adicional"
             fieldProps={{ rows: 2 }}
           />
         </section>
 
-        {/* Dirección física */}
-        <section className="mt-6">
+        {/* Dirección */}
+        <section className="mt-6 border-t pt-6">
           <div className="flex items-center gap-3 mb-6">
             <BsGeoAltFill className="w-8 h-8 text-blue-500" />
             <span className="text-lg font-semibold text-[#333333]">
               Dirección física
             </span>
           </div>
-
-          <ProFormText
-            name={["address", "line", 0]}
-            label="Dirección"
-            placeholder="Ej. Avenida principal 123"
-            rules={[{ required: true, message: "La dirección es obligatoria" }]}
-          />
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <ProFormSelect
               name={["address", "country"]}
               label="País"
-              placeholder="Seleccione país"
               options={countryOptions}
               showSearch
               allowClear
+              rules={[{ required: true }]}
               fieldProps={{
-                onChange: (countryShort?: string) => {
-                  if (!countryShort || typeof countryShort !== "string") {
-                    setStateOptions([]);
-                    setCityOptions([]);
-                    formRef.current?.setFieldValue(["address", "state"], null);
-                    formRef.current?.setFieldValue(["address", "city"], null);
-                    return;
-                  }
-
-                  const states = ccsj.getStatesByShort(countryShort) ?? [];
-                  setStateOptions(
-                    states.map((s: string) => ({ label: s, value: s }))
-                  );
-                  setCityOptions([]);
-                  formRef.current?.setFieldValue(["address", "state"], null);
-                  formRef.current?.setFieldValue(["address", "city"], null);
-                },
+                onChange: handleCountryChange,
                 suffixIcon: (
                   <BiChevronDown className="w-4 h-4 text-[#616161]" />
                 ),
               }}
             />
-
             <ProFormSelect
               name={["address", "state"]}
-              label="Estado / Provincia"
-              placeholder="Seleccione estado"
+              label="Estado"
               options={stateOptions}
               showSearch
               allowClear
+              rules={[{ required: true }]}
               fieldProps={{
-                onChange: (stateName?: string) => {
-                  const countryShort = formRef.current?.getFieldValue([
-                    "address",
-                    "country",
-                  ]);
-                  if (
-                    !countryShort ||
-                    typeof countryShort !== "string" ||
-                    !stateName
-                  ) {
-                    setCityOptions([]);
-                    formRef.current?.setFieldValue(["address", "city"], null);
-                    return;
-                  }
-
-                  const cities = ccsj.getCities(countryShort, stateName) ?? [];
-                  setCityOptions(
-                    cities.map((c: string) => ({ label: c, value: c }))
-                  );
-                  formRef.current?.setFieldValue(["address", "city"], null);
-                },
+                onChange: handleStateChange,
                 suffixIcon: (
                   <BiChevronDown className="w-4 h-4 text-[#616161]" />
                 ),
               }}
             />
-
             <ProFormSelect
               name={["address", "city"]}
               label="Ciudad"
-              placeholder="Seleccione ciudad"
               options={cityOptions}
               showSearch
               allowClear
@@ -356,9 +230,14 @@ export default function LocationForm() {
               }}
             />
           </div>
+          <ProFormText
+            name={["address", "line", 0]}
+            label="Dirección"
+            rules={[{ required: true }]}
+          />
         </section>
 
-        {/* Información de contacto */}
+        {/* Contactos */}
         <section className="mb-8 border-t pt-6">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -373,7 +252,7 @@ export default function LocationForm() {
               onClick={addContact}
               className="bg-green-500 hover:bg-green-600"
             >
-              Agregar contacto
+              Agregar
             </Button>
           </div>
 
@@ -385,8 +264,7 @@ export default function LocationForm() {
               >
                 <ProFormSelect
                   name={["telecom", index, "system"]}
-                  label={index === 0 ? "Tipo de contacto" : undefined}
-                  placeholder="Seleccione tipo"
+                  label={index === 0 ? "Tipo" : undefined}
                   options={[
                     { label: "Teléfono", value: 0 },
                     { label: "Fax", value: 1 },
@@ -398,38 +276,16 @@ export default function LocationForm() {
                   ]}
                   fieldProps={{
                     value: contact.system,
-                    onChange: (value) =>
-                      setContacts((prev) =>
-                        prev.map((c) =>
-                          c.id === contact.id
-                            ? { ...c, system: value, value: "" }
-                            : c
-                        )
-                      ),
+                    onChange: (v) => updateContact(contact.id, "system", v),
                     suffixIcon: (
                       <BiChevronDown className="w-4 h-4 text-[#616161]" />
                     ),
                   }}
-                  rules={[
-                    {
-                      required: true,
-                      message: "Seleccione el tipo de contacto",
-                    },
-                  ]}
+                  rules={[{ required: true }]}
                 />
-
                 <ProFormText
                   name={["telecom", index, "value"]}
                   label={index === 0 ? "Valor" : undefined}
-                  placeholder={
-                    contact.system === 0
-                      ? "Ej. +504 2550-1234"
-                      : contact.system === 2
-                        ? "Ej. correo@dominio.com"
-                        : contact.system === 4
-                          ? "Ej. https://miweb.com"
-                          : "Ingrese valor"
-                  }
                   fieldProps={{
                     value: contact.value,
                     type:
@@ -439,53 +295,30 @@ export default function LocationForm() {
                           ? "url"
                           : "text",
                     onChange: (e) =>
-                      setContacts((prev) =>
-                        prev.map((c) =>
-                          c.id === contact.id
-                            ? { ...c, value: e.target.value }
-                            : c
-                        )
-                      ),
+                      updateContact(contact.id, "value", e.target.value),
                   }}
                   rules={[
-                    { required: true, message: "Ingrese el valor" },
+                    { required: true },
                     {
-                      validator: (_, value) => {
-                        if (!value) return Promise.resolve();
+                      validator: (_, v) => {
+                        if (!v) return Promise.resolve();
                         if (
                           contact.system === 2 &&
-                          !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
-                        ) {
-                          return Promise.reject(
-                            "Ingrese un correo electrónico válido"
-                          );
-                        }
-                        if (
-                          contact.system === 4 &&
-                          !/^https?:\/\/.+/.test(value)
-                        ) {
-                          return Promise.reject("Ingrese una URL válida");
-                        }
-                        if (
-                          contact.system === 0 &&
-                          !/^[+0-9\s-]{6,}$/.test(value)
-                        ) {
-                          return Promise.reject(
-                            "Ingrese un número de teléfono válido"
-                          );
-                        }
+                          !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
+                        )
+                          return Promise.reject("Correo inválido");
+                        if (contact.system === 4 && !/^https?:\/\/.+/.test(v))
+                          return Promise.reject("URL inválida");
                         return Promise.resolve();
                       },
                     },
                   ]}
                 />
-
                 <Button
                   danger
                   icon={<DeleteOutlined />}
                   onClick={() => removeContact(contact.id)}
                   disabled={contacts.length === 1}
-                  className="mb-1"
                 />
               </div>
             ))}
@@ -503,74 +336,24 @@ export default function LocationForm() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <ProFormSelect
-              name="managingOrganizationId"
-              label="Organización responsable"
-              placeholder="Seleccione una organización"
+              name="managingOrganization"
+              label="Organización"
               options={organizationOptions}
               showSearch
               allowClear
               fieldProps={{
                 loading: orgsLoading,
-                suffixIcon: (
-                  <BiChevronDown className="w-4 h-4 text-[#616161]" />
-                ),
-                optionFilterProp: "label",
-                filterOption: (input, option) =>
-                  (option?.label ?? "")
-                    .toLowerCase()
-                    .includes(input.toLowerCase()),
-                onChange: (value, option) => {
-                  const opt = option as {
-                    label: string;
-                    value: string | null | undefined;
-                  };
-                  formRef.current?.setFieldValue(
-                    "managingOrganizationName",
-                    opt?.label ?? null
-                  );
-                },
               }}
-              tooltip={orgsError ? "Error al cargar organizaciones" : undefined}
+              tooltip={orgsError ? "Error al cargar" : undefined}
             />
 
-            {/* Campo oculto para enviar el nombre */}
-            <ProFormText name="managingOrganizationName" hidden />
-
             <ProFormSelect
-              name="partOfId"
-              label="Parte de (ubicación padre)"
-              placeholder="Seleccione ubicación padre"
+              name="partOf"
+              label="Ubicación padre"
               options={locationOptions}
               showSearch
               allowClear
-              fieldProps={{
-                loading: locationsLoading,
-                suffixIcon: (
-                  <BiChevronDown className="w-4 h-4 text-[#616161]" />
-                ),
-                optionFilterProp: "label",
-                filterOption: (input, option) =>
-                  (option?.label ?? "")
-                    .toLowerCase()
-                    .includes(input.toLowerCase()),
-                onChange: (value, option) => {
-                  const opt = option as {
-                    label: string;
-                    value: string | null | undefined;
-                  };
-                  formRef.current?.setFieldValue(
-                    "partOfName",
-                    opt?.label ?? null
-                  );
-                },
-              }}
-              tooltip={
-                locationsError ? "Error al cargar ubicaciones" : undefined
-              }
             />
-
-            {/* Campo oculto para enviar el nombre del padre */}
-            <ProFormText name="partOfName" hidden />
           </div>
         </section>
       </ProForm>
