@@ -78,8 +78,10 @@ export default function PatientForm({
         width="sm"
         rules={[{ required: true, message: "Campo requerido" }]}
         options={[
-          { label: "Masculino", value: 1 },
-          { label: "Femenino", value: 2 },
+          { label: "Masculino", value: 0 },
+          { label: "Femenino", value: 1 },
+          { label: "Otro", value: 2 },
+          { label: "Desconocido", value: 3 },
         ]}
       />
       <ProFormSelect
@@ -102,8 +104,8 @@ export default function PatientForm({
         placeholder="Seleccionar"
         width="sm"
         options={[
-          { label: "Vivo", value: 1 },
-          { label: "Fallecido", value: 0 },
+          { label: "Vivo/a", value: 1 },
+          { label: "Fallecido/a", value: 0 },
         ]}
       />
       <ProFormDatePicker
@@ -150,7 +152,7 @@ export default function PatientForm({
     <ProFormGroup>
       <ProFormSelect
         name="tipoNombre"
-        label="Tipo"
+        label="Tipo de Nombre"
         placeholder="Seleccionar"
         width="sm"
         options={[
@@ -194,14 +196,16 @@ export default function PatientForm({
           <ProFormSelect
             {...(mode === "create" ? field : {})}
             name="system"
-            label="Tipo de contacto"
+            label="Tipo de Contacto"
             placeholder="Seleccionar"
             width="sm"
             options={[
               { label: "Teléfono", value: "phone" },
               { label: "Email", value: "email" },
               { label: "URL", value: "url" },
+              { label: "Biper", value: "pager" },
               { label: "Fax", value: "fax" },
+              { label: "SMS", value: "sms" },
               { label: "Otro", value: "other" },
             ]}
           />
@@ -213,10 +217,11 @@ export default function PatientForm({
             placeholder="Seleccionar"
             width="sm"
             options={[
-              { label: "Personal", value: "personal" },
-              { label: "Casa", value: "home" },
+              { label: "Personal", value: "mobile" },
+              { label: "Hogar", value: "home" },
               { label: "Trabajo", value: "work" },
               { label: "Temporal", value: "temp" },
+              { label: "Antiguo", value: "old" },
             ]}
           />
 
@@ -249,14 +254,15 @@ export default function PatientForm({
           <ProFormSelect
             {...(mode === "create" ? field : {})}
             name="tipoDireccion"
-            label="Tipo"
+            label="Tipo de Dirección"
             placeholder="Seleccionar"
             width="sm"
             options={[
-              { label: "Casa", value: "home" },
+              { label: "Hogar", value: "home" },
               { label: "Trabajo", value: "work" },
-              { label: "Antigua", value: "old" },
               { label: "Temporal", value: "temp" },
+              { label: "Antiguo", value: "old" },
+              //{ label: "Factura", value: "billing" },
             ]}
           />
           <ProFormText
