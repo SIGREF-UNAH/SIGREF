@@ -6,8 +6,11 @@ using SIGREF.API.Dtos.PractitionerRole;
 using SIGREF.API.Extensions;
 using SIGREF.API.Helpers;
 using SIGREF.API.Services.Common;
+
 using FhirPractitionerRole = Hl7.Fhir.Model.PractitionerRole;
+
 namespace SIGREF.API.Services.PractitionerRole;
+
 public class PractitionerRoleService : IPractitionerRoleService
 {
     private readonly FhirClient _fhirClient;
@@ -15,6 +18,46 @@ public class PractitionerRoleService : IPractitionerRoleService
     public PractitionerRoleService(FhirClient fhirClient)
     {
         _fhirClient = fhirClient;
+    }
+
+    public async Task<PagedResult<PractitionerRoleDto>> GetFilteredAsync(PractitionerRoleFilterDto filters)
+    {
+        // Normalizar paginación usando el helper
+        var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filters.PageNumber, filters.PageSize);
+
+        var searchParams = new SearchParams();
+
+        // Filtros
+        if (filters.Active.HasValue)
+            searchParams.Add("active", filters.Active.Value.ToString().ToLowerInvariant());
+
+        if (!string.IsNullOrEmpty(filters.OrganizationId))
+            searchParams.Add("organization", $"Organization/{filters.OrganizationId}");
+
+        if (!string.IsNullOrEmpty(filters.Specialty))
+            searchParams.Add("specialty", filters.Specialty);
+
+        // Paginación FHIR
+        searchParams.Count = pageSize;
+        searchParams.Add("_offset", offset.ToString());
+        searchParams.Add("_total", "accurate");
+
+        // Ejecutar búsqueda
+        var bundle = await _fhirClient.SearchAsync<FhirPractitionerRole>(searchParams);
+
+        // Obtener PagedResult del helper
+        var pagedResult = FhirPaginationHelper.ToPagedResult<FhirPractitionerRole>(bundle, pageNumber, pageSize);
+
+        // Convertir Items a DTO
+        var resultDto = new PagedResult<PractitionerRoleDto>
+        {
+            Items = pagedResult.Items
+                    .Select(r => r.ToDto())
+                    .ToList(),
+            Pagination = pagedResult.Pagination
+        };
+
+        return resultDto;
     }
 
     public async Task<ServiceResult<PractitionerRoleDto>> CreateAsync(CreatePractitionerRoleDto dto)
@@ -78,6 +121,32 @@ public class PractitionerRoleService : IPractitionerRoleService
             return null;
         }
     }
+
+    public async Task<IEnumerable<PractitionerRoleDto>> GetByPractitionerIdAsync(string practitionerId)
+    {
+        try
+        {
+            // Realiza la búsqueda en el servidor FHIR por practitioner
+            var searchResult = await _fhirClient.SearchAsync<FhirPractitionerRole>(
+                new string[] { $"practitioner=Practitioner/{practitionerId}" }
+            );
+
+            // Convierte todos los recursos encontrados a PractitionerRoleDto
+            var roles = searchResult.Entry
+                .Where(e => e.Resource is FhirPractitionerRole)
+                .Select(e => ((FhirPractitionerRole)e.Resource).ToDto())
+                .ToList();
+
+            return roles;
+        }
+        catch (FhirOperationException ex)
+        {
+            // Puedes registrar el error si quieres más detalle
+            Console.WriteLine($"Error al obtener roles del Practitioner: {ex.Message}");
+            return Enumerable.Empty<PractitionerRoleDto>();
+        }
+    }
+
 
     public async Task<ServiceResult<PractitionerRoleDto>> UpdateAsync(string id, UpdatePractitionerRoleDto dto)
     {
@@ -226,10 +295,10 @@ public class PractitionerRoleService : IPractitionerRoleService
             return false;
         }
     }
-    private async Task<bool> ExistsActiveRoleFor(
-    string practitionerRef,
-    string? organizationRef,
-    CancellationToken ct = default)
+
+    // ====================== HELPERS ======================
+
+    private async Task<bool> ExistsActiveRoleFor(string practitionerRef, string? organizationRef, CancellationToken ct = default)
     {
         var searchParams = new SearchParams()
             .Add("practitioner", practitionerRef)
@@ -247,6 +316,7 @@ public class PractitionerRoleService : IPractitionerRoleService
         var bundle = await _fhirClient.SearchAsync<FhirPractitionerRole>(searchParams, ct);
         return bundle?.Entry?.Any() == true;
     }
+    
     private async Task<bool> IdentifierExists(string system, string value)
     {
         try
@@ -263,6 +333,7 @@ public class PractitionerRoleService : IPractitionerRoleService
             return true;
         }
     }
+    
     private bool AreCodesValid(List<CodeableConceptDto> codeableConcepts)
     {
         if (codeableConcepts == null || codeableConcepts.Count == 0)
@@ -303,46 +374,5 @@ public class PractitionerRoleService : IPractitionerRoleService
         }
 
         return true;
-    }
-
-    // Filtrar
-    public async Task<PagedResult<PractitionerRoleDto>> GetFilteredAsync(PractitionerRoleFilterDto filters)
-    {
-        // Normalizar paginación usando el helper
-        var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filters.PageNumber, filters.PageSize);
-
-        var searchParams = new SearchParams();
-
-        // Filtros
-        if (filters.Active.HasValue)
-            searchParams.Add("active", filters.Active.Value.ToString().ToLowerInvariant());
-
-        if (!string.IsNullOrEmpty(filters.OrganizationId))
-            searchParams.Add("organization", $"Organization/{filters.OrganizationId}");
-
-        if (!string.IsNullOrEmpty(filters.Specialty))
-            searchParams.Add("specialty", filters.Specialty);
-
-        // Paginación FHIR
-        searchParams.Count = pageSize;
-        searchParams.Add("_offset", offset.ToString());
-        searchParams.Add("_total", "accurate");
-
-        // Ejecutar búsqueda
-        var bundle = await _fhirClient.SearchAsync<FhirPractitionerRole>(searchParams);
-
-        // Obtener PagedResult del helper
-        var pagedResult = FhirPaginationHelper.ToPagedResult<FhirPractitionerRole>(bundle, pageNumber, pageSize);
-
-        // Convertir Items a DTO
-        var resultDto = new PagedResult<PractitionerRoleDto>
-        {
-            Items = pagedResult.Items
-                    .Select(r => r.ToDto())
-                    .ToList(),
-            Pagination = pagedResult.Pagination
-        };
-
-        return resultDto;
     }
 }

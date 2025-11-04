@@ -8,8 +8,10 @@ import type { AdministrativeGender } from "./administrativeGender";
 
 export type GetApiPatientsParams = {
   Name?: string;
-  Active?: boolean;
   Gender?: AdministrativeGender;
+  IdentifierType?: string;
+  IdentifierValue?: string;
+  BirthDate?: string;
   PageNumber?: number;
   PageSize?: number;
 };

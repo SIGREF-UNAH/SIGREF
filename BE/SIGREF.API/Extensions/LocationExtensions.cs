@@ -13,12 +13,16 @@ public static class LocationExtensions
         {
             Id = location.Id,
             Name = location.Name ?? string.Empty,
+            Alias = location.Alias?.ToArray() ?? [],
             Description = location.Description,
             Status = location.Status?.ToString() ?? "active",
+            Mode = location.Mode?.ToString() ?? "instance",
             Type = location.Type.ToString(),
             LastUpdated = location.Meta?.LastUpdated?.DateTime,
             Address = location.Address?.ToDto(),
-            Telecom = location.Telecom?.Select(t => t.ToDto()).ToList() ?? new List<ContactPointDto>()
+            Telecom = location.Telecom?.Select(t => t.ToDto()).ToList() ?? new List<ContactPointDto>(),
+            PartOf = location.PartOf?.ToReferenceDto(),
+            ManagingOrganization = location.ManagingOrganization?.ToReferenceDto()
         };
     }
 
@@ -31,15 +35,14 @@ public static class LocationExtensions
             Name = createDto.Name,
             Description = createDto.Description,
             Status = createDto.Status,
+            Mode = createDto.Mode,
             Type = CreateCodeableConceptList(createDto.Type),
             Alias = createDto.Alias,
             Address = createDto.Address?.ToFhirAddress(),
             Telecom = createDto.Telecom?.Select(t => t.ToFhirContactPoint()).ToList() ?? [],
             //TODO: Revisar PartOf y ManagingOrganization si funciona la relación
-            PartOf = !string.IsNullOrEmpty(createDto.PartOfId) ? new ResourceReference("Locations/" + createDto.PartOfId) : null,
-            ManagingOrganization = !string.IsNullOrEmpty(createDto.ManagingOrganizationIds)
-                ? new ResourceReference("Organization/" + createDto.ManagingOrganizationIds)
-                : null,
+            PartOf = createDto.PartOf?.ToFhirReference(),
+            ManagingOrganization = createDto.ManagingOrganization?.ToFhirReference(),
             Meta = new Meta
             {
                 LastUpdated = DateTimeOffset.Now,
@@ -60,6 +63,13 @@ public static class LocationExtensions
         if (updateDto.Status != null)
             existingLocation.Status = updateDto.Status;
 
+        existingLocation.Mode = updateDto.Mode;
+
+        if (updateDto.Alias != null)
+        {
+            existingLocation.Alias = updateDto.Alias?.ToList();
+        }
+
         if (updateDto.Type != null)
             existingLocation.Type = CreateCodeableConceptList(updateDto.Type);
 
@@ -69,11 +79,30 @@ public static class LocationExtensions
         if (updateDto.Telecom != null)
             existingLocation.Telecom = updateDto.Telecom.Select(t => t.ToFhirContactPoint()).ToList();
 
+        if (updateDto.PartOf != null)
+        {
+            existingLocation.PartOf = updateDto.PartOf.ToFhirReference();
+        }
+        else if (updateDto.PartOf == null && updateDto.GetType().GetProperty(nameof(updateDto.PartOf))?.GetValue(updateDto) != null)
+        {
+            existingLocation.PartOf = null;
+        }
+
+        if (updateDto.ManagingOrganization != null)
+        {
+            existingLocation.ManagingOrganization = updateDto.ManagingOrganization.ToFhirReference();
+        }
+        else if (updateDto.ManagingOrganization == null && updateDto.GetType().GetProperty(nameof(updateDto.ManagingOrganization))?.GetValue(updateDto) != null)
+        {
+            existingLocation.ManagingOrganization = null;
+        }
+
         // Actualizar metadatos
         if (existingLocation.Meta == null)
             existingLocation.Meta = new Meta();
 
         existingLocation.Meta.LastUpdated = DateTimeOffset.Now;
+
 
         // Incrementar versión
         if (int.TryParse(existingLocation.Meta.VersionId, out var currentVersion))
