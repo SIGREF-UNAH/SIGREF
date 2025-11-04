@@ -10,9 +10,9 @@ namespace SIGREF.API.Dtos.Patient
         public string? Name { get; set; }
         public AdministrativeGender? Gender { get; set; }
         public string? IdentifierType { get; set; }     
-        public string? IdentifierValue { get; set; }    
+        public string? IdentifierValue { get; set; }
         // public string? Nationality { get; set; }        
-        // public bool? Deceased { get; set; }             
+        public bool? Active { get; set; }
         public DateTime? BirthDate { get; set; }        
     }
 }
