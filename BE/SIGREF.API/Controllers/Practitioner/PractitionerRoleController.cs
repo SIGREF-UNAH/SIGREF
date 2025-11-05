@@ -1,5 +1,5 @@
-﻿using Hl7.Fhir.Model.CdsHooks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.PractitionerRole;
 using SIGREF.API.Services.PractitionerRole;
 
@@ -19,15 +19,22 @@ public class PractitionerRoleController : ControllerBase
     // GET ALL
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetAll()
+    [Produces(typeof(PagedResultDto<PractitionerRoleDto>))]
+    public async Task<IActionResult> GetFiltered([FromQuery] PractitionerRoleFilterDto filters)
     {
-        var roles = await _prService.GetAllAsync();
-        return Ok(roles);
+        var pagedRoles = await _prService.GetFilteredAsync(filters);
+
+        var pagedRoleDtos = new PagedResultDto<PractitionerRoleDto>
+        {
+            Items = pagedRoles.Items,
+            Pagination = pagedRoles.Pagination
+        };
+
+        return Ok(pagedRoleDtos);
     }
 
     // GET BY ID 
@@ -38,11 +45,28 @@ public class PractitionerRoleController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Produces<PractitionerRoleDto>()]
     public async Task<IActionResult> GetById(string id)
     {
         var role = await _prService.GetByIdAsync(id);
         if (role == null) return NotFound($"PractitionerRole with id '{id}' not found.");
         return Ok(role);
+    }
+
+    // GET BY PRACTITIONER ID 
+    [HttpGet("practitioner/{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Produces<PractitionerRoleDto>()]
+    public async Task<IActionResult> GetByPractitionerId(string id)
+    {
+        var roles = await _prService.GetByPractitionerIdAsync(id);
+        if (roles == null) return NotFound($"Practitioner with id '{id}' not found.");
+        return Ok(roles);
     }
 
     //CREATE 
@@ -52,7 +76,7 @@ public class PractitionerRoleController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    [HttpPost]
+    [Produces<PractitionerRoleDto>()]
     public async Task<IActionResult> Create([FromBody] CreatePractitionerRoleDto dto)
     {
         if (!ModelState.IsValid)
@@ -76,7 +100,6 @@ public class PractitionerRoleController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, result.Data);
     }
 
-
     // UPDATE
     [HttpPut("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -85,6 +108,7 @@ public class PractitionerRoleController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Produces<PractitionerRoleDto>()]
     public async Task<IActionResult> Update(string id, [FromBody] UpdatePractitionerRoleDto dto)
     {
         if (!ModelState.IsValid)

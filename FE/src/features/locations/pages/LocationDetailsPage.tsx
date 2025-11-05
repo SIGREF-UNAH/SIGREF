@@ -1,14 +1,8 @@
 import React, { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { ProDescriptions } from "@ant-design/pro-components";
+import { Card, Spin, Typography, Space, Button, message, Tag } from "antd";
 import {
-  ProForm,
-  ProFormText,
-  ProFormSelect,
-  ProFormTextArea,
-} from "@ant-design/pro-components";
-import { Card, Spin, Typography, Space, Button, message } from "antd";
-import {
-  EnvironmentOutlined,
   EditOutlined,
   DeleteOutlined,
   ArrowLeftOutlined,
@@ -20,10 +14,39 @@ import {
   getGetApiLocationsQueryKey,
 } from "../../../api/locations/locations";
 import { useQueryClient } from "@tanstack/react-query";
-import { BsBuilding, BsGeoAltFill, BsPersonFill } from "react-icons/bs";
-import { BiChevronDown } from "react-icons/bi";
-import { LocationMode, LocationStatus } from "../../../api/models";
+import {
+  BsBuilding,
+  BsGeoAltFill,
+  BsPersonFill,
+  BsPinMapFill,
+} from "react-icons/bs";
+import { ContactPointSystem } from "../../../api/models";
 import { PageHeaderTabs } from "../../../shared/components/ui";
+
+// Mapeo de ContactPointSystem a etiquetas legibles
+const TelecomLabels: Record<number, string> = {
+  [ContactPointSystem.NUMBER_0]: "Teléfono",
+  [ContactPointSystem.NUMBER_1]: "Fax",
+  [ContactPointSystem.NUMBER_2]: "Correo Electrónico",
+  [ContactPointSystem.NUMBER_3]: "Pager",
+  [ContactPointSystem.NUMBER_4]: "URL",
+  [ContactPointSystem.NUMBER_5]: "SMS",
+  [ContactPointSystem.NUMBER_6]: "Otro",
+};
+
+// Paleta de colores para los alias
+const ALIAS_COLORS = [
+  "blue",
+  "green",
+  "geekblue",
+  "purple",
+  "orange",
+  "cyan",
+  "gold",
+  "lime",
+  "volcano",
+  "magenta",
+];
 
 const LocationDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -34,6 +57,7 @@ const LocationDetailsPage: React.FC = () => {
     isLoading,
     isError,
   } = useGetApiLocationsId(Number(id));
+
   const { mutate: deleteLocation } = useDeleteApiLocationsId({
     mutation: {
       onSuccess: () => {
@@ -46,11 +70,10 @@ const LocationDetailsPage: React.FC = () => {
       onError: () => message.error("Error al eliminar la ubicación"),
     },
   });
+
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
-  const handleDeleteClick = () => {
-    setDeleteModalVisible(true);
-  };
+  const handleDeleteClick = () => setDeleteModalVisible(true);
 
   const handleDelete = async (locationId: number) => {
     try {
@@ -59,6 +82,32 @@ const LocationDetailsPage: React.FC = () => {
     } catch {
       return false;
     }
+  };
+
+  const getModeLabel = (mode?: string | null): string => {
+    if (!mode) return "—";
+    return mode === "Kind" ? "Tipo" : mode === "Instance" ? "Instancia" : mode;
+  };
+
+  const renderStatusTag = (status?: string | null) => {
+    if (status === undefined || status === null) return <Tag>—</Tag>;
+    switch (status) {
+      case "Active":
+        return <Tag color="success">Activo</Tag>;
+      case "Suspended":
+        return <Tag color="warning">Suspendido</Tag>;
+      case "Inactive":
+        return <Tag color="error">Inactivo</Tag>;
+      default:
+        return <Tag color="default">Desconocido</Tag>;
+    }
+  };
+
+  const renderModeTag = (mode?: string | null) => {
+    const label = getModeLabel(mode);
+    if (label === "Tipo") return <Tag color="blue">Tipo</Tag>;
+    if (label === "Instancia") return <Tag color="geekblue">Instancia</Tag>;
+    return <Tag color="default">{label}</Tag>;
   };
 
   if (isError) {
@@ -83,376 +132,253 @@ const LocationDetailsPage: React.FC = () => {
     );
   }
 
-  const renderStatusOptions = [
-    { label: "Seleccionar estado", value: "" },
-    { label: "Activo", value: LocationStatus.NUMBER_0 },
-    { label: "Inactivo", value: LocationStatus.NUMBER_1 },
-    { label: "Suspendido", value: LocationStatus.NUMBER_2 },
-  ];
-
-  const getModeLabel = (mode: number | undefined) => {
-    if (mode === LocationMode.NUMBER_0) return "Kind";
-    if (mode === LocationMode.NUMBER_1) return "Instance";
-    return "";
-  };
-
-  const initialValues = {
-    name: location.name || "",
-    alias: location.alias?.join(", ") || "",
-    description: location.description || "",
-    status: location.status,
-    mode: location.mode,
-    type: location.type || "",
-    address: {
-      line: location.address?.line?.[0] || "",
-      city: location.address?.city || "",
-      state: location.address?.state || "",
-      postalCode: location.address?.postalCode || "",
-      country: location.address?.country || "",
-    },
-    managingOrganizationIds: location.managingOrganizationIds || "",
-    partOfId: location.partOfId || "",
-  };
-
   return (
     <div>
       <main>
-        {/* Header */}
         <PageHeaderTabs
           title="Gestión de Ubicaciones"
           tabs={[
-            { key: "listar", label: "Lista de Ubicaciones", path: "/locations/list" },
-            { key: "crear", label: "Crear Ubicación", path: "/locations/create" },
+            {
+              key: "listar",
+              label: "Lista de Ubicaciones",
+              path: "/locations/list",
+            },
+            {
+              key: "crear",
+              label: "Crear Ubicación",
+              path: "/locations/create",
+            },
           ]}
           defaultActive="null"
         />
 
-        <div className="bg-[#FAFAFA] rounded-lg border-2 border-[#D9D9D9] p-6">
+        <div className="primary-card">
           {/* Header */}
           <div className="flex items-center gap-3 mb-8">
-            <EnvironmentOutlined className="w-10 h-10 text-blue-500" />
-            <span className="text-xl font-semibold text-[#333333]">
+            <BsPinMapFill className="text-blue-500 text-2xl" />
+            <h1 className="text-2xl font-bold text-[#333333]">
               {location.name || "Ubicación"}
-            </span>
+            </h1>
           </div>
 
-          <ProForm initialValues={initialValues} submitter={false}>
-            <div className="max-w-[105rem] mx-auto">
-              {/* Información Básica */}
-              <section>
-                <div className="flex items-center gap-3 mb-6">
-                  <BsBuilding className="w-8 h-8 text-blue-500" />
-                  <span className="text-lg font-semibold text-[#333333]">
-                    Información Básica
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8 md:gap-16 lg:gap-32 mb-2">
-                  <ProFormText
-                    name="name"
-                    label={
-                      <span className="text-[#616161] font-medium">
-                        Nombre de la ubicación
-                      </span>
-                    }
-                    readonly
-                    fieldProps={{
-                      value: location.name || "",
-                    }}
-                  />
-                  <ProFormText
-                    name="alias"
-                    label={
-                      <span className="text-[#616161] font-medium">Alias</span>
-                    }
-                    readonly
-                    fieldProps={{
-                      value: location.alias?.join(", ") || "",
-                    }}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8 md:gap-16 lg:gap-32 mb-2">
-                  <ProFormSelect
-                    name="status"
-                    label={
-                      <span className="text-[#616161] font-medium">Estado</span>
-                    }
-                    options={renderStatusOptions}
-                    readonly
-                    fieldProps={{
-                      value: location.status,
-                      suffixIcon: (
-                        <BiChevronDown className="w-4 h-4 text-[#616161]" />
-                      ),
-                    }}
-                  />
-                  <ProFormText
-                    name="mode"
-                    label={
-                      <span className="text-[#616161] font-medium">Modo</span>
-                    }
-                    readonly
-                    fieldProps={{
-                      value: getModeLabel(location.mode) || "",
-                    }}
-                  />
-                  <ProFormText
-                    name="type"
-                    label={
-                      <span className="text-[#616161] font-medium">
-                        Tipo de función
-                      </span>
-                    }
-                    readonly
-                    fieldProps={{
-                      value: location.type || "",
-                    }}
-                  />
-                </div>
-
-                <ProFormTextArea
-                  name="description"
-                  label={
-                    <span className="text-[#616161] font-medium">
-                      Descripción
-                    </span>
-                  }
-                  readonly
-                  fieldProps={{
-                    value: location.description || "",
-                    rows: 2,
-                  }}
-                />
-              </section>
-
-              <hr className="border-[#000] my-8" />
-
-              {/* Dirección física */}
-              <section>
-                <div className="flex items-center gap-3 mb-6">
-                  <BsGeoAltFill className="w-8 h-8 text-blue-500" />
-                  <span className="text-lg font-semibold text-[#333333]">
-                    Dirección física
-                  </span>
-                </div>
-
-                <ProFormText
-                  name="address.line"
-                  label={
-                    <span className="text-[#616161] font-medium">
-                      Dirección
-                    </span>
-                  }
-                  readonly
-                  fieldProps={{
-                    value: location.address?.line?.[0] || "",
-                  }}
-                />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 md:gap-16 lg:gap-32 mb-2">
-                  <ProFormText
-                    name="address.city"
-                    label={
-                      <span className="text-[#616161] font-medium">Ciudad</span>
-                    }
-                    readonly
-                    fieldProps={{
-                      value: location.address?.city || "",
-                    }}
-                  />
-                  <ProFormText
-                    name="address.state"
-                    label={
-                      <span className="text-[#616161] font-medium">
-                        Estado/Provincia
-                      </span>
-                    }
-                    readonly
-                    fieldProps={{
-                      value: location.address?.state || "",
-                    }}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 md:gap-16 lg:gap-32">
-                  <ProFormText
-                    name="address.postalCode"
-                    label={
-                      <span className="text-[#616161] font-medium">
-                        Código Postal
-                      </span>
-                    }
-                    readonly
-                    fieldProps={{
-                      value: location.address?.postalCode || "",
-                    }}
-                  />
-                  <ProFormText
-                    name="address.country"
-                    label={
-                      <span className="text-[#616161] font-medium">País</span>
-                    }
-                    readonly
-                    fieldProps={{
-                      value: location.address?.country || "",
-                    }}
-                  />
-                </div>
-              </section>
-
-              <hr className="border-[#000] mt-2 mb-8" />
-
-              {/* Información de contacto */}
-              <section>
-                <div className="flex items-center gap-3 mb-6">
-                  <BsPersonFill className="w-8 h-8 text-blue-500" />
-                  <span className="text-lg font-semibold text-[#333333]">
-                    Información de contacto
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8 md:gap-16 lg:gap-32">
-                  <ProFormText
-                    name="managingOrganizationIds"
-                    label={
-                      <span className="text-[#616161] font-medium">
-                        Nombre de contacto
-                      </span>
-                    }
-                    readonly
-                    fieldProps={{
-                      value: location.managingOrganizationIds || "",
-                    }}
-                  />
-                  <ProFormText
-                    name="phone"
-                    label={
-                      <span className="text-[#616161] font-medium">
-                        Teléfono
-                      </span>
-                    }
-                    readonly
-                    fieldProps={{
-                      value:
-                        (location.telecom || []).find(
-                          (t) => t.system?.toLowerCase() === "phone"
-                        )?.value || "No disponible",
-                    }}
-                  />
-                  <ProFormText
-                    name="email"
-                    label={
-                      <span className="text-[#616161] font-medium">
-                        Correo Electrónico
-                      </span>
-                    }
-                    readonly
-                    fieldProps={{
-                      type: "email",
-                      value:
-                        (location.telecom || []).find(
-                          (t) => t.system?.toLowerCase() === "email"
-                        )?.value || "No disponible",
-                    }}
-                  />
-                </div>
-              </section>
-
-              <hr className="border-[#000] mt-2 mb-8" />
-
-              {/* Organización y jerarquía */}
-              <section>
-                <div className="flex items-center gap-3 mb-6">
-                  <BsBuilding className="w-8 h-8 text-blue-500" />
-                  <span className="text-lg font-semibold text-[#333333]">
-                    Organización y jerarquía
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 md:gap-16 lg:gap-32">
-                  <ProFormText
-                    name="managingOrganizationIds"
-                    label={
-                      <span className="text-[#616161] font-medium">
-                        Organización responsable
-                      </span>
-                    }
-                    readonly
-                    fieldProps={{
-                      value: location.managingOrganizationIds || "",
-                    }}
-                  />
-                  <ProFormText
-                    name="partOfId"
-                    label={
-                      <span className="text-[#616161] font-medium">
-                        Parte de (ubicación padre)
-                      </span>
-                    }
-                    readonly
-                    fieldProps={{
-                      value: location.partOfId || "",
-                    }}
-                  />
-                </div>
-              </section>
-
-              {/* Botones de acciones */}
-              <div className="flex justify-end pt-2 pb-2">
-                <Space size="middle">
-                  <Link to="/locations">
-                    <Button
-                      size="large"
-                      style={{
-                        borderRadius: 6,
-                        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-                        color: "#163C65",
-                        borderColor: "#163C65",
-                      }}
-                    >
-                      <ArrowLeftOutlined /> Volver
-                    </Button>
-                  </Link>
-                  <Link to={`/locations/edit/${location.id}`}>
-                    <Button
-                      type="primary"
-                      size="large"
-                      icon={<EditOutlined />}
-                      style={{
-                        backgroundColor: "#52c41a",
-                        borderColor: "#52c41a",
-                        borderRadius: 6,
-                        boxShadow: "0 2px 8px rgba(82, 196, 26, 0.3)",
-                      }}
-                    >
-                      Editar
-                    </Button>
-                  </Link>
-                  <Button
-                    type="primary"
-                    size="large"
-                    icon={<DeleteOutlined />}
-                    style={{
-                      backgroundColor: "#f5222d",
-                      borderColor: "#f5222d",
-                      borderRadius: 6,
-                      boxShadow: "0 2px 8px rgba(245, 34, 45, 0.3)",
-                    }}
-                    onClick={handleDeleteClick}
-                  >
-                    Eliminar
-                  </Button>
-                </Space>
+          {/* Información Básica */}
+          <ProDescriptions
+            title={
+              <div className="flex items-center gap-2">
+                <BsBuilding className="text-blue-500" />
+                <span className="font-semibold">Información Básica</span>
               </div>
+            }
+            column={{ xs: 1, sm: 2, md: 2 }}
+            size="middle"
+            bordered
+            dataSource={location}
+            className="mb-8"
+            labelStyle={{ fontWeight: 600, backgroundColor: "#fafafa" }}
+          >
+            <ProDescriptions.Item label="Nombre de la ubicación" span={2}>
+              {location.name || "—"}
+            </ProDescriptions.Item>
+
+            <ProDescriptions.Item label="Alias" span={2}>
+              {location.alias && location.alias.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {location.alias.map((alias, index) => (
+                    <Tag
+                      key={index}
+                      color={ALIAS_COLORS[index % ALIAS_COLORS.length]}
+                      className="text-sm px-2.5 py-1"
+                    >
+                      {alias}
+                    </Tag>
+                  ))}
+                </div>
+              ) : (
+                "—"
+              )}
+            </ProDescriptions.Item>
+
+            <ProDescriptions.Item label="Estado">
+              {renderStatusTag(location.status)}
+            </ProDescriptions.Item>
+
+            <ProDescriptions.Item label="Modo">
+              {renderModeTag(location.mode)}
+            </ProDescriptions.Item>
+
+            <ProDescriptions.Item label="Tipo de función" span={2}>
+              {location.type || "—"}
+            </ProDescriptions.Item>
+
+            <ProDescriptions.Item label="Descripción" span={2}>
+              <div className="whitespace-pre-wrap text-gray-700">
+                {location.description || "—"}
+              </div>
+            </ProDescriptions.Item>
+          </ProDescriptions>
+
+          <hr className="border-[#000] my-8" />
+
+          {/* Dirección física */}
+          <ProDescriptions
+            title={
+              <div className="flex items-center gap-2">
+                <BsGeoAltFill className="text-blue-500" />
+                <span className="font-semibold">Dirección física</span>
+              </div>
+            }
+            column={{ xs: 1, sm: 2, md: 3 }}
+            size="middle"
+            bordered
+            dataSource={location}
+            className="mb-8"
+            labelStyle={{ fontWeight: 600, backgroundColor: "#fafafa" }}
+          >
+            <ProDescriptions.Item label="País">
+              {location.address?.country ? (
+                <Tag color="blue">{location.address.country}</Tag>
+              ) : (
+                "—"
+              )}
+            </ProDescriptions.Item>
+
+            <ProDescriptions.Item label="Estado/Provincia">
+              {location.address?.state ? (
+                <Tag color="blue">{location.address.state}</Tag>
+              ) : (
+                "—"
+              )}
+            </ProDescriptions.Item>
+
+            <ProDescriptions.Item label="Ciudad">
+              {location.address?.city ? (
+                <Tag color="blue">{location.address.city}</Tag>
+              ) : (
+                "—"
+              )}
+            </ProDescriptions.Item>
+            <ProDescriptions.Item label="Dirección" span={3}>
+              {location.address?.line?.[0] || "—"}
+            </ProDescriptions.Item>
+          </ProDescriptions>
+
+          <hr className="border-[#000] my-8" />
+
+          {/* Información de contacto */}
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <BsPersonFill className="text-blue-500" />
+              <span className="font-semibold">Información de contacto</span>
             </div>
-          </ProForm>
+
+            {location.telecom && location.telecom.length > 0 ? (
+              <ProDescriptions
+                column={{ xs: 1, sm: 2 }}
+                size="middle"
+                bordered
+                dataSource={{}}
+                labelStyle={{ fontWeight: 600, backgroundColor: "#fafafa" }}
+              >
+                {location.telecom.map((t, index) => {
+                  const label =
+                    t.system !== undefined && TelecomLabels[t.system]
+                      ? TelecomLabels[t.system]
+                      : `Contacto (${t.system ?? "desconocido"})`;
+                  return (
+                    <ProDescriptions.Item key={index} label={label}>
+                      {t.value || "—"}
+                    </ProDescriptions.Item>
+                  );
+                })}
+              </ProDescriptions>
+            ) : (
+              <div className="text-gray-500 text-sm pl-2">
+                No hay información de contacto disponible
+              </div>
+            )}
+          </div>
+
+          <hr className="border-[#000] my-8" />
+
+          {/* Organización y jerarquía */}
+          <ProDescriptions
+            title={
+              <div className="flex items-center gap-2">
+                <BsBuilding className="text-blue-500" />
+                <span className="font-semibold">Organización y jerarquía</span>
+              </div>
+            }
+            column={{ xs: 1, sm: 2 }}
+            size="middle"
+            bordered
+            dataSource={location}
+            className="mb-8"
+            labelStyle={{ fontWeight: 600, backgroundColor: "#fafafa" }}
+          >
+            <ProDescriptions.Item label="Organización responsable">
+              <Tag color="purple">
+                {location.managingOrganization?.display ||
+                  "No disponible"}
+              </Tag>
+            </ProDescriptions.Item>
+
+            <ProDescriptions.Item label="Parte de (ubicación padre)">
+              <Tag color="purple">{location.partOf?.display || "Ninguna"}</Tag>
+            </ProDescriptions.Item>
+          </ProDescriptions>
+
+          {/* Botones de acciones */}
+          <div className="flex justify-end pt-10">
+            <Space size="middle">
+              <Link to="/locations/list">
+                <Button
+                  size="large"
+                  style={{
+                    borderRadius: 6,
+                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+                    color: "#163C65",
+                    borderColor: "#163C65",
+                  }}
+                >
+                  <ArrowLeftOutlined /> Volver
+                </Button>
+              </Link>
+              <Link to={`/locations/update/${location.id}`}>
+                <Button
+                  type="primary"
+                  size="large"
+                  icon={<EditOutlined />}
+                  style={{
+                    backgroundColor: "#52c41a",
+                    borderColor: "#52c41a",
+                    borderRadius: 6,
+                    boxShadow: "0 2px 8px rgba(82, 196, 26, 0.3)",
+                  }}
+                >
+                  Editar
+                </Button>
+              </Link>
+              <Button
+                type="primary"
+                size="large"
+                icon={<DeleteOutlined />}
+                danger
+                style={{
+                  borderRadius: 6,
+                  boxShadow: "0 2px 8px rgba(245, 34, 45, 0.3)",
+                }}
+                onClick={handleDeleteClick}
+              >
+                Eliminar
+              </Button>
+            </Space>
+          </div>
         </div>
 
         <DeleteLocationModal
           visible={deleteModalVisible}
           onVisibleChange={setDeleteModalVisible}
-          locationId={location.id}
+          locationId={location.id ? Number(location.id) : null}
           locationName={location.name}
           onDelete={handleDelete}
         />

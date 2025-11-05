@@ -1,5 +1,5 @@
-import EditLocation from "../components/ui/EditFormulario";
 import { PageHeaderTabs } from "../../../shared/components/ui";
+import LocationForm from "../components/ui/LocationForm";
 
 export default function EditLocationPage() {
   return (
@@ -16,7 +16,7 @@ export default function EditLocationPage() {
         />
 
         {/* Formulario de gestión de ubicaciones */}
-        <EditLocation />
+        <LocationForm mode="edit" />
       </main>
     </div>
   );

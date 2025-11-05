@@ -3,6 +3,9 @@ using SIGREF.API.Dtos.Patient;
 using FhirPatient = Hl7.Fhir.Model.Patient;
 using SIGREF.API.Extensions;
 using Task = System.Threading.Tasks.Task;
+using System.Runtime.Serialization;
+using SIGREF.API.Dtos.Common;
+using SIGREF.API.Helpers;
 namespace SIGREF.API.Services.Patient;
 
 /// <summary>
@@ -36,8 +39,6 @@ public class PatientService : IPatientService
         _fhirClient = fhirClient ?? throw new System.ArgumentNullException(nameof(fhirClient));
     }
 
-
-
     /// <summary>
     /// Crea un nuevo paciente en el servidor FHIR.
     /// </summary>
@@ -56,7 +57,7 @@ public class PatientService : IPatientService
     /// var createdPatient = await patientService.CreatePatientAsync(createDto);
     /// </code>
     /// </example>
-    public async Task<PatientDTO> CreatePatientAsync(CreatePatientDto dto)
+    public async Task<PatientDto> CreatePatientAsync(CreatePatientDto dto)
     {
         var patient = dto.ToFhirPatient(); // Convierte DTO -> FHIR Patient
         var created = await _fhirClient.CreateAsync(patient);
@@ -77,20 +78,12 @@ public class PatientService : IPatientService
     /// Console.WriteLine(patient.Name.First().Given.First());
     /// </code>
     /// </example>
-    public async Task<PatientDTO> GetPatientByIdAsync(string id)
+    public async Task<PatientDto> GetPatientByIdAsync(string id)
     {
         var patient = await _fhirClient.ReadAsync<FhirPatient>($"{ResourceType}/{id}");
         return patient.ToDto();
     }
 
-    public async Task<IEnumerable<PatientDTO>> GetAllPatientsAsync()
-    {
-        var bundle = await _fhirClient.SearchAsync<FhirPatient>();
-        return bundle.Entry?
-                   .Select(e => (e.Resource as FhirPatient)?.ToDto())
-                   .Where(dto => dto != null)
-                   .ToList() ?? Enumerable.Empty<PatientDTO>();
-    }
     /// <summary>
     /// Actualiza un paciente existente en el servidor FHIR.
     /// </summary>
@@ -106,7 +99,7 @@ public class PatientService : IPatientService
     /// var updatedPatient = await patientService.UpdatePatientAsync("123", updateDto);
     /// </code>
     /// </example>
-    public async Task<PatientDTO> UpdatePatientAsync(string id, UpdatePatientDto dto)
+    public async Task<PatientDto> UpdatePatientAsync(string id, UpdatePatientDto dto)
     {
         // 1. Leer paciente existente
         var existing = await _fhirClient.ReadAsync<FhirPatient>($"{ResourceType}/{id}");
@@ -123,6 +116,64 @@ public class PatientService : IPatientService
     public async Task DeletePatientAsync(string id)
     {
         await _fhirClient.DeleteAsync($"{ResourceType}/{id}");
+    }
+
+    // Filtros
+    public async Task<PagedResult<PatientDto>> GetFilteredPatientsAsync(PatientFilterDto filter)
+    {
+        var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
+
+        var searchParams = new SearchParams();
+
+        // 1. Nombre
+        if (!string.IsNullOrWhiteSpace(filter.Name))
+            searchParams.Add("name", filter.Name.Trim());
+
+        // 2. Género
+        if (filter.Gender.HasValue)
+            searchParams.Add("gender", filter.Gender.Value.ToString().ToLowerInvariant());
+
+        // 3. Identificador (tipo + valor)
+        if (!string.IsNullOrWhiteSpace(filter.IdentifierType) && !string.IsNullOrWhiteSpace(filter.IdentifierValue))
+        {
+            searchParams.Add("identifier", $"{filter.IdentifierType}|{filter.IdentifierValue}");
+        }
+        else if (!string.IsNullOrWhiteSpace(filter.IdentifierValue))
+        {
+            searchParams.Add("identifier", filter.IdentifierValue);
+        }
+
+        // 4. Fecha de nacimiento
+        if (filter.BirthDate.HasValue)
+        {
+            var date = filter.BirthDate.Value.ToString("yyyy-MM-dd");
+            searchParams.Add("birthdate", $"eq{date}");
+        }
+
+        // 5 .Estado vital
+        if (filter.Active.HasValue)
+            searchParams.Add("active", filter.Active.Value.ToString().
+                ToLowerInvariant());
+
+        // Paginación
+        searchParams.Count = pageSize;
+        searchParams.Add("_offset", offset.ToString());
+        searchParams.Add("_total", "accurate");
+
+        var bundle = await _fhirClient.SearchAsync<FhirPatient>(searchParams);
+
+        var pagedResult = FhirPaginationHelper.ToPagedResult<FhirPatient>(bundle, pageNumber, pageSize);
+
+        var resultDto = new PagedResult<PatientDto>
+        {
+            Items = pagedResult.Items
+                    .Select(p => p.ToDto())
+                    .Where(dto => dto != null)!
+                    .ToList(),
+            Pagination = pagedResult.Pagination
+        };
+
+        return resultDto;
     }
 }
 

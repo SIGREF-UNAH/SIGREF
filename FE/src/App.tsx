@@ -8,8 +8,9 @@ import { Spin } from "antd";
 
 const queryClient = new QueryClient();
 
-function App() {
+export default function App() {
   const { initialized, keycloak } = useKeycloak();
+
   if (!initialized) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -22,10 +23,11 @@ function App() {
     keycloak.login();
     return (
       <div className="flex items-center justify-center h-screen">
-        Redirigiendo a la página de inicio de sesión...
+        <Spin size="large" />
       </div>
     );
   }
+
   const roles = getRolesFromToken(keycloak);
 
   return (
@@ -46,5 +48,3 @@ function App() {
     </QueryClientProvider>
   );
 }
-
-export default App;

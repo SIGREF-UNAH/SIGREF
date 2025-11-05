@@ -2,13 +2,23 @@ using FhirLocation = Hl7.Fhir.Model.Location;
 using Hl7.Fhir.Rest;
 using Task = System.Threading.Tasks.Task;
 using Hl7.Fhir.Model;
-
-
+using SIGREF.API.Services.Common;
+using SIGREF.API.Dtos.Location;
+using System.Runtime.Serialization;
+using SIGREF.API.Dtos.Common;
+using SIGREF.API.Helpers;
 namespace SIGREF.API.Services.Location;
 
-public class LocationService(FhirClient fhirService)
+public class LocationService
 {
-    private const string ResourceType = nameof(Location);
+    private readonly FhirClient _fhirClient;
+
+    public LocationService(FhirService fhirService)
+    {
+        _fhirClient = fhirService.GetFhirClient();
+    }
+
+    private const string ResourceType = "Location";
     /// <summary>
     /// Obtiene un recurso <see cref="FhirLocation"/> por su identificador único.
     /// </summary>
@@ -26,30 +36,7 @@ public class LocationService(FhirClient fhirService)
     public Task<FhirLocation> GetLocationByIdAsync(int id)
 
     {
-        return fhirService.ReadAsync<FhirLocation>($"{ResourceType}/{id}");
-    }
-    /// <summary>
-    /// Obtiene todos los recursos <see cref="FhirLocation"/> disponibles en el servidor FHIR.
-    /// </summary>
-    /// <returns>Una tarea que representa la operación asíncrona. El resultado es una colección de recursos <see cref="FhirLocation"/>.</returns>
-    /// <remarks>
-    /// Este método realiza una búsqueda sin filtros. En entornos con grandes volúmenes de datos, se recomienda paginar o filtrar.
-    /// </remarks>
-    /// <exception cref="FhirOperationException">Se lanza si ocurre un error durante la búsqueda en el servidor FHIR.</exception>
-    /// <example>
-    /// <code>
-    /// var locations = await locationService.GetAllLocationsAsync();
-    /// foreach (var loc in locations)
-    /// {
-    ///     Console.WriteLine(loc.Name);
-    /// }
-    /// </code>
-    /// </example>
-    public async Task<IEnumerable<FhirLocation>> GetAllLocationsAsync()
-    {
-        var searchResult = await fhirService.SearchAsync<FhirLocation>();
-        return searchResult.Entry?.Select(e => e.Resource as FhirLocation).Where(l => l != null) ??
-               Enumerable.Empty<FhirLocation>();
+        return _fhirClient.ReadAsync<FhirLocation>($"{ResourceType}/{id}");
     }
     /// <summary>
     /// Crea un nuevo recurso <see cref="FhirLocation"/> en el servidor FHIR.
@@ -82,7 +69,7 @@ public class LocationService(FhirClient fhirService)
             VersionId = "1"
         };
 
-        await fhirService.CreateAsync(location);
+        await _fhirClient.CreateAsync(location);
         return location;
     }
     /// <summary>
@@ -123,7 +110,7 @@ public class LocationService(FhirClient fhirService)
             location.Meta.VersionId = "1";
         }
 
-        var result = await fhirService.UpdateAsync(location);
+        var result = await _fhirClient.UpdateAsync(location);
         return result;
     }
 
@@ -142,6 +129,40 @@ public class LocationService(FhirClient fhirService)
     /// </example>
     public async Task DeleteLocationAsync(int id)
     {
-        await fhirService.DeleteAsync($"{ResourceType}/{id}");
+        await _fhirClient.DeleteAsync($"{ResourceType}/{id}");
+    }
+
+    // Filtrado
+    public async Task<PagedResult<FhirLocation>> GetFilteredLocationsAsync(LocationFilterDto filter)
+    {
+        var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
+
+        var searchParams = new SearchParams();
+
+        if (!string.IsNullOrWhiteSpace(filter.Name))
+            searchParams.Add("name", filter.Name);
+
+        if (filter.Status.HasValue)
+            searchParams.Add("status", GetEnumMemberValue(filter.Status.Value));
+
+        searchParams.Count = pageSize;
+        searchParams.Add("_offset", offset.ToString());
+        searchParams.Add("_total", "accurate");
+
+        var bundle = await _fhirClient.SearchAsync<FhirLocation>(searchParams);
+
+        return FhirPaginationHelper.ToPagedResult<FhirLocation>(bundle, pageNumber, pageSize);
+    }
+
+    // Auxiliar para obtener el valor de [EnumMember]
+    private static string GetEnumMemberValue(Enum enumValue)
+    {
+        var type = enumValue.GetType();
+        var info = type.GetField(enumValue.ToString());
+        var attr = info?.GetCustomAttributes(typeof(EnumMemberAttribute), false)
+                        .Cast<EnumMemberAttribute>()
+                        .FirstOrDefault();
+
+        return attr?.Value ?? enumValue.ToString().ToLowerInvariant();
     }
 }

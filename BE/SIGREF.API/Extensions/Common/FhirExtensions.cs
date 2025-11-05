@@ -1,7 +1,8 @@
 ﻿#nullable enable
-using System.Linq;
 using Hl7.Fhir.Model;
 using SIGREF.API.Dtos.Common;
+using SIGREF.API.Extensions.Common;
+using System.Linq;
 
 namespace SIGREF.API.Extensions;
 public static class CommonExtensions
@@ -103,6 +104,69 @@ public static class CommonExtensions
                 Display = c.Display
             }).ToList()
         };
+    }
+
+    // ────────────────────────────────────────────────
+    // EXTENSION
+    // ────────────────────────────────────────────────
+    public static ExtensionDto ToDto(this Extension extension)
+    {
+        var dto = new ExtensionDto
+        {
+            Url = extension.Url
+        };
+
+        switch (extension.Value)
+        {
+            case CodeableConcept codeableConcept:
+                dto.ValueCodeableConcept = codeableConcept.ToCodeableConceptDto();
+                break;
+            case FhirString fhirString:
+                dto.ValueString = fhirString.Value;
+                break;
+            case FhirBoolean fhirBoolean:
+                dto.ValueBoolean = fhirBoolean.Value;
+                break;
+            case Integer integer:
+                dto.ValueInteger = integer.Value;
+                break;
+            case FhirDecimal fhirDecimal:
+                dto.ValueDecimal = fhirDecimal.Value;
+                break;
+            case Date date:
+                dto.ValueDate = date.ToDateTime();
+                break;
+        }
+
+        return dto;
+    }
+
+    public static Extension ToFhirExtension(this ExtensionDto dto)
+    {
+        var extension = new Extension { Url = dto.Url };
+
+        if (dto.ValueCodeableConcept != null)
+        {
+            extension.Value = dto.ValueCodeableConcept.ToFhirCodeableConcept();
+        }
+        else if (dto.ValueString != null)
+        {
+            extension.Value = new FhirString(dto.ValueString);
+        }
+        else if (dto.ValueBoolean.HasValue)
+        {
+            extension.Value = new FhirBoolean(dto.ValueBoolean.Value);
+        }
+        else if (dto.ValueInteger.HasValue)
+        {
+            extension.Value = new Integer(dto.ValueInteger.Value);
+        }
+        else if (dto.ValueDecimal.HasValue)
+        {
+            extension.Value = new FhirDecimal(dto.ValueDecimal.Value);
+        }
+
+        return extension;
     }
 
 

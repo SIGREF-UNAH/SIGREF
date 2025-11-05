@@ -1,7 +1,10 @@
+using System.Runtime.Serialization;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 using SIGREF.API.Dtos;
+using SIGREF.API.Dtos.Common;
 using SIGREF.API.Extensions;
+using SIGREF.API.Helpers;
 using SIGREF.API.Services.Organization;
 
 namespace SIGREF.API.Services.Organizations
@@ -27,7 +30,7 @@ namespace SIGREF.API.Services.Organizations
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creando organización");
+                _logger.LogError(ex, "Error creando organizaciï¿½n");
                 throw;
             }
         }
@@ -42,45 +45,12 @@ namespace SIGREF.API.Services.Organizations
             }
             catch (FhirOperationException ex) when (ex.Status == System.Net.HttpStatusCode.NotFound)
             {
-                _logger.LogWarning("Organización con ID {Id} no encontrada", id);
+                _logger.LogWarning("Organizaciï¿½n con ID {Id} no encontrada", id);
                 return null;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error obteniendo organización con ID {Id}", id);
-                throw;
-            }
-        }
-
-        public async Task<IEnumerable<OrganizationDto>> GetAllOrganizationsAsync()
-        {
-            try
-            {
-                // USAR EL TIPO COMPLETAMENTE CALIFICADO
-                var bundle = await _fhirClient.SearchAsync<Hl7.Fhir.Model.Organization>();
-                var organizations = new List<OrganizationDto>();
-
-                while (bundle != null)
-                {
-                    organizations.AddRange(bundle.Entry
-                        .Where(e => e.Resource is Hl7.Fhir.Model.Organization)
-                        .Select(e => ((Hl7.Fhir.Model.Organization)e.Resource).ToDto()));
-
-                    if (bundle.NextLink != null)
-                    {
-                        bundle = await _fhirClient.ContinueAsync(bundle);
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                return organizations;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error obteniendo todas las organizaciones");
+                _logger.LogError(ex, "Error obteniendo organizaciï¿½n con ID {Id}", id);
                 throw;
             }
         }
@@ -102,12 +72,12 @@ namespace SIGREF.API.Services.Organizations
             }
             catch (FhirOperationException ex) when (ex.Status == System.Net.HttpStatusCode.NotFound)
             {
-                _logger.LogWarning("Organización con ID {Id} no encontrada para actualizar", id);
+                _logger.LogWarning("Organizaciï¿½n con ID {Id} no encontrada para actualizar", id);
                 return null;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error actualizando organización con ID {Id}", id);
+                _logger.LogError(ex, "Error actualizando organizaciï¿½n con ID {Id}", id);
                 throw;
             }
         }
@@ -121,14 +91,74 @@ namespace SIGREF.API.Services.Organizations
             }
             catch (FhirOperationException ex) when (ex.Status == System.Net.HttpStatusCode.NotFound)
             {
-                _logger.LogWarning("Organización con ID {Id} no encontrada para eliminar", id);
+                _logger.LogWarning("Organizaciï¿½n con ID {Id} no encontrada para eliminar", id);
                 return false;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error eliminando organización con ID {Id}", id);
+                _logger.LogError(ex, "Error eliminando organizaciï¿½n con ID {Id}", id);
                 throw;
             }
+        }
+
+        // Filtros
+        public async Task<PagedResult<OrganizationDto>> GetFilteredOrganizationsAsync(OrganizationFilterDto filter)
+        {
+            // Normalizar paginaciÃ³n usando el helper
+            var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
+
+            var searchParams = new SearchParams();
+
+            // Filtros
+            if (!string.IsNullOrWhiteSpace(filter.Name))
+                searchParams.Add("name", filter.Name);
+
+            if (filter.Active.HasValue)
+                searchParams.Add("active", filter.Active.Value.ToString().ToLowerInvariant());
+
+            if (filter.Types != null && filter.Types.Any())
+            {
+                foreach (var type in filter.Types)
+                {
+                    var typeValue = GetEnumMemberValue(type);
+                    searchParams.Add("type", typeValue);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.PartOf))
+                searchParams.Add("partof", filter.PartOf);
+
+            // ParÃ¡metros de paginaciÃ³n FHIR
+            searchParams.Count = pageSize;
+            searchParams.Add("_offset", offset.ToString());
+            searchParams.Add("_total", "accurate");
+
+            // Ejecutar bÃºsqueda
+            var bundle = await _fhirClient.SearchAsync<Hl7.Fhir.Model.Organization>(searchParams);
+
+            // Obtener PagedResult del helper
+            var pagedResult = FhirPaginationHelper.ToPagedResult<Hl7.Fhir.Model.Organization>(bundle, pageNumber, pageSize);
+
+            // Convertir Items a DTO
+            var resultDto = new PagedResult<OrganizationDto>
+            {
+                Items = pagedResult.Items.Select(o => o.ToDto()).ToList(),
+                Pagination = pagedResult.Pagination
+            };
+
+            return resultDto;
+        }
+
+        // Auxiliar para obtener el valor de EnumMember
+        private static string GetEnumMemberValue(Enum enumValue)
+        {
+            var type = enumValue.GetType();
+            var info = type.GetField(enumValue.ToString());
+            var attr = info?.GetCustomAttributes(typeof(EnumMemberAttribute), false)
+                            .Cast<EnumMemberAttribute>()
+                            .FirstOrDefault();
+
+            return attr?.Value ?? enumValue.ToString().ToLowerInvariant();
         }
     }
 }

@@ -15,3 +15,11 @@
   --color-card: #FAFAFA;
 }
 
+@layer components {
+  .primary-card { 
+    @apply p-6 bg-card border-gray-300 border-2 rounded-lg shadow-md;
+  }
+  .secondary-card {
+    @apply p-6 bg-white border-gray-300 border rounded-lg;
+  }
+}

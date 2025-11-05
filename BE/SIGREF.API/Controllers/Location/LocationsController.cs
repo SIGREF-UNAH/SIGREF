@@ -2,8 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Extensions;
 using SIGREF.API.Dtos.Location;
-using SIGREF.API.Constants;
 using SIGREF.API.Services.Location;
+using SIGREF.API.Dtos.Common;
 
 namespace SIGREF.API.Controllers.Location;
 
@@ -20,13 +20,22 @@ public class LocationsController(LocationService locationService) : ControllerBa
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    [Produces<IEnumerable<LocationDto>>()]
-    public async Task<IActionResult> Get()
+    [Produces(typeof(PagedResultDto<LocationDto>))]
+    public async Task<IActionResult> Get([FromQuery] LocationFilterDto filter)
     {
-        var locations = await locationService.GetAllLocationsAsync();
-        var locationDtos = locations.Select(location => location.ToDto());
-        return Ok(locationDtos);
+        var pagedLocations = await locationService.GetFilteredLocationsAsync(filter);
+        var pagedLocationDtos = new PagedResultDto<LocationDto>
+        {
+            Items = pagedLocations.Items.Select(location => location.ToDto()),
+            Pagination = pagedLocations.Pagination
+        };
+        return Ok(pagedLocationDtos);
     }
+
+    private static readonly HashSet<string> ValidStatuses = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "active", "suspended", "inactive"
+    };
 
     // GET api/locations/5
     [HttpGet("{id}")]

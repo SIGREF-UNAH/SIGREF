@@ -1,5 +1,6 @@
 ﻿using FhirPractitioner = Hl7.Fhir.Model.Practitioner;
 using SIGREF.API.Dtos.Practitioner;
+using SIGREF.API.Dtos.Common;
 
 namespace SIGREF.API.Services.Practitioner;
 public interface IPractitionerService
@@ -8,10 +9,10 @@ public interface IPractitionerService
 
     Task<FhirPractitioner> GetPractitionerByIdAsync(string id);
 
-    Task<IEnumerable<FhirPractitioner>> GetAllPractitionersAsync();
-
     Task<FhirPractitioner> UpdatePractitionerAsync(string id, FhirPractitioner dto);
 
     Task DeletePractitionerAsync(string id);
+
+    Task<PagedResult<PractitionerDto>> GetFilteredPractitionersAsync(PractitionerFilterDto filter);
 }
 
