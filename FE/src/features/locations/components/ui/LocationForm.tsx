@@ -61,7 +61,7 @@ export default function LocationForm({ mode }: LocationFormProps) {
   }
 
   return (
-    <div className="bg-[#FAFAFA] rounded-lg border-2 border-[#D9D9D9] p-6">
+    <div className="primary-card">
       <div className="flex items-center gap-3 mb-8">
         <MdOutlineAddLocationAlt className="w-10 h-10 text-blue-500" />
         <span className="text-xl font-semibold text-[#333333]">{title}</span>

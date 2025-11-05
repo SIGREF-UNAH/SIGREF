@@ -30,7 +30,7 @@ export const CreateHealthcarePage = () => {
       />
 
       {/* Contenido Principal */}
-      <div className="p-6 border-2 bg-card border-gray-300 shadow-md rounded-lg">
+      <div className="primary-card">
         <FormTitle title="Crear Servicio" icon="create" />
         
         {isLoading ? (
