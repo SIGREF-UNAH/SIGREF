@@ -198,8 +198,8 @@ const LocationList: React.FC = () => {
   ];
 
   return (
-    <div className="bg-[#FAFAFA] rounded-lg border-2 border-[#D9D9D9] p-6">
-      <Card style={{ borderRadius: "8px" }} bodyStyle={{ padding: "24px" }}>
+    <div className="primary-card">
+      <div>
         <Table<LocationDto>
           title={() => (
             <div className="flex justify-end gap-3 mb-4">
@@ -258,7 +258,7 @@ const LocationList: React.FC = () => {
           scroll={{ x: "max-content" }}
           bordered
         />
-      </Card>
+      </div>
 
       <DeleteLocationModal
         visible={deleteModalVisible}

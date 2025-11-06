@@ -203,10 +203,7 @@ export default function PatientsInformation() {
       {contextHolder}
 
       {/* Información del Paciente */}
-      <div
-        ref={patientInfoRef}
-        className="rounded-lg border border-gray-300 bg-white p-6"
-      >
+      <div ref={patientInfoRef} className="secondary-card">
         {selectedPatient.id !== "" ? (
           <div>
             {/* Encabezado y Botones */}
@@ -486,7 +483,7 @@ export default function PatientsInformation() {
       </div>
 
       {/* Busqueda y Filtros */}
-      <div className="rounded-lg border border-gray-300 bg-white p-6">
+      <div className="secondary-card">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FilterOutlined
@@ -613,7 +610,7 @@ export default function PatientsInformation() {
       </div>
 
       {/* Lista de Pacientes */}
-      <div className="rounded-lg border border-gray-300 bg-white p-6">
+      <div className="secondary-card">
         <div className="mb-4 flex items-center gap-2">
           <UserOutlined
             className="text-lg"

@@ -23,7 +23,7 @@ export const PatientsListPage = () => {
       />
 
       {/* Formulario */}
-      <div className="p-6 border-2 bg-card border-gray-300 shadow-md rounded-lg">
+      <div className="primary-card">
         <PatientsInformation />
       </div>
     </div>
