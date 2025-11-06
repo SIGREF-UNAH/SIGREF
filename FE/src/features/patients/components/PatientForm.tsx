@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   ProForm,
   ProFormText,
@@ -5,6 +6,7 @@ import {
   ProFormDatePicker,
   ProFormGroup,
   ProFormList,
+  type ProFormInstance,
 } from "@ant-design/pro-components";
 import {
   GlobalOutlined,
@@ -17,6 +19,10 @@ import {
 import { Button, Collapse, message, Space } from "antd";
 import type { CollapseProps } from "antd";
 import { Link } from "react-router-dom";
+import ccsj from "countrycitystatejson";
+import { useRef } from "react";
+
+// TODO: Validar campos de contecto y añadir libreria de codigos de telefono
 
 interface PatientFormProps {
   mode: "create" | "edit";
@@ -26,9 +32,6 @@ interface PatientFormProps {
   error?: string | null;
 }
 
-// TODO: Implementar una librería para seleccionar el país
-// TODO: Implementar una librería para el ingreso de un numero de telefono
-
 export default function PatientForm({
   mode,
   initialValues,
@@ -37,6 +40,113 @@ export default function PatientForm({
   onSubmit,
 }: PatientFormProps) {
   const [messageApi, contextHolder] = message.useMessage();
+  const formRef = useRef<ProFormInstance>(null);
+
+  // Estados para los selectores de ubicación
+  const [countryOptions] = useState(() =>
+    ccsj.getCountries().map((c: any) => ({
+      label: c.name,
+      value: c.shortName,
+    }))
+  );
+
+  // Estado para guardar las opciones de estados y ciudades por cada dirección
+  const [addressLocations, setAddressLocations] = useState<{
+    [key: number]: {
+      stateOptions: { label: string; value: string }[];
+      cityOptions: { label: string; value: string }[];
+    };
+  }>({});
+
+  // Función para manejar el cambio de país
+  const handleCountryChange = (index: number, countryShort?: string) => {
+    if (!countryShort) {
+      setAddressLocations((prev) => ({
+        ...prev,
+        [index]: { stateOptions: [], cityOptions: [] },
+      }));
+      // Limpiar campos de estado y ciudad en el formulario
+      if (formRef.current) {
+        formRef.current.setFieldValue(["address", index, "state"], null);
+        formRef.current.setFieldValue(["address", index, "city"], null);
+      }
+      return;
+    }
+
+    const states = ccsj.getStatesByShort(countryShort) ?? [];
+    setAddressLocations((prev) => ({
+      ...prev,
+      [index]: {
+        stateOptions: states.map((s) => ({ label: s, value: s })),
+        cityOptions: [],
+      },
+    }));
+    
+    // Limpiar campos de estado y ciudad en el formulario
+    if (formRef.current) {
+      formRef.current.setFieldValue(["address", index, "state"], null);
+      formRef.current.setFieldValue(["address", index, "city"], null);
+    }
+  };
+
+  // Función para manejar el cambio de estado
+  const handleStateChange = (
+    index: number,
+    countryShort: string,
+    stateName?: string
+  ) => {
+    if (!countryShort || !stateName) {
+      setAddressLocations((prev) => ({
+        ...prev,
+        [index]: {
+          ...prev[index],
+          cityOptions: [],
+        },
+      }));
+      // Limpiar campo de ciudad en el formulario
+      if (formRef.current) {
+        formRef.current.setFieldValue(["address", index, "city"], null);
+      }
+      return;
+    }
+
+    const cities = ccsj.getCities(countryShort, stateName) ?? [];
+    setAddressLocations((prev) => ({
+      ...prev,
+      [index]: {
+        ...prev[index],
+        cityOptions: cities.map((c) => ({ label: c, value: c })),
+      },
+    }));
+    
+    // Limpiar campo de ciudad en el formulario
+    if (formRef.current) {
+      formRef.current.setFieldValue(["address", index, "city"], null);
+    }
+  };
+
+  // Inicializar opciones de estado y ciudad si hay valores iniciales
+  useEffect(() => {
+    if (mode === "edit" && initialValues?.address && formRef.current) {
+      initialValues.address.forEach((addr: any, index: number) => {
+        if (addr.country) {
+          const states = ccsj.getStatesByShort(addr.country) ?? [];
+          const stateOptions = states.map((s) => ({ label: s, value: s }));
+          
+          let cityOptions: { label: string; value: string }[] = [];
+          if (addr.state) {
+            const cities = ccsj.getCities(addr.country, addr.state) ?? [];
+            cityOptions = cities.map((c) => ({ label: c, value: c }));
+          }
+          
+          setAddressLocations((prev) => ({
+            ...prev,
+            [index]: { stateOptions, cityOptions },
+          }));
+        }
+      });
+    }
+  }, [mode, initialValues]);
 
   // Función para enviar el formulario
   const onFinish = async (values: any) => {
@@ -65,11 +175,14 @@ export default function PatientForm({
   // Sección de nacionalidad
   const nacionalidadContent = (
     <ProFormGroup>
-      <ProFormText
-        name={mode === "create" ? "paisNacionalidad" : "nacionalidad"}
+      <ProFormSelect
+        name="nacionalidad"
         label="País de Nacionalidad"
-        placeholder="Ej. Honduras"
+        placeholder="Seleccionar país"
         width="md"
+        showSearch
+        allowClear
+        options={countryOptions}
       />
       <ProFormSelect
         name="gender"
@@ -78,10 +191,10 @@ export default function PatientForm({
         width="sm"
         rules={[{ required: true, message: "Campo requerido" }]}
         options={[
-          { label: "Masculino", value: 0 },
-          { label: "Femenino", value: 1 },
-          { label: "Otro", value: 2 },
-          { label: "Desconocido", value: 3 },
+          { label: "Masculino", value: 1 },
+          { label: "Femenino", value: 2 },
+          { label: "Otro", value: 3 },
+          { label: "Desconocido", value: 0 },
         ]}
       />
       <ProFormSelect
@@ -89,6 +202,7 @@ export default function PatientForm({
         label="Estado Civil"
         placeholder="Seleccionar"
         width="sm"
+        rules={[{ required: true, message: "Campo requerido" }]}
         options={[
           { label: "Soltero/a", value: "U" },
           { label: "Casado/a", value: "M" },
@@ -103,6 +217,7 @@ export default function PatientForm({
         label="Estado Vital"
         placeholder="Seleccionar"
         width="sm"
+        rules={[{ required: true, message: "Campo requerido" }]}
         options={[
           { label: "Vivo/a", value: 1 },
           { label: "Fallecido/a", value: 0 },
@@ -126,6 +241,7 @@ export default function PatientForm({
         label="Tipo de Identificación"
         placeholder="Seleccionar"
         width="sm"
+        rules={[{ required: true, message: "Campo requerido" }]}
         options={[
           { label: "DNI", value: "DNI" },
           { label: "Pasaporte", value: "PPN" },
@@ -137,6 +253,7 @@ export default function PatientForm({
         label="Número / Código"
         placeholder="Ej. 0401202501031"
         width="md"
+        rules={[{ required: true, message: "Campo requerido" }]}
       />
       <ProFormText
         name="emisor"
@@ -155,9 +272,10 @@ export default function PatientForm({
         label="Tipo de Nombre"
         placeholder="Seleccionar"
         width="sm"
+        rules={[{ required: true, message: "Campo requerido" }]}
         options={[
-          { label: "Legal", value: 0 },
-          { label: "Alias", value: 1 },
+          { label: "Legal", value: "Official" },
+          { label: "Alias", value: "Usual" },
         ]}
       />
       <ProFormText
@@ -200,13 +318,13 @@ export default function PatientForm({
             placeholder="Seleccionar"
             width="sm"
             options={[
-              { label: "Teléfono", value: "phone" },
-              { label: "Email", value: "email" },
-              { label: "URL", value: "url" },
-              { label: "Biper", value: "pager" },
-              { label: "Fax", value: "fax" },
-              { label: "SMS", value: "sms" },
-              { label: "Otro", value: "other" },
+              { label: "Teléfono", value: "Phone" },
+              { label: "Email", value: "Email" },
+              { label: "URL", value: "Url" },
+              { label: "Biper", value: "Pager" },
+              { label: "Fax", value: "Fax" },
+              { label: "SMS", value: "SMS" },
+              { label: "Otro", value: "Other" },
             ]}
           />
 
@@ -217,11 +335,11 @@ export default function PatientForm({
             placeholder="Seleccionar"
             width="sm"
             options={[
-              { label: "Personal", value: "mobile" },
-              { label: "Hogar", value: "home" },
-              { label: "Trabajo", value: "work" },
-              { label: "Temporal", value: "temp" },
-              { label: "Antiguo", value: "old" },
+              { label: "Personal", value: "Mobile" },
+              { label: "Hogar", value: "Home" },
+              { label: "Trabajo", value: "Work" },
+              { label: "Temporal", value: "Temp" },
+              { label: "Antiguo", value: "Old" },
             ]}
           />
 
@@ -237,7 +355,7 @@ export default function PatientForm({
     </ProFormList>
   );
 
-  // Sección de direcciones
+  // Sección de direcciones con selectores en cascada
   const direccionesContent = (
     <ProFormList
       name="address"
@@ -249,7 +367,7 @@ export default function PatientForm({
         ? { initialValue: initialValues.address }
         : {})}
     >
-      {(field) => (
+      {(field, index) => (
         <ProFormGroup key={field.key}>
           <ProFormSelect
             {...(mode === "create" ? field : {})}
@@ -258,34 +376,59 @@ export default function PatientForm({
             placeholder="Seleccionar"
             width="sm"
             options={[
-              { label: "Hogar", value: "home" },
-              { label: "Trabajo", value: "work" },
-              { label: "Temporal", value: "temp" },
-              { label: "Antiguo", value: "old" },
-              //{ label: "Factura", value: "billing" },
+              { label: "Hogar", value: "Home" },
+              { label: "Trabajo", value: "Work" },
+              { label: "Temporal", value: "Temp" },
+              { label: "Antiguo", value: "Old" },
             ]}
           />
-          <ProFormText
+
+          <ProFormSelect
             {...(mode === "create" ? field : {})}
             name="country"
             label="País"
-            placeholder="Ej. Honduras"
+            placeholder="Seleccionar país"
             width="md"
+            showSearch
+            allowClear
+            options={countryOptions}
+            fieldProps={{
+              onChange: (value) => handleCountryChange(index, value as string | undefined),
+            }}
           />
-          <ProFormText
+
+          <ProFormSelect
             {...(mode === "create" ? field : {})}
             name="state"
             label="Departamento"
-            placeholder="Ej. Copán"
+            placeholder="Seleccionar departamento"
             width="md"
+            showSearch
+            allowClear
+            options={addressLocations[index]?.stateOptions || []}
+            fieldProps={{
+              onChange: (value) => {
+                const countryValue = formRef.current?.getFieldValue([
+                  "address",
+                  index,
+                  "country",
+                ]) as string | undefined;
+                handleStateChange(index, countryValue as string, value as string | undefined);
+              },
+            }}
           />
-          <ProFormText
+
+          <ProFormSelect
             {...(mode === "create" ? field : {})}
             name="city"
             label="Ciudad"
-            placeholder="Ej. Santa Rosa de Copán"
+            placeholder="Seleccionar ciudad"
             width="md"
+            showSearch
+            allowClear
+            options={addressLocations[index]?.cityOptions || []}
           />
+
           <ProFormText
             {...(mode === "create" ? field : {})}
             name={mode === "create" ? ["line", 0] : "line"}
@@ -362,6 +505,7 @@ export default function PatientForm({
 
       <main className="flex-1 w-full">
         <ProForm
+          formRef={formRef}
           onFinish={onFinish}
           {...(mode === "edit" && initialValues ? { initialValues } : {})}
           submitter={{

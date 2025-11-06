@@ -4,12 +4,10 @@
  * SIGREF.API
  * OpenAPI spec version: 1.0
  */
-import type { CodeableConceptDto } from "./codeableConceptDto";
 
 export interface ExtensionDto {
   /** @nullable */
   url?: string | null;
-  valueCodeableConcept?: CodeableConceptDto;
   /** @nullable */
   valueString?: string | null;
   /** @nullable */
