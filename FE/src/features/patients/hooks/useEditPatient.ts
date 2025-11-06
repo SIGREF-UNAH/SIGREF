@@ -5,6 +5,7 @@ import {
   usePutApiPatientsId,
 } from "../../../api/patients/patients";
 import type { PatientDto } from "../../../api/models";
+import { PatientExtensionsUrls } from "../../../shared/constants";
 
 export const useEditPatient = () => {
   const { id } = useParams();
@@ -39,8 +40,7 @@ export const useEditPatient = () => {
     const updatePatientDto = {
       name: [
         {
-          use: values.tipoNombre === "legal" ? 0 : 1,
-          text: `${values.primerNombre} ${values.apellidos}`,
+          use: values.tipoNombre,
           family: values.apellidos,
           given: [values.primerNombre, values.segundoNombre || ""].filter(
             Boolean
@@ -62,17 +62,8 @@ export const useEditPatient = () => {
       },
       extension: [
         {
-          url: "http://hl7.org/fhir/StructureDefinition/patient-nationality",
-          valueCodeableConcept: {
-            coding: [
-              {
-                system: "urn:iso:std:iso:3166",
-                code: values.nacionalidadCodigo || "HN",
-                display: values.nacionalidad || "Honduras",
-              },
-            ],
-            text: values.nacionalidad || "Honduras",
-          },
+          url: PatientExtensionsUrls.nationality,
+          valueString: values.nacionalidad,
         },
       ],
 
@@ -82,17 +73,16 @@ export const useEditPatient = () => {
           use: item.use,
           value: item.value || "",
           rank: index + 1,
-          codigoPais: item.codigoPais || "+504",
-          preferido: item.preferido ?? false,
         })) || [],
 
       address:
         values.address?.map((addr: any, index: number) => ({
           use: addr.tipoDireccion || "casa",
-          type: 0,
-          text: addr.line || "",
-          line: addr.line ? [addr.line] : [],
+          type: addr.type || 0,
+          text: addr.line?.[0] || "",
+          line: addr.line || [],
           city: addr.city || "",
+          district: addr.district || "",
           state: addr.state || "",
           postalCode: addr.postalCode || "",
           country: addr.country || "",
@@ -111,24 +101,22 @@ export const useEditPatient = () => {
                   values.tipoIdentificacion === "PPN"
                     ? "Número de Pasaporte"
                     : values.tipoIdentificacion === "NI"
-                      ? "Identificador Único Nacional"
+                      ? "Documento de Identificación"
                       : "Documento Nacional de Identidad",
                 userSelected: true,
               },
             ],
             text: values.tipoIdentificacion,
           },
-          system: values.emisor || "https://registro.gob.hn/identifiers",
-          value: values.identifier?.[0]?.value || "",
+          system: values.emisor || null,
+          value: values.identifier?.[0]?.value || null,
         },
       ],
     };
 
-    console.log("DTO a enviar al backend:", updatePatientDto);
-
     updatePatient({
       id: id || "",
-      data: updatePatientDto,
+      data: updatePatientDto as any,
     });
   };
 
@@ -141,22 +129,20 @@ export const useEditPatient = () => {
   // Valores iniciales
   const initialValues = patient
     ? {
-        primerNombre: patient.name?.[0]?.given?.[0] || "",
-        segundoNombre: patient.name?.[0]?.given?.[1] || "",
-        apellidos: patient.name?.[0]?.family || "",
-        tipoNombre: patient.name?.[0]?.use === 0 ? "alias" : "legal",
-        gender: patient.gender || 0,
+        primerNombre: patient.name?.[0]?.given?.[0],
+        segundoNombre: patient.name?.[0]?.given?.[1],
+        apellidos: patient.name?.[0]?.family,
+        tipoNombre: patient.name?.[0]?.use,
+        gender: patient.gender,
         estadoVital: patient.active ? 1 : 0,
         estadoCivil:
           patient?.maritalStatus?.text ||
-          patient?.maritalStatus?.coding?.[0]?.display ||
-          "No registrado",
+          patient?.maritalStatus?.coding?.[0]?.display,
         nacionalidad:
           patient?.extension?.find(
             (ext) =>
-              ext.url ===
-              "http://hl7.org/fhir/StructureDefinition/patient-nationality"
-          )?.valueCodeableConcept?.text || "No registrada",
+              ext.url === PatientExtensionsUrls.nationality
+          )?.valueString,
         fechanacimiento: patient.birthDate ? new Date(patient.birthDate) : null,
         tipoIdentificacion: (() => {
           const code =
@@ -165,22 +151,22 @@ export const useEditPatient = () => {
           if (code === "NI") return "NI";
           return "DNI";
         })(),
-        identifier: [{ value: patient.identifier?.[0]?.value || "" }],
-        emisor: patient.identifier?.[0]?.system || "No registrado",
+        identifier: [{ value: patient.identifier?.[0]?.value }],
+        emisor: patient.identifier?.[0]?.system,
         telecom:
           patient.telecom?.map((t) => ({
-            system: t.system || "phone",
-            use: t.use === 0 ? 0 : t.use === 1 ? 1 : 2,
-            value: t.value || "",
+            system: t.system,
+            use: t.use,
+            value: t.value,
           })) || [],
         address:
           patient.address?.map((a) => ({
-            tipoDireccion: a.use || "home",
-            country: a.country || "",
-            state: a.state || "",
-            city: a.city || "",
-            line: a.line?.[0] || "",
-            postalCode: a.postalCode || "",
+            tipoDireccion: a.use,
+            country: a.country,
+            state: a.state,
+            city: a.city,
+            line: a.line?.[0],
+            postalCode: a.postalCode,
           })) || [],
       }
     : {};

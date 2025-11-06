@@ -1,11 +1,12 @@
-import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   usePostApiPatients,
   getGetApiPatientsQueryKey,
 } from "../../../api/patients/patients";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import type { CreatePatientDto } from "../../../api/models";
 import { useNavigate } from "react-router";
+import { PatientExtensionsUrls } from "../../../shared/constants";
 
 export default function useCreatePatientForm() {
   const navigate = useNavigate();
@@ -27,8 +28,7 @@ export default function useCreatePatientForm() {
     const payload: CreatePatientDto = {
       name: [
         {
-          use: values.tipoNombre === "legal" ? 0 : 1,
-          text: `${values.primerNombre} ${values.apellidos}`,
+          use: values.tipoNombre,
           family: values.apellidos,
           given: [values.primerNombre, values.segundoNombre || ""].filter(
             Boolean
@@ -52,17 +52,8 @@ export default function useCreatePatientForm() {
       },
       extension: [
         {
-          url: "http://hl7.org/fhir/StructureDefinition/patient-nationality",
-          valueCodeableConcept: {
-            coding: [
-              {
-                system: "urn:iso:std:iso:3166",
-                code: values.nacionalidadCodigo || "HN",
-                display: values.nacionalidad || "Honduras",
-              },
-            ],
-            text: values.nacionalidad || "Honduras",
-          },
+          url: PatientExtensionsUrls.nationality,
+          valueString: values.nacionalidad || "Desconocido",
         },
       ],
 
@@ -76,8 +67,8 @@ export default function useCreatePatientForm() {
 
       address:
         values.address?.map((addr: any, index: number) => ({
-          use: 0,
-          type: 0,
+          use: addr.tipoDireccion || "casa",
+          type: addr.type || 0,
           text: addr.line?.[0] || "",
           line: addr.line || [],
           city: addr.city || "",
@@ -100,20 +91,18 @@ export default function useCreatePatientForm() {
                   values.tipoIdentificacion === "PPN"
                     ? "Número de Pasaporte"
                     : values.tipoIdentificacion === "NI"
-                      ? "Identificador Único Nacional"
+                      ? "Documento de Identificación"
                       : "Documento Nacional de Identidad",
                 userSelected: true,
               },
             ],
             text: values.tipoIdentificacion,
           },
-          system: values.emisor || "https://registro.gob.hn/identifiers",
-          value: values.identifier?.[0]?.value || "",
+          system: values.emisor || null,
+          value: values.identifier?.[0]?.value || null,
         },
       ],
     };
-
-    // console.log("Datos enviados al backend:", payload);
 
     setIsSubmitting(true);
     setError(null);
