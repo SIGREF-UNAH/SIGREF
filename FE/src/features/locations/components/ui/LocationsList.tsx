@@ -123,9 +123,8 @@ const LocationList: React.FC = () => {
       render: (status) => {
         const normalized = status.toLowerCase();
         if (normalized === "active") return <Tag color="green">✓ Activo</Tag>;
-        if (normalized === "suspended")
-          return <Tag color="orange">⚠︎ Suspendido</Tag>;
-        if (normalized === "inactive") return <Tag color="red">✗ Inactivo</Tag>;
+        if (normalized === "suspended") return <Tag color="orange">⚠︎ Suspendido</Tag>;
+        if (normalized === "inactive") return <Tag color="red">✗ Inactivo</Tag>; 
         return "-";
       },
     },
