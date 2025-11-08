@@ -18,6 +18,8 @@ var postgres = builder.AddPostgres("postgres", username, password)
 // Bases de datos específicas
 var hapiDb = postgres.AddDatabase("hapi");
 
+// MongoDB eliminado del AppHost: se usará una instancia local instalada
+
 // Keycloak con realm configurado automáticamente usando método más confiable
 var keycloak = builder.AddKeycloakWithAutoSetup(
     "keycloak-server", 

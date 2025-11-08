@@ -1,18 +1,27 @@
 using Hl7.Fhir.Rest;
+using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using SIGREF.API.Constants;
 using SIGREF.API.Database;
+using Aspire.MongoDB.Driver;
 using SIGREF.API.Services.Common;
 using SIGREF.API.Services.Healthcare;
+using SIGREF.API.Services.Income;
 using SIGREF.API.Services.Location;
 using SIGREF.API.Services.Organization;
 using SIGREF.API.Services.Organizations;
 using SIGREF.API.Services.Patient;
 using SIGREF.API.Services.Practitioner;
 using SIGREF.API.Services.PractitionerRole;
+using SIGREF.API.Services.AuditLog;
+using SIGREF.API.Middleware;
 using System.Security.Claims;
 using System.Text.Json;
+using MongoDB.Driver;
+using Aspire.MongoDB.Driver;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace SIGREF.API;
 
@@ -30,6 +39,19 @@ public class Startup
         // Configurar las opciones de variables de entorno
         services.Configure<Env>(_configuration);
 
+        // Configurar MongoDB con Aspire
+        services.AddSingleton<IMongoClient>(sp =>
+        {
+            var connectionString = _configuration.GetConnectionString("mongodb");
+            return new MongoClient(connectionString);
+        });
+
+        // HttpContextAccessor (IMPORTANTE para auditoría)
+        services.AddHttpContextAccessor();
+
+        // Servicio de Auditoría
+        services.AddScoped<IAuditLogService, AuditLogService>();
+
         // Registrar FhirClient directamente
         services.AddScoped<FhirService>();
         services.AddScoped<FhirClient>(serviceProvider =>
@@ -43,22 +65,53 @@ public class Startup
         services.AddScoped<TiposUbicacionSeeder>();
         services.AddScoped<SIGREFSeeder>();
 
-        // Registrar FhirService (opcional si aún lo necesitas)
+        // Servicios de la aplicación
         services.AddScoped<LocationService>();
         services.AddScoped<HealthcareService>();
         services.AddScoped<IPatientService, PatientService>();
         services.AddScoped<IPractitionerRoleService, PractitionerRoleService>();
         services.AddScoped<IPractitionerService, PractitionerService>();
         services.AddScoped<IOrganizationService, OrganizationService>();
+        services.AddScoped<IIncomeService, IncomeService>();
 
         services.AddControllers();
         services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
-        services.AddHttpContextAccessor();
+        services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new OpenApiInfo { Title = "SIGREF API", Version = "v1" });
+
+            var securityScheme = new OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                In = ParameterLocation.Header,
+                Description = "Introduce tu token JWT con el prefijo 'Bearer '"
+            };
+
+            c.AddSecurityDefinition("Bearer", securityScheme);
+
+            var securityRequirement = new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    Array.Empty<string>()
+                }
+            };
+
+            c.AddSecurityRequirement(securityRequirement);
+        });
 
         // Configuración de PostgreSQL con Aspire
         services.AddNpgsql<SIGREFContext>("hapi");
-        services.AddHttpContextAccessor();
 
         // Configuración de Autenticación con Keycloak
         services.AddAuthentication(options =>
@@ -89,6 +142,11 @@ public class Startup
             // Aquí mapeamos los roles
             options.Events = new JwtBearerEvents
             {
+                OnAuthenticationFailed = context =>
+                {
+                    Console.WriteLine($"Authentication failed: {context.Exception}");
+                    return Task.CompletedTask;
+                },
                 OnTokenValidated = context =>
                 {
                     var identity = context.Principal.Identity as ClaimsIdentity;
@@ -96,11 +154,11 @@ public class Startup
                     if (identity != null)
                     {
                         // Lista de roles
-                        var validRoles = new[] { 
-                            RolesConstants.admin, 
-                            RolesConstants.cashier, 
-                            RolesConstants.ti, 
-                            RolesConstants.auditor 
+                        var validRoles = new[] {
+                            RolesConstants.admin,
+                            RolesConstants.cashier,
+                            RolesConstants.ti,
+                            RolesConstants.auditor
                         };
 
                         // --- Roles de Realm ---
@@ -171,6 +229,9 @@ public class Startup
         app.UseHttpsRedirection();
 
         app.UseCors("CorsPolicy");
+
+        //  IMPORTANTE: Middleware de auditoría ANTES de Authentication
+        app.UseMiddleware<AuditLogMiddleware>();
 
         app.UseRouting();
 
