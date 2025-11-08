@@ -1,6 +1,6 @@
 import { ProLayout } from "@ant-design/pro-components";
 import { Link, Outlet, useNavigate } from "react-router";
-import { Dropdown } from "antd";
+import { Button, Dropdown } from "antd";
 import { useKeycloak } from "@react-keycloak/web";
 import { RoutesByRole } from "../../config";
 import { validRoles } from "../../auth";
@@ -8,11 +8,15 @@ import {
   BookOutlined,
   LogoutOutlined,
   PhoneOutlined,
+  QuestionCircleOutlined,
 } from "@ant-design/icons";
+import { ShortcutsGuideModal } from "./modals";
+import { useState } from "react";
 
 export const Layout = () => {
   const navigate = useNavigate();
   const { keycloak } = useKeycloak();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Obtener todos los roles del token
   const roles = keycloak.tokenParsed?.realm_access?.roles || [];
@@ -101,6 +105,19 @@ export const Layout = () => {
             heightLayoutHeader: 64,
           },
         }}
+        
+        actionsRender={() => {
+          return [
+            <Button 
+              icon={<QuestionCircleOutlined />} 
+              type="default" 
+              onClick={() => setIsModalOpen(true)}
+            >
+              Atajos
+            </Button>
+          ];
+        }}
+
         // Avatar / Acciones
         avatarProps={{
           src: undefined,
@@ -166,6 +183,11 @@ export const Layout = () => {
         <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <Outlet />
         </div>
+        {/* Modal de Atajos */}
+        <ShortcutsGuideModal
+          open={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
       </ProLayout>
     </div>
   );
