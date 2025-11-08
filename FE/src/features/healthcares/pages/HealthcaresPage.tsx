@@ -1,6 +1,5 @@
 import { Table, Button, Input, Select, Space, Popconfirm, Alert, Tag } from "antd";
 import { useHealthcaresList } from "../hooks";
-import { HealthcareHeader } from "../components/ui";
 import { HealthcaresPageSkeleton } from "../components/skeletons";
 import { HealthcareDetailsModal } from "../components/modals";
 import { PageHeaderTabs } from "../../../shared/components/ui";
@@ -9,7 +8,6 @@ import type { HealthcareDto } from "../../../api/models";
 import {
   EditOutlined,
   DeleteOutlined,
-  PlusOutlined,
   FilterOutlined,
   EyeOutlined,
 } from "@ant-design/icons";
@@ -28,7 +26,6 @@ export const HealthcaresPage = () => {
     selectedHealthcare,
     isModalOpen,
     searchInput,
-    handleCreate,
     handleEdit,
     handleDelete,
     handleViewDetails,
@@ -118,18 +115,6 @@ export const HealthcaresPage = () => {
   if (isError) {
     return (
       <div>
-        <div className="flex mb-4 items-start justify-between">
-          <HealthcareHeader />
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleCreate}
-            size="large"
-            style={{ backgroundColor: "var(--color-primary)" }}
-          >
-            Nuevo Servicio
-          </Button>
-        </div>
         <Alert
           message="Error al cargar los servicios"
           description="No se pudieron cargar los servicios médicos. Por favor, intente nuevamente."
