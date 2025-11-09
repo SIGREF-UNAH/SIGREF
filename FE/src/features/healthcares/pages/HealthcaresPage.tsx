@@ -1,16 +1,25 @@
-import { Table, Button, Input, Select, Space, Popconfirm, Alert, Tag } from "antd";
+import {
+  Table,
+  Button,
+  Input,
+  Select,
+  Space,
+  Popconfirm,
+  Alert,
+  Tag,
+  Spin,
+} from "antd";
 import { useHealthcaresList } from "../hooks";
-import { HealthcaresPageSkeleton } from "../components/skeletons";
 import { HealthcareDetailsModal } from "../components/modals";
-import { PageHeaderTabs } from "../../../shared/components/ui";
-import type { ColumnsType } from "antd/es/table";
-import type { HealthcareDto } from "../../../api/models";
 import {
   EditOutlined,
   DeleteOutlined,
   FilterOutlined,
   EyeOutlined,
 } from "@ant-design/icons";
+import { PageHeaderTabs } from "../../../shared/components/ui";
+import type { ColumnsType } from "antd/es/table";
+import type { HealthcareDto } from "../../../api/models";
 
 const { Search } = Input;
 
@@ -54,8 +63,11 @@ export const HealthcaresPage = () => {
       title: "Ubicación(es)",
       key: "area",
       width: 200,
-      render: (_, record) => record.location?.map(loc => 
-        loc?.display).filter(Boolean).join(", ") || "-",
+      render: (_, record) =>
+        record.location
+          ?.map((loc) => loc?.display)
+          .filter(Boolean)
+          .join(", ") || "-",
     },
     {
       title: "Costo",
@@ -100,11 +112,7 @@ export const HealthcaresPage = () => {
             cancelText="Cancelar"
             okButtonProps={{ danger: true }}
           >
-            <Button
-              type="text"
-              danger
-              icon={<DeleteOutlined />}
-            />
+            <Button type="text" danger icon={<DeleteOutlined />} />
           </Popconfirm>
         </Space>
       ),
@@ -125,70 +133,82 @@ export const HealthcaresPage = () => {
     );
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-100">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
   return (
     <div>
       {/* Encabezado */}
       <PageHeaderTabs
         title="Gestión de Servicios"
         tabs={[
-          { key: "listar", label: "Lista de Servicios", path: "/healthcares/list" },
-          { key: "crear", label: "Crear Servicio", path: "/healthcares/create" },
+          {
+            key: "listar",
+            label: "Lista de Servicios",
+            path: "/healthcares/list",
+          },
+          {
+            key: "crear",
+            label: "Crear Servicio",
+            path: "/healthcares/create",
+          },
         ]}
         defaultActive="crear"
       />
 
       {/* Contenido */}
-      {isLoading ? (
-        <HealthcaresPageSkeleton />
-      ) : (
-        <div className="primary-card">
-          {/* Búsqueda y filtros */}
-          <div className="flex justify-end gap-3 mb-4">
-            <Search
-              placeholder="Buscar por nombre"
-              allowClear
-              style={{ width: 300 }}
-              value={searchInput}
-              onChange={(e) => handleSearchInputChange(e.target.value)}
-              onSearch={handleSearch}
-              onClear={handleClearSearch}
-            />
-            <Select
-              placeholder="Por Ubicación"
-              allowClear
-              suffixIcon={<FilterOutlined />}
-              style={{ width: 200, height: 36 }}
-              value={filters.location}
-              onChange={(value) => setFilter("location", value)}
-              options={locations.map((loc) => ({ 
-                label: loc.display, 
-                value: loc.reference 
-              }))}
-            />
-            <Select
-              placeholder="Por Estado"
-              allowClear
-              suffixIcon={<FilterOutlined />}
-              style={{ width: 150, height: 36 }}
-              value={filters.status}
-              onChange={(value) => setFilter("status", value)}
-              options={[
-                { label: "Activo", value: "active" },
-                { label: "Inactivo", value: "inactive" },
-              ]}
-            />
-          </div>
-          {/* Lista de servicios */}
-          <Table
-            columns={columns}
-            dataSource={healthcares}
-            rowKey="id"
-            pagination={paginationConfig}
-            bordered
-            loading={isFetching}
+      <div className="primary-card">
+        {/* Búsqueda y filtros */}
+        <div className="flex justify-end gap-3 mb-4">
+          <Search
+            placeholder="Buscar por nombre"
+            allowClear
+            style={{ width: 300 }}
+            value={searchInput}
+            onChange={(e) => handleSearchInputChange(e.target.value)}
+            onSearch={handleSearch}
+            onClear={handleClearSearch}
+          />
+          <Select
+            placeholder="Por Ubicación"
+            allowClear
+            suffixIcon={<FilterOutlined />}
+            style={{ width: 200, height: 36 }}
+            value={filters.location}
+            onChange={(value) => setFilter("location", value)}
+            options={locations.map((loc) => ({
+              label: loc.display,
+              value: loc.reference,
+            }))}
+          />
+          <Select
+            placeholder="Por Estado"
+            allowClear
+            suffixIcon={<FilterOutlined />}
+            style={{ width: 150, height: 36 }}
+            value={filters.status}
+            onChange={(value) => setFilter("status", value)}
+            options={[
+              { label: "Activo", value: "active" },
+              { label: "Inactivo", value: "inactive" },
+            ]}
           />
         </div>
-      )}
+        {/* Lista de servicios */}
+        <Table
+          columns={columns}
+          dataSource={healthcares}
+          rowKey="id"
+          pagination={paginationConfig}
+          bordered
+          loading={isFetching}
+        />
+      </div>
 
       {/* Modal de detalles */}
       <HealthcareDetailsModal

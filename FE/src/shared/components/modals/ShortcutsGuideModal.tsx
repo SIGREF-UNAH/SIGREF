@@ -47,7 +47,7 @@ export const ShortcutsGuideModal = ({
       width={1100}
       centered
     >
-      <div className="grid grid-cols-3 gap-6 p-4">
+      <div className="grid grid-cols-3 gap-6">
         {shortcutSections.map((section, index) => (
           <Can key={index} I="read" a={section.category} ability={ability}>
             <div className="border rounded-lg p-4 bg-gray-50">

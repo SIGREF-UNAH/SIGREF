@@ -132,12 +132,12 @@ export const Layout = () => {
             const userMenu = [
               {
                 key: "1",
-                label: <Link to="/">Documentación</Link>,
+                label: <Link to="/documentation">Documentación</Link>,
                 icon: <BookOutlined />,
               },
               {
                 key: "2",
-                label: <Link to="/">Soporte</Link>,
+                label: <Link to="/support">Soporte</Link>,
                 icon: <PhoneOutlined />,
               },
               {
