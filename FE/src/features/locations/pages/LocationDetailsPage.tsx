@@ -152,7 +152,7 @@ const LocationDetailsPage: React.FC = () => {
           defaultActive="null"
         />
 
-        <div className="bg-[white] rounded-lg border-2 border-[#D9D9D9] p-6">
+        <div className="primary-card">
           {/* Header */}
           <div className="flex items-center gap-3 mb-8">
             <BsPinMapFill className="text-blue-500 text-2xl" />

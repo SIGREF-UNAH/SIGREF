@@ -1,6 +1,3 @@
-// TODO: tipo se va vacio, endpoint da 500, Ubicacion hace falta en el hook 
-
-
 import { useNavigate } from "react-router";
 import type { CreateOrganizationDto } from "../../../api/models";
 import { useQueryClient } from "@tanstack/react-query";
@@ -37,7 +34,7 @@ export function useCreateOrganization() {
   type FormValues = {
     name: string;
     identifier: string;
-    type: "hospital" | "clinica" | "centro_salud" | "laboratorio";
+    types: OrgTypeKey;
     active: boolean;
     description?: string;
     phone?: string;
@@ -46,25 +43,47 @@ export function useCreateOrganization() {
     address: string;
     city: string;
     state: string;
-    postalCode: string;
+    country?: string;
   };
 
-  const handleFinish = async (values: FormValues) => {
-    const typeMap = {
-      hospital: "prov",
-      clinica: "prov",
-      centro_salud: "prov",
-      laboratorio: "dept",
+  type OrgTypeKey =
+    | "prov"
+    | "dept"
+    | "team"
+    | "govt"
+    | "ins"
+    | "pay"
+    | "edu"
+    | "reli"
+    | "crs"
+    | "cg"
+    | "bus"
+    | "other";
+
+  const handleFinish = async (values: FormValues) =>  {
+    const typeMap: Record<OrgTypeKey, { code: string; display: string }> = {
+      prov: { code: "prov", display: "Proveedor de salud" },
+      dept: { code: "dept", display: "Departamento" },
+      team: { code: "team", display: "Equipo" },
+      govt: { code: "govt", display: "Gobierno" },
+      ins: { code: "ins", display: "Aseguradora" },
+      pay: { code: "pay", display: "Pagador" },
+      edu: { code: "edu", display: "Educativo" },
+      reli: { code: "reli", display: "Religioso" },
+      crs: { code: "crs", display: "Investigación clínica" },
+      cg: { code: "cg", display: "Comunidad" },
+      bus: { code: "bus", display: "Negocio no médico" },
+      other: { code: "other", display: "Otro" },
     };
 
-    const typeCode = typeMap[values.type];
-if (!typeCode) {
-  console.error("Tipo de organización inválido:", values.type);
-  return;
-}
+    if (!values.types) {
+      values.types = "prov";
+    }
 
+    console.log("Tipo seleccionado:", values.types);
+    console.log("Mapa de tipo:", typeMap[values.types]);
 
-    const payload: CreateOrganizationDto = {
+    const payload: CreateOrganizationDto & { types?: any } = {
       identifier: [
         {
           use: 1,
@@ -80,26 +99,30 @@ if (!typeCode) {
             text: "Identificador institucional",
           },
           system: "http://hospitalcentral.org/identifiers",
-          value: values.identifier,
+          value: Array.isArray(values.identifier)
+            ? values.identifier[0]
+            : values.identifier,
         },
       ],
-      name: values.name,
-      type: [
+      active: values.active,
+      types: [
         {
           coding: [
             {
               system: "http://terminology.hl7.org/CodeSystem/organization-type",
-              code: typeCode,
-              display: values.type,
+              version: "1.0",
+              code: typeMap[values.types].code,
+              display: typeMap[values.types].display,
               userSelected: true,
             },
           ],
-          text: values.type,
+          text: typeMap[values.types].display,
         },
       ],
-      active: values.active,
-      alias: [values.name, values.identifier],
-      description:values.description || "",
+      name: values.name,
+      alias: [values.name],
+      description: values.description || "",
+
       contact: [
         {
           purpose: {
@@ -107,6 +130,7 @@ if (!typeCode) {
               {
                 system:
                   "http://terminology.hl7.org/CodeSystem/contactentity-type",
+                version: "1.0",
                 code: "ADMIN",
                 display: "Administrativo",
                 userSelected: true,
@@ -116,36 +140,20 @@ if (!typeCode) {
           },
           name: "Contacto principal",
           telecom: [
-            {
-              system: 0,
-              value: values.phone || "",
-              use: 1, 
-              rank: 1,
-            },
-            {
-              system: 2, 
-              value: values.email || "",
-              use: 1, 
-              rank: 1,
-            },
+            { system: 0, value: values.phone || "", use: 0, rank: 1 },
+            { system: 2, value: values.email || "", use: 0, rank: 2 },
           ],
+          address: {
+            use: 0,
+            type: 0,
+            text: values.address || "",
+            line: [values.address || ""],
+            city: values.city || "",
+            state: values.state || "",
+            country: values.country || "Honduras",
+          },
         },
       ],
-      endpoint: values.apiLink
-  ? [
-      {
-        reference: values.apiLink,
-        display: "API endpoint",
-        type: "Endpoint",  
-        identifier: {
-          use: 1,
-          type: { text: "API Identifier", coding: [{ system: "string", code: "API", display: "API", userSelected: true }] },
-          system: "http://hospitalcentral.org/endpoints",
-          value: values.apiLink,
-        },
-      },
-    ]
-  : [],
     };
 
     console.log("Payload:", JSON.stringify(payload, null, 2));

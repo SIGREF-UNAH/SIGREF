@@ -1,2 +1,3 @@
 export * from './CreateOrganizationsPage'
-export * from './OrganizationsListPage'
+export * from './ListOrganizationsPage'
+export * from './UpdateOrganizationsPage'

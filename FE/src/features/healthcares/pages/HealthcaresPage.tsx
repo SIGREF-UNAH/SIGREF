@@ -156,7 +156,7 @@ export const HealthcaresPage = () => {
       {isLoading ? (
         <HealthcaresPageSkeleton />
       ) : (
-        <div className="p-4 border-2 bg-card border-gray-300 shadow-md rounded-lg">
+        <div className="primary-card">
           {/* Búsqueda y filtros */}
           <div className="flex justify-end gap-3 mb-4">
             <Search

@@ -1,2 +1,4 @@
 export * from './useCreateOrganizations';
-export * from './useListOrganization'
+export * from './useListOrganizations'
+export * from './useUpdateOrganizations';
+    

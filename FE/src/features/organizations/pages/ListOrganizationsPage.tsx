@@ -5,6 +5,7 @@ export default function OrganizationsListPage() {
   return (
     <div>
       <main>
+        {/* Header Tabs */}
         <PageHeaderTabs
           title="SIGREF - Gestión de Organizaciones"
           tabs={[
@@ -13,6 +14,7 @@ export default function OrganizationsListPage() {
           ]}
           defaultActive="list"
         />
+        {/* Se usa el componente OrganizationsList */}
         <OrganizationsList />
       </main>
     </div>
