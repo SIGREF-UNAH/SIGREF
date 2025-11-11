@@ -11,6 +11,7 @@ export type GetApiPatientsParams = {
   Gender?: AdministrativeGender;
   IdentifierType?: string;
   IdentifierValue?: string;
+  Active?: boolean;
   BirthDate?: string;
   PageNumber?: number;
   PageSize?: number;

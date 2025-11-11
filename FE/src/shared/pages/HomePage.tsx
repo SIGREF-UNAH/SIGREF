@@ -1,9 +1,7 @@
-import React, { useState } from "react";
 import { Card, Button, Tooltip } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useKeycloak } from "@react-keycloak/web";
 import { validRoles } from "../../auth";
-import { ShortcutsGuideModal } from "../components/modals";
 import { useAbility } from "../../config";
 import { Can } from "@casl/react"
 import {
@@ -15,7 +13,6 @@ import {
   TeamOutlined,
   UserOutlined,
   BarChartOutlined,
-  QuestionCircleOutlined,
 } from "@ant-design/icons";
 
 interface ModuleCardProps {
@@ -65,7 +62,6 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
 };
 
 export const HomePage: React.FC = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const { keycloak } = useKeycloak();
   const ability = useAbility();
 
@@ -92,17 +88,6 @@ export const HomePage: React.FC = () => {
           <p className="text-general-secondary text-sm mt-1">
             Rol: <span className="uppercase font-semibold">{userRole}</span>
           </p>
-        </div>
-
-        {/* Botones */}
-        <div className="flex gap-2">
-          <Button 
-            icon={<QuestionCircleOutlined />} 
-            type="default" 
-            onClick={() => setIsModalOpen(true)}
-          >
-            Atajos
-          </Button>
         </div>
       </div>
 
@@ -196,12 +181,6 @@ export const HomePage: React.FC = () => {
           />
         </Can>
       </div>
-
-      {/* Modal de Atajos */}
-      <ShortcutsGuideModal
-        open={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
     </div>
   );
 };

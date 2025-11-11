@@ -19,13 +19,13 @@ public static class OrganizationExtensions
         // Identifiers - CORREGIDO: Ahora usa Identifier.IdentifierUse? directamente
         if (organization.Identifier != null)
         {
-            dto.Identifiers = organization.Identifier.Select(i => new IdentifierDto
+            dto.Identifier = organization.Identifier.Select(i => new IdentifierDto
             {
                 System = i.System,
                 Value = i.Value,
                 Use = i.Use != null && Enum.TryParse<Identifier.IdentifierUse>(i.Use.ToString(), out var use)
-    ? use
-    : null,  // Asignación directa del enum
+                ? use
+                : null,  // Asignación directa del enum
                 Type = i.Type?.ToCodeableConceptDto()
             }).ToList();
         }

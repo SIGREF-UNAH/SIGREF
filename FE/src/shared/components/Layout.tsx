@@ -1,25 +1,22 @@
 import { ProLayout } from "@ant-design/pro-components";
-import { Badge } from "antd/lib";
 import { Link, Outlet, useNavigate } from "react-router";
-import { Dropdown } from "antd";
+import { Button, Dropdown } from "antd";
 import { useKeycloak } from "@react-keycloak/web";
 import { RoutesByRole } from "../../config";
 import { validRoles } from "../../auth";
 import {
-  BellOutlined,
   BookOutlined,
-  FileSyncOutlined,
   LogoutOutlined,
   PhoneOutlined,
   QuestionCircleOutlined,
-  SettingOutlined,
-  UserOutlined,
-  WarningOutlined,
 } from "@ant-design/icons";
+import { ShortcutsGuideModal } from "./modals";
+import { useState } from "react";
 
 export const Layout = () => {
   const navigate = useNavigate();
   const { keycloak } = useKeycloak();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Obtener todos los roles del token
   const roles = keycloak.tokenParsed?.realm_access?.roles || [];
@@ -48,17 +45,17 @@ export const Layout = () => {
         logo="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Logo_de_SESAL.svg/1200px-Logo_de_SESAL.svg.png"
         layout="top"
         fixedHeader
-        // Configuración para que el contenido ocupe el espacio disponible
         style={{
           height: "100%",
           minHeight: "100vh",
         }}
         contentStyle={{
           height: "100%",
-          minHeight: "calc(100vh - 128px)", // 64px es la altura del header
+          minHeight: "calc(100vh - 128px)",
           display: "flex",
           flexDirection: "column",
         }}
+        // Pie de página
         footerRender={() => (
           <div
             style={{
@@ -70,13 +67,14 @@ export const Layout = () => {
               borderTop: "1px solid #d9d9d9",
               fontSize: "14px",
               color: "#ffffff",
-              marginTop: "auto", // Empuja el footer hacia abajo
+              marginTop: "auto",
             }}
           >
             <span>SIGREF - Sistema de Gestión de Receptoría de Fondos</span>
             <span>© 2025 Ingeniería en Sistemas - UNAH Campus Copán</span>
           </div>
         )}
+        // Encabezado / Titulo
         headerTitleRender={(logo) => (
           <div
             className="flex items-center gap-2 md:gap-4 hover:cursor-pointer"
@@ -107,92 +105,20 @@ export const Layout = () => {
             heightLayoutHeader: 64,
           },
         }}
+        
         actionsRender={() => {
-          const helpMenu = [
-            {
-              key: "1",
-              label: <Link to="/">Documentación</Link>,
-              icon: <BookOutlined />,
-            },
-            {
-              key: "2",
-              label: <Link to="/">Tutorial</Link>,
-              icon: <FileSyncOutlined />,
-            },
-            {
-              key: "3",
-              label: <Link to="/">Contactar Soporte</Link>,
-              icon: <PhoneOutlined />,
-            },
-          ];
-
-          const notificationsMenu = [
-            {
-              key: "1",
-              label: (
-                <div className="px-2 py-1">
-                  <strong>Nueva factura generada</strong>
-                  <br />
-                  <span className="text-xs text-general-secondary">
-                    Hace 5 minutos
-                  </span>
-                </div>
-              ),
-              icon: <WarningOutlined style={{ color: "#FFD54F" }} />,
-            },
-            {
-              key: "2",
-              label: (
-                <div className="px-2 py-1">
-                  <strong>Cierre de caja pendiente</strong>
-                  <br />
-                  <span className="text-xs text-general-secondary">
-                    Hace 1 hora
-                  </span>
-                </div>
-              ),
-              icon: <WarningOutlined style={{ color: "#FFD54F" }} />,
-            },
-            {
-              key: "3",
-              label: (
-                <div className="px-2 py-1">
-                  <strong>Nuevo paciente registrado</strong>
-                  <br />
-                  <span className="text-xs text-general-secondary">
-                    Hace 2 horas
-                  </span>
-                </div>
-              ),
-              icon: <WarningOutlined style={{ color: "#FFD54F" }} />,
-            },
-          ];
-
           return [
-            <Dropdown
-              key="help"
-              menu={{
-                items: helpMenu,
-              }}
-              trigger={["click"]}
+            <Button 
+              icon={<QuestionCircleOutlined />} 
+              type="default" 
+              onClick={() => setIsModalOpen(true)}
             >
-              <QuestionCircleOutlined className="text-lg text-general-secondary cursor-pointer hover:text-general" />
-            </Dropdown>,
-
-            <Dropdown
-              key="notif"
-              menu={{
-                items: notificationsMenu,
-              }}
-              trigger={["click"]}
-              placement="bottomRight"
-            >
-              <Badge count={3} size="small">
-                <BellOutlined className="text-lg text-general-secondary cursor-pointer hover:text-general" />
-              </Badge>
-            </Dropdown>,
+              Atajos
+            </Button>
           ];
         }}
+
+        // Avatar / Acciones
         avatarProps={{
           src: undefined,
           size: "default",
@@ -201,18 +127,18 @@ export const Layout = () => {
             fontSize: "16px",
             fontWeight: "600",
           },
-          title: getInitials(name),
+          icon: <span className="text-xs font-thin text-white">{getInitials(name)}</span>,
           render: (_props, dom) => {
             const userMenu = [
               {
                 key: "1",
-                label: <Link to="/">Mi Perfil</Link>,
-                icon: <UserOutlined />,
+                label: <Link to="/documentation">Documentación</Link>,
+                icon: <BookOutlined />,
               },
               {
                 key: "2",
-                label: <Link to="/">Configuración</Link>,
-                icon: <SettingOutlined />,
+                label: <Link to="/support">Soporte</Link>,
+                icon: <PhoneOutlined />,
               },
               {
                 key: "3",
@@ -257,6 +183,11 @@ export const Layout = () => {
         <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <Outlet />
         </div>
+        {/* Modal de Atajos */}
+        <ShortcutsGuideModal
+          open={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
       </ProLayout>
     </div>
   );

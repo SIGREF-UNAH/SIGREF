@@ -67,10 +67,12 @@ export const HealthcareForm = ({
       title: "Estado",
       dataIndex: "status",
       key: "status",
-      render: (status: string) => {
-        const color = status === "Active" ? "green" : "default";
-        const text = status === "Active" ? "Activo" : "Inactivo";
-        return <Tag color={color}>{text}</Tag>;
+      render: (status) => {
+        const normalized = status.toLowerCase();
+        if (normalized === "active") return <Tag color="green">✓ Activo</Tag>;
+        if (normalized === "suspended") return <Tag color="orange">⚠︎ Suspendido</Tag>;
+        if (normalized === "inactive") return <Tag color="red">✗ Inactivo</Tag>; 
+        return "-";
       },
     },
   ];

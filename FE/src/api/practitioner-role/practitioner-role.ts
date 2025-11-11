@@ -23,6 +23,7 @@ import type {
 import type {
   CreatePractitionerRoleDto,
   GetApiPractitionerRoleParams,
+  PractitionerRoleDto,
   PractitionerRoleDtoPagedResultDto,
   ProblemDetails,
   UpdatePractitionerRoleDto,
@@ -193,7 +194,7 @@ export const postApiPractitionerRole = (
   createPractitionerRoleDto: CreatePractitionerRoleDto,
   signal?: AbortSignal,
 ) => {
-  return customInstance<void>({
+  return customInstance<PractitionerRoleDto | void>({
     url: `/api/PractitionerRole`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -273,7 +274,7 @@ export const usePostApiPractitionerRole = <
   return useMutation(mutationOptions, queryClient);
 };
 export const getApiPractitionerRoleId = (id: string, signal?: AbortSignal) => {
-  return customInstance<void>({
+  return customInstance<PractitionerRoleDto>({
     url: `/api/PractitionerRole/${id}`,
     method: "GET",
     signal,
@@ -460,7 +461,7 @@ export const putApiPractitionerRoleId = (
   id: string,
   updatePractitionerRoleDto: UpdatePractitionerRoleDto,
 ) => {
-  return customInstance<void>({
+  return customInstance<PractitionerRoleDto>({
     url: `/api/PractitionerRole/${id}`,
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -638,3 +639,195 @@ export const useDeleteApiPractitionerRoleId = <
 
   return useMutation(mutationOptions, queryClient);
 };
+export const getApiPractitionerRolePractitionerId = (
+  id: string,
+  signal?: AbortSignal,
+) => {
+  return customInstance<PractitionerRoleDto>({
+    url: `/api/PractitionerRole/practitioner/${id}`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getGetApiPractitionerRolePractitionerIdQueryKey = (
+  id?: string,
+) => {
+  return [`/api/PractitionerRole/practitioner/${id}`] as const;
+};
+
+export const getGetApiPractitionerRolePractitionerIdQueryOptions = <
+  TData = Awaited<ReturnType<typeof getApiPractitionerRolePractitionerId>>,
+  TError =
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | void,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getApiPractitionerRolePractitionerId>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getGetApiPractitionerRolePractitionerIdQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getApiPractitionerRolePractitionerId>>
+  > = ({ signal }) => getApiPractitionerRolePractitionerId(id, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getApiPractitionerRolePractitionerId>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetApiPractitionerRolePractitionerIdQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getApiPractitionerRolePractitionerId>>
+>;
+export type GetApiPractitionerRolePractitionerIdQueryError =
+  | ProblemDetails
+  | ProblemDetails
+  | ProblemDetails
+  | ProblemDetails
+  | void;
+
+export function useGetApiPractitionerRolePractitionerId<
+  TData = Awaited<ReturnType<typeof getApiPractitionerRolePractitionerId>>,
+  TError =
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | void,
+>(
+  id: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getApiPractitionerRolePractitionerId>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiPractitionerRolePractitionerId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiPractitionerRolePractitionerId>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiPractitionerRolePractitionerId<
+  TData = Awaited<ReturnType<typeof getApiPractitionerRolePractitionerId>>,
+  TError =
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | void,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getApiPractitionerRolePractitionerId>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiPractitionerRolePractitionerId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiPractitionerRolePractitionerId>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiPractitionerRolePractitionerId<
+  TData = Awaited<ReturnType<typeof getApiPractitionerRolePractitionerId>>,
+  TError =
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | void,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getApiPractitionerRolePractitionerId>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useGetApiPractitionerRolePractitionerId<
+  TData = Awaited<ReturnType<typeof getApiPractitionerRolePractitionerId>>,
+  TError =
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | ProblemDetails
+    | void,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getApiPractitionerRolePractitionerId>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getGetApiPractitionerRolePractitionerIdQueryOptions(
+    id,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}

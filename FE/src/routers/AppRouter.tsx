@@ -1,8 +1,7 @@
 import { Navigate, Route, Routes } from "react-router";
 import { Layout } from "../shared/components";
 import { HealthcaresRouter } from "../features/healthcares/routers";
-import { EmployeesRouter } from "../features/employees/routers";
-import { HomePage } from "../shared/pages";
+import { DocumentationPage, HomePage, SupportPage } from "../shared/pages";
 import { IncomesRouter } from "../features/incomes/routers";
 import { PractitionersRouter } from "../features/practitioners/routers";
 import { OrganizationsRouter } from "../features/organizations/routers";
@@ -18,14 +17,18 @@ import { LocationsRouter } from "../features/locations/routers";
       <Route element={<Layout />}>
         {/* Página de Inicio */}
         <Route path="/" element={<HomePage />} />
+        
+        {/* Página de Soporte (Miembros del Equipo) */}
+        <Route path="/support" element={<SupportPage />} />
+        
+        {/* Página de Documentación */}
+        <Route path="/documentation" element={<DocumentationPage />} />
     
         {/* Rutas de Ubicaciones */}
         <Route path="/locations/*" element={<LocationsRouter />} />
 
         {/* Rutas de Servicios Médicos */}
         <Route path="/healthcares/*" element={<HealthcaresRouter />} />
-        {/* Rutas de Empleados */}
-        <Route path="/employees/*" element={<EmployeesRouter/>}/>
         {/* Rutas de Ingresos/Fondos */}
         <Route path="/incomes/*" element={<IncomesRouter />} />
 

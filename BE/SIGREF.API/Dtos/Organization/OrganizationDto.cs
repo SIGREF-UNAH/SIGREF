@@ -6,7 +6,7 @@ namespace SIGREF.API.Dtos;
 public class OrganizationDto
 {
     public string Id { get; set; }
-    public List<IdentifierDto> Identifiers { get; set; } = new();
+    public List<IdentifierDto> Identifier { get; set; } = new();
     public bool Active { get; set; } = true;
     public List<CodeableConcept> Types { get; set; } = new();
     public string Name { get; set; } = string.Empty;

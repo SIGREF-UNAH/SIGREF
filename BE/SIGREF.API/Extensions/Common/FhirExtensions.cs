@@ -118,9 +118,6 @@ public static class CommonExtensions
 
         switch (extension.Value)
         {
-            case CodeableConcept codeableConcept:
-                dto.ValueCodeableConcept = codeableConcept.ToCodeableConceptDto();
-                break;
             case FhirString fhirString:
                 dto.ValueString = fhirString.Value;
                 break;
@@ -145,11 +142,7 @@ public static class CommonExtensions
     {
         var extension = new Extension { Url = dto.Url };
 
-        if (dto.ValueCodeableConcept != null)
-        {
-            extension.Value = dto.ValueCodeableConcept.ToFhirCodeableConcept();
-        }
-        else if (dto.ValueString != null)
+        if (dto.ValueString != null)
         {
             extension.Value = new FhirString(dto.ValueString);
         }

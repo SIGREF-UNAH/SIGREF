@@ -4,6 +4,7 @@ import {
   ProFormSelect,
   ProTable,
   ProFormDatePicker,
+  ProDescriptions,
 } from "@ant-design/pro-components";
 import {
   UserOutlined,
@@ -39,14 +40,13 @@ interface PatientData {
   estadoVital?: string;
 }
 
-// TODO: Usar ProDescriptions para la información de los pacientes
-//! En el campo de nacionalidad solo devuelve Honduras
 //! Limpiar Fecha de Nacimiento no funciona
+//! De lado de backend se tiene arreglar el filtro de Idetnificacion y Tipo
 
 export default function PatientsInformation() {
   const patientInfoRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<FormInstance>(null);
-  
+
   const {
     selectedPatientId,
     isLoading,
@@ -68,9 +68,9 @@ export default function PatientsInformation() {
   // Scroll automático cuando se selecciona un paciente
   useEffect(() => {
     if (selectedPatientId && patientInfoRef.current) {
-      patientInfoRef.current.scrollIntoView({ 
-        behavior: "smooth", 
-        block: "center" 
+      patientInfoRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
       });
     }
   }, [selectedPatientId]);
@@ -79,7 +79,9 @@ export default function PatientsInformation() {
   useEffect(() => {
     if (formRef.current) {
       const formValues: any = {
-        fechaNacimiento: filters.fechaNacimiento ? dayjs(filters.fechaNacimiento) : undefined,
+        fechaNacimiento: filters.fechaNacimiento
+          ? dayjs(filters.fechaNacimiento)
+          : undefined,
         genero: filters.genero || undefined,
         tipoIdentificador: filters.tipoIdentificador || undefined,
         estadoVital: filters.estadoVital || undefined,
@@ -88,12 +90,14 @@ export default function PatientsInformation() {
     }
   }, [filters]);
 
+  // Eliminar
   const handleDeleteConfirm = () => {
     if (selectedPatient?.id) {
       deletePatient({ id: selectedPatient.id });
     }
   };
 
+  // Limpiar todos los filtros
   const handleClearAllFilters = () => {
     clearAllFilters();
     formRef.current?.resetFields();
@@ -106,12 +110,12 @@ export default function PatientsInformation() {
   };
 
   // Verificar si hay filtros activos
-  const hasActiveFilters = 
-    filters.nombreCompleto || 
-    filters.identificador || 
-    filters.fechaNacimiento || 
-    filters.genero || 
-    filters.tipoIdentificador || 
+  const hasActiveFilters =
+    filters.nombreCompleto ||
+    filters.identificador ||
+    filters.fechaNacimiento ||
+    filters.genero ||
+    filters.tipoIdentificador ||
     filters.estadoVital;
 
   // Manejo de errores
@@ -130,13 +134,11 @@ export default function PatientsInformation() {
       title: "Nombre",
       dataIndex: "nombre",
       key: "nombre",
-      width: 200,
-      fixed: "left",
+      width: 230,
       render: (_, record) => (
         <Button
           type="link"
           onClick={() => handleSelectPatient(record.id)}
-          className="p-0"
         >
           {record.nombre}
         </Button>
@@ -207,14 +209,17 @@ export default function PatientsInformation() {
             {/* Encabezado y Botones */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2 text-primary">
-                <QuestionCircleOutlined className="text-lg" style={{color: "var(--color-primary)"}}/>
+                <QuestionCircleOutlined
+                  className="text-lg"
+                  style={{ color: "var(--color-primary)" }}
+                />
                 <span className="text-lg font-medium text-primary">
                   Información del Paciente Seleccionado
                 </span>
               </div>
-              <div className="flex gap-2 ">
+              <div className="flex gap-2">
                 <Button
-                  type="primary"
+                  type="dashed"
                   icon={<CopyOutlined />}
                   className="bg-primary"
                   onClick={handleCopyData}
@@ -227,7 +232,7 @@ export default function PatientsInformation() {
                     icon={<EditOutlined />}
                     className="bg-green-600 hover:bg-green-700"
                   >
-                    Editar Datos
+                    Editar
                   </Button>
                 </Link>
                 <Popconfirm
@@ -263,144 +268,216 @@ export default function PatientsInformation() {
             </div>
 
             {/* Información */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 text-foreground mb-3">
-                  <UserOutlined />
-                  <h3 className="font-medium">Información Personal</h3>
-                </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex">
-                    <span className="font-medium w-32">Nombre:</span>
-                    <span className="text-muted-foreground">
-                      {selectedPatient.nombre}
-                    </span>
-                  </div>
-                  <div className="flex">
-                    <span className="font-medium w-32">Apellidos:</span>
-                    <span className="text-muted-foreground">
-                      {selectedPatient.apellidos}
-                    </span>
-                  </div>
-                  <div className="flex">
-                    <span className="font-medium w-32">Fecha de Nacimiento:</span>
-                    <span className="text-muted-foreground">
-                      {selectedPatient.fechaNacimiento}
-                    </span>
-                  </div>
-                  <div className="flex">
-                    <span className="font-medium w-32">Edad:</span>
-                    <span className="text-muted-foreground">
-                      {selectedPatient.edad}
-                    </span>
-                  </div>
-                  <div className="flex">
-                    <span className="font-medium w-32">Género:</span>
-                    <span className="text-muted-foreground">
-                      {selectedPatient.genero}
-                    </span>
-                  </div>
-                  <div className="flex">
-                    <span className="font-medium w-32">Nacionalidad:</span>
-                    <span className="text-muted-foreground">
-                      {selectedPatient.nacionalidad}
-                    </span>
-                  </div>
-                  <div className="flex">
-                    <span className="font-medium w-32">Estado Vital:</span>
-                    <span className="text-muted-foreground">
-                      {selectedPatient.estadoVital}
-                    </span>
-                  </div>
-                </div>
-
+            <div className="grid grid-cols-2 gap-6">
+              {/* Primer columna */}
+              <div className="flex flex-col gap-6">
+                <ProDescriptions
+                  column={1}
+                  title={
+                    <div className="flex items-center gap-2 text-foreground">
+                      <UserOutlined />
+                      <span className="font-medium">Información Personal</span>
+                    </div>
+                  }
+                  dataSource={selectedPatient}
+                  columns={[
+                    {
+                      title: "Nombre",
+                      dataIndex: "nombre",
+                      key: "nombre",
+                    },
+                    {
+                      title: "Apellidos",
+                      dataIndex: "apellidos",
+                      key: "apellidos",
+                    },
+                    {
+                      title: "Fecha de Nacimiento",
+                      dataIndex: "fechaNacimiento",
+                      key: "fechaNacimiento",
+                    },
+                    {
+                      title: "Edad",
+                      dataIndex: "edad",
+                      key: "edad",
+                    },
+                    {
+                      title: "Género",
+                      dataIndex: "genero",
+                      key: "genero",
+                    },
+                    {
+                      title: "Estado Civil",
+                      dataIndex: "estadoCivil",
+                      key: "estadoCivil",
+                    },
+                    {
+                      title: "Nacionalidad",
+                      dataIndex: "nacionalidad",
+                      key: "nacionalidad",
+                    },
+                    {
+                      title: "Estado Vital",
+                      dataIndex: "estadoVital",
+                      key: "estadoVital",
+                      render: (_, record) => {
+                        const estado = record.estadoVital?.trim().toLowerCase();
+                        return (
+                          <Tag color={estado === "vivo" ? "green" : "red"}>
+                            {record.estadoVital}
+                          </Tag>
+                        );
+                      },
+                    },
+                  ]}
+                />
+              </div>
+            
+              {/* Segunda columna */}
+              <div className="flex flex-col gap-6">
+                {/* Identificadores */}
+                <ProDescriptions
+                  column={1}
+                  title={
+                    <div className="flex items-center gap-2 text-foreground">
+                      <IdcardOutlined />
+                      <span className="font-medium">Identificación</span>
+                    </div>
+                  }
+                  dataSource={{
+                    identificadores: selectedPatient.identificadores,
+                  }}
+                  columns={[
+                    {
+                      dataIndex: "identificadores",
+                      key: "identificadores",
+                      render: (identificadores) => {
+                        const lista = Array.isArray(identificadores)
+                          ? identificadores
+                          : [];
+                        return (
+                          <div className="">
+                            {lista.length > 0 ? (
+                              lista.map((id, idx) => (
+                                <div
+                                  key={idx}
+                                  className="border border-gray-200 rounded-lg p-3"
+                                >
+                                  <div className="font-medium text-sm">
+                                    {id.tipo}{id.emisor !== null && ` (${id.emisor})`}: 
+                                    <span className="text-primary text-muted-foreground text-sm">
+                                      {" "}{id.valor}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-muted-foreground text-sm">
+                                No hay identificadores registrados
+                              </div>
+                            )}
+                          </div>
+                        );
+                      },
+                    },
+                  ]}
+                />
+                {/* Contactos */}
+                <ProDescriptions
+                  column={1}
+                  title={
+                    <div className="flex items-center gap-2 text-foreground">
+                      <PhoneOutlined />
+                      <span className="font-medium">Contactos</span>
+                    </div>
+                  }
+                  dataSource={{ contactos: selectedPatient.contactos }}
+                  columns={[
+                    {
+                      dataIndex: "contactos",
+                      key: "contactos",
+                      span: 2,
+                      render: (contactos) => {
+                        const lista = Array.isArray(contactos) ? contactos : [];
+                        return (
+                          <div className="grid grid-cols-1 gap-4">
+                            {lista.length > 0 ? (
+                              lista.map((contacto, idx) => (
+                                <div
+                                  key={idx}
+                                  className="border border-gray-200 rounded-lg p-3"
+                                >
+                                  <div className="font-medium text-sm capitalize">
+                                    {contacto.tipo} ({contacto.uso}):{" "}
+                                    <span className="text-primary text-muted-foreground text-sm">
+                                      {contacto.valor}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-muted-foreground text-sm col-span-2">
+                                No hay contactos registradas
+                              </div>
+                            )}
+                          </div>
+                        );
+                      },
+                    },
+                  ]}
+                />
                 {/* Direcciones */}
-                <div className="pt-4">
-                  <div className="flex items-center gap-2 text-foreground mb-3">
-                    <EnvironmentOutlined />
-                    <h3 className="font-medium">Direcciones</h3>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    {/* Dirección principal (Casa) */}
-                    <div>
-                      <div className="font-medium mb-1">Casa:</div>
-                      <div className="text-muted-foreground text-xs">
-                        {selectedPatient.casaDireccion || "No registrada"}
-                      </div>
-                      <div className="font-medium mt-1">Detalles:</div>
-                      <div className="text-muted-foreground text-xs">
-                        {selectedPatient.casaDetalles || "No registrados"}
-                      </div>
+                <ProDescriptions
+                  column={1}
+                  title={
+                    <div className="flex items-center gap-2 text-foreground">
+                      <EnvironmentOutlined />
+                      <span className="font-medium">Direcciones</span>
                     </div>
-
-                    {/* Segunda dirección (Trabajo) */}
-                    <div>
-                      <div className="font-medium mb-1">
-                        Segunda dirección (Lugar):
-                      </div>
-                      <div className="text-muted-foreground text-xs">
-                        {selectedPatient.trabajoDireccion || "No registrada"}
-                      </div>
-                      <div className="font-medium mt-1">Detalles:</div>
-                      <div className="text-muted-foreground text-xs">
-                        {selectedPatient.trabajoDetalles || "No registrados"}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Identificadores */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 text-foreground mb-3">
-                  <IdcardOutlined />
-                  <h3 className="font-medium">Identificadores</h3>
-                </div>
-                <div className="space-y-3 text-sm">
-                  {selectedPatient.identificadores.map((id, idx) => (
-                    <div key={idx}>
-                      <div className="font-medium mb-1">{id.tipo}:</div>
-                      <div className="text-muted-foreground">{id.valor}</div>
-                      <div className="font-medium mt-1">Emisor:</div>
-                      <div className="text-muted-foreground">{id.emisor}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Contacto */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 text-foreground mb-3">
-                  <PhoneOutlined />
-                  <h3 className="font-medium">Contacto</h3>
-                </div>
-                <div className="space-y-3 text-sm">
-                  {[
-                    { label: "Móvil", value: selectedPatient.movil },
-                    { label: "Email", value: selectedPatient.email },
-                    { label: "Fax", value: selectedPatient.fax },
-                    { label: "Pager", value: selectedPatient.pager },
-                    { label: "URL", value: selectedPatient.url },
-                    { label: "SMS", value: selectedPatient.sms },
-                    { label: "Otro", value: selectedPatient.other },
-                  ]
-                    .filter((item) => item.value && item.value !== "No registrado")
-                    .map((item) => (
-                      <div key={item.label}>
-                        <div className="font-medium mb-1">{item.label}:</div>
-                        <div className="text-muted-foreground">{String(item.value)}</div>
-                      </div>
-                    ))}
-                </div>
+                  }
+                  dataSource={{ direcciones: selectedPatient.direcciones }}
+                  columns={[
+                    {
+                      dataIndex: "direcciones",
+                      key: "direcciones",
+                      span: 2,
+                      render: (direcciones) => {
+                        const lista = Array.isArray(direcciones) ? direcciones : [];
+                        return (
+                          <div className="grid grid-cols-1 gap-4">
+                            {lista.length > 0 ? (
+                              lista.map((direccion, idx) => (
+                                <div
+                                  key={idx}
+                                  className="border border-gray-200 rounded-lg p-3"
+                                >
+                                  <div className="font-medium text-sm capitalize">
+                                    {direccion.tipo}:{" "}
+                                    <span className="text-primary text-muted-foreground text-sm">
+                                      {direccion.valor}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-muted-foreground text-sm col-span-2">
+                                No hay direcciones registradas
+                              </div>
+                            )}
+                          </div>
+                        );
+                      },
+                    },
+                  ]}
+                />
               </div>
             </div>
           </div>
         ) : (
           <Typography.Text type="secondary">
             <QuestionCircleOutlined className="mr-2" />
-            No hay paciente seleccionado. Por favor, seleccione un paciente de la
-            lista para ver su información.
+            No hay paciente seleccionado. Por favor, seleccione un paciente de
+            la lista para ver su información.
           </Typography.Text>
         )}
       </div>
@@ -409,13 +486,19 @@ export default function PatientsInformation() {
       <div className="secondary-card">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <FilterOutlined className="text-lg" style={{color: "var(--color-primary)"}}/>
+            <FilterOutlined
+              className="text-lg"
+              style={{ color: "var(--color-primary)" }}
+            />
             <span className="text-lg font-medium text-primary">
               Filtros de Búsqueda
             </span>
             {hasActiveFilters && (
               <Tag color="blue">
-                {Object.values(filters).filter(v => v && v !== '' && v !== null).length - 2} activos
+                {Object.values(filters).filter(
+                  (v) => v && v !== "" && v !== null
+                ).length - 2}{" "}
+                activos
               </Tag>
             )}
           </div>
@@ -438,14 +521,14 @@ export default function PatientsInformation() {
           onValuesChange={(changedValues, allValues) => {
             Object.keys(changedValues).forEach((key) => {
               let value = allValues[key];
-              
+
               // Manejo especial para fechas
-              if (key === 'fechaNacimiento' && value) {
-                value = dayjs(value).format('DD-MM-YYYY');
+              if (key === "fechaNacimiento" && value) {
+                value = dayjs(value).format("DD-MM-YYYY");
               }
-              
+
               // Si el valor es undefined, null o string vacío, limpiar el filtro
-              if (value === undefined || value === null || value === '') {
+              if (value === undefined || value === null || value === "") {
                 setFilter(key as keyof typeof filters, null as any);
               } else {
                 setFilter(key as keyof typeof filters, value);
@@ -472,9 +555,9 @@ export default function PatientsInformation() {
               placeholder="Ej. 23/09/2001"
               width="100%"
               allowClear
-              fieldProps={{ 
+              fieldProps={{
                 format: "DD-MM-YYYY",
-                onClear: () => handleClearFilter('fechaNacimiento'),
+                onClear: () => handleClearFilter("fechaNacimiento"),
               }}
             />
 
@@ -484,11 +567,13 @@ export default function PatientsInformation() {
               options={[
                 { label: "Masculino", value: "Masculino" },
                 { label: "Femenino", value: "Femenino" },
+                { label: "Otro", value: "Otro" },
+                { label: "Desconocido", value: "Desconocido" },
               ]}
               placeholder="Seleccionar"
               allowClear
               fieldProps={{
-                onClear: () => handleClearFilter('genero'),
+                onClear: () => handleClearFilter("genero"),
               }}
             />
 
@@ -503,7 +588,7 @@ export default function PatientsInformation() {
               placeholder="Seleccionar"
               allowClear
               fieldProps={{
-                onClear: () => handleClearFilter('tipoIdentificador'),
+                onClear: () => handleClearFilter("tipoIdentificador"),
               }}
             />
 
@@ -517,7 +602,7 @@ export default function PatientsInformation() {
               placeholder="Seleccionar"
               allowClear
               fieldProps={{
-                onClear: () => handleClearFilter('estadoVital'),
+                onClear: () => handleClearFilter("estadoVital"),
               }}
             />
           </div>
@@ -527,7 +612,10 @@ export default function PatientsInformation() {
       {/* Lista de Pacientes */}
       <div className="secondary-card">
         <div className="mb-4 flex items-center gap-2">
-          <UserOutlined className="text-lg" style={{color: "var(--color-primary)"}}/>
+          <UserOutlined
+            className="text-lg"
+            style={{ color: "var(--color-primary)" }}
+          />
           <span className="text-lg font-medium text-primary">
             Lista de Pacientes
           </span>
