@@ -116,9 +116,9 @@ namespace SIGREF.API.Services.Organizations
             if (filter.Active.HasValue)
                 searchParams.Add("active", filter.Active.Value.ToString().ToLowerInvariant());
 
-            if (filter.Types != null && filter.Types.Any())
+            if (filter.Type != null && filter.Type.Any())
             {
-                foreach (var type in filter.Types)
+                foreach (var type in filter.Type)
                 {
                     var typeValue = GetEnumMemberValue(type);
                     searchParams.Add("type", typeValue);
