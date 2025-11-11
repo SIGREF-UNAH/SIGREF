@@ -8,6 +8,7 @@ import type { PatientDto } from "../../../api/models";
 import { useMemo, useState } from "react";
 import { message } from "antd";
 import { useUrlFilters } from "../../../shared/hooks";
+import { PatientExtensionsUrls } from "../../../shared/constants";
 
 export type PaginationDto = {
   currentPage: number;
@@ -73,7 +74,11 @@ export function usePatientsInformation() {
     // Género
     if (filters.genero) {
       params.gender =
-        filters.genero === "Masculino" ? 1 : filters.genero === "Femenino" ? 2 : undefined;
+        filters.genero === "Masculino" ? 1 
+        : filters.genero === "Femenino" ? 2 
+          : filters.genero === "Otro" ? 3
+            : filters.genero === "Desconocido" ? 0
+              : undefined;
     }
 
     // Estado vital
@@ -130,35 +135,7 @@ export function usePatientsInformation() {
 
   const patient: PatientDto | undefined = Array.isArray(data) ? data[0] : data;
 
-  // Mapeo de paciente actual
-  const phone =
-    data?.telecom?.find((t) => String(t.system).toLowerCase() === "phone")
-      ?.value ?? "No registrado";
-
-  const email =
-    data?.telecom?.find((t) => String(t.system).toLowerCase() === "email")
-      ?.value ?? "No registrado";
-
-  const fax =
-    data?.telecom?.find((t) => String(t.system).toLowerCase() === "fax")
-      ?.value ?? "No registrado";
-
-  const pager =
-    data?.telecom?.find((t) => String(t.system).toLowerCase() === "pager")
-      ?.value ?? "No registrado";
-
-  const url =
-    data?.telecom?.find((t) => String(t.system).toLowerCase() === "url")
-      ?.value ?? "No registrado";
-
-  const sms =
-    data?.telecom?.find((t) => String(t.system).toLowerCase() === "sms")
-      ?.value ?? "No registrado";
-
-  const other = data?.telecom?.find(
-    (t) => String(t.system).toLowerCase() === "other"
-  );
-
+  // Datos del paciente seleccionado
   const selectedPatient = useMemo(() => {
     return {
       id: patient?.id ?? "",
@@ -179,55 +156,97 @@ export function usePatientsInformation() {
           )} años`
         : "No especificada",
       genero:
-        typeof patient?.gender === "string"
-          ? patient.gender === "male"
-            ? "Masculino"
-            : patient.gender === "female"
-              ? "Femenino"
-              : patient.gender === "other"
-                ? "Otro"
-                : "Desconocido"
-          : patient?.gender === 1
+        patient?.gender === 1
             ? "Masculino"
             : patient?.gender === 2
               ? "Femenino"
               : patient?.gender === 3
                 ? "Otro"
-                : "No especificado",
+                : "Desconocido",         
       estadoCivil:
-        patient?.maritalStatus?.text ||
-        patient?.maritalStatus?.coding?.[0]?.display ||
-        "No registrado",
+        typeof patient?.maritalStatus?.text === "string"
+          ? patient?.maritalStatus?.text === "U"
+            ? "Soltero/a"
+            : patient?.maritalStatus?.text === "M"
+              ? "Casado/a"
+              : patient?.maritalStatus?.text === "D"
+                ? "Divorciado/a"
+                : patient?.maritalStatus?.text === "W"
+                  ? "Viudo/a"
+                  : patient?.maritalStatus?.text === "T"
+                    ? "Unión de hechos"
+                    : patient?.maritalStatus?.text === "UNK"
+                      ? "Desconocido"
+                      : patient?.maritalStatus?.text
+          : patient?.maritalStatus?.coding?.[0]?.display || "Desconocido",
       nacionalidad:
         patient?.extension?.find(
-          (ext) =>
-            ext.url ===
-            "http://hl7.org/fhir/StructureDefinition/patient-nationality"
-        )?.valueCodeableConcept?.text || "No registrada",
-      estadoVital: patient?.active ? "Con Vida" : "Sin Vida",
+          (ext) => ext.url === PatientExtensionsUrls.nationality
+        )?.valueString || "Desconocido",
+      estadoVital: patient?.active ? "Vivo" : "Fallecido",
       identificadores:
         patient?.identifier?.map((id) => ({
           tipo: id.type?.coding?.[0]?.display || id.type?.text || "Desconocido",
-          valor: id.value || "No disponible",
-          emisor: id.system || "Desconocido",
+          codigo: id.type?.coding?.[0]?.code || id.type?.text || "Desconocido",
+          valor: id.value || "Desconocido",
+          emisor: id.system || null,
         })) || [],
-      movil: phone,
-      email,
-      fax,
-      pager,
-      url,
-      sms,
-      other,
-      casaDireccion: patient?.address?.[0]?.text ?? "No disponible",
-      casaDetalles: `${patient?.address?.[0]?.city ?? ""}, ${
-        patient?.address?.[0]?.country ?? ""
-      }`,
-      trabajoDireccion: patient?.address?.[1]?.text ?? "No registrada",
-      trabajoDetalles: `${patient?.address?.[1]?.city ?? ""}, ${
-        patient?.address?.[1]?.country ?? ""
-      }`,
+      contactos: patient?.telecom?.map((t) => ({
+        tipo: 
+          typeof t.system === "string"
+            ? t.system === "Phone"
+              ? "Teléfono"
+              : t.system === "Email"
+                ? "Correo electrónico"
+                : t.system === "url"
+                  ? "URL"
+                  : t.system === "Pager"
+                    ? "Biper"
+                    : t.system === "Fax"
+                      ? "Fax"
+                      : t.system === "SMS"
+                        ? "SMS"
+                        : t.system === "Other"
+                          ? "Otro"
+                          : t.system === "Old"
+                            ? "Antiguo"
+                            : t.system
+            : t.system || "Desconocido",
+        uso: 
+          typeof t.use === "string"
+            ? t.use === "Mobile"
+              ? "Personal"
+              : t.use === "Home"
+                ? "Hogar"
+                : t.use === "Work"
+                  ? "Trabajo"
+                  : t.use === "Temp"
+                    ? "Temporal"
+                    : t.use === "Old"
+                      ? "Antiguo"
+                      : t.use
+            : t.use || "Desconocido",
+        valor: t.value,
+      })) || [],
+      direcciones: patient?.address?.map((a) => ({
+        tipo: 
+          typeof a.use === "string"
+            ? a.use === "Home"
+              ? "Hogar"
+              : a.use === "Work"
+                ? "Trabajo"
+                : a.use === "Temp"
+                  ? "Temporal"
+                  : a.use === "Old"
+                    ? "Antiguo"
+                    : a.use
+            : a.use || "Desconocido",
+        valor: `${a.line?.join(", ") || "Desconocido"}, ${a.city || ""}, ${
+          a.country || ""
+        }`,
+      })) || [],
     };
-  }, [data, phone, email]);
+  }, [data]);
 
   // Mapeo de pacientes para tabla
   const patients = useMemo(() => {
@@ -235,10 +254,7 @@ export function usePatientsInformation() {
     return items.map((p: PatientDto, index: number) => ({
       id: p.id || String(index),
       key: p.id || String(index),
-      nombre:
-        p.name?.[0]?.text ??
-        p.name?.[0]?.given?.join(" ") ??
-        "Nombre no disponible",
+      nombre: `${p?.name?.[0]?.given?.join(" ") || ""} ${p?.name?.[0]?.family || ""}`.trim() || "Desconocido",
       identificadorTipo: (() => {
         const code =
           p.identifier?.[0]?.type?.coding?.[0]?.code?.toUpperCase() ?? "DNI";
@@ -251,7 +267,10 @@ export function usePatientsInformation() {
       nacimiento: p.birthDate
         ? new Date(p.birthDate).toLocaleDateString()
         : "-",
-      nacionalidad: p.address?.[0]?.country || "-",
+      nacionalidad:
+        p?.extension?.find(
+          (ext) => ext.url === PatientExtensionsUrls.nationality
+        )?.valueString || "Desconocido",
       genero:
         p.gender === 1
           ? "Masculino"
@@ -259,7 +278,7 @@ export function usePatientsInformation() {
             ? "Femenino"
             : p.gender === 3
               ? "Otro"
-              : "No especificado",
+              : "Desconocido",
       estadoVital: p.active ? "Vivo" : "Fallecido",
     }));
   }, [response]);
@@ -302,23 +321,22 @@ export function usePatientsInformation() {
     }
 
     const info = `
-      Nombre: ${selectedPatient.nombre} ${selectedPatient.apellidos}
-      Fecha de Nacimiento: ${selectedPatient.fechaNacimiento}
-      Edad: ${selectedPatient.edad}
-      Género: ${selectedPatient.genero}
-      Nacionalidad: ${selectedPatient.nacionalidad}
-      Estado Vital: ${selectedPatient.estadoVital}
-
-      ${selectedPatient.identificadores
-        .map((id) => `${id.tipo}: ${id.valor} (${id.emisor})`)
-        .join("\n")}
-
-      Móvil: ${selectedPatient.movil}
-      Email: ${selectedPatient.email}
-
-      Dirección Casa: ${selectedPatient.casaDireccion}
-      Dirección Trabajo: ${selectedPatient.trabajoDireccion}
-    `.trim();
+Nombre: ${selectedPatient.nombre} ${selectedPatient.apellidos}
+Fecha de Nacimiento: ${selectedPatient.fechaNacimiento}
+Edad: ${selectedPatient.edad}
+Género: ${selectedPatient.genero}
+Nacionalidad: ${selectedPatient.nacionalidad}
+Estado Vital: ${selectedPatient.estadoVital}
+${selectedPatient.identificadores
+.map((id) => `${id.tipo}: ${id.valor} (${id.emisor})`)
+.join("\n")}
+${selectedPatient.contactos
+.map((c) => `${c.tipo}(${c.uso}): ${c.valor}`)
+.join("\n")}
+${selectedPatient.direcciones
+.map((d) => `Dirección(${d.tipo}): ${d.valor}`)
+.join("\n")}
+`.trim();
 
     navigator.clipboard.writeText(info);
     messageApi.success("Datos del paciente copiados al portapapeles.");

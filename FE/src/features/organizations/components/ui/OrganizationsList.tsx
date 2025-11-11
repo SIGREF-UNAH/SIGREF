@@ -37,12 +37,12 @@ export default function OrganizationsList() {
     },
     {
       title: "Identificador",
-      dataIndex: "identifiers",
+      dataIndex: "identifier",
       key: "identifier",
-      render: (identifiers: any[]) =>
-        Array.isArray(identifiers)
-          ? identifiers[0]?.value || "N/A"
-          : identifiers?.value || "N/A",
+      render: (identifier: any[]) =>
+        Array.isArray(identifier)
+          ? identifier[0]?.value || "N/A"
+          : identifier?.value || "N/A",
     },
     {
       title: "Tipo",

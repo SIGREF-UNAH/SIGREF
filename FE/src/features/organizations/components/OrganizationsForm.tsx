@@ -19,7 +19,7 @@ import type { ProFormInstance } from "@ant-design/pro-components";
 type OrganizationFormValues = {
   name: string;
   identifier: string;
-  types: string[];
+  type: string[];
   active: boolean;
   description?: string;
   phone?: string;
@@ -50,7 +50,7 @@ export default function OrganizationsForm({
     const payload: CreateOrganizationDto = {
       name: values.name,
       identifier: values.identifier,
-      types: values.types,
+      type: values.type,
       active: values.active,
       email: values.email,
       phone: values.phone,
@@ -148,7 +148,7 @@ export default function OrganizationsForm({
             initialValues={{
               name: initialValues?.name || "",
               identifier: initialValues?.identifier || "",
-              types: initialValues?.types || "",
+              type: initialValues?.type || "",
               active: initialValues?.active ?? true,
               email: initialValues?.email || "",
               phone: initialValues?.phone || "",
@@ -187,7 +187,7 @@ export default function OrganizationsForm({
                   ]}
                 />
                 <ProFormSelect
-                  name="types"
+                  name="type"
                   label="Tipo de Organización"
                   placeholder="Seleccionar tipo"
                   options={[

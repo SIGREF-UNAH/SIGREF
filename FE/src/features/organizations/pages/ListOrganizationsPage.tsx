@@ -9,8 +9,12 @@ export default function OrganizationsListPage() {
         <PageHeaderTabs
           title="SIGREF - Gestión de Organizaciones"
           tabs={[
-            { key: "list", label: "Lista de Organizaciones", path: "/organizations/list" },
-            { key: "create", label: "Crear Organización", path: "/organizations/create" },
+            { key: "list", 
+              label: "Lista de Organizaciones", 
+              path: "/organizations/list" },
+            { key: "create", 
+              label: "Crear Organización", 
+              path: "/organizations/create" },
           ]}
           defaultActive="list"
         />

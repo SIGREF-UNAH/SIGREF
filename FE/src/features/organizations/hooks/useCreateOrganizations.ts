@@ -34,7 +34,7 @@ export function useCreateOrganization() {
   type FormValues = {
     name: string;
     identifier: string;
-    types: OrgTypeKey;
+    type: OrgTypeKey;
     active: boolean;
     description?: string;
     phone?: string;
@@ -76,14 +76,14 @@ export function useCreateOrganization() {
       other: { code: "other", display: "Otro" },
     };
 
-    if (!values.types) {
-      values.types = "prov";
+    if (!values.type) {
+      values.type = "prov";
     }
 
-    console.log("Tipo seleccionado:", values.types);
-    console.log("Mapa de tipo:", typeMap[values.types]);
+    console.log("Tipo seleccionado:", values.type);
+    console.log("Mapa de tipo:", typeMap[values.type]);
 
-    const payload: CreateOrganizationDto & { types?: any } = {
+    const payload: CreateOrganizationDto & { type?: any } = {
       identifier: [
         {
           use: 1,
@@ -105,18 +105,18 @@ export function useCreateOrganization() {
         },
       ],
       active: values.active,
-      types: [
+      type: [
         {
           coding: [
             {
               system: "http://terminology.hl7.org/CodeSystem/organization-type",
               version: "1.0",
-              code: typeMap[values.types].code,
-              display: typeMap[values.types].display,
+              code: typeMap[values.type].code,
+              display: typeMap[values.type].display,
               userSelected: true,
             },
           ],
-          text: typeMap[values.types].display,
+          text: typeMap[values.type].display,
         },
       ],
       name: values.name,

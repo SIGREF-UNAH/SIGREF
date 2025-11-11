@@ -119,7 +119,7 @@ export default function LocationForm({ mode }: LocationFormProps) {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-2">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <ProFormText
               name="name"
               label="Nombre"
@@ -153,9 +153,6 @@ export default function LocationForm({ mode }: LocationFormProps) {
                 ),
               }}
             />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-2">
             <ProFormSelect
               name="mode"
               label="Modo"
@@ -170,13 +167,14 @@ export default function LocationForm({ mode }: LocationFormProps) {
                 ),
               }}
             />
-            <ProFormText name="type" label="Tipo de función" />
           </div>
+
+          {/* <ProFormText name="type" label="Tipo de función" /> */}
 
           <ProFormTextArea
             name="description"
             label="Descripción"
-            fieldProps={{ rows: 2 }}
+            fieldProps={{ rows: 3 }}
           />
         </section>
 

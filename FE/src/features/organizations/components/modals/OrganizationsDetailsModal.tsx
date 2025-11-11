@@ -69,7 +69,7 @@ export const OrganizationDetailsModal = ({
 
           <Descriptions.Item label="Identificador">
             <Tag color="blue" className="text-sm px-3 py-1">
-              {organization.identifiers?.[0]?.value || "No disponible"}
+              {organization.identifier?.[0]?.value || "No disponible"}
             </Tag>
           </Descriptions.Item>
 
@@ -88,8 +88,8 @@ export const OrganizationDetailsModal = ({
           {organization.types && organization.types.length > 0 && (
             <Descriptions.Item label="Tipo" span={2}>
               <Tag color="purple" className="text-sm px-3 py-1">
-                {organization.types?.[0]?.coding?.[0]?.display ||
-                  organization.types?.[0]?.coding?.[0]?.code ||
+                {organization.type?.[0]?.coding?.[0]?.display ||
+                  organization.type?.[0]?.coding?.[0]?.code ||
                   "No especificado"}
               </Tag>
             </Descriptions.Item>

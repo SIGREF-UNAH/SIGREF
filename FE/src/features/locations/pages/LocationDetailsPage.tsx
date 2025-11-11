@@ -206,9 +206,9 @@ const LocationDetailsPage: React.FC = () => {
               {renderModeTag(location.mode)}
             </ProDescriptions.Item>
 
-            <ProDescriptions.Item label="Tipo de función" span={2}>
+            {/* <ProDescriptions.Item label="Tipo de función" span={2}>
               {location.type || "—"}
-            </ProDescriptions.Item>
+            </ProDescriptions.Item> */}
 
             <ProDescriptions.Item label="Descripción" span={2}>
               <div className="whitespace-pre-wrap text-gray-700">

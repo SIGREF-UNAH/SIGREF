@@ -17,7 +17,7 @@ export function useUpdateOrganization() {
   interface OrganizationFormValues {
     name: string;
     identifier: string;
-    types: {
+    type: {
       coding: {
         system: string;
         version?: string;
@@ -83,8 +83,8 @@ export function useUpdateOrganization() {
   const initialValues: OrganizationFormValues | undefined = organization
     ? {
         name: organization.name || "",
-        identifier: organization.identifiers?.[0]?.value || "",
-        type: organization.types?.length ? organization.types : [],
+        identifier: organization.identifier?.[0]?.value || "",
+        type: organization.type?.length ? organization.type : [],
         active: organization.active ?? true,
         description: organization.description || "",
         phone,
@@ -128,8 +128,8 @@ export function useUpdateOrganization() {
           value: values.identifier,
         },
       ],
-      type: values.types?.length
-        ? values.types
+      type: values.type?.length
+        ? values.type
         : [
             {
               coding: [
