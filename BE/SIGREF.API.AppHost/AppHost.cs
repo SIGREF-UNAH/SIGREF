@@ -37,6 +37,7 @@ var traefik = builder.AddContainer("traefik", "traefik", "latest")
 var postgresUsername = builder.AddParameter("postgres-username", Environment.GetEnvironmentVariable("POSTGRES_USER") ?? "sigref");
 var postgresPassword = builder.AddParameter("postgres-password", Environment.GetEnvironmentVariable("POSTGRES_PASSWORD") ?? "sigref", secret: true);
 
+
 var postgres = builder.AddPostgres("postgres", postgresUsername, postgresPassword)
     .WithImage("postgres", "17")
     .WithEnvironment("POSTGRES_DB", Environment.GetEnvironmentVariable("POSTGRES_DB") ?? "postgres")
@@ -68,6 +69,7 @@ var mongoConnectionString = builder.AddConnectionString(
     "MongoSigrefLogsConnection",
     $"mongodb://{mongoUser}:{mongoPassword}@mongo-sigref-logs:27017"
 );
+
 // =============================================================
 // KEYCLOAK - Servidor de Autenticación
 // =============================================================

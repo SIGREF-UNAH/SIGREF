@@ -1,4 +1,5 @@
-﻿using FhirPractitioner = Hl7.Fhir.Model.Practitioner;
+﻿#nullable enable
+using FhirPractitioner = Hl7.Fhir.Model.Practitioner;
 using SIGREF.API.Dtos.Practitioner;
 using SIGREF.API.Dtos.Common;
 
@@ -7,9 +8,11 @@ public interface IPractitionerService
 {
     Task<FhirPractitioner> CreatePractitionerAsync(CreatePractitionerDto dto);
 
-    Task<FhirPractitioner> GetPractitionerByIdAsync(string id);
+    Task<PractitionerDto> GetPractitionerByIdAsync(string id);
 
     Task<FhirPractitioner> UpdatePractitionerAsync(string id, FhirPractitioner dto);
+
+    Task<FhirPractitioner?> UpdatePractitionerWithDtoAsync(string id, UpdatePractitionerDto dto);
 
     Task DeletePractitionerAsync(string id);
 
