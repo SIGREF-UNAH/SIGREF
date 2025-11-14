@@ -48,6 +48,27 @@ var hapiDb = postgres.AddDatabase("hapi");
 var sigrefDb = postgres.AddDatabase("sigref");
 
 // =============================================================
+// MONGODB - Base de datos para logs internos de SIGREF
+// =============================================================
+var mongoUser = builder.AddParameter("mongodb-user", Environment.GetEnvironmentVariable("MONGO_USER") ?? "sigref" );
+var mongoPassword = builder.AddParameter("mongodb-password", Environment.GetEnvironmentVariable("MONGO_PASSWORD") ?? "sigref", secret: true );
+
+// Contenedor MongoDB
+var mongoSigrefLogs = builder.AddContainer("mongo-sigref-logs", "mongo", "6.0")
+    .WithEnvironment("MONGO_INITDB_ROOT_USERNAME", mongoUser)
+    .WithEnvironment("MONGO_INITDB_ROOT_PASSWORD", mongoPassword)
+    .WithBindMount("./data/mongodb", "/data/db")  
+    .WithHttpEndpoint(targetPort: 27017, name: "mongo") 
+    .WaitFor(postgres); 
+
+// =============================================================
+// CONNECTION STRING para que SIGREF-API lo reciba
+// =============================================================
+var mongoConnectionString = builder.AddConnectionString(
+    "MongoSigrefLogsConnection",
+    $"mongodb://{mongoUser}:{mongoPassword}@mongo-sigref-logs:27017"
+);
+// =============================================================
 // KEYCLOAK - Servidor de Autenticación
 // =============================================================
 //var keycloakHost = Environment.GetEnvironmentVariable("KEYCLOAK_HOST") ?? "keycloak.localhost";
@@ -76,6 +97,7 @@ var apiHost = Environment.GetEnvironmentVariable("API_HOST") ?? "api.localhost";
 var sigrefApi = builder.AddProject<Projects.SIGREF_API>("sigref-api")
     .WithReference(hapiDb)
     .WithReference(sigrefDb)
+    .WithReference(mongoConnectionString) 
     .WaitFor(hapi)
     .WaitFor(keycloak);
 
