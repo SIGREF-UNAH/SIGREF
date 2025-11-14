@@ -1,189 +1,115 @@
-{
-  "realm": "fhir",
-  "displayName": "FHIR Realm",
+﻿{
+  "realm": "sigref",
+  "displayName": "SIGREF Realm",
+  "loginTheme": "sigref",
   "enabled": true,
   "sslRequired": "external",
-  "registrationAllowed": true,
+  "registrationAllowed": false,
   "loginWithEmailAllowed": true,
-  "duplicateEmailsAllowed": false,
   "resetPasswordAllowed": true,
-  "editUsernameAllowed": false,
   "bruteForceProtected": true,
-  "permanentLockout": false,
-  "maxFailureWaitSeconds": 900,
-  "minimumQuickLoginWaitSeconds": 60,
-  "waitIncrementSeconds": 60,
-  "quickLoginCheckMilliSeconds": 1000,
-  "maxDeltaTimeSeconds": 43200,
-  "failureFactor": 30,
-  "defaultRoles": ["default-roles-fhir", "offline_access", "uma_authorization"],
-  "requiredCredentials": ["password"],
-  "passwordPolicy": "hashIterations(27500)",
-  "otpPolicyType": "totp",
-  "otpPolicyAlgorithm": "HmacSHA1",
-  "otpPolicyInitialCounter": 0,
-  "otpPolicyDigits": 6,
-  "otpPolicyLookAheadWindow": 1,
-  "otpPolicyPeriod": 30,
   "clients": [
     {
-      "clientId": "fhir-client",
-      "name": "FHIR Client",
-      "description": "Cliente para aplicación FHIR",
+      "clientId": "sigref-api",
+      "name": "SIGREF_API",
+      "description": "Cliente OIDC para la API de SIGREF",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
-      "secret": "fhir-client-secret",
-      "standardFlowEnabled": true,
-      "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": true,
-      "serviceAccountsEnabled": true,
-      "publicClient": false,
+      "secret": "sigref-secret",
       "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "publicClient": false,
       "redirectUris": [
+        "https://api.localhost/*",
         "http://localhost:8080/*",
-        "http://localhost:3000/*",
-        "http://localhost:4200/*",
-        "http://127.0.0.1:8080/*",
-        "http://127.0.0.1:3000/*",
-        "http://127.0.0.1:4200/*"
+        "http://localhost:3000/*"
       ],
       "webOrigins": [
+        "https://api.localhost",
         "http://localhost:8080",
-        "http://localhost:3000",
-        "http://localhost:4200",
-        "http://127.0.0.1:8080",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:4200"
-      ],
-      "attributes": {
-        "access.token.lifespan": "300",
-        "client.secret.creation.time": "1694764800"
-      }
+        "http://localhost:3000"
+      ]
     },
     {
-      "clientId": "fhir-admin",
-      "name": "FHIR Admin Client",
-      "description": "Cliente administrativo para FHIR",
+      "clientId": "frontend",
+      "name": "SIGREF_Frontend",
+      "description": "Aplicacion web del SIGREF",
       "enabled": true,
-      "clientAuthenticatorType": "client-secret",
-      "secret": "fhir-admin-secret",
-      "standardFlowEnabled": true,
-      "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": true,
-      "serviceAccountsEnabled": true,
-      "publicClient": false,
+      "publicClient": true,
       "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
       "redirectUris": [
-        "http://localhost:8080/*",
-        "http://localhost:3000/*",
-        "http://localhost:4200/*"
+        "http://localhost:5173/*",
+        "https://app.localhost/*"
       ],
       "webOrigins": [
-        "http://localhost:8080",
-        "http://localhost:3000",
-        "http://localhost:4200"
+        "http://localhost:5173",
+        "https://app.localhost"
       ]
+    },
+    {
+      "clientId": "sigref-admin-api",
+      "name": "SIGREF Admin API",
+      "description": "Cliente interno usado por SIGREF.API para crear y administrar usuarios",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "serviceAccountsEnabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "sigref-admin-secret",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "authorizationServicesEnabled": true,
+      "fullScopeAllowed": false
     }
   ],
   "roles": {
     "realm": [
       {
-        "name": "fhir-user",
-        "description": "Usuario FHIR estándar",
+        "name": "cashier",
+        "description": "Rol definido en entorno: cashier",
         "composite": false
       },
       {
-        "name": "fhir-admin",
-        "description": "Administrador FHIR",
+        "name": "admin",
+        "description": "Rol definido en entorno: admin",
         "composite": false
       },
       {
-        "name": "fhir-practitioner",
-        "description": "Profesional de la salud",
+        "name": "ti",
+        "description": "Rol definido en entorno: ti",
         "composite": false
       },
       {
-        "name": "fhir-patient",
-        "description": "Paciente",
+        "name": "auditor",
+        "description": "Rol definido en entorno: auditor",
         "composite": false
       }
     ]
   },
   "users": [
     {
-      "username": "admin",
+      "username": "sigref-admin",
       "enabled": true,
-      "email": "admin@example.com",
-      "firstName": "Admin",
-      "lastName": "User",
+      "emailVerified": true,
+      "firstName": "SIGREF",
+      "lastName": "Admin",
+      "email": "admin@sigref.local",
       "credentials": [
         {
           "type": "password",
-          "value": "admin123",
+          "value": "Admin123",
           "temporary": false
         }
       ],
-      "realmRoles": ["fhir-admin", "fhir-user"],
-      "clientRoles": {}
-    },
-    {
-      "username": "practitioner",
-      "enabled": true,
-      "email": "practitioner@example.com",
-      "firstName": "Doctor",
-      "lastName": "Smith",
-      "credentials": [
-        {
-          "type": "password",
-          "value": "practitioner123",
-          "temporary": false
-        }
-      ],
-      "realmRoles": ["fhir-practitioner", "fhir-user"],
-      "clientRoles": {}
-    },
-    {
-      "username": "patient",
-      "enabled": true,
-      "email": "patient@example.com",
-      "firstName": "John",
-      "lastName": "Doe",
-      "credentials": [
-        {
-          "type": "password",
-          "value": "patient123",
-          "temporary": false
-        }
-      ],
-      "realmRoles": ["fhir-patient", "fhir-user"],
-      "clientRoles": {}
-    }
-  ],
-  "groups": [
-    {
-      "name": "Healthcare Providers",
-      "path": "/Healthcare Providers",
-      "realmRoles": ["fhir-practitioner"]
-    },
-    {
-      "name": "Patients",
-      "path": "/Patients", 
-      "realmRoles": ["fhir-patient"]
-    },
-    {
-      "name": "Administrators",
-      "path": "/Administrators",
-      "realmRoles": ["fhir-admin"]
-    }
-  ],
-  "scopeMappings": [
-    {
-      "client": "fhir-client",
-      "roles": ["fhir-user", "fhir-practitioner", "fhir-patient"]
-    },
-    {
-      "client": "fhir-admin",
-      "roles": ["fhir-admin", "fhir-user"]
+      "realmRoles": [
+        "cashier",
+        "admin",
+        "ti",
+        "auditor"
+      ]
     }
   ]
 }

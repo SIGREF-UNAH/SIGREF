@@ -2,8 +2,8 @@ namespace SIGREF.API.Constants;
 
 public class Env
 {
-    public PhirConfig Fhir { get; set; } = new();
-    public FhirConfig Phir { get; set; } = new();
+    public PhirConfig Phir { get; set; } = new();
+    public FhirConfig Fhir { get; set; } = new();
 }
 
 public class FhirConfig
