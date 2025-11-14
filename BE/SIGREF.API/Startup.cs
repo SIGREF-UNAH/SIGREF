@@ -13,7 +13,10 @@ using SIGREF.API.Services.Practitioner;
 using SIGREF.API.Services.PractitionerRole;
 using System.Security.Claims;
 using System.Text.Json;
+using Microsoft.Extensions.Options;
 using SIGREF.API.Services.Auth;
+using MongoDB.Driver;
+
 
 namespace SIGREF.API;
 
@@ -67,7 +70,32 @@ public class Startup
         // No entiendo por que se enlazaba ese contexto aqui, si directamente se utiliza un client
         // el contexto es para tener acceso directo a la base de datos ejemplo contex.users 
         //services.AddNpgsql<HapiContext>("hapi");
+        
+        
+        // ====================================================
+        // MONGO DB - Logs internos SIGREF
+        // ====================================================
+                services.Configure<MongoSettings>(_configuration.GetSection("Mongo"));
 
+                services.AddSingleton<IMongoClient>(sp =>
+                {
+                    var settings = sp.GetRequiredService<IOptions<MongoSettings>>().Value;
+                    return new MongoClient(settings.ConnectionString);
+                });
+
+                services.AddSingleton(sp =>
+                {
+                    var settings = sp.GetRequiredService<IOptions<MongoSettings>>().Value;
+                    var client = sp.GetRequiredService<IMongoClient>();
+                    return client.GetDatabase(settings.Database);
+                });
+
+        // Servicio para escribir logs
+        // o lo que tenga David
+        //services.AddScoped<SigrefLogService>();
+        
+        
+        
         services.AddHttpContextAccessor();
         
         // Configuración de Autenticación con Keycloak
