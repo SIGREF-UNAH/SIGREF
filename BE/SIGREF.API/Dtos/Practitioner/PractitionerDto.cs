@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using Hl7.Fhir.Model;
 using SIGREF.API.Dtos.Common;
+using SIGREF.API.Dtos.PractitionerRole;
 
 namespace SIGREF.API.Dtos.Practitioner;
 public class PractitionerDto
@@ -13,5 +14,6 @@ public class PractitionerDto
     public AdministrativeGender? Gender { get; set; } = AdministrativeGender.Unknown;
     public DateTime? BirthDate { get; set; }
     public DateTime? LastUpdated { get; set; }
+    public List<PractitionerRoleDto>? Roles { get; set; } = new();
 }
 
