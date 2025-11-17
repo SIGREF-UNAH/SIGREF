@@ -8,7 +8,7 @@ public class OrganizationDto
     public string Id { get; set; }
     public List<IdentifierDto> Identifier { get; set; } = new();
     public bool Active { get; set; } = true;
-    public List<CodeableConcept> Types { get; set; } = new();
+    public List<CodeableConcept> Type { get; set; } = new();
     public string Name { get; set; } = string.Empty;
     public List<string> Alias { get; set; } = new();
     public string Description { get; set; } = string.Empty;

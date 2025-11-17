@@ -11,7 +11,7 @@ namespace SIGREF.API.Dtos
 
         public bool? Active { get; set; }
 
-        public List<OrganizationTypeEnum>? Types { get; set; }
+        public List<OrganizationTypeEnum>? Type { get; set; }
 
         public string? PartOf { get; set; }
     }
