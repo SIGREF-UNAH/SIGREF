@@ -1,8 +1,8 @@
 import { HealthcareForm } from "../components";
 import { useHealthcareForm, useUpdateHealthcare } from "../hooks";
 import { FormTitle } from "../components/ui/FormTitle";
-import { HealthcareFormSkeleton } from "../components/skeletons";
 import { PageHeaderTabs } from "../../../shared/components/ui";
+import { Spin } from "antd";
 
 export const UpdateHealthcarePage = () => {
   const {
@@ -11,7 +11,7 @@ export const UpdateHealthcarePage = () => {
     isLoading: isLoadingHealthcare,
     handleFinish,
   } = useUpdateHealthcare();
-  
+
   const {
     organizations,
     locations,
@@ -21,35 +21,46 @@ export const UpdateHealthcarePage = () => {
 
   const isLoading = isLoadingHealthcare || isLoadingFormData;
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-100">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
   return (
     <div>
       {/* Encabezado */}
       <PageHeaderTabs
         title="Gestión de Servicios"
         tabs={[
-          { key: "listar", label: "Lista de Servicios", path: "/healthcares/list" },
-          { key: "crear", label: "Crear Servicio", path: "/healthcares/create" },
+          {
+            key: "listar",
+            label: "Lista de Servicios",
+            path: "/healthcares/list",
+          },
+          {
+            key: "crear",
+            label: "Crear Servicio",
+            path: "/healthcares/create",
+          },
         ]}
         defaultActive="null"
       />
 
       {/* Contenido Principal */}
-      <div className="p-6 border-2 bg-card border-gray-300 shadow-md rounded-lg">
+      <div className="primary-card">
         <FormTitle title="Editar Servicio" icon="edit" />
-
-        {isLoading ? (
-          <HealthcareFormSkeleton />
-        ) : (
-          <HealthcareForm
-            initialValues={healthcare}
-            organizations={organizations}
-            locations={locations}
-            onFinish={handleFinish}
-            onCancel={handleCancel}
-            submitButtonText="Actualizar servicio"
-            isPending={isPending}
-          />
-        )}
+        <HealthcareForm
+          initialValues={healthcare}
+          organizations={organizations}
+          locations={locations}
+          onFinish={handleFinish}
+          onCancel={handleCancel}
+          submitButtonText="Actualizar servicio"
+          isPending={isPending}
+        />
       </div>
     </div>
   );

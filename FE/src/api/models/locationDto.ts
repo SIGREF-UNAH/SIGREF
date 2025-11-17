@@ -6,6 +6,7 @@
  */
 import type { AddressDto } from "./addressDto";
 import type { ContactPointDto } from "./contactPointDto";
+import type { ReferenceDto } from "./referenceDto";
 
 export interface LocationDto {
   /** @nullable */
@@ -15,9 +16,13 @@ export interface LocationDto {
   /** @minLength 1 */
   name: string;
   /** @nullable */
+  alias?: string[] | null;
+  /** @nullable */
   description?: string | null;
   /** @minLength 1 */
   status: string;
+  /** @nullable */
+  mode?: string | null;
   address?: AddressDto;
   /** @nullable */
   telecom?: ContactPointDto[] | null;
@@ -25,4 +30,6 @@ export interface LocationDto {
   type?: string | null;
   /** @nullable */
   lastUpdated?: string | null;
+  partOf?: ReferenceDto;
+  managingOrganization?: ReferenceDto;
 }

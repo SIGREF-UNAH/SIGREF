@@ -10,8 +10,6 @@ public class UpdatePatientDto
 {
     public bool? Active { get; set; }
 
-    // Name es opcional en update, pero si se envía, debe ser válido
-    // Validar en la actualización que no esté vacío si se proporciona
     [AtLeastOneNameRequired]
     public List<HumanNameDto>? Name { get; set; }
 

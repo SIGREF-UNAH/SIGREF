@@ -133,22 +133,29 @@ public class PatientService : IPatientService
         if (filter.Gender.HasValue)
             searchParams.Add("gender", filter.Gender.Value.ToString().ToLowerInvariant());
 
-        // 3. Identificador (tipo + valor)
-        if (!string.IsNullOrWhiteSpace(filter.IdentifierType) && !string.IsNullOrWhiteSpace(filter.IdentifierValue))
+        // 3. Filtro por tipo de identificador
+        if (!string.IsNullOrWhiteSpace(filter.IdentifierType))
         {
-            searchParams.Add("identifier", $"{filter.IdentifierType}|{filter.IdentifierValue}");
-        }
-        else if (!string.IsNullOrWhiteSpace(filter.IdentifierValue))
-        {
-            searchParams.Add("identifier", filter.IdentifierValue);
+            searchParams.Add("identifier-type:contains", filter.IdentifierType.Trim());
         }
 
-        // 4. Fecha de nacimiento
+        // 4. Filtro por valor de identificador
+        if (!string.IsNullOrWhiteSpace(filter.IdentifierValue))
+        {
+            searchParams.Add("identifier-value:above", filter.IdentifierValue.Trim());
+        }
+
+        // 5. Fecha de nacimiento
         if (filter.BirthDate.HasValue)
         {
             var date = filter.BirthDate.Value.ToString("yyyy-MM-dd");
             searchParams.Add("birthdate", $"eq{date}");
         }
+
+        // 6 .Estado vital
+        if (filter.Active.HasValue)
+            searchParams.Add("active", filter.Active.Value.ToString().
+                ToLowerInvariant());
 
         // Paginación
         searchParams.Count = pageSize;

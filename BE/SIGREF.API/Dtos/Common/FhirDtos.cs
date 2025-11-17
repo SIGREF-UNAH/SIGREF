@@ -31,10 +31,10 @@ namespace SIGREF.API.Dtos.Common
     public class ExtensionDto // Para extensiones personalizadas
     {
         public string Url { get; set; } = string.Empty;
-        public CodeableConceptDto? ValueCodeableConcept { get; set; }
         public string? ValueString { get; set; }
         public bool? ValueBoolean { get; set; }
         public int? ValueInteger { get; set; }
+        public decimal? ValueDecimal { get; set; }
         public DateTime? ValueDate { get; set; }
     }
 

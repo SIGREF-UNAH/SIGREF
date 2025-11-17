@@ -12,6 +12,9 @@ public interface IPractitionerRoleService
     // Obtener un PractitionerRole por Id
     Task<PractitionerRoleDto?> GetByIdAsync(string id);
 
+    // Obtener un PractitionerRole por PractitionerId
+    Task<IEnumerable<PractitionerRoleDto>> GetByPractitionerIdAsync(string practitionerId);
+
     // Actualizar
     Task<ServiceResult<PractitionerRoleDto?>> UpdateAsync(string id, UpdatePractitionerRoleDto dto);
 

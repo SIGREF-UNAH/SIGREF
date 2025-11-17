@@ -1,4 +1,3 @@
-export * from './CreatePatient';
-export * from './PatientDetails';
-export * from './PatientsList';
-export * from './UpdatePatient';
+export * from './CreatePatientPage';
+export * from './PatientsListPage';
+export * from './UpdatePatientPage';

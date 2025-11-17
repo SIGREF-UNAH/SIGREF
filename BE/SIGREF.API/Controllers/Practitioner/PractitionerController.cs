@@ -37,7 +37,7 @@ public class PractitionerController : ControllerBase
 
         return Ok(pagedPractitionerDtos);
     }
-    
+
     // GET: api/practitioner/{id}
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -77,16 +77,11 @@ public class PractitionerController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var existingPractitioner = await _practitionerService.GetPractitionerByIdAsync(id);
-        if (existingPractitioner == null)
+        var updatedPractitioner = await _practitionerService.UpdatePractitionerWithDtoAsync(id, updatePractitionerDto);
+        if (updatedPractitioner == null)
             return NotFound($"Practitioner with id '{id}' not found.");
 
-        // Aplicar actualizaciones usando extension method
-        existingPractitioner.ApplyUpdate(updatePractitionerDto);
-        var updatePractitioner = await _practitionerService.UpdatePractitionerAsync(id, existingPractitioner);
-
-        // 3. Devolver el resultado
-        return Ok(updatePractitioner);
+        return Ok(updatedPractitioner);
     }
 
     // DELETE: api/practitioner/{id}

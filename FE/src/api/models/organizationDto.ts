@@ -13,7 +13,7 @@ export interface OrganizationDto {
   /** @nullable */
   id?: string | null;
   /** @nullable */
-  identifiers?: IdentifierDto[] | null;
+  identifier?: IdentifierDto[] | null;
   active?: boolean;
   /** @nullable */
   types?: OrganizationDtoTypesItem[] | null;

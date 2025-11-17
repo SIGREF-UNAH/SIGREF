@@ -1,324 +1,223 @@
 using System.Text;
 using System.Text.Json;
+using System.Security.Cryptography;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Postgres;
 
 namespace SIGREF.API.AppHost;
 
-/// <summary>
-/// Clase para configurar automáticamente el realm de Keycloak en Aspire
-/// </summary>
 public static class KeycloakRealmConfigurator
 {
-    /// <summary>
-    /// Configura un contenedor de Keycloak con un realm por defecto usando init containers
-    /// </summary>
-    /// <param name="builder">El builder de la aplicación distribuida</param>
-    /// <param name="containerName">Nombre del contenedor de Keycloak</param>
-    /// <param name="realmConfigPath">Ruta al archivo de configuración del realm</param>
-    /// <returns>El recurso de contenedor de Keycloak configurado</returns>
-    public static IResourceBuilder<ContainerResource> AddKeycloakWithRealm(
-        this IDistributedApplicationBuilder builder,
-        string containerName,
-        string? realmConfigPath = null)
-    {
-        // Usar la configuración por defecto si no se proporciona una ruta
-        realmConfigPath ??= "./config/keycloak-realm.json";
+    private const string DefaultRealmPath = "./config/keycloak-realm.json";
+    private const string DefaultKeycloakImage = "quay.io/keycloak/keycloak";
+    private const string DefaultKeycloakVersion = "24.0.3";
 
-        // Configuración básica de Keycloak con argumentos para importar realm
-        var keycloak = builder.AddContainer(containerName, "quay.io/keycloak/keycloak", "24.0.3")
-            .WithEnvironment("KC_DB", "postgres")
-            .WithEnvironment("KC_DB_URL_HOST", "postgres")
-            .WithEnvironment("KC_DB_URL_DATABASE", "keycloak")
-            .WithEnvironment("KC_HOSTNAME", "localhost")
-            .WithEnvironment("KC_DB_USERNAME", "hapi")
-            .WithEnvironment("KC_DB_PASSWORD", "hapi")
-            .WithEnvironment("KEYCLOAK_ADMIN", "admin")
-            .WithEnvironment("KEYCLOAK_ADMIN_PASSWORD", "admin")
-            .WithEnvironment("KC_HEALTH_ENABLED", "true")
-            .WithHttpEndpoint(targetPort: 8080, port: 8081, name: "keycloak-http");
-
-        // Configurar importación del realm si el archivo existe
-        if (File.Exists(realmConfigPath))
-        {
-            keycloak = keycloak
-                .WithBindMount(realmConfigPath, "/opt/keycloak/data/import/realm.json")
-                .WithArgs("start-dev", "--import-realm");
-        }
-        else
-        {
-            keycloak = keycloak.WithArgs("start-dev");
-        }
-
-        return keycloak;
-    }
-
-    /// <summary>
-    /// Configura Keycloak con PostgreSQL y realm por defecto usando init containers
-    /// </summary>
-    /// <param name="builder">El builder de la aplicación distribuida</param>
-    /// <param name="containerName">Nombre del contenedor de Keycloak</param>
-    /// <param name="postgresResource">Recurso de PostgreSQL</param>
-    /// <param name="databaseName">Nombre de la base de datos para Keycloak</param>
-    /// <param name="realmConfigPath">Ruta al archivo de configuración del realm</param>
-    /// <returns>El recurso de contenedor de Keycloak configurado</returns>
-    public static IResourceBuilder<ContainerResource> AddKeycloakWithPostgresAndRealm(
-        this IDistributedApplicationBuilder builder,
-        string containerName,
-        IResourceBuilder<PostgresServerResource> postgresResource,
-        string databaseName = "keycloak",
-        string? realmConfigPath = null)
-    {
-        // Crear la base de datos para Keycloak
-        var keycloakDb = postgresResource.AddDatabase(databaseName);
-        
-        // Usar la configuración por defecto si no se proporciona una ruta
-        realmConfigPath ??= "./config/keycloak-realm.json";
-
-        // Configurar Keycloak
-        var keycloak = builder.AddContainer(containerName, "quay.io/keycloak/keycloak", "24.0.3")
-            .WithEnvironment("KC_DB", "postgres")
-            .WithEnvironment("KC_DB_URL_HOST", "postgres")
-            .WithEnvironment("KC_DB_URL_DATABASE", databaseName)
-            .WithEnvironment("KC_HOSTNAME", "localhost")
-            .WithEnvironment("KC_DB_USERNAME", "hapi")
-            .WithEnvironment("KC_DB_PASSWORD", "hapi")
-            .WithEnvironment("KEYCLOAK_ADMIN", "admin")
-            .WithEnvironment("KEYCLOAK_ADMIN_PASSWORD", "admin")
-            .WithEnvironment("KC_HEALTH_ENABLED", "true")
-            .WithHttpEndpoint(targetPort: 8080, port: 8081, name: "keycloak-http")
-            .WaitFor(postgresResource);
-
-        // Configurar importación del realm si el archivo existe
-        if (File.Exists(realmConfigPath))
-        {
-            keycloak = keycloak
-                .WithBindMount(realmConfigPath, "/opt/keycloak/data/import/realm.json")
-                .WithArgs("start-dev", "--import-realm");
-        }
-        else
-        {
-            keycloak = keycloak.WithArgs("start-dev");
-        }
-
-        return keycloak;
-    }
-
-    /// <summary>
-    /// Configura Keycloak con setup automático usando un init container
-    /// </summary>
-    /// <param name="builder">El builder de la aplicación distribuida</param>
-    /// <param name="containerName">Nombre del contenedor de Keycloak</param>
-    /// <param name="postgresResource">Recurso de PostgreSQL</param>
-    /// <param name="databaseName">Nombre de la base de datos para Keycloak</param>
-    /// <returns>El recurso de contenedor de Keycloak configurado</returns>
     public static IResourceBuilder<ContainerResource> AddKeycloakWithAutoSetup(
         this IDistributedApplicationBuilder builder,
         string containerName,
-        IResourceBuilder<PostgresServerResource> postgresResource,
-        string databaseName = "keycloak")
+        IResourceBuilder<PostgresServerResource>? postgresResource = null,
+        string databaseName = "keycloak",
+        string? realmConfigPath = null)
     {
-        // Crear la base de datos para Keycloak
+        realmConfigPath ??= DefaultRealmPath;
+
+        EnsureRealmConfig(realmConfigPath);
+
+        postgresResource ??= builder.Resources.OfType<IResourceBuilder<PostgresServerResource>>().FirstOrDefault()
+            ?? throw new InvalidOperationException("No se encontró un recurso PostgreSQL en la aplicación.");
+
         var keycloakDb = postgresResource.AddDatabase(databaseName);
 
-        // Crear el script de inicialización
-        CreateKeycloakInitScript();
+        var dbUser = Environment.GetEnvironmentVariable("KEYCLOAK_DB_USER") ?? "sigref";
+        var dbPass = Environment.GetEnvironmentVariable("KEYCLOAK_DB_PASS") ?? "sigref";
+        var adminUser = Environment.GetEnvironmentVariable("KEYCLOAK_ADMIN") ?? "admin";
+        var adminPass = Environment.GetEnvironmentVariable("KEYCLOAK_ADMIN_PASS") ?? "admin";
+        var hostname = Environment.GetEnvironmentVariable("KEYCLOAK_HOSTNAME") ?? "localhost";
 
-        // Configurar Keycloak
-        var keycloak = builder.AddContainer(containerName, "quay.io/keycloak/keycloak", "24.0.3")
-            .WithEnvironment("KC_DB", "postgres")
-            .WithEnvironment("KC_DB_URL_HOST", "postgres")
-            .WithEnvironment("KC_DB_URL_DATABASE", databaseName)
-            .WithEnvironment("KC_HOSTNAME", "localhost")
-            .WithEnvironment("KC_DB_USERNAME", "hapi")
-            .WithEnvironment("KC_DB_PASSWORD", "hapi")
-            .WithEnvironment("KEYCLOAK_ADMIN", "admin")
-            .WithEnvironment("KEYCLOAK_ADMIN_PASSWORD", "admin")
-            .WithEnvironment("KC_HEALTH_ENABLED", "true")
-            .WithHttpEndpoint(targetPort: 8080, port: 8081, name: "keycloak-http")
-            .WithArgs("start-dev")
+        var keycloak = CreateBaseKeycloakContainer(builder, containerName, databaseName, dbUser, dbPass, adminUser, adminPass, hostname)
+            .WithBindMount(realmConfigPath, "/opt/keycloak/data/import/realm.json")
+            .WithArgs("start-dev", "--import-realm")
             .WaitFor(postgresResource);
 
-        // Agregar init container para configurar el realm
-        var keycloakInit = builder.AddContainer("keycloak-init", "curlimages/curl", "latest")
-            .WithBindMount("./config/init-keycloak.sh", "/scripts/init-keycloak.sh")
-            .WithBindMount("./config/keycloak-realm.json", "/scripts/keycloak-realm.json")
-            .WithEntrypoint("/bin/sh")
-            .WithArgs("/scripts/init-keycloak.sh")
-            .WaitFor(keycloak);
+        Console.WriteLine("[SIGREF] Keycloak se inicializará automáticamente con --import-realm.");
+        Console.WriteLine($"[SIGREF] Realm generado dinámicamente desde variables .env → {realmConfigPath}");
 
         return keycloak;
     }
 
-    /// <summary>
-    /// Crea el script de inicialización de Keycloak
-    /// </summary>
-    private static void CreateKeycloakInitScript()
+    private static IResourceBuilder<ContainerResource> CreateBaseKeycloakContainer(
+        IDistributedApplicationBuilder builder,
+        string containerName,
+        string dbName,
+        string dbUser,
+        string dbPass,
+        string adminUser,
+        string adminPass,
+        string hostname)
     {
-        var scriptPath = "./config/init-keycloak.sh";
-        
-        // Solo crear el archivo si no existe
-        if (!File.Exists(scriptPath))
-        {
-            var directory = Path.GetDirectoryName(scriptPath);
-            
-            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
+        return builder.AddContainer(containerName, DefaultKeycloakImage, DefaultKeycloakVersion)
+            .WithEnvironment("KC_DB", "postgres")
+            .WithEnvironment("KC_DB_URL_HOST", "postgres")
+            .WithEnvironment("KC_DB_URL_DATABASE", dbName)
+            .WithEnvironment("KC_DB_USERNAME", dbUser)
+            .WithEnvironment("KC_DB_PASSWORD", dbPass)
+            .WithEnvironment("KC_HOSTNAME", hostname)
+            .WithEnvironment("KEYCLOAK_ADMIN", adminUser)
+            .WithEnvironment("KEYCLOAK_ADMIN_PASSWORD", adminPass)
+            .WithEnvironment("KC_HEALTH_ENABLED", "true")
+            .WithEnvironment("KC_SPI_THEME_LOGIN_THEME", "sigref")
+            .WithEnvironment("KC_SPI_THEME_ACCOUNT_THEME", "keycloak")
+            .WithEnvironment("KC_THEME_CACHE_TEMPLATES", "false")
+            .WithEnvironment("KC_THEME_CACHE_THEMES", "false")
+            .WithBindMount("./config/themes", "/opt/keycloak/themes")
+            .WithHttpEndpoint(targetPort: 8080, port: 8081, name: "keycloak-http");
+    }
 
-            // El script ya existe en el sistema de archivos
-            // Solo verificamos que esté presente
-            Console.WriteLine($"Script de inicialización debe existir en: {Path.GetFullPath(scriptPath)}");
+    private static void EnsureRealmConfig(string filePath)
+    {
+        var directory = Path.GetDirectoryName(filePath);
+        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            Directory.CreateDirectory(directory);
+
+        if (!File.Exists(filePath))
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine($"[SIGREF] No se encontró {filePath}. Generando realm con roles definidos en .env...");
+            Console.ResetColor();
+            SaveDefaultRealmConfig(filePath);
+        }
+        else
+        {
+            Console.WriteLine($"[SIGREF] Realm existente encontrado en {filePath}.");
         }
     }
 
-    /// <summary>
-    /// Crea la configuración del realm FHIR por defecto
-    /// </summary>
-    /// <returns>La configuración del realm como JSON</returns>
-    public static string CreateDefaultFhirRealmConfig()
+    public static string CreateDefaultRealmConfig()
     {
+        var realmName = Environment.GetEnvironmentVariable("KEYCLOAK_REALM") ?? "sigref";
+        var realmDisplay = Environment.GetEnvironmentVariable("KEYCLOAK_REALM_DISPLAY") ?? "SIGREF Realm";
+
+        var rolesEnv = Environment.GetEnvironmentVariable("KEYCLOAK_ROLES");
+        var roleNames = string.IsNullOrWhiteSpace(rolesEnv)
+            ? Array.Empty<string>()
+            : rolesEnv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        // === Usuarios iniciales ===
+        var adminUser = Environment.GetEnvironmentVariable("KEYCLOAK_ADMIN_USERNAME") ?? "sigref-admin";
+        var adminPass = Environment.GetEnvironmentVariable("KEYCLOAK_ADMIN_PASSWORD") ?? "Admin123";
+        var adminEmail = Environment.GetEnvironmentVariable("KEYCLOAK_ADMIN_EMAIL") ?? "admin@sigref.local";
+        var adminFirst = Environment.GetEnvironmentVariable("KEYCLOAK_ADMIN_FIRSTNAME") ?? "SIGREF";
+        var adminLast = Environment.GetEnvironmentVariable("KEYCLOAK_ADMIN_LASTNAME") ?? "Admin";
+
+        // === Cliente Backend (API principal) ===
+        var apiClient = new
+        {
+            clientId = Environment.GetEnvironmentVariable("KEYCLOAK_CLIENT_API_ID") ?? "sigref-api",
+            name = Environment.GetEnvironmentVariable("KEYCLOAK_CLIENT_API_NAME") ?? "SIGREF_API",
+            description = "Cliente OIDC para la API de SIGREF",
+            enabled = true,
+            clientAuthenticatorType = "client-secret",
+            secret = Environment.GetEnvironmentVariable("KEYCLOAK_CLIENT_API_SECRET") ?? "sigref-secret",
+            protocol = "openid-connect",
+            standardFlowEnabled = true,
+            directAccessGrantsEnabled = true,
+            publicClient = false,
+            redirectUris = (Environment.GetEnvironmentVariable("KEYCLOAK_CLIENT_API_REDIRECT_URIS") ?? "https://api.localhost/*")
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+            webOrigins = (Environment.GetEnvironmentVariable("KEYCLOAK_CLIENT_API_WEB_ORIGINS") ?? "https://api.localhost")
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        };
+
+        // === Cliente Frontend (público) ===
+        var feClient = new
+        {
+            clientId = Environment.GetEnvironmentVariable("KEYCLOAK_CLIENT_FE_ID") ?? "frontend",
+            name = Environment.GetEnvironmentVariable("KEYCLOAK_CLIENT_FE_NAME") ?? "SIGREF_Frontend",
+            description = "Aplicación web del SIGREF",
+            enabled = true,
+            publicClient = true,
+            protocol = "openid-connect",
+            standardFlowEnabled = true,
+            directAccessGrantsEnabled = true,
+            redirectUris = (Environment.GetEnvironmentVariable("KEYCLOAK_CLIENT_FE_REDIRECT_URIS") ?? "http://localhost:5173/*")
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+            webOrigins = (Environment.GetEnvironmentVariable("KEYCLOAK_CLIENT_FE_WEB_ORIGINS") ?? "http://localhost:5173")
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        };
+
+        // === Cliente de administración interna ===
+        var adminApiClient = new
+        {
+            clientId = Environment.GetEnvironmentVariable("KEYCLOAK_CLIENT_ADMIN_ID") ?? "sigref-admin-api",
+            name = Environment.GetEnvironmentVariable("KEYCLOAK_CLIENT_ADMIN_NAME") ?? "SIGREF Admin API",
+            description = "Cliente interno usado por SIGREF.API para crear y administrar usuarios",
+            enabled = true,
+            protocol = "openid-connect",
+            serviceAccountsEnabled = true,
+            clientAuthenticatorType = "client-secret",
+            secret = Environment.GetEnvironmentVariable("KEYCLOAK_CLIENT_ADMIN_SECRET") ?? "sigref-admin-secret",
+            publicClient = false,
+            standardFlowEnabled = false,
+            directAccessGrantsEnabled = false,
+            authorizationServicesEnabled = true,
+            fullScopeAllowed = false
+        };
+
+        var realmRoles = roleNames
+            .Select(r => new { name = r, description = $"Rol definido en entorno: {r}", composite = false })
+            .ToArray();
+
         var realmConfig = new
         {
-            realm = "fhir",
-            displayName = "FHIR Realm",
+            realm = realmName,
+            displayName = realmDisplay,
+            loginTheme = "sigref",
             enabled = true,
             sslRequired = "external",
-            registrationAllowed = true,
+            registrationAllowed = false,
             loginWithEmailAllowed = true,
-            duplicateEmailsAllowed = false,
             resetPasswordAllowed = true,
-            editUsernameAllowed = false,
             bruteForceProtected = true,
-            permanentLockout = false,
-            maxFailureWaitSeconds = 900,
-            minimumQuickLoginWaitSeconds = 60,
-            waitIncrementSeconds = 60,
-            quickLoginCheckMilliSeconds = 1000,
-            maxDeltaTimeSeconds = 43200,
-            failureFactor = 30,
-            defaultRoles = new[] { "default-roles-fhir", "offline_access", "uma_authorization" },
-            requiredCredentials = new[] { "password" },
-            passwordPolicy = "hashIterations(27500)",
-            clients = new[]
-            {
-                new
-                {
-                    clientId = "fhir-client",
-                    name = "FHIR Client",
-                    description = "Cliente para aplicación FHIR",
-                    enabled = true,
-                    clientAuthenticatorType = "client-secret",
-                    secret = "fhir-client-secret",
-                    standardFlowEnabled = true,
-                    implicitFlowEnabled = false,
-                    directAccessGrantsEnabled = true,
-                    serviceAccountsEnabled = true,
-                    publicClient = false,
-                    protocol = "openid-connect",
-                    redirectUris = new[]
-                    {
-                        "http://localhost:8080/*",
-                        "http://localhost:3000/*",
-                        "http://localhost:4200/*",
-                        "http://127.0.0.1:8080/*",
-                        "http://127.0.0.1:3000/*",
-                        "http://127.0.0.1:4200/*"
-                    },
-                    webOrigins = new[]
-                    {
-                        "http://localhost:8080",
-                        "http://localhost:3000",
-                        "http://localhost:4200",
-                        "http://127.0.0.1:8080",
-                        "http://127.0.0.1:3000",
-                        "http://127.0.0.1:4200"
-                    }
-                }
-            },
-            roles = new
-            {
-                realm = new[]
-                {
-                    new
-                    {
-                        name = "fhir-user",
-                        description = "Usuario FHIR estándar",
-                        composite = false
-                    },
-                    new
-                    {
-                        name = "fhir-admin",
-                        description = "Administrador FHIR",
-                        composite = false
-                    }
-                }
-            },
+
+            // --- Clientes registrados ---
+            clients = new object[] { apiClient, feClient, adminApiClient },
+
+            // --- Roles ---
+            roles = new { realm = realmRoles },
+
+            // --- Usuario administrador inicial ---
             users = new[]
             {
-                new
-                {
-                    username = "fhir-user",
+                new {
+                    username = adminUser,
                     enabled = true,
                     emailVerified = true,
-                    firstName = "FHIR",
-                    lastName = "User",
-                    email = "fhir-user@example.com",
-                    credentials = new[]
-                    {
-                        new
-                        {
-                            type = "password",
-                            value = "fhir123",
-                            temporary = false
-                        }
+                    firstName = adminFirst,
+                    lastName = adminLast,
+                    email = adminEmail,
+                    credentials = new[] {
+                        new { type = "password", value = adminPass, temporary = false }
                     },
-                    realmRoles = new[] { "fhir-user" }
-                },
-                new
-                {
-                    username = "fhir-admin",
-                    enabled = true,
-                    emailVerified = true,
-                    firstName = "FHIR",
-                    lastName = "Admin",
-                    email = "fhir-admin@example.com",
-                    credentials = new[]
-                    {
-                        new
-                        {
-                            type = "password",
-                            value = "admin123",
-                            temporary = false
-                        }
-                    },
-                    realmRoles = new[] { "fhir-admin" }
+                    realmRoles = roleNames
                 }
             }
         };
 
-        return JsonSerializer.Serialize(realmConfig, new JsonSerializerOptions 
-        { 
-            WriteIndented = true 
-        });
+        return JsonSerializer.Serialize(realmConfig, new JsonSerializerOptions { WriteIndented = true });
     }
 
-    /// <summary>
-    /// Guarda la configuración del realm por defecto en un archivo
-    /// </summary>
-    /// <param name="filePath">Ruta donde guardar el archivo</param>
     public static void SaveDefaultRealmConfig(string filePath)
     {
-        var realmConfig = CreateDefaultFhirRealmConfig();
-        var directory = Path.GetDirectoryName(filePath);
-        
-        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
+        var content = CreateDefaultRealmConfig();
+        File.WriteAllText(filePath, content, Encoding.UTF8);
+    }
 
-        File.WriteAllText(filePath, realmConfig, Encoding.UTF8);
+    private static string GetFileHash(string path)
+    {
+        using var sha = SHA256.Create();
+        using var stream = File.OpenRead(path);
+        var hash = sha.ComputeHash(stream);
+        return Convert.ToBase64String(hash);
     }
 }

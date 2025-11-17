@@ -16,7 +16,7 @@ export default function CreateLocationPage() {
         />
 
         {/* Location Form */}
-        <LocationForm />
+        <LocationForm mode="create"/>
       </main>
     </div>
   );
