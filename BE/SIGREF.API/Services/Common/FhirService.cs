@@ -14,10 +14,10 @@ public class FhirService
 
     /// <summary>
     /// Inicializa una nueva instancia de la clase <see cref="FhirService"/>.
-    /// Configura el cliente FHIR utilizando los parámetros definidos en el entorno.
+    /// Configura el cliente FHIR utilizando los parï¿½metros definidos en el entorno.
     /// </summary>
     /// <param name="env">
-    /// Opciones de entorno que contienen la configuración del endpoint FHIR.
+    /// Opciones de entorno que contienen la configuraciï¿½n del endpoint FHIR.
     /// El objeto <see cref="Env"/> debe proporcionar la propiedad <c>Phir</c>,
     /// que incluye el <c>BaseUrl</c> del servidor FHIR.
     /// </param>
