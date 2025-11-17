@@ -8,13 +8,13 @@ export const EditPractitionerPage = () => {
             {/* Header */}
         <div className="relative mb-6">
           <div className="flex justify-between items-center relative z-10">
-            <h1 className="text-3xl font-bold text-[#333333]">
+            <h1 className="text-3xl font-bold text-general">
               Gestión de Empleados
             </h1>
 
             {/* Opciones */}
             <div className="flex items-center gap-3 relative">
-              <div className="absolute bottom-0 h-[1px] bg-gray-300 z-0 left-0 right-0"></div>
+              <div className="absolute bottom-0 h-px bg-gray-300 z-0 left-0 right-0"></div>
             </div>
           </div>
         </div>

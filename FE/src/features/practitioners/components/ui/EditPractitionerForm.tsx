@@ -90,7 +90,7 @@ export default function EditPractitionerForm() {
 
   const onFinish = async (values: any) => {
 
-    // telecom
+
 const telecom: any[] = [];
 
 if (values.phone) {
@@ -107,7 +107,7 @@ if (values.email) {
     system: "Email",
     value: values.email,
     use: "Home",
-    rank: telecom.length + 1, // rank 2 si hay teléfono
+    rank: telecom.length + 1,
   });
 }
   const payload = {

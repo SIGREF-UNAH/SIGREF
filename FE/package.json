@@ -42,7 +42,11 @@
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
     "@esbuild/win32-x64": "^0.25.12",
     "@eslint/js": "^9.33.0",
+<<<<<<< HEAD
     "@rollup/rollup-win32-x64-msvc": "^4.52.5",
+=======
+    "@rollup/rollup-win32-x64-msvc": "^4.53.1",
+>>>>>>> main
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^5.0.0",
@@ -52,6 +56,7 @@
     "globals": "^16.3.0",
     "orval": "^7.13.1",
     "prettier": "^3.6.2",
+    "rollup": "^4.24.0",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.39.1",
     "vite": "^7.1.2"
