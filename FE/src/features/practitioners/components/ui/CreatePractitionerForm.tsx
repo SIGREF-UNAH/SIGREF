@@ -85,11 +85,11 @@ export default function CreatePractitionerForm() {
 
 
   return (
-    <div className="bg-[#FAFAFA] rounded-lg border-2 border-[#D9D9D9] p-6">
+    <div className="bg-card rounded-lg border-2 border-[#D9D9D9] p-6">
       {/* Encabezado */}
       <div className="flex items-center gap-3 mb-8">
         <FaUserPlus className="w-10 h-10 text-blue-500" />
-        <span className="text-xl font-semibold text-[#333333]">
+        <span className="text-xl font-semibold text-general">
           Crear Usuario
         </span>
       </div>
@@ -115,7 +115,7 @@ export default function CreatePractitionerForm() {
         <section className="mb-8">
           <div className="flex items-center gap-3 mb-6">
             <BsPersonVcardFill className="w-8 h-8 text-blue-500" />
-            <span className="text-lg font-semibold text-[#333333]">
+            <span className="text-lg font-semibold text-general">
               Datos Personales
             </span>
           </div>

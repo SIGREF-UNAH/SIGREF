@@ -60,17 +60,25 @@ export const PractitionersListForm = () => {
 const [modal, contextHolder] = Modal.useModal();
 
  const practitioners: Practitioner[] =
-  data?.items?.map((p: any, index: number) => ({
-    id: p.id ?? String(index + 1),
-    name: p.name?.[0]?.text ?? "Sin nombre",
-    email:
-      p.telecom?.find(
-        (t: any) => t.system?.toLowerCase() === "email"
-      )?.value ?? "Sin correo",
-    position: p.qualification?.[0]?.code?.text ?? "No especificado",
-    area: p.address?.[0]?.text ?? "Sin área",
-    status: p.active ? "Activo" : "Inactivo",
-  })) ?? [];
+  data?.items?.map((p: any, index: number) => {
+
+    const role = p.roles?.[0]; // Tomar el primer rol asignado
+    const position = role?.code?.[0]?.text ?? "Sin puesto";
+    const area = role?.location?.[0]?.display ?? "Sin área";
+
+    return {
+      id: p.id ?? String(index + 1),
+      name: p.name?.[0]?.text ?? "Sin nombre",
+      email:
+        p.telecom?.find(
+          (t: any) => t.system?.toLowerCase() === "email"
+        )?.value ?? "Sin correo",
+      position, // <-- puesto real desde PractitionerRole
+      area,     // <-- área real desde PractitionerRole
+      status: p.active ? "Activo" : "Inactivo",
+    };
+  }) ?? [];
+
 
 
     if (isLoading) return <p>Cargando empleados...</p>;
@@ -85,7 +93,7 @@ const [modal, contextHolder] = Modal.useModal();
   });
 
   const handleEdit = (practitioner: Practitioner) => {
-  navigate(`/practitioners/edit/${practitioner.id}`);
+  navigate(`/practitioners/update/${practitioner.id}`);
 };
 
   const handleDelete = (practitioner: Practitioner) => {
@@ -171,7 +179,7 @@ const [modal, contextHolder] = Modal.useModal();
   ];
 
   return (
-    <div className="bg-[#FAFAFA] rounded-lg border-2 border-[#D9D9D9] p-6">
+    <div className="bg-card rounded-lg border-2 border-[#D9D9D9] p-6">
       {contextHolder}
     {/* Filtros */}
     <Card
@@ -180,7 +188,7 @@ const [modal, contextHolder] = Modal.useModal();
     >
       <div className="flex items-center gap-3 mb-6">
         <FilterOutlined className="text-blue-500 text-xl" />
-        <span className="text-lg font-semibold text-[#333333]">
+        <span className="text-lg font-semibold text-geneal">
           Filtros de Búsqueda
         </span>
       </div>
@@ -189,7 +197,7 @@ const [modal, contextHolder] = Modal.useModal();
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <ProFormText
               name="name"
-              label={<span className="text-[#616161] font-medium">Nombre</span>}
+              label={<span className="text-general-secondary font-medium">Nombre</span>}
               placeholder="Buscar por nombre"
               fieldProps={{
                 value: searchName,
@@ -198,7 +206,7 @@ const [modal, contextHolder] = Modal.useModal();
             />
           <ProFormSelect
             name="position"
-            label={<span className="text-[#616161] font-medium">Cargo</span>}
+            label={<span className="text-general-secondary font-medium">Cargo</span>}
             options={[
               {
                 label: "Auxiliar de Receptoría",
@@ -215,7 +223,7 @@ const [modal, contextHolder] = Modal.useModal();
           <ProFormSelect
             name="area"
             label={
-              <span className="text-[#616161] font-medium">
+              <span className="text-general-secondary font-medium">
                 Área Asistencial
               </span>
             }
@@ -231,7 +239,7 @@ const [modal, contextHolder] = Modal.useModal();
           />
           <ProFormSelect
             name="status"
-            label={<span className="text-[#616161] font-medium">Estado</span>}
+            label={<span className="text-general-secondary font-medium">Estado</span>}
             options={[
               { label: "Activo", value: "Activo" },
               { label: "Inactivo", value: "Inactivo" },

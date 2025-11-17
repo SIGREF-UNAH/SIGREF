@@ -14,32 +14,34 @@ import { IdentifierUse } from "../../../api/models";
 
 
 type EmployeeDetail = {
-  id: { value: string };
-  meta: { lastUpdated: { value: string }; versionId: { value: string } };
+  id: string;
   identifier: {
-    use: { value: string };
-    type: { text: { value: string } };
-    system: { value: string };
-    value: { value: string };
+    use: string;
+    type?: { text?: string };
+    system: string;
+    value: string;
   }[];
-  active: { value: boolean };
+  active: boolean;
   name: {
-    use: { value: string };
-    text: { value: string };
-    family: { value: string };
-    given: { value: string }[];
-    prefix?: { value: string }[];
-    suffix?: { value: string }[];
+    use?: string;
+    text?: string;
+    family?: string;
+    given?: string[];
+    prefix?: string[];
+    suffix?: string[];
   }[];
   telecom: {
-    system: { value: string };
-    value: { value: string };
-    use: { value: string };
-    rank: { value: number };
+    system: string;
+    value: string;
+    use?: string;
+    rank?: number;
   }[];
-  gender: { value: "male" | "female" | "other" };
-  birthDate: { value: string };
+  gender: number | string;
+  birthDate: string;
+  lastUpdated: string;
+  roles: any[];
 };
+
 
 type PractitionerRoleDto = {
   id: string;
@@ -101,24 +103,31 @@ export default function PractitionerDetailsPage() {
   }
 
   const employee = data;
-  const name = employee?.name?.[0];
-  const telecom = employee?.telecom || [];
-  const phone = telecom.find((t) => t.system?.value === "fax")?.value?.value;
-  const email = telecom.find((t) => t.system?.value === "email")?.value?.value;
-  const identifier = employee?.identifier?.[0];
 
-  const genderMap: Record<string, string> = {
-    male: "Masculino",
-    female: "Femenino",
-    other: "Otro",
-  };
+const name = employee?.name?.[0];
+const identifier = employee?.identifier?.[0];
 
+const telecom = employee?.telecom ?? [];
 
-  const genderValue = employee?.gender?.value ?? "N/A";
+const phone = telecom.find(t => t.system?.toLowerCase() === "phone")?.value ?? "-";
+const email = telecom.find(t => t.system?.toLowerCase() === "email")?.value ?? "-";
+
+// gender con mapa basado en números
+const genderMap: Record<number, string> = {
+  1: "Masculino",
+  2: "Femenino",
+  3: "Otro"
+};
+
+const genderValue = genderMap[employee?.gender] ?? "N/A";
+
+// La fecha ya viene como string ISO
+const birthDate = employee?.birthDate?.split("T")[0] ?? "-";
+
 
   // --- Función para editar ---
   const handleEdit = () => {
-    if (id) navigate(`/practitioners/edit/${id}`);
+    if (id) navigate(`/practitioners/update/${id}`);
   };
 
   // --- Función para eliminar ---
@@ -192,16 +201,16 @@ export default function PractitionerDetailsPage() {
           bordered
           column={3}
           dataSource={{
-            firstName: name?.given?.[0]?.value,
-            middleName: name?.given?.[1]?.value ?? "-",
-            lastName: name?.family?.value,
-            dni: identifier?.value?.value,
-            idType: identifier?.type?.text?.value,
-            phone: phone ?? "-",
-            email: email ?? "-",
-            gender: genderMap[genderValue] ?? "N/A",
-            birthDate: employee?.birthDate?.value,
-            active: employee?.active?.value ? "Sí" : "No",
+            firstName: name?.given?.[0],
+            middleName: name?.given?.[1] ?? "-",
+            lastName: name?.family,
+            dni: identifier?.value,
+            idType: identifier?.type?.text,
+            phone,
+            email,
+            gender: genderValue,
+            birthDate,
+            active: employee?.active ? "Sí" : "No",
           }}
         >
           <ProDescriptions.Item label="Primer Nombre" dataIndex="firstName" />

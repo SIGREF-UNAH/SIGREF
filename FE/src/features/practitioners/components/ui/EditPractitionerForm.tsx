@@ -6,7 +6,7 @@ import {
   ProFormSwitch,
 } from "@ant-design/pro-components";
 import { FaUserEdit, FaCheck } from "react-icons/fa";
-import { BsPersonVcardFill, BsShieldLock } from "react-icons/bs";
+import { BsPersonVcardFill } from "react-icons/bs";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useGetApiPractitionerId, usePutApiPractitionerId } from "../../../../api/practitioner/practitioner";
@@ -55,23 +55,32 @@ export default function EditPractitionerForm() {
  useEffect(() => {
   if (!data) return;
 
-  // const emailEntry = data.telecom?.find(t => t.system?.value === "email");
+  const values = {
+    firstName: data.name?.[0]?.given?.[0] ?? "",
+    middleName: data.name?.[0]?.given?.[1] ?? "",
+    lastName: data.name?.[0]?.family ?? "",
+    dni: data.identifier?.[0]?.value ?? "",
+    idType: data.identifier?.[0]?.type?.text ?? "",
+    phone: data.telecom?.[0]?.value ?? "",
+    email: data.telecom?.[1]?.value ?? "",
+    gender: data.gender ?? 0,
+    birthDate: data.birthDate?.value
+  ? new Date(data.birthDate.value)
+  : null,
+    active: data.active ?? true,
+  };
 
-  setInitialValues({
-  firstName: data.name?.[0]?.given?.[0]?.value ?? "",
-  middleName: data.name?.[0]?.given?.[1]?.value ?? "",
-  lastName: data.name?.[0]?.family?.value ?? "",
-  dni: data.identifier?.[0]?.value?.value ?? "",
-  idType: data.identifier?.[0]?.type?.text?.value ?? "",
-  phone: data.telecom?.[0]?.value?.value ?? "",
-  email: data.telecom?.find(t => t.system?.value === "email")?.value?.value ?? "",
-  gender: data.gender?.value === "male" ? 1 : data.gender?.value === "female" ? 2 : 3,
-  birthDate: data.birthDate?.value ? new Date(data.birthDate.value) : null,
-  active: data.active?.value ?? true,
-});
+  setInitialValues(values);
+
+  setTimeout(() => {
+    if (formRef.current) {
+      formRef.current.setFieldsValue(values);
+    }
+  }, 50);
 
   setLoading(false);
 }, [data]);
+
 
   useEffect(() => {
   if (formRef.current && Object.keys(initialValues).length) {
@@ -80,56 +89,60 @@ export default function EditPractitionerForm() {
   }, [initialValues]);
 
   const onFinish = async (values: any) => {
+
+    // telecom
+const telecom: any[] = [];
+
+if (values.phone) {
+  telecom.push({
+    system: "Phone",
+    value: values.phone,
+    use: "Home",
+    rank: 1,
+  });
+}
+
+if (values.email) {
+  telecom.push({
+    system: "Email",
+    value: values.email,
+    use: "Home",
+    rank: telecom.length + 1, // rank 2 si hay teléfono
+  });
+}
   const payload = {
-    identifier: [
-      {
-        use: 0,
-        type: {
-          coding: [
-            {
-              system: "https://localhost:7107",
-              version: "1.0",
-              code: values.idType ?? "DNI",
-              display: values.idType ?? "DNI",
-              userSelected: true,
-            },
-          ],
-          text: values.idType,
-        },
-        system: "https://localhost:7107",
-        value: values.dni,
+  identifier: [
+    {
+      use: "Usual",
+      type: {
+        text: values.idType,
       },
-    ],
-    active: values.active ?? true,
-    name: [
-      {
-        use: 0,
-        text: `${values.firstName} ${values.middleName ?? ""} ${values.lastName}`,
-        family: values.lastName,
-        given: [values.firstName, values.middleName].filter(Boolean),
-        prefix: [],
-        suffix: [],
-      },
-    ],
-    telecom: values.phone
-      ? [
-          {
-            system: 1,
-            value: values.phone,
-            use: 0,
-            rank: 1,
-          },
-        ]
-      : [],
-    gender: values.gender ?? 0,
-    birthDate: values.birthDate
-      ? new Date(values.birthDate).toISOString()
-      : null,
-  };
+      system: "https://localhost:7107",
+      value: values.dni
+    }
+  ],
+  active: values.active,
+  name: [
+    {
+      use: "Usual",
+      text: `${values.firstName} ${values.middleName ?? ""} ${values.lastName}`,
+      family: values.lastName,
+      given: [values.firstName, values.middleName].filter(Boolean),
+      prefix: [],
+      suffix: [],
+    }
+  ],
+  telecom: telecom,
+  gender: values.gender,
+  birthDate: values.birthDate
+    ? new Date(values.birthDate).toISOString()
+    : null,
+};
+
 
   try {
     console.log("Enviando payload:", payload);
-    await mutateAsync({ id, data: payload }); // 👈 Llamada real al backend
+    await mutateAsync({ id, data: payload });
     message.success("Empleado actualizado correctamente");
     navigate("/practitioners/list");
   } catch (error) {
@@ -142,11 +155,11 @@ export default function EditPractitionerForm() {
   if (loading) return <div className="text-gray-500">Cargando datos...</div>;
 
   return (
-    <div className="bg-[#FAFAFA] rounded-lg border-2 border-[#D9D9D9] p-6">
+    <div className="bg-card rounded-lg border-2 border-[#D9D9D9] p-6">
       {/* Encabezado */}
       <div className="flex items-center gap-3 mb-8">
         <FaUserEdit className="w-10 h-10 text-blue-500" />
-        <span className="text-xl font-semibold text-[#333333]">
+        <span className="text-xl font-semibold text-general">
           Editar Usuario
         </span>
       </div>
@@ -173,7 +186,7 @@ export default function EditPractitionerForm() {
         <section className="mb-8">
           <div className="flex items-center gap-3 mb-6">
             <BsPersonVcardFill className="w-8 h-8 text-blue-500" />
-            <span className="text-lg font-semibold text-[#333333]">
+            <span className="text-lg font-semibold text-general">
               Datos Personales
             </span>
           </div>
@@ -211,6 +224,14 @@ export default function EditPractitionerForm() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            <ProFormText
+              name="email"
+              label="Correo Electrónico"
+              rules={[
+                { required: true, message: "Campo obligatorio" },
+                { type: "email", message: "Correo inválido" },
+              ]}
+            />
             <ProFormSelect
               name="gender"
               label="Género"
@@ -222,42 +243,9 @@ export default function EditPractitionerForm() {
               ]}
             />
             <ProFormDatePicker name="birthDate" label="Fecha de Nacimiento" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
             <ProFormSwitch name="active" label="Activo" />
-          </div>
-        </section>
-
-        {/* Datos de Usuario */}
-        <section>
-          <div className="flex items-center gap-3 mb-6">
-            <BsShieldLock className="w-8 h-8 text-blue-500" />
-            <span className="text-lg font-semibold text-[#333333]">
-              Datos de Usuario
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <ProFormText
-              name="username"
-              label="Nombre de Usuario"
-              rules={[{ required: true, message: "Campo obligatorio" }]}
-            />
-            <ProFormText
-              name="email"
-              label="Correo Electrónico"
-              rules={[
-                { required: true, message: "Campo obligatorio" },
-                { type: "email", message: "Correo inválido" },
-              ]}
-            />
-            <ProFormSelect
-              name="role"
-              label="Rol del Usuario"
-              options={[
-                { label: "Administrador", value: "admin" },
-                { label: "Técnico", value: "technician" },
-                { label: "Empleado", value: "employee" },
-              ]}
-            />
           </div>
         </section>
       </ProForm>
