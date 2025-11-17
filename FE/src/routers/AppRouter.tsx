@@ -29,7 +29,6 @@ import { LocationsRouter } from "../features/locations/routers";
 
         {/* Rutas de Servicios Médicos */}
         <Route path="/healthcares/*" element={<HealthcaresRouter />} />
-
         {/* Rutas de Ingresos/Fondos */}
         <Route path="/incomes/*" element={<IncomesRouter />} />
 
