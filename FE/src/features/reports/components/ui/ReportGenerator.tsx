@@ -195,8 +195,7 @@ export const ReportGenerator = () => {
             </Button>
             <Button
               type="primary"
-              color="green"
-              className="w-full"
+              className="w-full bg-green-600! hover:bg-green-400! text-white"
               icon={<FileExcelOutlined />}
               size="large"
             >

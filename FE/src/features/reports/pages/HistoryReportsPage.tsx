@@ -1,4 +1,5 @@
 import { PageHeaderTabs } from "../../../shared/components";
+import { UnderConstructionPage } from "../../../shared/pages";
 
 export const HistoryReportsPage = () => {
   return (
@@ -25,9 +26,10 @@ export const HistoryReportsPage = () => {
         ]}
         defaultActive="listar"
       />
+      
       {/* Contenido  */}
       <div className="primary-card">
-
+        <UnderConstructionPage />
       </div>
     </div>
   );
