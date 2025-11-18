@@ -47,7 +47,7 @@
                                     Ha ocurrido un error de autenticación. Recarga la página.
                                     <#break>
                                 <#default>
-                                    ${message.summary}
+                                    Error: Revise sus credenciales o contacte al administrador
                             </#switch>
                         </div>
                     <#elseif message.type == 'success'>

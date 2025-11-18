@@ -123,7 +123,7 @@ export default function OrganizationsForm({
                 size="large"
                 onClick={onCancel}
                 disabled={isPending}
-                className="!bg-red-500 !text-white hover:!bg-red-500 border-none px-8"
+                className="bg-red-500! text-white! hover:bg-red-500! border-none px-8"
               >
                 Cancelar
               </Button>
@@ -134,7 +134,7 @@ export default function OrganizationsForm({
                 icon={<CheckOutlined />}
                 size="large"
                 loading={isPending}
-                className="!bg-green-500 !hover:bg-green-600 border-none px-8"
+                className="bg-green-500! hover:bg-green-600! border-none px-8"
               >
                 {submitButtonText ||
                   (initialValues
@@ -161,7 +161,7 @@ export default function OrganizationsForm({
         {/* Información de la Organización */}
         <div>
           <div className="flex items-center gap-2 mb-6 pb-3 border-b border-gray-200">
-            <BarChartOutlined className="text-lg !text-blue-400" />
+            <BarChartOutlined className="text-lg text-blue-400!" />
             <h2 className="text-lg font-semibold text-gray-900">
               Información
             </h2>
@@ -224,7 +224,7 @@ export default function OrganizationsForm({
         {/* Información de Contacto */}
         <div>
           <div className="flex items-center gap-2 mb-6 pb-3 border-b border-gray-200">
-            <PhoneOutlined className="text-lg !text-blue-400" />
+            <PhoneOutlined className="text-lg text-blue-400!" />
             <h2 className="text-lg font-semibold text-gray-900">
               Contacto
             </h2>
@@ -250,7 +250,7 @@ export default function OrganizationsForm({
         {/* Ubicación */}
         <div>
           <div className="flex items-center gap-2 mb-6 pb-3 border-b border-gray-200">
-            <EnvironmentOutlined className="text-lg !text-blue-400" />
+            <EnvironmentOutlined className="text-lg text-blue-400!" />
             <h2 className="text-lg font-semibold text-gray-900">Ubicación</h2>
           </div>
 
