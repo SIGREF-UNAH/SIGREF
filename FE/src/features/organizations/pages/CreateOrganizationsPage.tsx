@@ -14,34 +14,30 @@ const CreateOrganizationsPage = () => {
   return (
     <div>
       {/* Header */}
-      <div className="px-8">
-        <PageHeaderTabs
-          title="Gestión de Organizaciones"
-          tabs={[
-            {
-              key: "listar",
-              label: "Lista de Organizaciones",
-              path: "/organizations/list",
-            },
-            {
-              key: "crear",
-              label: "Crear Organización",
-              path: "/organizations/create",
-            },
-          ]}
-          defaultActive="crear"
-        />
-      </div>
+      <PageHeaderTabs
+        title="Gestión de Organizaciones"
+        tabs={[
+          {
+            key: "listar",
+            label: "Lista de Organizaciones",
+            path: "/organizations/list",
+          },
+          {
+            key: "crear",
+            label: "Crear Organización",
+            path: "/organizations/create",
+          },
+        ]}
+        defaultActive="listar"
+      />
 
-      {/* Main Content */}
-      <main>
-        <OrganizationsForm
-          onFinish={handleFinish}
-          onCancel={handleCancel}
-          isPending={isPending}
-          submitButtonText="Crear Organización"
-        />
-      </main>
+      {/* Formulario */}
+      <OrganizationsForm
+        onFinish={handleFinish as any}
+        onCancel={handleCancel}
+        isPending={isPending}
+        submitButtonText="Crear Organización"
+      />
     </div>
   );
 };

@@ -14,7 +14,6 @@ export const UpdateOrganizationPage = () => {
   return (
     <div>
       {/* Header Tabs */}
-      <div className="px-8">
       <PageHeaderTabs
         title="Gestión de Organizaciones"
         tabs={[
@@ -25,12 +24,11 @@ export const UpdateOrganizationPage = () => {
             label: "Crear Organización", 
             path: "/organizations/create" },
         ]}
-        defaultActive="undefined"
+        defaultActive="null"
       />
-      </div>
 
       {/* Contenido principal */}
-      <div className=" ">
+      <div>
         {isLoading ? (
           <div className="flex justify-center py-10">
             <p>Cargando organización...</p>

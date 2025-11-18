@@ -9,6 +9,8 @@ import {
 import { useOrganizationsList } from "../../hooks";
 import { OrganizationDetailsModal } from "../modals/OrganizationsDetailsModal";
 
+const { Search } = Input;
+
 export default function OrganizationsList() {
   const {
     organizations,
@@ -27,18 +29,21 @@ export default function OrganizationsList() {
     handleTypeChange,
     handleStatusChange,
   } = useOrganizationsList();
-  console.log(organizations);
+  
+  //console.log(organizations);
 
   const columns = [
     {
       title: "Nombre",
       dataIndex: "name",
       key: "name",
+      width: 300,
     },
     {
       title: "Identificador",
       dataIndex: "identifier",
       key: "identifier",
+      window: 100,
       render: (identifier: any[]) =>
         Array.isArray(identifier)
           ? identifier[0]?.value || "N/A"
@@ -48,6 +53,7 @@ export default function OrganizationsList() {
       title: "Tipo",
       dataIndex: "types",
       key: "type",
+      width: 300,
       render: (types: any) => {
         if (Array.isArray(types)) {
           return types[0]?.text || types[0]?.coding?.[0]?.display || "N/A";
@@ -61,41 +67,31 @@ export default function OrganizationsList() {
     {
       title: "Estado",
       dataIndex: "active",
+      width: 140,
       key: "active",
-      render: (active: boolean) => (
-        <Tag color={active ? "green" : "red"}>
-          {active ? "Activo" : "Inactivo"}
-        </Tag>
-      ),
-    },
-    {
-      title: "Descripción",
-      dataIndex: "description",
-      key: "description",
-      render: (text: string) => (
-        <div
-          className="whitespace-normal break-words max-w-xs overflow-hidden text-ellipsis"
-          title={text} 
-        >
-          {text}
-        </div>
-      ),
+      render: (status: boolean) => {
+        const color = status === true ? "green" : "error";
+        const text = status === true ? "✓ Activo" : "✗ Inactivo";
+        return <Tag color={color}>{text}</Tag>;
+      },
     },
     {
       title: "Acciones",
       key: "actions",
+      width: 190,
       render: (_, record) => (
         <Space size="small">
           {/* ver detalles de organizacion */}
           <Button
-            type="link"
-            icon={<EyeOutlined className="!text-black" />}
             onClick={() => handleViewDetails(record)}
+            type="text"
+            icon={<EyeOutlined />}
+            title="Ver detalles"
           ></Button>
           <Button
-            type="link"
-            icon={<EditOutlined className="!text-black" />}
-            onClick={() => handleEdit(record.id)}
+            type="text"
+            icon={<EditOutlined />}
+            onClick={() => handleEdit(record.id || "")}
           ></Button>
           {/* eliminar organizacion */}
           <Popconfirm
@@ -114,26 +110,21 @@ export default function OrganizationsList() {
   ];
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+    <div className="primary-card">
+      {/* Búsqueda y Filtros*/}
       <div className="flex justify-end gap-3 mb-4">
         {/* Búsqueda por nombre */}
-        <Input
+        <Search
           placeholder="Buscar por nombre"
           value={searchInput}
           onChange={(e) => handleSearchInputChange(e.target.value)}
-          onPressEnter={handleSearch}
           allowClear
-          style={{ width: 200 }}
-          suffix={
-            <SearchOutlined
-              onClick={handleSearch}
-              style={{ cursor: "pointer", color: "#black" }}
-            />
-          }
+          style={{ width: 300 }}
+          onSearch={handleSearch}
         />
         {/* Filtro por ubicación/tipo */}
         <Select
-          placeholder="Por Ubicación"
+          placeholder="Por Tipo"
           allowClear
           suffixIcon={<FilterOutlined />}
           style={{ width: 200, height: 36 }}
@@ -169,13 +160,17 @@ export default function OrganizationsList() {
         />
       </div>
 
+      {/* Lista de organizaciones */}
       <Table
         columns={columns}
         dataSource={organizations}
         rowKey="id"
+        bordered
         loading={isLoading}
         pagination={paginationConfig}
       />
+
+      {/* Modal de detalles */}
       <OrganizationDetailsModal
         open={isModalOpen}
         organization={selectedOrganization}

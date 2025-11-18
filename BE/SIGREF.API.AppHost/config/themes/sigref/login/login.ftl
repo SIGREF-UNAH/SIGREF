@@ -12,10 +12,22 @@
         <div class="login-container">
             <div class="login-logo">
                 <h1>SIGREF</h1>
+                <div class="logos-container">
+                    <img
+                      src="https://curoc.unah.edu.hn/assets/CUROC/paginas/nuevo-pagina/_resampled/ResizedImageWzMwMCwzMDBd/logos-UNAH-12.png"
+                      alt="Ingenieria en Sistemas"
+                      class="logo-sistemas"
+                    />
+                    <img
+                      src="https://krti.cl/wp-content/uploads/2021/04/Logo-Hospital-Final.png"
+                      alt="Hospital de Occidente"
+                      class="logo-hospital"
+                    />
+                </div>
             </div>
 
             <div class="login-box">
-                <h2 class="titulo">Inicia Sesión</h2>
+                <h2 class="titulo">Inicio de Sesión</h2>
 
                 <!-- Mensajes de error y estados de Keycloak -->
                 <#if message?has_content>
@@ -23,16 +35,16 @@
                         <div class="error-message">
                             <#switch message.summary>
                                 <#case "Invalid username or password.">
-                                    Usuario o contrase�a incorrectos. Por favor, verifica tus datos.
+                                    Usuario o contraseña incorrectos. Por favor, verifica tus datos.
                                     <#break>
                                 <#case "User disabled.">
                                     Tu cuenta ha sido desactivada. Contacta al administrador.
                                     <#break>
                                 <#case "Account temporarily disabled, try again later.">
-                                    Tu cuenta est� temporalmente bloqueada. Intenta m�s tarde.
+                                    Tu cuenta está temporalmente bloqueada. Intenta más tarde.
                                     <#break>
                                 <#case "Invalid grant type.">
-                                    Ha ocurrido un error de autenticaci�n. Recarga la p�gina.
+                                    Ha ocurrido un error de autenticación. Recarga la página.
                                     <#break>
                                 <#default>
                                     ${message.summary}
@@ -54,7 +66,7 @@
                       method="post">
 
                     <div class="campo">
-                        <label for="username">Nombre de Usuario:</label>
+                        <label for="username">Usuario:</label>
                         <input id="username" 
                                class="form-input" 
                                name="username" 
