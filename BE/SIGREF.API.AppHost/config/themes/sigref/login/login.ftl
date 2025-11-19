@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>SIGREF - Login</title>
-    <link rel="icon" type="image/svg" href="${url.resourcesPath}/img/LOGO.svg">
+    <link rel="icon" type="image/svg" href=https://raw.githubusercontent.com/MichaelGald/assets/refs/heads/main/LOGO.svg>
     <link rel="stylesheet" href="${url.resourcesPath}/css/style.css">
 </head>
 <body>
