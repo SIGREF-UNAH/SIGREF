@@ -1,12 +1,21 @@
-import { DeleteOutlined, EditOutlined, ExclamationCircleOutlined, FilterOutlined } from "@ant-design/icons";
+import {
+  DeleteOutlined,
+  EditOutlined,
+  ExclamationCircleOutlined,
+  FilterOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import {
   ProForm,
   ProFormSelect,
   ProFormText,
 } from "@ant-design/pro-components";
-import { Button, Card, message, Modal, Space, Table, Tag } from "antd";
+import { Button, message, Modal, Space, Table, Tag } from "antd";
 import { useState } from "react";
-import { useDeleteApiPractitionerId, useGetApiPractitioner } from "../../../../api/practitioner/practitioner";
+import {
+  useDeleteApiPractitionerId,
+  useGetApiPractitioner,
+} from "../../../../api/practitioner/practitioner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 
@@ -20,68 +29,63 @@ interface Practitioner {
 }
 
 export const PractitionersListForm = () => {
+  const navigate = useNavigate();
   const [searchName, setSearchName] = useState("");
   const [searchRole, setSearchRole] = useState<string | undefined>(undefined);
   const [searchArea, setSearchArea] = useState<string | undefined>(undefined);
   const [searchStatus, setSearchStatus] = useState<string | undefined>(undefined);
-
-  const navigate = useNavigate();
-
   const handleNavigate = (id: string) => {
-  navigate(`/practitioners/details/${id}`);
-};
+    navigate(`/practitioners/details/${id}`);
+  };
 
   const { data, isLoading, isError } = useGetApiPractitioner<{
-  items: Practitioner[];
-  pagination: {
-    currentPage: number;
-    hasNext: boolean;
-    hasPrevious: boolean;
-    pageSize: number;
-    totalItems: number;
-    totalPages: number;
-  };
-}>();
+    items: Practitioner[];
+    pagination: {
+      currentPage: number;
+      hasNext: boolean;
+      hasPrevious: boolean;
+      pageSize: number;
+      totalItems: number;
+      totalPages: number;
+    };
+  }>();
 
   const queryClient = useQueryClient();
+  
   const deleteMutation = useDeleteApiPractitionerId({
-  mutation: {
-    onSuccess: () => {
-      message.success("Empleado eliminado correctamente");
-      queryClient.invalidateQueries({ queryKey: ["/api/Practitioner"] });
+    mutation: {
+      onSuccess: () => {
+        message.success("Empleado eliminado correctamente");
+        queryClient.invalidateQueries({ queryKey: ["/api/Practitioner"] });
+      },
+      onError: (error) => {
+        message.error("Error al eliminar el empleado");
+        console.error(error);
+      },
     },
-    onError: (error) => {
-      message.error("Error al eliminar el empleado");
-      console.error(error);
-    },
-  },
-});
+  });
 
-const [modal, contextHolder] = Modal.useModal();
+  const [modal, contextHolder] = Modal.useModal();
 
- const practitioners: Practitioner[] =
-  data?.items?.map((p: any, index: number) => {
+  const practitioners: Practitioner[] =
+    data?.items?.map((p: any, index: number) => {
+      const role = p.roles?.[0]; // Tomar el primer rol asignado
+      const position = role?.code?.[0]?.text ?? "Sin puesto";
+      const area = role?.location?.[0]?.display ?? "Sin área";
 
-    const role = p.roles?.[0]; // Tomar el primer rol asignado
-    const position = role?.code?.[0]?.text ?? "Sin puesto";
-    const area = role?.location?.[0]?.display ?? "Sin área";
+      return {
+        id: p.id ?? String(index + 1),
+        name: p.name?.[0]?.text ?? "Sin nombre",
+        email:
+          p.telecom?.find((t: any) => t.system?.toLowerCase() === "email")
+            ?.value ?? "Sin correo",
+        position, // <-- puesto real desde PractitionerRole
+        area, // <-- área real desde PractitionerRole
+        status: p.active ? "Activo" : "Inactivo",
+      };
+    }) ?? [];
 
-    return {
-      id: p.id ?? String(index + 1),
-      name: p.name?.[0]?.text ?? "Sin nombre",
-      email:
-        p.telecom?.find(
-          (t: any) => t.system?.toLowerCase() === "email"
-        )?.value ?? "Sin correo",
-      position, // <-- puesto real desde PractitionerRole
-      area,     // <-- área real desde PractitionerRole
-      status: p.active ? "Activo" : "Inactivo",
-    };
-  }) ?? [];
-
-
-
-    if (isLoading) return <p>Cargando empleados...</p>;
+  if (isLoading) return <p>Cargando empleados...</p>;
   if (isError) return <p>Error al cargar empleados.</p>;
 
   const filteredEmployees = practitioners.filter((e) => {
@@ -93,53 +97,53 @@ const [modal, contextHolder] = Modal.useModal();
   });
 
   const handleEdit = (practitioner: Practitioner) => {
-  navigate(`/practitioners/update/${practitioner.id}`);
-};
+    navigate(`/practitioners/update/${practitioner.id}`);
+  };
 
   const handleDelete = (practitioner: Practitioner) => {
-  modal.confirm({
-  title: "¿Eliminar empleado?",
-  icon: <ExclamationCircleOutlined />,
-  content: `¿Estás seguro de que deseas eliminar a ${practitioner.name}? Esta acción no se puede deshacer.`,
-  okText: "Eliminar",
-  okType: "danger",
-  cancelText: "Cancelar",
-  onOk: async () => {
-    try {
-      await deleteMutation.mutateAsync({ id: practitioner.id });
-    } catch (error) {
-      message.error("No se pudo eliminar el empleado");
-    }
-  },
-});
-};
+    modal.confirm({
+      title: "¿Eliminar empleado?",
+      icon: <ExclamationCircleOutlined />,
+      content: `¿Estás seguro de que deseas eliminar a ${practitioner.name}? Esta acción no se puede deshacer.`,
+      okText: "Eliminar",
+      okType: "danger",
+      cancelText: "Cancelar",
+      onOk: async () => {
+        try {
+          await deleteMutation.mutateAsync({ id: practitioner.id });
+        } catch (error) {
+          message.error("No se pudo eliminar el empleado");
+        }
+      },
+    });
+  };
 
   const columns = [
     {
-  title: "Nombre",
-  dataIndex: "name",
-  key: "name",
-  render: (text: string, record: Practitioner) => (
-    <span
-      className="text-blue-600 hover:underline cursor-pointer"
-      onClick={() => handleNavigate(record.id)}
-    >
-      {text}
-    </span>
-  ),
-},
+      title: "Nombre",
+      dataIndex: "name",
+      key: "name",
+      render: (text: string, record: Practitioner) => (
+        <span
+          className="text-blue-600 hover:underline cursor-pointer"
+          onClick={() => handleNavigate(record.id)}
+        >
+          {text}
+        </span>
+      ),
+    },
     {
       title: "Correo",
       dataIndex: "email",
       key: "email",
     },
     {
-      title: "Puesto",
+      title: "Cargo",
       dataIndex: "position",
       key: "position",
     },
     {
-      title: "Área",
+      title: "Ubicación",
       dataIndex: "area",
       key: "area",
     },
@@ -147,131 +151,147 @@ const [modal, contextHolder] = Modal.useModal();
       title: "Estado",
       dataIndex: "status",
       key: "status",
-      align: "center",
       render: (status: string) => (
-        <Tag color={status === "Activo" ? "green" : "red"}>{status}</Tag>
+        <Tag color={status === "Activo" ? "green" : "red"}>{status === "Activo" ? "✓ Activo" : "✗ Inactivo"}</Tag>
       ),
     },
     {
-  title: "Acciones",
-  key: "actions",
-  align: "center",
-  render: (_: any, record: Practitioner) => (
-    <Space>
-      {/* Botón de editar */}
-      <Button
-        type="text"
-        icon={<EditOutlined />}
-        onClick={() => handleEdit(record)}
-      />
+      title: "Acciones",
+      key: "actions",
+      render: (_: any, record: Practitioner) => (
+        <Space>
+          {/* Botón de editar */}
+          <Button
+            type="text"
+            icon={<EditOutlined />}
+            onClick={() => handleEdit(record)}
+          />
 
-      {/* Botón de eliminar */}
-      <Button
-        type="text"
-        danger
-        icon={<DeleteOutlined />}
-        onClick={() => handleDelete(record)}
-      />
-    </Space>
-  ),
-},
-
+          {/* Botón de eliminar */}
+          <Button
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(record)}
+          />
+        </Space>
+      ),
+    },
   ];
 
   return (
-    <div className="bg-card rounded-lg border-2 border-[#D9D9D9] p-6">
+    <div className="primary-card">
       {contextHolder}
-    {/* Filtros */}
-    <Card
-      style={{ marginBottom: 16, borderRadius: 8 }}
-      bodyStyle={{ padding: 24 }}
-    >
-      <div className="flex items-center gap-3 mb-6">
-        <FilterOutlined className="text-blue-500 text-xl" />
-        <span className="text-lg font-semibold text-geneal">
-          Filtros de Búsqueda
-        </span>
-      </div>
 
-      <ProForm submitter={false}>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <ProFormText
+      {/* Filtros */}
+      <div>
+        <div className="flex items-center gap-3 mb-4">
+          <FilterOutlined className="text-primary! text-xl" />
+          <span className="text-lg text-primary">
+            Filtros de Búsqueda
+          </span>
+        </div>
+
+        <ProForm submitter={false}>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <ProFormText
               name="name"
-              label={<span className="text-general-secondary font-medium">Nombre</span>}
+              label={
+                <span className="text-general font-medium">
+                  Nombre
+                </span>
+              }
               placeholder="Buscar por nombre"
               fieldProps={{
                 value: searchName,
                 onChange: (e) => setSearchName(e.target.value),
               }}
             />
-          <ProFormSelect
-            name="position"
-            label={<span className="text-general-secondary font-medium">Cargo</span>}
-            options={[
-              {
-                label: "Auxiliar de Receptoría",
-                value: "Auxiliar de Receptoría",
-              },
-              { label: "Médico", value: "Médico" },
-              { label: "Enfermero", value: "Enfermero" },
-            ]}
-            fieldProps={{
-              value: searchRole,
-              onChange: (value) => setSearchRole(value),
-            }}
-          />
-          <ProFormSelect
-            name="area"
-            label={
-              <span className="text-general-secondary font-medium">
-                Área Asistencial
-              </span>
-            }
-            options={[
-              { label: "Consulta Externa", value: "Consulta Externa" },
-              { label: "Emergencia", value: "Emergencia" },
-              { label: "Pediatría", value: "Pediatría" },
-            ]}
-            fieldProps={{
-              value: searchArea,
-              onChange: (value) => setSearchArea(value),
-            }}
-          />
-          <ProFormSelect
-            name="status"
-            label={<span className="text-general-secondary font-medium">Estado</span>}
-            options={[
-              { label: "Activo", value: "Activo" },
-              { label: "Inactivo", value: "Inactivo" },
-              { label: "Bloqueado", value: "Bloqueado" },
-            ]}
-            fieldProps={{
-              value: searchStatus,
-              onChange: (value) => setSearchStatus(value),
-            }}
-          />
-        </div>
-      </ProForm>
-    </Card>
+            <ProFormSelect
+              name="position"
+              placeholder="Seleccionar"
+              label={
+                <span className="text-general font-medium">
+                  Cargo
+                </span>
+              }
+              options={[
+                {
+                  label: "Auxiliar de Receptoría",
+                  value: "Auxiliar de Receptoría",
+                },
+                { label: "Médico", value: "Médico" },
+                { label: "Enfermero", value: "Enfermero" },
+              ]}
+              fieldProps={{
+                value: searchRole,
+                onChange: (value) => setSearchRole(value),
+              }}
+            />
+            <ProFormSelect
+              name="area"
+             placeholder="Seleccionar"
+              label={
+                <span className="text-general font-medium">
+                  Ubicación
+                </span>
+              }
+              options={[
+                { label: "Consulta Externa", value: "Consulta Externa" },
+                { label: "Emergencia", value: "Emergencia" },
+                { label: "Pediatría", value: "Pediatría" },
+              ]}
+              fieldProps={{
+                value: searchArea,
+                onChange: (value) => setSearchArea(value),
+              }}
+            />
+            <ProFormSelect
+              name="status"
+              placeholder="Seleccionar"
+              label={
+                <span className="text-general font-medium">
+                  Estado
+                </span>
+              }
+              options={[
+                { label: "Activo", value: "Activo" },
+                { label: "Inactivo", value: "Inactivo" },
+                { label: "Bloqueado", value: "Bloqueado" },
+              ]}
+              fieldProps={{
+                value: searchStatus,
+                onChange: (value) => setSearchStatus(value),
+              }}
+            />
+          </div>
+        </ProForm>
+      </div>
 
-    {/* Tabla */}
-        <Card style={{ borderRadius: 8 }}>
-          <Table
-        columns={columns}
-        dataSource={filteredEmployees}
-        rowKey="id"
-        loading={isLoading}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showQuickJumper: true,
-          total: filteredEmployees.length,
-          showTotal: (total, range) =>
-            `${range[0]}-${range[1]} de ${total} empleados`,
-        }}
-        bordered
-      />
-        </Card>
+      {/* Tabla */}
+      <div>
+        <div className="flex items-center gap-3 mb-4 mt-2">
+          <UserOutlined className="text-primary! text-xl" />
+          <span className="text-lg text-primary">
+            Lista de Empleados
+          </span>
         </div>
+        <Table
+          columns={columns as any}
+          dataSource={filteredEmployees}
+          rowKey="id"
+          loading={isLoading}
+          pagination={{
+            pageSize: 10,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            total: filteredEmployees.length,
+            showTotal: (total, range) =>
+              `${range[0]}-${range[1]} de ${total} empleados`,
+          }}
+          bordered
+        />
+      </div>
+    </div>
   );
 };

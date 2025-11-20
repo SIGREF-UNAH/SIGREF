@@ -155,12 +155,12 @@ if (values.email) {
   if (loading) return <div className="text-gray-500">Cargando datos...</div>;
 
   return (
-    <div className="bg-card rounded-lg border-2 border-[#D9D9D9] p-6">
+    <div className="primary-card">
       {/* Encabezado */}
       <div className="flex items-center gap-3 mb-8">
         <FaUserEdit className="w-10 h-10 text-blue-500" />
         <span className="text-xl font-semibold text-general">
-          Editar Usuario
+          Editar Empleado
         </span>
       </div>
 

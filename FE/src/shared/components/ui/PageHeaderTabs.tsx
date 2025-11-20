@@ -64,7 +64,7 @@ export const PageHeaderTabs: React.FC<PageHeaderTabsProps> = ({
           ))}
 
           {/* Línea inferior */}
-          <div className="absolute bottom-0 h-[1px] bg-gray-300 z-0 left-0 right-0"></div>
+          <div className="absolute bottom-0 h-px bg-gray-300 z-0 left-0 right-0"></div>
         </div>
       </div>
     </div>
