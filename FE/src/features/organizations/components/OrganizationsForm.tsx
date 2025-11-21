@@ -4,7 +4,6 @@ import {
   ProFormSelect,
   ProFormTextArea,
 } from "@ant-design/pro-components";
-import { Button } from "antd";
 import {
   BarChartOutlined,
   EnvironmentOutlined,
@@ -13,9 +12,12 @@ import {
   PhoneOutlined,
 } from "@ant-design/icons";
 import type { CreateOrganizationDto } from "../../../api/models";
+import type { ProFormInstance } from "@ant-design/pro-components";
+import { Button, Form } from "antd";
 import { useRef, useState } from "react";
 import ccsj from "countrycitystatejson";
-import type { ProFormInstance } from "@ant-design/pro-components";
+import PhoneInput from "react-phone-number-input";
+import 'react-phone-number-input/style.css';
 
 type OrganizationFormValues = {
   name: string;
@@ -42,11 +44,12 @@ interface OrganizationsFormProps {
 
 export default function OrganizationsForm({
   initialValues,
-  onFinish,
-  onCancel,
   isPending = false,
   submitButtonText,
+  onFinish,
+  onCancel,
 }: OrganizationsFormProps) {
+  
   const handleFinish = async (values: any) => {
     const payload: CreateOrganizationDto = {
       name: values.name,
@@ -67,17 +70,10 @@ export default function OrganizationsForm({
   const formRef = useRef<ProFormInstance>(null);
 
   // Cargar países correctamente
-  const [countryOptions] = useState(
-    ccsj.getCountries().map((c) => ({ label: c.name, value: c.shortName }))
-  );
-  const [stateOptions, setStateOptions] = useState<
-    { label: string; value: string }[]
-  >([]);
-  const [cityOptions, setCityOptions] = useState<
-    { label: string; value: string }[]
-  >([]);
+  const [countryOptions] = useState( ccsj.getCountries().map((c) => ({ label: c.name, value: c.shortName })));
+  const [stateOptions, setStateOptions] = useState<{ label: string; value: string }[]>([]);
+  const [cityOptions, setCityOptions] = useState<{ label: string; value: string }[]>([]);
 
-  //  Corregido: ahora se guarda el país y se limpian los otros campos
   const handleCountryChange = (countryShort?: string) => {
     if (!countryShort) {
       setStateOptions([]);
@@ -92,10 +88,9 @@ export default function OrganizationsForm({
     setCityOptions([]);
     formRef.current?.setFieldValue("state", null);
     formRef.current?.setFieldValue("city", null);
-    formRef.current?.setFieldValue("country", countryShort); // clave
+    formRef.current?.setFieldValue("country", countryShort);
   };
 
-  // Corregido: solo carga ciudades, no reescribe estados
   const handleStateChange = (stateName?: string) => {
     const countryShort = formRef.current?.getFieldValue("country");
     if (!countryShort || !stateName) {
@@ -162,9 +157,7 @@ export default function OrganizationsForm({
         <div>
           <div className="flex items-center gap-2 mb-6 pb-3 border-b border-gray-200">
             <BarChartOutlined className="text-lg text-blue-400!" />
-            <h2 className="text-lg font-semibold text-gray-900">
-              Información
-            </h2>
+            <h2 className="text-lg font-semibold text-gray-900">Información</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -213,21 +206,19 @@ export default function OrganizationsForm({
               fieldProps={{ className: "bg-gray-100" }}
             />
           </div>
-            <ProFormTextArea
-              name="description"
-              label="Descripción"
-              placeholder="Ej. Detalles adicionales sobre la organización..."
-              style={{ width: "100%" }}
-            />
+          <ProFormTextArea
+            name="description"
+            label="Descripción"
+            placeholder="Ej. Detalles adicionales sobre la organización..."
+            style={{ width: "100%" }}
+          />
         </div>
 
         {/* Información de Contacto */}
         <div>
           <div className="flex items-center gap-2 mb-6 pb-3 border-b border-gray-200">
             <PhoneOutlined className="text-lg text-blue-400!" />
-            <h2 className="text-lg font-semibold text-gray-900">
-              Contacto
-            </h2>
+            <h2 className="text-lg font-semibold text-gray-900">Contacto</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -238,12 +229,39 @@ export default function OrganizationsForm({
               rules={[{ type: "email", message: "Ingrese un email válido" }]}
               fieldProps={{ className: "bg-gray-100" }}
             />
-            <ProFormText
+            
+            {/* Campo de teléfono con selector de país */}
+            <Form.Item
               name="phone"
               label="Teléfono"
-              placeholder="Ej. +504 2222-6666"
-              fieldProps={{ className: "bg-gray-100" }}
-            />
+              rules={[
+                {
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    // Validación básica
+                    if (value && value.length < 5) {
+                      return Promise.reject(new Error('Número de teléfono muy corto'));
+                    }
+                    return Promise.resolve();
+                  },
+                },
+              ]}
+            >
+              <PhoneInput
+                international
+                countryCallingCodeEditable={false}
+                defaultCountry="HN"
+                value={formRef.current?.getFieldValue("phone")}
+                onChange={(value) => {
+                  formRef.current?.setFieldValue("phone", value || "");
+                }}
+                className="ant-input bg-white rounded px-3 py-2 border border-gray-300 hover:border-blue-400 focus:border-blue-400 focus:shadow-outline"
+                style={{
+                  width: '100%',
+                  padding: '4px 11px',
+                }}
+              />
+            </Form.Item>
           </div>
         </div>
 

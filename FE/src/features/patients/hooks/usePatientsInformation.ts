@@ -241,7 +241,7 @@ export function usePatientsInformation() {
                     ? "Antiguo"
                     : a.use
             : a.use || "Desconocido",
-        valor: `${a.line?.join(", ") || "Desconocido"}, ${a.city || ""}, ${
+        valor: `${a.line?.join(", ") || ""}, ${a.city || ""}, ${
           a.country || ""
         }`,
       })) || [],
@@ -257,12 +257,13 @@ export function usePatientsInformation() {
       nombre: `${p?.name?.[0]?.given?.join(" ") || ""} ${p?.name?.[0]?.family || ""}`.trim() || "Desconocido",
       identificadorTipo: (() => {
         const code =
-          p.identifier?.[0]?.type?.coding?.[0]?.code?.toUpperCase() ?? "DNI";
+          p.identifier?.[0]?.type?.coding?.[0]?.code?.toUpperCase() ?? "";
+        if (code === "DNI") return "DNI";
         if (code === "PPN") return "PPN";
         if (code === "NI") return "ID";
-        return "DNI";
+        return "DSC";
       })(),
-      identificador: p.identifier?.[0]?.value || "-",
+      identificador: p.identifier?.[0]?.value || "Desconocido",
       contacto: p.telecom?.[0]?.value || "-",
       nacimiento: p.birthDate
         ? new Date(p.birthDate).toLocaleDateString()
@@ -270,7 +271,7 @@ export function usePatientsInformation() {
       nacionalidad:
         p?.extension?.find(
           (ext) => ext.url === PatientExtensionsUrls.nationality
-        )?.valueString || "Desconocido",
+        )?.valueString || "-",
       genero:
         p.gender === 1
           ? "Masculino"

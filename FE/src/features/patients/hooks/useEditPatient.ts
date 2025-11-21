@@ -63,7 +63,7 @@ export const useEditPatient = () => {
       extension: [
         {
           url: PatientExtensionsUrls.nationality,
-          valueString: values.nacionalidad,
+          valueString: values.nacionalidad || null,
         },
       ],
 
@@ -79,8 +79,8 @@ export const useEditPatient = () => {
         values.address?.map((addr: any, index: number) => ({
           use: addr.tipoDireccion || "casa",
           type: addr.type || 0,
-          text: addr.line?.[0] || "",
-          line: addr.line || [],
+          text: Array.isArray(addr.line) ? addr.line[0] : addr.line || "",
+          line: Array.isArray(addr.line) ? addr.line : [addr.line || ""], 
           city: addr.city || "",
           district: addr.district || "",
           state: addr.state || "",
@@ -102,7 +102,9 @@ export const useEditPatient = () => {
                     ? "Número de Pasaporte"
                     : values.tipoIdentificacion === "NI"
                       ? "Documento de Identificación"
-                      : "Documento Nacional de Identidad",
+                      : values.tipoIdentificacion === "DNI"
+                        ? "Documento Nacional de Identidad"
+                        : null,
                 userSelected: true,
               },
             ],
@@ -146,10 +148,11 @@ export const useEditPatient = () => {
         fechanacimiento: patient.birthDate ? new Date(patient.birthDate) : null,
         tipoIdentificacion: (() => {
           const code =
-            patient.identifier?.[0]?.type?.coding?.[0]?.code || "DNI";
+            patient.identifier?.[0]?.type?.coding?.[0]?.code || null;
+          if (code === "DNI") return "DNI";
           if (code === "PPN") return "PPN";
           if (code === "NI") return "NI";
-          return "DNI";
+          return null;
         })(),
         identifier: [{ value: patient.identifier?.[0]?.value }],
         emisor: patient.identifier?.[0]?.system,

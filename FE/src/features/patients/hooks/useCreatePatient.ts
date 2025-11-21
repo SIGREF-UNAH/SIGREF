@@ -53,7 +53,7 @@ export default function useCreatePatientForm() {
       extension: [
         {
           url: PatientExtensionsUrls.nationality,
-          valueString: values.nacionalidad || "Desconocido",
+          valueString: values.nacionalidad || null,
         },
       ],
 
@@ -86,17 +86,19 @@ export default function useCreatePatientForm() {
             coding: [
               {
                 system: "http://terminology.hl7.org/CodeSystem/v2-0203",
-                code: values.tipoIdentificacion,
+                code: values.tipoIdentificacion || null,
                 display:
                   values.tipoIdentificacion === "PPN"
                     ? "Número de Pasaporte"
                     : values.tipoIdentificacion === "NI"
                       ? "Documento de Identificación"
-                      : "Documento Nacional de Identidad",
+                      : values.tipoIdentificacion === "DNI"
+                        ? "Documento Nacional de Identidad"
+                        : null,
                 userSelected: true,
               },
             ],
-            text: values.tipoIdentificacion,
+            text: values.tipoIdentificacion || null,
           },
           system: values.emisor || null,
           value: values.identifier?.[0]?.value || null,

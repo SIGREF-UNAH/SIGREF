@@ -10,13 +10,13 @@ import {
   UserOutlined,
   IdcardOutlined,
   PhoneOutlined,
-  EnvironmentOutlined,
   FilterOutlined,
   CopyOutlined,
   EditOutlined,
   ExclamationCircleOutlined,
   QuestionCircleOutlined,
   ClearOutlined,
+  HomeOutlined,
 } from "@ant-design/icons";
 import type { ProColumns } from "@ant-design/pro-components";
 import type { FormInstance } from "antd";
@@ -134,7 +134,7 @@ export default function PatientsInformation() {
       title: "Nombre",
       dataIndex: "nombre",
       key: "nombre",
-      width: 230,
+      width: 200,
       render: (_, record) => (
         <Button
           type="link"
@@ -148,7 +148,7 @@ export default function PatientsInformation() {
       title: "Identificador",
       dataIndex: "identificador",
       key: "identificador",
-      width: 180,
+      width: 160,
       render: (_, record) => (
         <span>
           <Tag color={getIdentificadorColor(record.identificadorTipo)}>
@@ -159,34 +159,29 @@ export default function PatientsInformation() {
       ),
     },
     {
-      title: "Contacto",
-      dataIndex: "contacto",
-      key: "contacto",
-      width: 150,
-    },
-    {
       title: "Nacimiento",
       dataIndex: "nacimiento",
       key: "nacimiento",
-      width: 120,
+      width: 100,
     },
     {
       title: "Nacionalidad",
       dataIndex: "nacionalidad",
       key: "nacionalidad",
-      width: 120,
+      width: 80,
     },
     {
       title: "Género",
       dataIndex: "genero",
       key: "genero",
-      width: 80,
+      width: 90,
     },
     {
       title: "Estado Vital",
       dataIndex: "estadoVital",
       key: "estadoVital",
-      width: 120,
+      align: "center",
+      width: 80,
       render: (_, record) => {
         const estado = record.estadoVital?.trim().toLowerCase();
         return (
@@ -258,7 +253,7 @@ export default function PatientsInformation() {
                   <Button
                     type="primary"
                     icon={<BiTrash />}
-                    className="!bg-red-600 hover:!bg-red-700"
+                    className="bg-red-600! hover:bg-red-700!"
                     danger
                   >
                     Eliminar
@@ -275,7 +270,7 @@ export default function PatientsInformation() {
                   column={1}
                   title={
                     <div className="flex items-center gap-2 text-foreground">
-                      <UserOutlined />
+                      <UserOutlined style={{ color: "#6366f1" }} />
                       <span className="font-medium">Información Personal</span>
                     </div>
                   }
@@ -340,7 +335,7 @@ export default function PatientsInformation() {
                   column={1}
                   title={
                     <div className="flex items-center gap-2 text-foreground">
-                      <IdcardOutlined />
+                      <IdcardOutlined style={{ color: "#ef4444" }} />
                       <span className="font-medium">Identificación</span>
                     </div>
                   }
@@ -357,15 +352,14 @@ export default function PatientsInformation() {
                           : [];
                         return (
                           <div className="">
-                            {lista.length > 0 ? (
+                            {lista.length > 0 && lista[0].tipo !== "Desconocido" ? (
                               lista.map((id, idx) => (
                                 <div
                                   key={idx}
-                                  className="border border-gray-200 rounded-lg p-3"
                                 >
                                   <div className="font-medium text-sm">
-                                    {id.tipo}{id.emisor !== null && ` (${id.emisor})`}: 
-                                    <span className="text-primary text-muted-foreground text-sm">
+                                    <span className="text-neutral-500">{id.tipo}{id.emisor !== null && ` (${id.emisor})`}: </span>
+                                    <span className="text-muted-foreground text-sm">
                                       {" "}{id.valor}
                                     </span>
                                   </div>
@@ -373,7 +367,7 @@ export default function PatientsInformation() {
                               ))
                             ) : (
                               <div className="text-muted-foreground text-sm">
-                                No hay identificadores registrados
+                                No hay identifación registrada
                               </div>
                             )}
                           </div>
@@ -387,7 +381,7 @@ export default function PatientsInformation() {
                   column={1}
                   title={
                     <div className="flex items-center gap-2 text-foreground">
-                      <PhoneOutlined />
+                      <PhoneOutlined style={{ color: "#f97316" }} />
                       <span className="font-medium">Contactos</span>
                     </div>
                   }
@@ -405,11 +399,10 @@ export default function PatientsInformation() {
                               lista.map((contacto, idx) => (
                                 <div
                                   key={idx}
-                                  className="border border-gray-200 rounded-lg p-3"
                                 >
-                                  <div className="font-medium text-sm capitalize">
-                                    {contacto.tipo} ({contacto.uso}):{" "}
-                                    <span className="text-primary text-muted-foreground text-sm">
+                                  <div className="font-medium text-sm">
+                                    <span className="text-neutral-500">{contacto.tipo} ({contacto.uso}):{" "}</span>
+                                    <span className="text-muted-foreground text-sm">
                                       {contacto.valor}
                                     </span>
                                   </div>
@@ -431,7 +424,7 @@ export default function PatientsInformation() {
                   column={1}
                   title={
                     <div className="flex items-center gap-2 text-foreground">
-                      <EnvironmentOutlined />
+                      <HomeOutlined style={{ color: "green" }} />
                       <span className="font-medium">Direcciones</span>
                     </div>
                   }
@@ -449,11 +442,10 @@ export default function PatientsInformation() {
                               lista.map((direccion, idx) => (
                                 <div
                                   key={idx}
-                                  className="border border-gray-200 rounded-lg p-3"
                                 >
                                   <div className="font-medium text-sm capitalize">
-                                    {direccion.tipo}:{" "}
-                                    <span className="text-primary text-muted-foreground text-sm">
+                                    <span className="text-neutral-500">{direccion.tipo}:{" "}</span>
+                                    <span className="text-muted-foreground text-sm">
                                       {direccion.valor}
                                     </span>
                                   </div>
@@ -628,7 +620,7 @@ export default function PatientsInformation() {
           options={false}
           loading={isLoading || loadingPatients}
           pagination={paginationConfig}
-          scroll={{ x: 1200 }}
+          bordered
         />
       </div>
     </div>

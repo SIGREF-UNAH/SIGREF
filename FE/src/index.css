@@ -23,3 +23,7 @@
     @apply p-6 bg-white border-gray-300 border rounded-lg;
   }
 }
+
+.PhoneInput input:focus {
+  outline: none !important;
+}

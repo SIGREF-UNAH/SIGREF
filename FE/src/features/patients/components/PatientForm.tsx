@@ -16,13 +16,13 @@ import {
   HomeOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
-import { Button, Collapse, message, Space } from "antd";
+import { Button, Collapse, message, Space, Form } from "antd";
 import type { CollapseProps } from "antd";
 import { Link } from "react-router-dom";
 import ccsj from "countrycitystatejson";
 import { useRef } from "react";
-
-// TODO: Validar campos de contecto y añadir libreria de codigos de telefono
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 
 interface PatientFormProps {
   mode: "create" | "edit";
@@ -39,8 +39,12 @@ export default function PatientForm({
   error,
   onSubmit,
 }: PatientFormProps) {
+  
   const [messageApi, contextHolder] = message.useMessage();
   const formRef = useRef<ProFormInstance>(null);
+  
+  // Estado para manejar los tipos de contacto seleccionados por cada campo
+  const [contactTypes, setContactTypes] = useState<{ [key: number]: string }>({});
 
   // Estados para los selectores de ubicación
   const [countryOptions] = useState(() =>
@@ -57,6 +61,105 @@ export default function PatientForm({
       cityOptions: { label: string; value: string }[];
     };
   }>({});
+
+  // Función para manejar el cambio de tipo de contacto
+  const handleContactTypeChange = (index: number, system: string) => {
+    setContactTypes(prev => ({
+      ...prev,
+      [index]: system
+    }));
+  };
+
+  // Función para renderizar el input según el tipo de contacto
+  const renderContactInput = (field: any, index: number) => {
+    const contactType = contactTypes[index];
+    
+    if (contactType === "Email") {
+      return (
+        <ProFormText
+          {...(mode === "create" ? field : {})}
+          rules={[{ type: "email", message: "Ingrese un email válido" }]}
+          name="value"
+          label="Valor"
+          placeholder="Ej. ejemplo@correo.com"
+          width="md"
+        />
+      );
+    } else if ((contactType === "Phone" || contactType === "Fax") && mode === "create") {
+      // Solo usar PhoneInput en modo crear para Phone y Fax
+      return (
+        <Form.Item
+          name={["telecom", index, "value"]}
+          label="Valor"
+          rules={[
+            {
+              validator: (_, value) => {
+                if (!value) return Promise.resolve();
+                // Validación básica
+                if (value && value.length < 5) {
+                  return Promise.reject(new Error('Número de teléfono muy corto'));
+                }
+                return Promise.resolve();
+              },
+            },
+          ]}
+        >
+          <PhoneInput
+            international
+            countryCallingCodeEditable={false}
+            defaultCountry="HN"
+            value={formRef.current?.getFieldValue(["telecom", index, "value"])}
+            onChange={(value) => {
+              formRef.current?.setFieldValue(["telecom", index, "value"], value || "");
+            }}
+            className="ant-input bg-white rounded px-3 py-2 border border-gray-300 hover:border-blue-400 focus:border-blue-400 focus:shadow-outline"
+            style={{
+              width: '100%',
+              padding: '4px 11px',
+            }}
+          />
+        </Form.Item>
+      );
+    } else if ((contactType === "Phone" || contactType === "Fax") && mode === "edit") {
+      // En modo editar usar ProFormText normal para Phone y Fax
+      return (
+        <ProFormText
+          {...field}
+          name="value"
+          label="Valor"
+          placeholder={contactType === "Phone" ? "Ej. +504 1234-5678" : "Ej. +504 1234-5678"}
+          width="md"
+        />
+      );
+    } else {
+      // Input por defecto para otros tipos
+      return (
+        <ProFormText
+          {...(mode === "create" ? field : {})}
+          name="value"
+          label="Valor"
+          placeholder={`Ej. ${getPlaceholderByType(contactType)}`}
+          width="md"
+        />
+      );
+    }
+  };
+
+  // Función auxiliar para obtener placeholder según el tipo
+  const getPlaceholderByType = (type: string) => {
+    switch (type) {
+      case "Url":
+        return "https://ejemplo.com";
+      case "Pager":
+        return "Número de biper";
+      case "SMS":
+        return "Número para SMS";
+      case "Other":
+        return "Información de contacto";
+      default:
+        return "Valor del contacto";
+    }
+  };
 
   // Función para manejar el cambio de país
   const handleCountryChange = (index: number, countryShort?: string) => {
@@ -146,11 +249,23 @@ export default function PatientForm({
         }
       });
     }
+
+    // Inicializar tipos de contacto si hay valores iniciales
+    if (mode === "edit" && initialValues?.telecom && formRef.current) {
+      const initialContactTypes: { [key: number]: string } = {};
+      initialValues.telecom.forEach((contact: any, index: number) => {
+        if (contact.system) {
+          initialContactTypes[index] = contact.system;
+        }
+      });
+      setContactTypes(initialContactTypes);
+    }
   }, [mode, initialValues]);
 
   // Función para enviar el formulario
   const onFinish = async (values: any) => {
     const success = await onSubmit(values);
+    console.log(values);
     if (success) {
       messageApi.success(
         mode === "create"
@@ -222,6 +337,10 @@ export default function PatientForm({
           { label: "Vivo/a", value: 1 },
           { label: "Fallecido/a", value: 0 },
         ]}
+        fieldProps={{
+          disabled: mode === "create"
+        }}
+        initialValue={mode === "create" ? 1 : undefined}
       />
       <ProFormDatePicker
         name="fechanacimiento"
@@ -241,7 +360,6 @@ export default function PatientForm({
         label="Tipo de Identificación"
         placeholder="Seleccionar"
         width="sm"
-        rules={[{ required: true, message: "Campo requerido" }]}
         options={[
           { label: "DNI", value: "DNI" },
           { label: "Pasaporte", value: "PPN" },
@@ -253,7 +371,6 @@ export default function PatientForm({
         label="Número / Código"
         placeholder="Ej. 0401202501031"
         width="md"
-        rules={[{ required: true, message: "Campo requerido" }]}
       />
       <ProFormText
         name="emisor"
@@ -309,7 +426,7 @@ export default function PatientForm({
         icon: <PlusOutlined />,
       }}
     >
-      {(field) => (
+      {(field, index) => (
         <ProFormGroup key={field.key}>
           <ProFormSelect
             {...(mode === "create" ? field : {})}
@@ -326,6 +443,9 @@ export default function PatientForm({
               { label: "SMS", value: "SMS" },
               { label: "Otro", value: "Other" },
             ]}
+            fieldProps={{
+              onChange: (value) => handleContactTypeChange(index, value as string),
+            }}
           />
 
           <ProFormSelect
@@ -343,19 +463,13 @@ export default function PatientForm({
             ]}
           />
 
-          <ProFormText
-            {...(mode === "create" ? field : {})}
-            name="value"
-            label="Valor"
-            placeholder="Ej. 9999-9999 / ejemplo@correo.com"
-            width="md"
-          />
+          {renderContactInput(field, index)}
         </ProFormGroup>
       )}
     </ProFormList>
   );
 
-  // Sección de direcciones con selectores en cascada
+  // Sección de direcciones
   const direccionesContent = (
     <ProFormList
       name="address"
@@ -431,7 +545,7 @@ export default function PatientForm({
 
           <ProFormText
             {...(mode === "create" ? field : {})}
-            name={mode === "create" ? ["line", 0] : "line"}
+            name={mode === "create" ? ["line", 0] : ["line"]}
             label="Detalles"
             placeholder="Ej. Ave 13, Calle 7, Casa 2"
             width="xl"
@@ -491,7 +605,7 @@ export default function PatientForm({
       key: "5",
       label: (
         <Space>
-          <HomeOutlined style={{ color: "#ef4444" }} />
+          <HomeOutlined style={{ color: "green" }} />
           <span>Direcciones</span>
         </Space>
       ),
