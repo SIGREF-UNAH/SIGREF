@@ -1,3 +1,4 @@
+import { Spin } from "antd";
 import type { OrganizationDto } from "../../../api/models";
 import { PageHeaderTabs } from "../../../shared/components";
 import OrganizationsForm from "../components/OrganizationsForm";
@@ -5,10 +6,10 @@ import { useUpdateOrganization } from "../hooks/useUpdateOrganizations";
 
 export const UpdateOrganizationPage = () => {
   const {
-    initialValues, // valores iniciales listos para el formulario
-    isPending, // estado de la mutación (update)
-    isLoading, // estado de la carga inicial (get)
-    handleFinish, // función para guardar
+    initialValues, 
+    isPending, 
+    isLoading, 
+    handleFinish, 
   } = useUpdateOrganization();
 
   return (
@@ -30,8 +31,8 @@ export const UpdateOrganizationPage = () => {
       {/* Contenido principal */}
       <div>
         {isLoading ? (
-          <div className="flex justify-center py-10">
-            <p>Cargando organización...</p>
+          <div className="flex items-center justify-center h-100">
+            <Spin size="large" />
           </div>
         ) : (
           <OrganizationsForm

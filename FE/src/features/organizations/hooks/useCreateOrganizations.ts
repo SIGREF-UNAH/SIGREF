@@ -80,8 +80,8 @@ export function useCreateOrganization() {
       values.type = "prov";
     }
 
-    console.log("Tipo seleccionado:", values.type);
-    console.log("Mapa de tipo:", typeMap[values.type]);
+    //console.log("Tipo seleccionado:", values.type);
+    //console.log("Mapa de tipo:", typeMap[values.type]);
 
     const payload: CreateOrganizationDto & { type?: any } = {
       identifier: [
@@ -121,7 +121,7 @@ export function useCreateOrganization() {
       ],
       name: values.name,
       alias: [values.name],
-      description: values.description || "",
+      description: values.description || null,
 
       contact: [
         {
@@ -140,23 +140,22 @@ export function useCreateOrganization() {
           },
           name: "Contacto principal",
           telecom: [
-            { system: 0, value: values.phone || "", use: 0, rank: 1 },
-            { system: 2, value: values.email || "", use: 0, rank: 2 },
+            { system: 0, value: values.phone || null, use: 0, rank: 1 },
+            { system: 2, value: values.email || null, use: 0, rank: 2 },
           ],
           address: {
             use: 0,
             type: 0,
-            text: values.address || "",
+            text: values.address || null,
             line: [values.address || ""],
-            city: values.city || "",
-            state: values.state || "",
-            country: values.country || "Honduras",
+            city: values.city || null,
+            state: values.state || null,
+            country: values.country || null,
           },
         },
       ],
     };
 
-    console.log("Payload:", JSON.stringify(payload, null, 2));
     await createOrganization({ data: payload });
   };
 

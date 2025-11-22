@@ -36,10 +36,10 @@ type OrganizationFormValues = {
 
 interface OrganizationsFormProps {
   initialValues?: OrganizationFormValues;
-  onFinish: (values: CreateOrganizationDto) => Promise<void>;
-  onCancel: () => void;
   isPending?: boolean;
   submitButtonText?: string;
+  onFinish: (values: CreateOrganizationDto) => Promise<void>;
+  onCancel: () => void;
 }
 
 export default function OrganizationsForm({
@@ -140,17 +140,17 @@ export default function OrganizationsForm({
           ),
         }}
         initialValues={{
-          name: initialValues?.name || "",
-          identifier: initialValues?.identifier || "",
-          type: initialValues?.type || "",
-          active: initialValues?.active ?? true,
-          email: initialValues?.email || "",
-          phone: initialValues?.phone || "",
-          address: initialValues?.address || "",
-          city: initialValues?.city || "",
-          state: initialValues?.state || "",
-          country: initialValues?.country || "",
-          description: initialValues?.description || "",
+          name: initialValues?.name || null,
+          identifier: initialValues?.identifier || null,
+          type: initialValues?.type || null,
+          active: initialValues?.active,
+          email: initialValues?.email || null,
+          phone: initialValues?.phone || null,
+          address: initialValues?.address || null,
+          city: initialValues?.city || null,
+          state: initialValues?.state || null,
+          country: initialValues?.country || null,
+          description: initialValues?.description || null,
         }}
       >
         {/* Información de la Organización */}

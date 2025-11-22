@@ -5,7 +5,7 @@
  * OpenAPI spec version: 1.0
  */
 import type { IdentifierDto } from "./identifierDto";
-import type { OrganizationDtoTypesItem } from "./organizationDtoTypesItem";
+import type { OrganizationDtoTypeItem } from "./organizationDtoTypeItem";
 import type { ExtendedContactDetailDto } from "./extendedContactDetailDto";
 import type { ReferenceDto } from "./referenceDto";
 
@@ -16,7 +16,7 @@ export interface OrganizationDto {
   identifier?: IdentifierDto[] | null;
   active?: boolean;
   /** @nullable */
-  types?: OrganizationDtoTypesItem[] | null;
+  type?: OrganizationDtoTypeItem[] | null;
   /** @nullable */
   name?: string | null;
   /** @nullable */

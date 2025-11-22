@@ -11,12 +11,11 @@ import {
 } from "../../../api/organizations/organizations";
 
 export function useOrganizationsList() {
-  const [selectedOrganization, setSelectedOrganization] =
-    useState<OrganizationDto | null>(null);
+  const [selectedOrganization, setSelectedOrganization] = useState<OrganizationDto | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const msg = useMessage();
+  const navigate = useNavigate();
 
   // Estado para búsqueda local
   const [searchInput, setSearchInput] = useState("");
@@ -40,16 +39,19 @@ export function useOrganizationsList() {
     };
 
     if (filters.search) params.name = filters.search;
+
     // Filtro por estado
     if (filters.status === "active") {
       params.active = true;
     } else if (filters.status === "inactive") {
       params.active = false;
     }
+
     // Filtro por tipo de organización
     if (filters.type) {
       params.type = filters.type; 
     }
+
     return params;
   }, [filters]);
 
@@ -101,7 +103,7 @@ export function useOrganizationsList() {
   };
   const handleTypeChange = (value: string) => setFilter("type", value);
 
-  // Nuevo: manejo de filtro estado
+  // Manejo de filtro estado
   const handleStatusChange = (value: string) => setFilter("status", value);
 
   // Paginación

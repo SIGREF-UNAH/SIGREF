@@ -9,7 +9,7 @@ import type { OrganizationTypeEnum } from "./organizationTypeEnum";
 export type GetApiOrganizationsParams = {
   Name?: string;
   Active?: boolean;
-  Types?: OrganizationTypeEnum[];
+  Type?: OrganizationTypeEnum[];
   PartOf?: string;
   PageNumber?: number;
   PageSize?: number;

@@ -16,7 +16,7 @@ public static class OrganizationExtensions
             LastUpdated = organization.Meta?.LastUpdated?.DateTime ?? DateTime.MinValue
         };
 
-        // Identifiers - CORREGIDO: Ahora usa Identifier.IdentifierUse? directamente
+        // Identifiers
         if (organization.Identifier != null)
         {
             dto.Identifier = organization.Identifier.Select(i => new IdentifierDto
@@ -29,13 +29,29 @@ public static class OrganizationExtensions
                 Type = i.Type?.ToCodeableConceptDto()
             }).ToList();
         }
+
+        // Type
+        if (organization.Type != null)
+        {
+            dto.Type = organization.Type.Select(t => new CodeableConcept
+            {
+                Text = t.Text,
+                Coding = t.Coding?.Select(c => new Coding
+                {
+                    System = c.System,
+                    Code = c.Code,
+                    Display = c.Display
+                }).ToList()
+            }).ToList();
+        }
+
         // Aliases
         if (organization.Alias != null)
         {
             dto.Alias = organization.Alias.ToList();
         }
 
-        // Contacts - CORREGIDO: Eliminado Purpose
+        // Contacts
         if (organization.Contact != null)
         {
             dto.Contact = organization.Contact.Select(c => new ExtendedContactDetailDto
@@ -99,14 +115,14 @@ public static class OrganizationExtensions
                 : null
         };
 
-        // Identifiers - CORREGIDO: Usa directamente el enum
+        // Identifier
         if (dto.Identifier != null && dto.Identifier.Any())
         {
             organization.Identifier = dto.Identifier.Select(i => new Identifier
             {
                 System = i.System,
                 Value = i.Value,
-                Use = i.Use,  // Asignación directa del enum
+                Use = i.Use, 
                 Type = i.Type?.ToFhirCodeableConcept()
             }).ToList();
         }
@@ -132,7 +148,7 @@ public static class OrganizationExtensions
             organization.Alias = dto.Alias;
         }
 
-        // Contacts - CORREGIDO: Sin Purpose
+        // Contacts
         if (dto.Contact != null && dto.Contact.Any())
         {
             organization.Contact = dto.Contact.Select(c => new Organization.ContactComponent
@@ -187,7 +203,6 @@ public static class OrganizationExtensions
 
     public static Organization UpdateFhirResource(this UpdateOrganizationDto dto, Organization existingOrganization)
     {
-        // Update only the properties that are provided in the DTO
         if (dto.Active.HasValue)
         {
             existingOrganization.Active = dto.Active.Value;
@@ -207,19 +222,17 @@ public static class OrganizationExtensions
             };
         }
 
-        // Update Identifiers - CORREGIDO: Usa directamente el enum
         if (dto.Identifier != null)
         {
             existingOrganization.Identifier = dto.Identifier.Select(i => new Identifier
             {
                 System = i.System,
                 Value = i.Value,
-                Use = i.Use,  // Asignación directa del enum
+                Use = i.Use, 
                 Type = i.Type?.ToFhirCodeableConcept()
             }).ToList();
         }
 
-        // Update Types
         if (dto.Type != null)
         {
             existingOrganization.Type = dto.Type.Select(t => new CodeableConcept
@@ -234,13 +247,11 @@ public static class OrganizationExtensions
             }).ToList();
         }
 
-        // Update Aliases
         if (dto.Alias != null)
         {
             existingOrganization.Alias = dto.Alias;
         }
 
-        // Update Contacts - CORREGIDO: Sin Purpose
         if (dto.Contact != null)
         {
             existingOrganization.Contact = dto.Contact.Select(c => new Organization.ContactComponent
@@ -268,7 +279,6 @@ public static class OrganizationExtensions
             }).ToList();
         }
 
-        // Update PartOf
         if (dto.PartOf != null)
         {
             existingOrganization.PartOf = new ResourceReference
@@ -279,7 +289,6 @@ public static class OrganizationExtensions
             };
         }
 
-        // Update Endpoints
         if (dto.Endpoint != null)
         {
             existingOrganization.Endpoint = dto.Endpoint.Select(e => new ResourceReference
@@ -290,7 +299,6 @@ public static class OrganizationExtensions
             }).ToList();
         }
 
-        // Actualizar metadata
         if (existingOrganization.Meta == null)
         {
             existingOrganization.Meta = new Meta();

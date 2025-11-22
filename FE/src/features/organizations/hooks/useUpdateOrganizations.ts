@@ -1,12 +1,12 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMessage } from "../../../shared/hooks";
+import type { CreateOrganizationDto } from "../../../api/models";
 import {
   getGetApiOrganizationsQueryKey,
   useGetApiOrganizationsId,
   usePutApiOrganizationsId,
 } from "../../../api/organizations/organizations";
-import type { CreateOrganizationDto } from "../../../api/models";
 
 export function useUpdateOrganization() {
   const { id } = useParams<{ id: string }>();
@@ -17,16 +17,7 @@ export function useUpdateOrganization() {
   interface OrganizationFormValues {
     name: string;
     identifier: string;
-    type: {
-      coding: {
-        system: string;
-        version?: string;
-        code: string;
-        display: string;
-        userSelected?: boolean;
-      }[];
-      text: string;
-    }[];
+    type: string; // Cambiado a string para el formulario
     active: boolean;
     description?: string;
     phone?: string;
@@ -68,27 +59,36 @@ export function useUpdateOrganization() {
       },
     });
 
-  // --- Mapeo seguro de datos ---
+  // Mapeo seguro de datos
   let telecom = organization?.contact?.flatMap((c) => c.telecom || []) || [];
 
-  const phone =
-    telecom.find((t) => String(t.system).toLowerCase() === "phone")?.value ||
-    "";
-  const email =
-    telecom.find((t) => String(t.system).toLowerCase() === "email")?.value ||
-    "";
-
+  const phone = telecom.find((t) => String(t.system).toLowerCase() === "phone")?.value || null;
+  const email = telecom.find((t) => String(t.system).toLowerCase() === "email")?.value || null;
   const addressObj = organization?.contact?.[0]?.address;
+
+  const formatDescription = (html: string) => {
+    if (!html) return "";
+    // Remover todos los tags HTML
+    return html.replace(/<[^>]*>/g, '').trim();
+  };
+
+  // Obtener el tipo de organización para el formulario
+  const getOrganizationType = () => {
+    if (!organization?.type?.[0]) return "oth"; // Valor por defecto
+    
+    // Priorizar el código del type
+    return organization.type[0]?.coding?.[0]?.code || "oth";
+  };
 
   const initialValues: OrganizationFormValues | undefined = organization
     ? {
         name: organization.name || "",
         identifier: organization.identifier?.[0]?.value || "",
-        type: organization.type?.length ? organization.type : [],
-        active: organization.active ?? true,
-        description: organization.description || "",
-        phone,
-        email,
+        type: getOrganizationType(), // Usar el código para el formulario
+        active: organization.active ? true : false,
+        description: formatDescription(organization.description || ""),
+        phone: phone || "",
+        email: email || "",
         address: addressObj?.text || "",
         city: addressObj?.city || "",
         state: addressObj?.state || "",
@@ -97,15 +97,47 @@ export function useUpdateOrganization() {
       }
     : undefined;
 
-  console.log("Organization raw data:", organization);
-  console.log("Mapped initialValues:", initialValues);
-
-  // --- Submit ---
+  // Enviar datos
   const handleFinish = async (values: OrganizationFormValues) => {
     if (!id) {
       msg.error("ID de la organización no encontrado");
       return;
     }
+
+    // Mapear el tipo seleccionado a la estructura correcta
+    const getTypeStructure = (typeCode: string) => {
+      const typeMappings: { [key: string]: { code: string; display: string } } = {
+        "prov": { code: "prov", display: "Proveedor" },
+        "dept": { code: "dept", display: "Departamento" },
+        "team": { code: "team", display: "Equipo" },
+        "govt": { code: "govt", display: "Gobierno" },
+        "ins": { code: "ins", display: "Aseguradora" },
+        "pay": { code: "pay", display: "Pago" },
+        "edu": { code: "edu", display: "Educativa" },
+        "reli": { code: "reli", display: "Religiosa" },
+        "cr": { code: "cr", display: "Centro de Investigación" },
+        "other": { code: "other", display: "Otro" },
+        "bus": { code: "bus", display: "Negocio" },
+        "oth": { code: "oth", display: "Otro" },
+      };
+
+      const selectedType = typeMappings[typeCode] || typeMappings["oth"];
+
+      return [
+        {
+          coding: [
+            {
+              system: "http://terminology.hl7.org/CodeSystem/organization-type",
+              version: "1.0",
+              code: selectedType.code,
+              display: selectedType.display,
+              userSelected: true,
+            },
+          ],
+          text: selectedType.display,
+        },
+      ];
+    };
 
     // Reconstruir payload completo
     const payload: CreateOrganizationDto = {
@@ -125,26 +157,10 @@ export function useUpdateOrganization() {
             text: "Identificador institucional",
           },
           system: "http://hospitalcentral.org/identifiers",
-          value: values.identifier,
+          value: values.identifier || "",
         },
       ],
-      type: values.type?.length
-        ? values.type
-        : [
-            {
-              coding: [
-                {
-                  system:
-                    "http://terminology.hl7.org/CodeSystem/organization-type",
-                  version: "1.0",
-                  code: "oth",
-                  display: "Otro",
-                  userSelected: true,
-                },
-              ],
-              text: "Otro",
-            },
-          ],
+      type: getTypeStructure(values.type), // Usar la función mapeadora
       active: values.active,
       description: values.description || "",
       contact: [
@@ -152,8 +168,7 @@ export function useUpdateOrganization() {
           purpose: {
             coding: [
               {
-                system:
-                  "http://terminology.hl7.org/CodeSystem/contactentity-type",
+                system: "http://terminology.hl7.org/CodeSystem/contactentity-type",
                 version: "1.0",
                 code: "ADMIN",
                 display: "Administrativo",
@@ -174,11 +189,14 @@ export function useUpdateOrganization() {
             line: [values.address || ""],
             city: values.city || "",
             state: values.state || "",
-            country: values.country || "HN",
+            country: values.country || "",
+            postalCode: values.postalCode || "",
           },
         },
       ],
     };
+
+    console.log("Payload:", JSON.stringify(payload, null, 2));
 
     try {
       await updateOrganization({

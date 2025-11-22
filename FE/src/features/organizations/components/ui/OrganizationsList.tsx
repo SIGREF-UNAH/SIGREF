@@ -1,13 +1,13 @@
-import { Table, Button, Input, Space, Popconfirm, Tag, Select } from "antd";
 import {
   EditOutlined,
   DeleteOutlined,
-  SearchOutlined,
   EyeOutlined,
   FilterOutlined,
 } from "@ant-design/icons";
+import { Table, Button, Input, Space, Popconfirm, Tag, Select } from "antd";
 import { useOrganizationsList } from "../../hooks";
 import { OrganizationDetailsModal } from "../modals/OrganizationsDetailsModal";
+import type { OrganizationDto } from "../../../../api/models";
 
 const { Search } = Input;
 
@@ -17,20 +17,18 @@ export default function OrganizationsList() {
     filters,
     paginationConfig,
     isLoading,
+    isModalOpen,
+    selectedOrganization,
     searchInput,
     handleEdit,
     handleDelete,
     handleViewDetails,
-    isModalOpen,
-    selectedOrganization,
     setIsModalOpen,
     handleSearchInputChange,
     handleSearch,
     handleTypeChange,
     handleStatusChange,
   } = useOrganizationsList();
-  
-  //console.log(organizations);
 
   const columns = [
     {
@@ -47,22 +45,25 @@ export default function OrganizationsList() {
       render: (identifier: any[]) =>
         Array.isArray(identifier)
           ? identifier[0]?.value || "N/A"
-          : identifier?.value || "N/A",
+          : identifier || "N/A",
     },
     {
       title: "Tipo",
-      dataIndex: "types",
+      dataIndex: "type",
       key: "type",
       width: 300,
       render: (types: any) => {
-        if (Array.isArray(types)) {
-          return types[0]?.text || types[0]?.coding?.[0]?.display || "N/A";
-        }
-        if (types?.coding) {
-          return types?.coding?.[0]?.display || "N/A";
-        }
-        return "N/A";
-      },
+    if (Array.isArray(types) && types.length > 0) {
+      return types.map(type => {
+        return type?.text?.value || 
+               type?.coding?.[0]?.display?.value || 
+               type?.text || 
+               type?.coding?.[0]?.display || 
+               "N/A";
+      }).join(', ');
+    }
+    return "N/A";
+  },
     },
     {
       title: "Estado",
@@ -79,7 +80,7 @@ export default function OrganizationsList() {
       title: "Acciones",
       key: "actions",
       width: 190,
-      render: (_, record) => (
+      render: (record : OrganizationDto) => (
         <Space size="small">
           {/* ver detalles de organizacion */}
           <Button
@@ -97,7 +98,7 @@ export default function OrganizationsList() {
           <Popconfirm
             title="¿Eliminar organización?"
             description="Esta acción no se puede deshacer"
-            onConfirm={() => handleDelete(record.id)}
+            onConfirm={() => handleDelete(record?.id || "")}
             okText="Sí, eliminar"
             cancelText="Cancelar"
             okButtonProps={{ danger: true }}
@@ -110,7 +111,7 @@ export default function OrganizationsList() {
   ];
 
   return (
-    <div className="primary-card">
+    <div className="primary-card">     
       {/* Búsqueda y Filtros*/}
       <div className="flex justify-end gap-3 mb-4">
         {/* Búsqueda por nombre */}
@@ -122,6 +123,7 @@ export default function OrganizationsList() {
           style={{ width: 300 }}
           onSearch={handleSearch}
         />
+
         {/* Filtro por ubicación/tipo */}
         <Select
           placeholder="Por Tipo"
@@ -131,20 +133,21 @@ export default function OrganizationsList() {
           value={filters.type}
           onChange={handleTypeChange}
           options={[
-            { label: "Proveedor de salud", value: "prov" },
-            { label: "Departamento", value: "dept" },
-            { label: "Equipo", value: "team" },
-            { label: "Gobierno", value: "govt" },
-            { label: "Aseguradora", value: "ins" },
-            { label: "Pagador", value: "pay" },
-            { label: "Educativo", value: "edu" },
-            { label: "Religioso", value: "reli" },
-            { label: "Investigación clínica", value: "crs" },
-            { label: "Comunidad", value: "cg" },
-            { label: "Negocio no médico", value: "bus" },
-            { label: "Otro", value: "other" },
+            { label: "Proveedor de salud", value: "Provider" },
+            { label: "Departamento", value: "Department" },
+            { label: "Equipo", value: "Team" },
+            { label: "Gobierno", value: "Government" },
+            { label: "Aseguradora", value: "Insurer" },
+            { label: "Pagador", value: "Payer" },
+            { label: "Educativo", value: "Educational" },
+            { label: "Religioso", value: "Regligious" },
+            { label: "Investigación clínica", value: "ClinicalResearchSponsor" },
+            { label: "Comunidad", value: "CommunityGroup" },
+            { label: "Negocio no médico", value: "NonHealthcareBusiness" },
+            // { label: "Otro", value: "Other" },
           ]}
         />
+
         {/* Filtro por estado */}
         <Select
           placeholder="Por Estado"

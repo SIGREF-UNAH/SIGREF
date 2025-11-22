@@ -119,7 +119,7 @@ export const OrganizationDetailsModal = ({
           )}
         </Descriptions>
 
-        {/* Alias */}
+        {/* Alias 
         {organization.alias && organization.alias.length > 0 && (
           <div className="mt-6">
             <div className="mb-3 text-base font-semibold text-general">
@@ -134,6 +134,7 @@ export const OrganizationDetailsModal = ({
             </div>
           </div>
         )}
+        */}
 
         {/* Información adicional */}
         {organization.id && (
