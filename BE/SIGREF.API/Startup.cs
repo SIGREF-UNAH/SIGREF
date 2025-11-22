@@ -1,22 +1,28 @@
 using Hl7.Fhir.Rest;
+using MongoDB.Driver;
+using Aspire.MongoDB.Driver;
+using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options; 
 using SIGREF.API.Constants;
 using SIGREF.API.Database;
 using SIGREF.API.Services.Common;
 using SIGREF.API.Services.Healthcare;
+using SIGREF.API.Services.Income;
 using SIGREF.API.Services.Location;
 using SIGREF.API.Services.Organization;
 using SIGREF.API.Services.Organizations;
 using SIGREF.API.Services.Patient;
 using SIGREF.API.Services.Practitioner;
 using SIGREF.API.Services.PractitionerRole;
+using SIGREF.API.Services.AuditLog;
+using SIGREF.API.Services.Auth;
+using SIGREF.API.Middleware;
 using System.Security.Claims;
 using System.Text.Json;
-using Microsoft.Extensions.Options;
-using SIGREF.API.Services.Auth;
-using MongoDB.Driver;
-
 
 namespace SIGREF.API;
 
@@ -42,7 +48,10 @@ public class Startup
             return fhirService.GetFhirClient();
         });
 
-        // SEEDER
+        // Servicio de Auditoría
+        services.AddScoped<IAuditLogService, AuditLogService>();
+
+        // Seeder
         services.AddScoped<RolesAdminSeeder>();
         services.AddScoped<TiposUbicacionSeeder>();
         services.AddScoped<SIGREFSeeder>();
@@ -54,6 +63,7 @@ public class Startup
         services.AddScoped<IPractitionerRoleService, PractitionerRoleService>();
         services.AddScoped<IPractitionerService, PractitionerService>();
         services.AddScoped<IOrganizationService, OrganizationService>();
+        services.AddScoped<IIncomeService, IncomeService>();
         
         services.AddScoped<KeycloakAdminService>();
         
@@ -72,29 +82,23 @@ public class Startup
         //services.AddNpgsql<HapiContext>("hapi");
         
         
-        // ====================================================
         // MONGO DB - Logs internos SIGREF
-        // ====================================================
-                services.Configure<MongoSettings>(_configuration.GetSection("Mongo"));
+        services.Configure<MongoSettings>(_configuration.GetSection("Mongo"));
 
-                services.AddSingleton<IMongoClient>(sp =>
-                {
-                    var settings = sp.GetRequiredService<IOptions<MongoSettings>>().Value;
+        services.AddSingleton<IMongoClient>(sp =>
+        {
+            var settings = sp.GetRequiredService<IOptions<MongoSettings>>().Value;
                     return new MongoClient(settings.ConnectionString);
-                });
+        });
 
-                services.AddSingleton(sp =>
-                {
-                    var settings = sp.GetRequiredService<IOptions<MongoSettings>>().Value;
-                    var client = sp.GetRequiredService<IMongoClient>();
-                    return client.GetDatabase(settings.Database);
-                });
+        services.AddSingleton(sp =>
+        {
+            var settings = sp.GetRequiredService<IOptions<MongoSettings>>().Value;
+            var client = sp.GetRequiredService<IMongoClient>();
+            return client.GetDatabase(settings.Database);
+        });
 
-        // Servicio para escribir logs
-        // o lo que tenga David
         //services.AddScoped<SigrefLogService>();
-        
-        
         
         services.AddHttpContextAccessor();
         
@@ -183,6 +187,7 @@ public class Startup
             };
 
         });
+
         services.AddAuthorization();
 
         // CORS Configuration
@@ -208,6 +213,8 @@ public class Startup
         app.UseHttpsRedirection();
 
         app.UseCors("CorsPolicy");
+
+        app.UseMiddleware<AuditLogMiddleware>();
 
         app.UseRouting();
 

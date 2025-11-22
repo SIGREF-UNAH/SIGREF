@@ -1,4 +1,8 @@
 ﻿namespace SIGREF.API.Constants;
+
+/// <summary>
+/// Constantes para roles de usuario
+/// </summary>
 public static class RolesConstants
 {
     // ========== Roles de usuario que se pueden asignar ==========
