@@ -1,12 +1,12 @@
 ﻿using System.Linq.Expressions;
-using SIGREF.API.Database.Entity;
+using SIGREF.API.Database.Entity.Administration;
 using SIGREF.API.Dtos.UserLink;
 
 namespace SIGREF.API.Extensions;
 
 public static class UserLinkExtensions
 {
-    public static Expression<Func<UserLink, UserLinkDto>> ToDtoProjection()
+    public static Expression<Func<UserLinkEntity, UserLinkDto>> ToDtoProjection()
     {
         return u => new UserLinkDto
         {
@@ -25,7 +25,7 @@ public static class UserLinkExtensions
     /// <summary>
     /// Convierte una entidad UserLink a UserLinkDto.
     /// </summary>
-    public static UserLinkDto ToDto(this UserLink entity)
+    public static UserLinkDto ToDto(this UserLinkEntity entity)
     {
         if (entity == null)
             return null!;

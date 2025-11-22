@@ -5,7 +5,7 @@ using Hl7.Fhir.Rest;
 using Microsoft.EntityFrameworkCore;
 using SIGREF.API.Constants;
 using SIGREF.API.Database;
-using SIGREF.API.Database.Entity;
+using SIGREF.API.Database.Entity.Administration;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.UserLink;
 using SIGREF.API.Extensions;
@@ -304,7 +304,7 @@ public class KeycloakAdminService
         // ================================================================
         // 6. Crear registro local en UserLinks
         // ================================================================
-        var newLocalUser = new UserLink
+        var newLocalUser = new UserLinkEntity
         {
             KeycloakUserId = userId!,
             PractitionerId = practitionerId,
