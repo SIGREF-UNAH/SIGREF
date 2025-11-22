@@ -8,16 +8,13 @@ public class SeedController : ControllerBase
 {
     private readonly RolesAdminSeeder _rolesSeeder;
     private readonly TiposUbicacionSeeder _ubicacionSeeder;
-    private readonly PractitionerRolesSeeder _practitionerRolesSeeder;
 
     public SeedController(
         RolesAdminSeeder rolesSeeder,
-        TiposUbicacionSeeder ubicacionSeeder,
-        PractitionerRolesSeeder practitionerRoleSeeder)
+        TiposUbicacionSeeder ubicacionSeeder)
     {
         _rolesSeeder = rolesSeeder;
         _ubicacionSeeder = ubicacionSeeder;
-        _practitionerRolesSeeder = practitionerRoleSeeder;
     }
 
     [HttpPost("roles")]
@@ -39,13 +36,6 @@ public class SeedController : ControllerBase
         await _rolesSeeder.SeedAsync(ct);
         await _ubicacionSeeder.SeedAsync(ct);
         return Ok("Todos los seeders ejecutados manualmente.");
-    }
-
-    [HttpPost("practitioner-roles")]
-    public async Task<IActionResult> SeedPractitionerRoles(CancellationToken ct = default)
-    {
-        await _practitionerRolesSeeder.SeedAsync(ct);
-        return Ok("Roles FHIR Practitioner sembrados.");
     }
 }
 
