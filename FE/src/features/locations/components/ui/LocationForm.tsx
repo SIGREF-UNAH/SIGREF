@@ -8,10 +8,18 @@ import { BiChevronDown } from "react-icons/bi";
 import { MdOutlineAddLocationAlt } from "react-icons/md";
 import { FaCheck } from "react-icons/fa";
 import { LocationStatus, LocationMode } from "../../../../api/models";
-import { BsBuilding, BsGeoAltFill, BsPersonFill } from "react-icons/bs";
-import { Button, Spin } from "antd";
+import { BsBookmarkCheckFill, BsBuilding, BsGeoAltFill, BsPersonFill } from "react-icons/bs";
+import { Button, Spin, Form } from "antd";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import useLocationForm from "../../hooks/useLocationForm";
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
+
+interface Contact {
+  id: string;
+  system?: number;
+  value?: string;
+}
 
 interface LocationFormProps {
   mode: "create" | "edit";
@@ -20,7 +28,6 @@ interface LocationFormProps {
 export default function LocationForm({ mode }: LocationFormProps) {
   const {
     formRef,
-    onFinish,
     isSubmitting,
     contacts,
     countryOptions,
@@ -32,15 +39,124 @@ export default function LocationForm({ mode }: LocationFormProps) {
     locationError,
     orgsLoading,
     orgsError,
+    isEdit,
+    title,
+    contactTypes,
+    getPlaceholderByType,
+    handleContactTypeChange,
+    onFinish,
     handleCountryChange,
     handleStateChange,
     addContact,
     removeContact,
     updateContact,
-    isEdit,
-    title,
   } = useLocationForm({ mode });
 
+  // Función para renderizar el input según el tipo de contacto
+  const renderContactInput = (contact: Contact, index: number) => {
+    const contactType = contactTypes[contact.id];
+    
+    if (contactType === 2) { // Email
+      return (
+        <ProFormText
+          name={["telecom", index, "value"]}
+          label={index === 0 ? "Valor" : undefined}
+          fieldProps={{
+            value: contact.value,
+            type: "email",
+            onChange: (e) => updateContact(contact.id, "value", e.target.value),
+            placeholder: "Ej. ejemplo@correo.com"
+          }}
+          rules={[
+            { required: true },
+            { type: "email", message: "Ingrese un email válido" }
+          ]}
+        />
+      );
+    } else if ((contactType === 0 || contactType === 1) && mode === "create") { 
+      // Phone (0) o Fax (1) en modo crear
+      return (
+        <Form.Item
+          name={["telecom", index, "value"]}
+          label={index === 0 ? "Valor" : undefined}
+          rules={[
+            { required: true },
+            {
+              validator: (_, value) => {
+                if (!value) return Promise.resolve();
+                if (value && value.length < 5) {
+                  return Promise.reject(new Error('Número de teléfono muy corto'));
+                }
+                return Promise.resolve();
+              },
+            },
+          ]}
+        >
+          <PhoneInput
+            international
+            countryCallingCodeEditable={false}
+            defaultCountry="HN"
+            value={contact.value}
+            onChange={(value) => {
+              updateContact(contact.id, "value", value || "");
+            }}
+            className="ant-input bg-white rounded px-3 py-2 border border-gray-300 hover:border-blue-400 focus:border-blue-400 focus:shadow-outline"
+            style={{
+              width: '100%',
+              padding: '4px 11px',
+            }}
+          />
+        </Form.Item>
+      );
+    } else if ((contactType === 0 || contactType === 1) && mode === "edit") {
+      // Phone (0) o Fax (1) en modo editar - usar ProFormText normal
+      return (
+        <ProFormText
+          name={["telecom", index, "value"]}
+          label={index === 0 ? "Valor" : undefined}
+          fieldProps={{
+            value: contact.value,
+            onChange: (e) => updateContact(contact.id, "value", e.target.value),
+            placeholder: contactType === 0 ? "Ej. +504 1234-5678" : "Ej. +504 1234-5678"
+          }}
+          rules={[{ required: true }]}
+        />
+      );
+    } else if (contactType === 4) { // URL
+      return (
+        <ProFormText
+          name={["telecom", index, "value"]}
+          label={index === 0 ? "Valor" : undefined}
+          fieldProps={{
+            value: contact.value,
+            type: "url",
+            onChange: (e) => updateContact(contact.id, "value", e.target.value),
+            placeholder: "Ej. https://ejemplo.com"
+          }}
+          rules={[
+            { required: true },
+            { type: "url", message: "Ingrese una URL válida" }
+          ]}
+        />
+      );
+    } else {
+      // Input por defecto para otros tipos (Pager, SMS, Otro)
+      return (
+        <ProFormText
+          name={["telecom", index, "value"]}
+          label={index === 0 ? "Valor" : undefined}
+          fieldProps={{
+            value: contact.value,
+            onChange: (e) => updateContact(contact.id, "value", e.target.value),
+            placeholder: getPlaceholderByType(contactType)
+          }}
+          rules={[{ required: true }]}
+        />
+      );
+    }
+  };
+
+  // Pantalla de carga
   if (isEdit && locationLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -49,6 +165,7 @@ export default function LocationForm({ mode }: LocationFormProps) {
     );
   }
 
+  // Pantalla de error
   if (isEdit && locationError) {
     return (
       <div className="text-center py-10">
@@ -62,9 +179,10 @@ export default function LocationForm({ mode }: LocationFormProps) {
 
   return (
     <div className="primary-card">
+      {/* Titulo */}
       <div className="flex items-center gap-3 mb-8">
-        <MdOutlineAddLocationAlt className="w-10 h-10 text-blue-500" />
-        <span className="text-xl font-semibold text-[#333333]">{title}</span>
+        <MdOutlineAddLocationAlt className="size-8 text-blue-500" />
+        <span className="text-xl font-semibold text-general">{title}</span>
       </div>
 
       <ProForm
@@ -113,8 +231,8 @@ export default function LocationForm({ mode }: LocationFormProps) {
         {/* Información Básica */}
         <section>
           <div className="flex items-center gap-3 mb-6">
-            <BsBuilding className="w-8 h-8 text-blue-500" />
-            <span className="text-lg font-semibold text-[#333333]">
+            <BsBookmarkCheckFill className="size-6 text-blue-500" />
+            <span className="text-lg font-semibold text-general">
               Información Básica
             </span>
           </div>
@@ -149,7 +267,7 @@ export default function LocationForm({ mode }: LocationFormProps) {
               rules={[{ required: true }]}
               fieldProps={{
                 suffixIcon: (
-                  <BiChevronDown className="w-4 h-4 text-[#616161]" />
+                  <BiChevronDown className="w-4 h-4 text-general-secondary" />
                 ),
               }}
             />
@@ -163,13 +281,11 @@ export default function LocationForm({ mode }: LocationFormProps) {
               rules={[{ required: true }]}
               fieldProps={{
                 suffixIcon: (
-                  <BiChevronDown className="w-4 h-4 text-[#616161]" />
+                  <BiChevronDown className="w-4 h-4 text-general-secondary" />
                 ),
               }}
             />
           </div>
-
-          {/* <ProFormText name="type" label="Tipo de función" /> */}
 
           <ProFormTextArea
             name="description"
@@ -179,10 +295,10 @@ export default function LocationForm({ mode }: LocationFormProps) {
         </section>
 
         {/* Dirección */}
-        <section className="mt-6 border-t pt-6">
+        <section className="mt-6">
           <div className="flex items-center gap-3 mb-6">
-            <BsGeoAltFill className="w-8 h-8 text-blue-500" />
-            <span className="text-lg font-semibold text-[#333333]">
+            <BsGeoAltFill className="size-6 text-blue-500" />
+            <span className="text-lg font-semibold text-general">
               Dirección física
             </span>
           </div>
@@ -197,7 +313,7 @@ export default function LocationForm({ mode }: LocationFormProps) {
               fieldProps={{
                 onChange: handleCountryChange,
                 suffixIcon: (
-                  <BiChevronDown className="w-4 h-4 text-[#616161]" />
+                  <BiChevronDown className="w-4 h-4 text-general-secondary" />
                 ),
               }}
             />
@@ -211,7 +327,7 @@ export default function LocationForm({ mode }: LocationFormProps) {
               fieldProps={{
                 onChange: handleStateChange,
                 suffixIcon: (
-                  <BiChevronDown className="w-4 h-4 text-[#616161]" />
+                  <BiChevronDown className="w-4 h-4 text-general-secondary" />
                 ),
               }}
             />
@@ -223,7 +339,7 @@ export default function LocationForm({ mode }: LocationFormProps) {
               allowClear
               fieldProps={{
                 suffixIcon: (
-                  <BiChevronDown className="w-4 h-4 text-[#616161]" />
+                  <BiChevronDown className="w-4 h-4 text-general-secondary" />
                 ),
               }}
             />
@@ -236,11 +352,11 @@ export default function LocationForm({ mode }: LocationFormProps) {
         </section>
 
         {/* Contactos */}
-        <section className="mb-8 border-t pt-6">
+        <section>
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <BsPersonFill className="w-8 h-8 text-blue-500" />
-              <span className="text-lg font-semibold text-[#333333]">
+              <BsPersonFill className="size-6 text-blue-500" />
+              <span className="text-lg font-semibold text-general">
                 Información de contacto
               </span>
             </div>
@@ -258,7 +374,7 @@ export default function LocationForm({ mode }: LocationFormProps) {
             {contacts.map((contact, index) => (
               <div
                 key={contact.id}
-                className="grid grid-cols-[1fr_2fr_auto] items-end gap-4 border-b pb-4"
+                className="grid grid-cols-[1fr_2fr_auto] items-end gap-4"
               >
                 <ProFormSelect
                   name={["telecom", index, "system"]}
@@ -274,44 +390,16 @@ export default function LocationForm({ mode }: LocationFormProps) {
                   ]}
                   fieldProps={{
                     value: contact.system,
-                    onChange: (v) => updateContact(contact.id, "system", v),
+                    onChange: (v) => handleContactTypeChange(contact.id, v),
                     suffixIcon: (
-                      <BiChevronDown className="w-4 h-4 text-[#616161]" />
+                      <BiChevronDown className="w-4 h-4 text-general-secondary" />
                     ),
                   }}
                   rules={[{ required: true }]}
                 />
-                <ProFormText
-                  name={["telecom", index, "value"]}
-                  label={index === 0 ? "Valor" : undefined}
-                  fieldProps={{
-                    value: contact.value,
-                    type:
-                      contact.system === 2
-                        ? "email"
-                        : contact.system === 4
-                          ? "url"
-                          : "text",
-                    onChange: (e) =>
-                      updateContact(contact.id, "value", e.target.value),
-                  }}
-                  rules={[
-                    { required: true },
-                    {
-                      validator: (_, v) => {
-                        if (!v) return Promise.resolve();
-                        if (
-                          contact.system === 2 &&
-                          !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
-                        )
-                          return Promise.reject("Correo inválido");
-                        if (contact.system === 4 && !/^https?:\/\/.+/.test(v))
-                          return Promise.reject("URL inválida");
-                        return Promise.resolve();
-                      },
-                    },
-                  ]}
-                />
+                
+                {renderContactInput(contact, index)}
+                
                 <Button
                   danger
                   icon={<DeleteOutlined />}
@@ -326,8 +414,8 @@ export default function LocationForm({ mode }: LocationFormProps) {
         {/* Jerarquía */}
         <section className="mt-6">
           <div className="flex items-center gap-3 mb-6">
-            <BsBuilding className="w-8 h-8 text-blue-500" />
-            <span className="text-lg font-semibold text-[#333333]">
+            <BsBuilding className="size-6 text-blue-500" />
+            <span className="text-lg font-semibold text-general">
               Organización y jerarquía
             </span>
           </div>

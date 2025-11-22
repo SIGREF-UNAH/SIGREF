@@ -366,8 +366,8 @@ export default function PatientsInformation() {
                                 </div>
                               ))
                             ) : (
-                              <div className="text-muted-foreground text-sm">
-                                No hay identifación registrada
+                              <div className="text-neutral-500 text-muted-foreground text-sm">
+                                No hay identificación registrada
                               </div>
                             )}
                           </div>
@@ -409,8 +409,8 @@ export default function PatientsInformation() {
                                 </div>
                               ))
                             ) : (
-                              <div className="text-muted-foreground text-sm col-span-2">
-                                No hay contactos registradas
+                              <div className="text-neutral-500 text-muted-foreground text-sm col-span-2">
+                                No hay contactos registrados
                               </div>
                             )}
                           </div>
@@ -452,7 +452,7 @@ export default function PatientsInformation() {
                                 </div>
                               ))
                             ) : (
-                              <div className="text-muted-foreground text-sm col-span-2">
+                              <div className="text-neutral-500 text-muted-foreground text-sm col-span-2">
                                 No hay direcciones registradas
                               </div>
                             )}

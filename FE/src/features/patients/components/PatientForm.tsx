@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import {
   ProForm,
   ProFormText,
@@ -6,7 +5,6 @@ import {
   ProFormDatePicker,
   ProFormGroup,
   ProFormList,
-  type ProFormInstance,
 } from "@ant-design/pro-components";
 import {
   GlobalOutlined,
@@ -16,13 +14,12 @@ import {
   HomeOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
-import { Button, Collapse, message, Space, Form } from "antd";
+import { Button, Collapse, Space, Form } from "antd";
 import type { CollapseProps } from "antd";
 import { Link } from "react-router-dom";
-import ccsj from "countrycitystatejson";
-import { useRef } from "react";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+import usePatientForm from "../hooks/usePatientForm";
 
 interface PatientFormProps {
   mode: "create" | "edit";
@@ -36,39 +33,22 @@ export default function PatientForm({
   mode,
   initialValues,
   isSubmitting,
-  error,
   onSubmit,
 }: PatientFormProps) {
   
-  const [messageApi, contextHolder] = message.useMessage();
-  const formRef = useRef<ProFormInstance>(null);
-  
-  // Estado para manejar los tipos de contacto seleccionados por cada campo
-  const [contactTypes, setContactTypes] = useState<{ [key: number]: string }>({});
-
-  // Estados para los selectores de ubicación
-  const [countryOptions] = useState(() =>
-    ccsj.getCountries().map((c: any) => ({
-      label: c.name,
-      value: c.shortName,
-    }))
-  );
-
-  // Estado para guardar las opciones de estados y ciudades por cada dirección
-  const [addressLocations, setAddressLocations] = useState<{
-    [key: number]: {
-      stateOptions: { label: string; value: string }[];
-      cityOptions: { label: string; value: string }[];
-    };
-  }>({});
-
-  // Función para manejar el cambio de tipo de contacto
-  const handleContactTypeChange = (index: number, system: string) => {
-    setContactTypes(prev => ({
-      ...prev,
-      [index]: system
-    }));
-  };
+  const {
+    contextHolder,
+    contactTypes,
+    countryOptions,
+    addressLocations,
+    formRef,
+    onFinish,
+    onCancel,
+    handleContactTypeChange,
+    getPlaceholderByType,
+    handleCountryChange,
+    handleStateChange,
+  } = usePatientForm(onSubmit, mode, initialValues);
 
   // Función para renderizar el input según el tipo de contacto
   const renderContactInput = (field: any, index: number) => {
@@ -143,148 +123,6 @@ export default function PatientForm({
         />
       );
     }
-  };
-
-  // Función auxiliar para obtener placeholder según el tipo
-  const getPlaceholderByType = (type: string) => {
-    switch (type) {
-      case "Url":
-        return "https://ejemplo.com";
-      case "Pager":
-        return "Número de biper";
-      case "SMS":
-        return "Número para SMS";
-      case "Other":
-        return "Información de contacto";
-      default:
-        return "Valor del contacto";
-    }
-  };
-
-  // Función para manejar el cambio de país
-  const handleCountryChange = (index: number, countryShort?: string) => {
-    if (!countryShort) {
-      setAddressLocations((prev) => ({
-        ...prev,
-        [index]: { stateOptions: [], cityOptions: [] },
-      }));
-      // Limpiar campos de estado y ciudad en el formulario
-      if (formRef.current) {
-        formRef.current.setFieldValue(["address", index, "state"], null);
-        formRef.current.setFieldValue(["address", index, "city"], null);
-      }
-      return;
-    }
-
-    const states = ccsj.getStatesByShort(countryShort) ?? [];
-    setAddressLocations((prev) => ({
-      ...prev,
-      [index]: {
-        stateOptions: states.map((s) => ({ label: s, value: s })),
-        cityOptions: [],
-      },
-    }));
-    
-    // Limpiar campos de estado y ciudad en el formulario
-    if (formRef.current) {
-      formRef.current.setFieldValue(["address", index, "state"], null);
-      formRef.current.setFieldValue(["address", index, "city"], null);
-    }
-  };
-
-  // Función para manejar el cambio de estado
-  const handleStateChange = (
-    index: number,
-    countryShort: string,
-    stateName?: string
-  ) => {
-    if (!countryShort || !stateName) {
-      setAddressLocations((prev) => ({
-        ...prev,
-        [index]: {
-          ...prev[index],
-          cityOptions: [],
-        },
-      }));
-      // Limpiar campo de ciudad en el formulario
-      if (formRef.current) {
-        formRef.current.setFieldValue(["address", index, "city"], null);
-      }
-      return;
-    }
-
-    const cities = ccsj.getCities(countryShort, stateName) ?? [];
-    setAddressLocations((prev) => ({
-      ...prev,
-      [index]: {
-        ...prev[index],
-        cityOptions: cities.map((c) => ({ label: c, value: c })),
-      },
-    }));
-    
-    // Limpiar campo de ciudad en el formulario
-    if (formRef.current) {
-      formRef.current.setFieldValue(["address", index, "city"], null);
-    }
-  };
-
-  // Inicializar opciones de estado y ciudad si hay valores iniciales
-  useEffect(() => {
-    if (mode === "edit" && initialValues?.address && formRef.current) {
-      initialValues.address.forEach((addr: any, index: number) => {
-        if (addr.country) {
-          const states = ccsj.getStatesByShort(addr.country) ?? [];
-          const stateOptions = states.map((s) => ({ label: s, value: s }));
-          
-          let cityOptions: { label: string; value: string }[] = [];
-          if (addr.state) {
-            const cities = ccsj.getCities(addr.country, addr.state) ?? [];
-            cityOptions = cities.map((c) => ({ label: c, value: c }));
-          }
-          
-          setAddressLocations((prev) => ({
-            ...prev,
-            [index]: { stateOptions, cityOptions },
-          }));
-        }
-      });
-    }
-
-    // Inicializar tipos de contacto si hay valores iniciales
-    if (mode === "edit" && initialValues?.telecom && formRef.current) {
-      const initialContactTypes: { [key: number]: string } = {};
-      initialValues.telecom.forEach((contact: any, index: number) => {
-        if (contact.system) {
-          initialContactTypes[index] = contact.system;
-        }
-      });
-      setContactTypes(initialContactTypes);
-    }
-  }, [mode, initialValues]);
-
-  // Función para enviar el formulario
-  const onFinish = async (values: any) => {
-    const success = await onSubmit(values);
-    console.log(values);
-    if (success) {
-      messageApi.success(
-        mode === "create"
-          ? "Paciente creado exitosamente"
-          : "Paciente actualizado exitosamente"
-      );
-    } else {
-      messageApi.error(
-        error ??
-          (mode === "create"
-            ? "Error al crear el paciente"
-            : "Error al actualizar el paciente")
-      );
-    }
-  };
-
-  // Función para cancelar
-  const onCancel = () => {
-    messageApi.info("Operación cancelada");
   };
 
   // Sección de nacionalidad
@@ -436,11 +274,11 @@ export default function PatientForm({
             width="sm"
             options={[
               { label: "Teléfono", value: "Phone" },
-              { label: "Email", value: "Email" },
-              { label: "URL", value: "Url" },
-              { label: "Biper", value: "Pager" },
+              { label: "Correo electrónico", value: "Email" },
+              { label: "Dirección web", value: "Url" },
+              { label: "Pager", value: "Pager" },
               { label: "Fax", value: "Fax" },
-              { label: "SMS", value: "SMS" },
+              { label: "Mensaje de texto", value: "SMS" },
               { label: "Otro", value: "Other" },
             ]}
             fieldProps={{

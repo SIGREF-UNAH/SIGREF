@@ -267,11 +267,50 @@ export default function useLocationForm({ mode }: UseLocationFormProps) {
 
   const isSubmitting = isCreating || isUpdating;
 
+  // Estado para manejar los tipos de contacto seleccionados
+  const [contactTypes, setContactTypes] = useState<{ [key: string]: number }>(
+    {}
+  );
+
+  // Función para manejar el cambio de tipo de contacto
+  const handleContactTypeChange = (contactId: string, system: number) => {
+    setContactTypes((prev) => ({
+      ...prev,
+      [contactId]: system,
+    }));
+    updateContact(contactId, "system", system);
+  };
+
+  // Función auxiliar para obtener placeholder según el tipo
+  const getPlaceholderByType = (type: number) => {
+    switch (type) {
+      case 3: // Pager
+        return "Ej. Número de biper";
+      case 5: // SMS
+        return "Ej. Número para SMS";
+      case 6: // Otro
+        return "Ej. Información de contacto";
+      default:
+        return "Ej. Valor del contacto";
+    }
+  };
+
+  // Inicializar tipos de contacto cuando se cargan los contactos
+  useEffect(() => {
+    if (contacts.length > 0) {
+      const initialContactTypes: { [key: string]: number } = {};
+      contacts.forEach((contact) => {
+        initialContactTypes[contact.id] = contact.system || 0;
+      });
+      setContactTypes(initialContactTypes);
+    }
+  }, [contacts]);
+
   return {
     // Form
     formRef,
-    onFinish,
     isSubmitting,
+    onFinish,
 
     // Data
     contacts,
@@ -295,6 +334,11 @@ export default function useLocationForm({ mode }: UseLocationFormProps) {
     addContact,
     removeContact,
     updateContact,
+
+    // Contacto
+    contactTypes,
+    getPlaceholderByType,
+    handleContactTypeChange,
 
     // Modo
     isEdit,

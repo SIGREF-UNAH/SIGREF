@@ -1,15 +1,20 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { message } from "antd";
 import {
+  getGetApiPatientsQueryKey,
   useGetApiPatientsId,
   usePutApiPatientsId,
 } from "../../../api/patients/patients";
 import type { PatientDto } from "../../../api/models";
 import { PatientExtensionsUrls } from "../../../shared/constants";
+import { useMessage } from "../../../shared/hooks";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const useEditPatient = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const msg = useMessage();
+  const queryClient = useQueryClient();
   const [messageApi, contextHolder] = message.useMessage();
 
   // Obtener paciente por ID
@@ -19,18 +24,22 @@ export const useEditPatient = () => {
     error?: any;
   };
   const patient: PatientDto | undefined = Array.isArray(data) ? data[0] : data;
+
   // Mutación para actualizar
   const { mutate: updatePatient, isPending } = usePutApiPatientsId({
     mutation: {
       onSuccess: () => {
-        messageApi.success("Paciente actualizado correctamente");
-        setTimeout(() => {
-          navigate("/patients/list");
-        }, 600);
+        queryClient.invalidateQueries({
+          queryKey: getGetApiPatientsQueryKey(),
+        });
+        msg.success("Paciente actualizado correctamente");
+        navigate("/patients/list");
       },
-      onError: (error) => {
-        console.error(error);
-        messageApi.error("Error al actualizar el paciente");
+      onError: (error: any) => {
+        console.error("Error al actualizar el paciente:", error);
+        msg.error(
+          error?.response?.data?.message || "Error al actualizar el paciente"
+        );
       },
     },
   });
@@ -80,7 +89,7 @@ export const useEditPatient = () => {
           use: addr.tipoDireccion || "casa",
           type: addr.type || 0,
           text: Array.isArray(addr.line) ? addr.line[0] : addr.line || "",
-          line: Array.isArray(addr.line) ? addr.line : [addr.line || ""], 
+          line: Array.isArray(addr.line) ? addr.line : [addr.line || ""],
           city: addr.city || "",
           district: addr.district || "",
           state: addr.state || "",
@@ -140,15 +149,12 @@ export const useEditPatient = () => {
         estadoCivil:
           patient?.maritalStatus?.text ||
           patient?.maritalStatus?.coding?.[0]?.display,
-        nacionalidad:
-          patient?.extension?.find(
-            (ext) =>
-              ext.url === PatientExtensionsUrls.nationality
-          )?.valueString,
+        nacionalidad: patient?.extension?.find(
+          (ext) => ext.url === PatientExtensionsUrls.nationality
+        )?.valueString,
         fechanacimiento: patient.birthDate ? new Date(patient.birthDate) : null,
         tipoIdentificacion: (() => {
-          const code =
-            patient.identifier?.[0]?.type?.coding?.[0]?.code || null;
+          const code = patient.identifier?.[0]?.type?.coding?.[0]?.code || null;
           if (code === "DNI") return "DNI";
           if (code === "PPN") return "PPN";
           if (code === "NI") return "NI";

@@ -7,9 +7,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { CreatePatientDto } from "../../../api/models";
 import { useNavigate } from "react-router";
 import { PatientExtensionsUrls } from "../../../shared/constants";
+import { useMessage } from "../../../shared/hooks";
 
 export default function useCreatePatientForm() {
   const navigate = useNavigate();
+  const msg = useMessage();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,6 +22,14 @@ export default function useCreatePatientForm() {
         queryClient.invalidateQueries({
           queryKey: getGetApiPatientsQueryKey(),
         });
+        msg.success("Paciente creado correctamente");
+        navigate("/patients/list");
+      },
+      onError: (error: any) => {
+        console.error("Error al crear el paciente:", error);
+        msg.error(
+          error?.response?.data?.message || "Error al crear el paciente"
+        );
       },
     },
   });

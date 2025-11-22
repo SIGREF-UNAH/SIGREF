@@ -1,4 +1,5 @@
 import {
+  getGetApiPatientsQueryKey,
   useDeleteApiPatientsId,
   useGetApiPatients,
   useGetApiPatientsId,
@@ -6,9 +7,9 @@ import {
 import type { TablePaginationConfig } from "antd";
 import type { PatientDto } from "../../../api/models";
 import { useMemo, useState } from "react";
-import { message } from "antd";
-import { useUrlFilters } from "../../../shared/hooks";
+import { useMessage, useUrlFilters } from "../../../shared/hooks";
 import { PatientExtensionsUrls } from "../../../shared/constants";
+import { useQueryClient } from "@tanstack/react-query";
 
 export type PaginationDto = {
   currentPage: number;
@@ -34,8 +35,8 @@ const defaultFilters = {
 };
 
 export function usePatientsInformation() {
-  const [messageApi, contextHolder] = message.useMessage();
-  
+  const queryClient = useQueryClient();
+  const msg = useMessage();
   // Estado local para el ID del paciente seleccionado
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
 
@@ -199,13 +200,13 @@ export function usePatientsInformation() {
               : t.system === "Email"
                 ? "Correo electrónico"
                 : t.system === "url"
-                  ? "URL"
+                  ? "Dirección web"
                   : t.system === "Pager"
-                    ? "Biper"
+                    ? "Pager"
                     : t.system === "Fax"
                       ? "Fax"
                       : t.system === "SMS"
-                        ? "SMS"
+                        ? "Mensaje de texto"
                         : t.system === "Other"
                           ? "Otro"
                           : t.system === "Old"
@@ -301,23 +302,21 @@ export function usePatientsInformation() {
   const { mutate: deletePatient } = useDeleteApiPatientsId({
     mutation: {
       onSuccess: () => {
-        messageApi.success("Paciente eliminado correctamente");
-        setSelectedPatientId(""); // Limpiar selección
-        // Forzar actualización de la lista
+        queryClient.invalidateQueries({
+          queryKey: getGetApiPatientsQueryKey(),
+        });
+        msg.success("Paciente eliminado correctamente");
+        setSelectedPatientId("");
         refetch();
       },
-      onError: (error) => {
-        messageApi.error(
-          "Error al eliminar paciente: " + (error?.message || "Desconocido")
-        );
-      },
+      onError: () => msg.error("Error al eliminar el paciente"),
     },
   });
 
   // Copiar datos del paciente
   const handleCopyData = () => {
     if (!selectedPatient || !selectedPatient.id) {
-      messageApi.warning("No hay datos del paciente para copiar.");
+      msg.warning("No hay datos del paciente para copiar.");
       return;
     }
 
@@ -340,7 +339,7 @@ ${selectedPatient.direcciones
 `.trim();
 
     navigator.clipboard.writeText(info);
-    messageApi.success("Datos del paciente copiados al portapapeles.");
+    msg.success("Datos del paciente copiados al portapapeles.");
   };
 
   // Función para seleccionar un paciente
@@ -380,8 +379,6 @@ ${selectedPatient.direcciones
     paginationConfig,
     filters,
     loadingPatients,
-    messageApi,
-    contextHolder,
     isLoading: loadingPatientDetail || loadingPatients,
     setFilter,
     setFilters,
