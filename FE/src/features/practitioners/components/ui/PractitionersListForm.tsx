@@ -1,7 +1,7 @@
 import {
   DeleteOutlined,
   EditOutlined,
-  ExclamationCircleOutlined,
+  // ExclamationCircleOutlined,
   FilterOutlined,
   UserOutlined,
 } from "@ant-design/icons";
@@ -10,7 +10,7 @@ import {
   ProFormSelect,
   ProFormText,
 } from "@ant-design/pro-components";
-import { Button, message, Modal, Popconfirm, Space, Table, Tag } from "antd";
+import { Button, message, Popconfirm, Space, Table, Tag } from "antd";
 import { useState } from "react";
 import {
   useDeleteApiPractitionerId,
@@ -68,7 +68,7 @@ export const PractitionersListForm = () => {
     },
   });
 
-  const [modal, contextHolder] = Modal.useModal();
+  // const [modal, contextHolder] = Modal.useModal();
 
   const practitioners: Practitioner[] =
     data?.items?.map((p: any, index: number) => {
@@ -206,7 +206,7 @@ export const PractitionersListForm = () => {
 
   return (
     <div className="primary-card">
-      {contextHolder}
+      {/* {contextHolder} */}
 
       {/* Filtros */}
       <div>

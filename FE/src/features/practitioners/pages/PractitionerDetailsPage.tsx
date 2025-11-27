@@ -2,7 +2,7 @@ import { ProDescriptions, type ProFormInstance } from "@ant-design/pro-component
 import { FaUser } from "react-icons/fa";
 import { BsPersonVcardFill } from "react-icons/bs";
 import { useParams, useNavigate } from "react-router-dom";
-import { Button, Spin, Modal, message, Space } from "antd";
+import { Button, Spin, Modal, message, Space, Popconfirm } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import {
   useDeleteApiPractitionerId,
@@ -11,8 +11,9 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useGetApiOrganizations } from "../../../api/organizations/organizations";
 import { useGetApiLocations } from "../../../api/locations/locations";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
+  useDeleteApiPractitionerRoleId,
   useGetApiPractitionerRolePractitionerId,
   usePostApiPractitionerRole,
   usePutApiPractitionerRoleId,
@@ -49,7 +50,7 @@ export default function PractitionerDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [modal, contextHolder] = Modal.useModal();
+  const [contextHolder] = Modal.useModal();
 
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<PractitionerRoleDto | null>(null);
@@ -90,6 +91,28 @@ export default function PractitionerDetailsPage() {
     },
   });
 
+  useEffect(() => {
+    if (!roleModalOpen) return;
+
+    if (editingRole) {
+      formRef.current?.setFieldsValue(initialRoleValues);
+    } else {
+      formRef.current?.resetFields();
+    }
+  }, [roleModalOpen, editingRole]);
+
+  const deleteRoleMutation = useDeleteApiPractitionerRoleId({
+  mutation: {
+    onSuccess: () => {
+      message.success("Cargo eliminado correctamente");
+      queryClient.invalidateQueries({ queryKey: ["/api/practitionerRole", id] });
+    },
+    onError: () => {
+      message.error("Error al eliminar el cargo");
+    },
+  },
+});
+
   const { data: employee, isLoading } = useGetApiPractitionerId<EmployeeDetail, any>(id || "");
 
   if (isLoading) {
@@ -107,29 +130,9 @@ export default function PractitionerDetailsPage() {
   const email = telecom.find((t) => t.system?.toLowerCase() === "email")?.value ?? "-";
   const genderMap: Record<number, string> = { 1: "Masculino", 2: "Femenino", 3: "Otro" };
   const genderValue = genderMap[Number(employee?.gender)] ?? "N/A";
-  const birthDate = employee?.birthDate?.split("T")[0] ?? "-";
+  const birthDate = employee?.birthDate?.split("T")[0] ?? "-";  
 
   const handleEdit = () => { if (id) navigate(`/practitioners/update/${id}`); };
-
-  const handleDelete = () => {
-    if (!id) return message.error("ID del empleado no válido");
-    modal.confirm({
-      title: "¿Seguro que deseas eliminar este empleado?",
-      content: "Esta acción no se puede deshacer.",
-      okText: "Sí, eliminar",
-      cancelText: "Cancelar",
-      okButtonProps: { danger: true },
-      onOk: async () => {
-        try {
-          await deleteMutation.mutateAsync({ id });
-          message.success("Empleado eliminado correctamente");
-          navigate("/practitioners/list");
-        } catch {
-          message.error("Error al eliminar el empleado");
-        }
-      },
-    });
-  };
 
   const handleRoleSubmit = async (values: any) => {
     if (!employee) return false;
@@ -141,7 +144,10 @@ export default function PractitionerDetailsPage() {
         system: "https://hospitalpublico.hn/fhir/identifier/practitionerrole",
         value: `role-${id}-${Date.now()}`,
       }],
-      period: { start: values.startDate, end: values.endDate },
+      period: {
+        start: values.period?.[0] ?? null,
+        end: values.period?.[1] ?? null,
+      },
       practitioner: { reference: `Practitioner/${id}` },
       code: [{
         coding: [{ system: "https://hospitalpublico.hn/fhir/CodeSystem/roles-admin", code: selectedRole?.value, display: selectedRole?.label }],
@@ -179,6 +185,7 @@ export default function PractitionerDetailsPage() {
     return false;
   }
   };
+  
 
   const initialRoleValues = editingRole
     ? {
@@ -186,8 +193,10 @@ export default function PractitionerDetailsPage() {
         role: editingRole.code?.[0]?.coding?.[0]?.code,
         organizationId: editingRole.organization?.reference?.replace("Organization/", ""),
         locationId: editingRole.location?.[0]?.reference?.replace("Location/", ""),
-        startDate: editingRole.period?.start,
-        endDate: editingRole.period?.end,
+        period: [
+          editingRole.period?.start ? new Date(editingRole.period.start) : null,
+          editingRole.period?.end ? new Date(editingRole.period.end) : null
+        ]
       }
     : {};
 
@@ -213,7 +222,6 @@ export default function PractitionerDetailsPage() {
       />
 
       <div className="primary-card">
-        {contextHolder}
 
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
@@ -226,16 +234,44 @@ export default function PractitionerDetailsPage() {
               onClick={() => {
                 setEditingRole(practitionerRole?.[0] ?? null);
                 setRoleModalOpen(true);
-                setTimeout(() => {
-                  if (editingRole) formRef.current?.setFieldsValue(initialRoleValues);
-                  else formRef.current?.resetFields();
-                }, 50);
               }}
             >
               {practitionerRole?.[0] ? "Editar Cargo" : "Asignar Cargo"}
             </Button>
+            {practitionerRole?.[0] && (
+              <Popconfirm
+                title="¿Deseas eliminar el cargo asignado?"
+                okText="Eliminar"
+                okType="danger"
+                cancelText="Cancelar"
+                onConfirm={async () => {
+                  try {
+                    await deleteRoleMutation.mutateAsync({ id: practitionerRole[0].id });
+                    window.location.reload();
+                  } catch (err) {
+                    message.error("Error al eliminar el cargo");
+                  }
+                }}
+              >
+                <Button danger icon={<DeleteOutlined />}>Eliminar Cargo</Button>
+              </Popconfirm>
+            )}
             <Button type="primary" icon={<EditOutlined />} onClick={handleEdit}>Editar</Button>
-            <Button danger icon={<DeleteOutlined />} onClick={handleDelete}>Eliminar</Button>
+            <Popconfirm
+              title={`¿Estás seguro de que deseas eliminar a ${name?.text}? Esta acción no se puede deshacer.`}
+              onConfirm={async () => {
+                try {
+                  await deleteMutation.mutateAsync({ id: id?? "" });
+                } catch (error) {
+                  message.error("No se pudo eliminar el empleado");
+                }
+              }}
+              okText="Eliminar"
+              okType="danger"
+              cancelText="Cancelar"
+            >
+              <Button type="text" danger icon={<DeleteOutlined />} >Eliminar</Button>
+            </Popconfirm>
           </Space>
         </div>
 

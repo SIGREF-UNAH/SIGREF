@@ -35,13 +35,13 @@ type EmployeeDetail = {
     suffix?: { value: string }[];
   }[];
   telecom: {
-    system: { value: string };
+    system: string;
     value: { value: string };
     use: { value: string };
     rank: { value: number };
   }[];
-  gender: { value: "male" | "female" | "other" };
-  birthDate: { value: string };
+  gender: number;
+  birthDate: string;
 };
 
 export default function PractitionerForm() {
@@ -49,7 +49,7 @@ export default function PractitionerForm() {
   const navigate = useNavigate();
   const formRef = useRef<any>(null);
   const [loading, setLoading] = useState(!!id);
-  const [initialValues, setInitialValues] = useState<any>({});
+  const [setInitialValues] = useState<any>({});
 
   // Hooks API
   const { data } = useGetApiPractitionerId<EmployeeDetail>(id!);
@@ -89,14 +89,15 @@ export default function PractitionerForm() {
       lastName: data.name?.[0]?.family ?? "",
       dni: data.identifier?.[0]?.value ?? "",
       idType: data.identifier?.[0]?.type?.text ?? "",
-      phone: data.telecom?.find((t) => t.system?.value?.toLowerCase() === "phone")?.value?.value ?? "",
-      email: data.telecom?.find((t) => t.system?.value?.toLowerCase() === "email")?.value?.value ?? "",
-      gender: data.gender?.value ?? 0,
-      birthDate: data.birthDate?.value ? new Date(data.birthDate.value) : null,
+      phone: data.telecom?.find((t) => t.system?.toLowerCase() === "phone")?.value ?? "",
+      email: data.telecom?.find((t) => t.system?.toLowerCase() === "email")?.value ?? "",
+      gender: data.gender ?? 0,
+      birthDate: data.birthDate ? new Date(data.birthDate) : null,
       active: data.active?.value ?? true,
     };
 
     setInitialValues(values);
+    
 
     setTimeout(() => formRef.current?.setFieldsValue(values), 50);
     setLoading(false);
@@ -149,7 +150,6 @@ export default function PractitionerForm() {
 
       <ProForm
         formRef={formRef}
-        initialValues={initialValues}
         onFinish={onFinish}
         submitter={{
           searchConfig: { submitText: id ? "Guardar Cambios" : "Crear Empleado" },

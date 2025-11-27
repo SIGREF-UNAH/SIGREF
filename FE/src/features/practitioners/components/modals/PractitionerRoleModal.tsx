@@ -1,4 +1,4 @@
-import { ModalForm, ProFormText, ProFormSelect, ProFormDatePicker, type ProFormInstance } from "@ant-design/pro-components";
+import { ModalForm, ProFormText, ProFormSelect, type ProFormInstance, ProFormDateRangePicker } from "@ant-design/pro-components";
 import { useEffect } from "react";
 
 type PractitionerRoleModalProps = {
@@ -69,12 +69,11 @@ export default function PractitionerRoleModal({
         options={locationOptions}
       />
 
-      <ProFormDatePicker
-        name="startDate"
-        label="Fecha de Inicio"
-        rules={[{ required: true }]}
+      <ProFormDateRangePicker
+        name="period"
+        label="Periodo (Inicio - Fin)"
+        rules={[{ required: true, message: "Seleccione un rango de fechas" }]}
       />
-      <ProFormDatePicker name="endDate" label="Fecha de Fin" />
     </ModalForm>
   );
 }
