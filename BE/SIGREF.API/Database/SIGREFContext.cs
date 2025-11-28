@@ -18,15 +18,10 @@ public class SIGREFContext : DbContext
     // ============================
 
     // --- Administración ---
-    public DbSet<UserLinkEntity> UserLinks { get; set; } = default!;
     public DbSet<HospitalPropertiesEntity> HospitalProperties { get; set; } = default!;
 
     // --- Catálogos ---
-    public DbSet<HealthServicesEntity> HealthServices { get; set; } = default!;
     public DbSet<HealthServicePackagesEntity> HealthServicePackages { get; set; } = default!;
-    public DbSet<HealthServicesPackagesNnEntity> HealthServicesPackagesNn { get; set; } = default!;
-    public DbSet<LocationEntity> Locations { get; set; } = default!;
-    public DbSet<LocationHealthServiceEntity> LocationHealthServices { get; set; } = default!;
     public DbSet<LocationHealthServicePackageEntity> LocationHealthServicePackages { get; set; } = default!;
 
     // --- Facturación ---

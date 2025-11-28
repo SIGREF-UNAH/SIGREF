@@ -39,10 +39,7 @@ public class InvoiceEntity : BaseEntity
     // ===============================
 
     [Required] [Column("user_id")] public Guid UserId { get; set; }
-
-    [ForeignKey(nameof(UserId))] public UserLinkEntity? User { get; set; }
-
-
+    
     // ===============================
     //      SERIE DE FACTURACIÓN
     // ===============================

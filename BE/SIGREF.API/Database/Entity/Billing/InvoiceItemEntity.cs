@@ -25,9 +25,7 @@ public class InvoiceItemEntity : BaseEntity
 
     [Column("service_id")]
     public Guid? ServiceId { get; set; }
-
-    [ForeignKey(nameof(ServiceId))]
-    public HealthServicesEntity? Service { get; set; }
+    
 
     [Column("package_id")]
     public Guid? PackageId { get; set; }

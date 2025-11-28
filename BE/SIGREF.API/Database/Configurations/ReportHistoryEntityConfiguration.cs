@@ -67,11 +67,7 @@ public class ReportHistoryEntityConfiguration : IEntityTypeConfiguration<ReportH
         builder.Property(e => e.CreatedByUserId)
             .IsRequired()
             .HasColumnName("created_by_user_id");
-
-        builder.HasOne(e => e.CreatedByUser)
-            .WithMany()
-            .HasForeignKey(e => e.CreatedByUserId)
-            .OnDelete(DeleteBehavior.Restrict);
+        
 
 
         // ===============================

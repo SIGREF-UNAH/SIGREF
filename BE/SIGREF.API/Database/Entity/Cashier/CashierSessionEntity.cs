@@ -15,10 +15,7 @@ public class CashierSessionEntity : BaseEntity
     [Required]
     [Column("user_id")]
     public Guid UserId { get; set; }
-
-    [ForeignKey(nameof(UserId))]
-    public UserLinkEntity? User { get; set; }
-
+    
     [Required]
     [Column("shift_id")]
     public Guid ShiftId { get; set; }

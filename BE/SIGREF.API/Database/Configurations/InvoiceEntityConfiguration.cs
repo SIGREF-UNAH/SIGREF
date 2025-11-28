@@ -54,11 +54,7 @@ public class InvoiceEntityConfiguration : IEntityTypeConfiguration<InvoiceEntity
         builder.Property(e => e.UserId)
             .IsRequired()
             .HasColumnName("user_id");
-
-        builder.HasOne(e => e.User)
-            .WithMany()
-            .HasForeignKey(e => e.UserId)
-            .OnDelete(DeleteBehavior.Restrict);
+        
 
 
         // ===============================

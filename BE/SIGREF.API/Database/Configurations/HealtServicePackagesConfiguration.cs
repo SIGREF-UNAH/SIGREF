@@ -75,15 +75,7 @@ public class HealtServicePackagesConfiguration : IEntityTypeConfiguration<Health
         //        RELACIONES
         // ============================
 
-        builder.HasOne(x => x.CreatedBy)
-            .WithMany()
-            .HasForeignKey(x => x.CreatedById)
-            .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(x => x.UpdatedBy)
-            .WithMany()
-            .HasForeignKey(x => x.UpdatedById)
-            .OnDelete(DeleteBehavior.Restrict);
 
         // ============================
         //          ÍNDICES

@@ -37,10 +37,6 @@ public class LocationHealthServicePackageConfiguration : IEntityTypeConfiguratio
         // ===============================
         //           RELACIONES
         // ===============================
-        builder.HasOne(e => e.Location)
-            .WithMany()
-            .HasForeignKey(e => e.LocationId)
-            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(e => e.Package)
             .WithMany()

@@ -15,11 +15,6 @@ public class ShiftEntity : BaseEntity
     [Required]
     [Column("location_id")]
     public Guid LocationId { get; set; }
-
-    [ForeignKey(nameof(LocationId))]
-    public LocationEntity? Location { get; set; }
-
-
     // ======================================
     //         INFORMACIÓN DEL TURNO
     // ======================================
