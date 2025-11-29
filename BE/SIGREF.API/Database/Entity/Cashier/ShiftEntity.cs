@@ -31,4 +31,7 @@ public class ShiftEntity : BaseEntity
     [Required]
     [Column("end_time")]
     public TimeOnly EndTime { get; set; }
+    
+    [Column("correction_closure")]
+    public DateTime CorrectionClosure { get; set; }
 }

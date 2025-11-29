@@ -17,6 +17,7 @@ using Microsoft.Extensions.Options;
 using SIGREF.API.Services.Auth;
 using MongoDB.Driver;
 using SIGREF.API.Services.Auth.Keycloak;
+using SIGREF.API.Services.Cashier;
 
 
 namespace SIGREF.API;
@@ -55,6 +56,10 @@ public class Startup
     services.AddScoped<IPractitionerRoleService, PractitionerRoleService>();
     services.AddScoped<IPractitionerService, PractitionerService>();
     services.AddScoped<IOrganizationService, OrganizationService>();
+    
+    
+    // ================ SIGREF SERVICES =======================
+    services.AddScoped<IShiftService, ShiftService>();
 
 
     // ==============================================================
@@ -79,6 +84,9 @@ public class Startup
 
     // SIGREF (PostgreSQL via Aspire)
     services.AddNpgsql<SIGREFContext>("sigref");
+    
+    
+    services.AddScoped<IUserContextService, UserContextService>();
 
 
     // ================== MONGO LOGGING ==================

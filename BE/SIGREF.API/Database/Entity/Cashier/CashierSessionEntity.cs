@@ -53,10 +53,14 @@ public class CashierSessionEntity : BaseEntity
     //         ESTADO DEL TURNO
     // ======================================
 
-    [Column("is_closed")]
-    public bool IsClosed { get; set; } = false;
+    [Column("is_open")]
+    public bool IsOpen { get; set; } = true;
+    
+    [Column("requires_correction")]
+    public bool RequiresCorrection { get; set; }
 
-
+    [Column("correction_date")]
+    public DateTime? CorrectionDate { get; set; }
     // ======================================
     //               NOTAS
     // ======================================
