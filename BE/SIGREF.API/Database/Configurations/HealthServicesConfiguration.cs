@@ -24,32 +24,32 @@ public class HealthServicesConfiguration : IEntityTypeConfiguration<HealthServic
         //       COLUMN MAPPINGS
         // ============================
 
-        builder.Property(x => x.Name)
-            .HasColumnName("name")
-            .HasMaxLength(150)
-            .IsRequired()
-            .HasComment("Nombre del servicio de salud.");
+        // builder.Property(x => x.Name)
+        //     .HasColumnName("name")
+        //     .HasMaxLength(150)
+        //     .IsRequired()
+        //     .HasComment("Nombre del servicio de salud.");
 
-        builder.Property(x => x.Description)
-            .HasColumnName("description")
-            .HasMaxLength(300)
-            .HasComment("Descripción del servicio.");
+        // builder.Property(x => x.Description)
+        //     .HasColumnName("description")
+        //     .HasMaxLength(300)
+        //     .HasComment("Descripción del servicio.");
 
         builder.Property(x => x.HealthServiceIdFHIR)
             .HasColumnName("health_service_id_fhir")
             .HasMaxLength(64)
             .IsRequired()
             .HasComment("ID del recurso HealthcareService en FHIR.");
-
-        builder.Property(x => x.Abbreviation)
-            .HasColumnName("abbreviation")
-            .HasMaxLength(5)
-            .HasComment("Abreviación corta (0–5 caracteres).");
-
-        builder.Property(x => x.IsActive)
-            .HasColumnName("is_active")
-            .IsRequired()
-            .HasComment("Indica si el servicio está activo.");
+        //
+        // builder.Property(x => x.Abbreviation)
+        //     .HasColumnName("abbreviation")
+        //     .HasMaxLength(5)
+        //     .HasComment("Abreviación corta (0–5 caracteres).");
+        //
+        // builder.Property(x => x.IsActive)
+        //     .HasColumnName("is_active")
+        //     .IsRequired()
+        //     .HasComment("Indica si el servicio está activo.");
 
         builder.Property(x => x.Price)
             .HasColumnName("price")
@@ -78,9 +78,9 @@ public class HealthServicesConfiguration : IEntityTypeConfiguration<HealthServic
             .HasColumnName("updated_date")
             .HasComment("Fecha de última actualización (UTC).");
 
-        builder.Property(x => x.LastSync)
-            .HasColumnName("last_sync")
-            .HasComment("Fecha de última sincronización con FHIR o procesos automáticos.");
+        // builder.Property(x => x.LastSync)
+        //     .HasColumnName("last_sync")
+        //     .HasComment("Fecha de última sincronización con FHIR o procesos automáticos.");
 
         // ============================
         //          RELACIONES
@@ -104,16 +104,16 @@ public class HealthServicesConfiguration : IEntityTypeConfiguration<HealthServic
             .IsUnique()
             .HasDatabaseName("idx_health_services_fhir");
 
-        builder.HasIndex(x => x.Name)
-            .HasDatabaseName("idx_health_services_name");
-
-        builder.HasIndex(x => x.IsActive)
-            .HasDatabaseName("idx_health_services_active");
-
-        builder.HasIndex(x => new { x.Name, x.IsActive })
-            .HasDatabaseName("idx_health_services_name_active");
-
-        builder.HasIndex(x => x.LastSync)
-            .HasDatabaseName("idx_health_services_last_sync");
+        // builder.HasIndex(x => x.Name)
+        //     .HasDatabaseName("idx_health_services_name");
+        //
+        // builder.HasIndex(x => x.IsActive)
+        //     .HasDatabaseName("idx_health_services_active");
+        //
+        // builder.HasIndex(x => new { x.Name, x.IsActive })
+        //     .HasDatabaseName("idx_health_services_name_active");
+        //
+        // builder.HasIndex(x => x.LastSync)
+        //     .HasDatabaseName("idx_health_services_last_sync");
     }
 }

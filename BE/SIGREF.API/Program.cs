@@ -1,8 +1,12 @@
 using SIGREF.API;
+using SIGREF.API.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+
+// Add MongoDB client with Aspire integration
+builder.AddMongoDBClient("sigref-logs");
 
 var startup = new Startup(builder.Configuration);
 

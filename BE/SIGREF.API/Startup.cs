@@ -11,6 +11,7 @@ using SIGREF.API.Services.Organizations;
 using SIGREF.API.Services.Patient;
 using SIGREF.API.Services.Practitioner;
 using SIGREF.API.Services.PractitionerRole;
+using SIGREF.API.Services.ServiceGroup;
 using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
@@ -54,50 +55,37 @@ public class Startup
         services.AddScoped<IPractitionerRoleService, PractitionerRoleService>();
         services.AddScoped<IPractitionerService, PractitionerService>();
         services.AddScoped<IOrganizationService, OrganizationService>();
-        
+
+        services.AddScoped<ServiceGroupService>();
+
         services.AddScoped<KeycloakAdminService>();
-        
+
         services.AddControllers();
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
         services.AddHttpContextAccessor();
-        
+
         // Configuración de PostgreSQL con Aspire
         // ========================================================
         // Base de datos SIGREF (Gestion de Receptoraa de Fondos)
         services.AddNpgsql<SIGREFContext>("sigref");
         // Base de datos HAPI FHIR
         // No entiendo por que se enlazaba ese contexto aqui, si directamente se utiliza un client
-        // el contexto es para tener acceso directo a la base de datos ejemplo contex.users 
+        // el contexto es para tener acceso directo a la base de datos ejemplo contex.users
         //services.AddNpgsql<HapiContext>("hapi");
-        
-        
-        // ====================================================
-        // MONGO DB - Logs internos SIGREF
-        // ====================================================
-                services.Configure<MongoSettings>(_configuration.GetSection("Mongo"));
 
-                services.AddSingleton<IMongoClient>(sp =>
-                {
-                    var settings = sp.GetRequiredService<IOptions<MongoSettings>>().Value;
-                    return new MongoClient(settings.ConnectionString);
-                });
+        // MongoDB is now configured via builder.AddMongoDBClient() in Program.cs
+        // IMongoClient is automatically available via DI
 
-                services.AddSingleton(sp =>
-                {
-                    var settings = sp.GetRequiredService<IOptions<MongoSettings>>().Value;
-                    var client = sp.GetRequiredService<IMongoClient>();
-                    return client.GetDatabase(settings.Database);
-                });
+        // Optional: Register IMongoDatabase if needed by services
+        services.AddSingleton<IMongoDatabase>(sp =>
+        {
+            var client = sp.GetRequiredService<IMongoClient>();
+            return client.GetDatabase("sigref-logs");
+        });
 
-        // Servicio para escribir logs
-        // o lo que tenga David
-        //services.AddScoped<SigrefLogService>();
-        
-        
-        
         services.AddHttpContextAccessor();
-        
+
         // Configuración de Autenticación con Keycloak
         services.AddAuthentication(options =>
         {
@@ -109,11 +97,11 @@ public class Startup
             var authority = _configuration["Keycloak:Authority"];
             var audience = _configuration["Keycloak:Audience"];
             var requireHttps = _configuration.GetValue<bool>("Keycloak:RequireHttps");
-
+        
             options.Authority = authority;
             options.Audience = audience;
             options.RequireHttpsMetadata = requireHttps;
-
+        
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
@@ -123,14 +111,14 @@ public class Startup
                 NameClaimType = "preferred_username",
                 RoleClaimType = ClaimTypes.Role
             };
-
+        
             // Aquí mapeamos los roles
             options.Events = new JwtBearerEvents
             {
                 OnTokenValidated = context =>
                 {
                     var identity = context.Principal.Identity as ClaimsIdentity;
-
+        
                     if (identity != null)
                     {
                         // Lista de roles
@@ -140,7 +128,7 @@ public class Startup
                             RolesConstants.ti, 
                             RolesConstants.auditor 
                         };
-
+        
                         // --- Roles de Realm ---
                         var realmAccess = context.Principal.FindFirst("realm_access")?.Value;
                         if (!string.IsNullOrEmpty(realmAccess))
@@ -158,7 +146,7 @@ public class Startup
                                 }
                             }
                         }
-
+        
                         // --- Roles del Client ---
                         var resourceAccess = context.Principal.FindFirst("resource_access")?.Value;
                         if (!string.IsNullOrEmpty(resourceAccess))
@@ -181,9 +169,52 @@ public class Startup
                     return Task.CompletedTask;
                 }
             };
-
+        
         });
-        services.AddAuthorization();
+        //
+        // services.AddAuthentication()
+        //     .AddKeycloakJwtBearer("keycloak", realm: _configuration["Keycloak:RealmName"],
+        //         options =>
+        //         {
+        //             options.RequireHttpsMetadata = _configuration.GetValue<bool>("Keycloak:RequireHttps");
+        //             options.Audience = _configuration["Keycloak:Audience"];
+        //             
+        //             // IMPORTANTE: Forzar la URL interna para la validación de metadatos
+        //             // Esto evita el error 404 al intentar contactar a Keycloak
+        //             options.MetadataAddress = "http://keycloak-server:8080/keycloak/realms/sigref/.well-known/openid-configuration";
+        //
+        //             options.TokenValidationParameters = new TokenValidationParameters
+        //             {
+        //                 ValidateIssuer = true,
+        //                 ValidateAudience = true,
+        //                 ValidAudience = options.Audience,
+        //                 NameClaimType = "preferred_username",
+        //                 RoleClaimType = ClaimTypes.Role,
+        //                 // Validar firma aunque no se pueda descargar el JWKS automáticamente si falla la conexión
+        //                 ValidateIssuerSigningKey = true
+        //             };
+        //         });
+        //
+        // services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+        //     .PostConfigure(options =>
+        //     {
+        //         // Configurar ValidIssuers para aceptar tanto URLs internas como externas
+        //         var validIssuers = new List<string>();
+        //         
+        //         var realm = _configuration["Keycloak:RealmName"];
+        //         // URL Interna (Docker)
+        //         validIssuers.Add($"http://keycloak-server:8080/keycloak/realms/{realm}");
+        //         // URL Externa (Directa)
+        //         validIssuers.Add($"http://localhost:8081/keycloak/realms/{realm}");
+        //         // URL Externa (YARP)
+        //         validIssuers.Add($"http://localhost:5000/keycloak/realms/{realm}");
+        //         // URL HTTPS (si aplica)
+        //         validIssuers.Add($"https://localhost:8081/keycloak/realms/{realm}");
+        //
+        //         options.TokenValidationParameters.ValidIssuers = validIssuers;
+        //         options.TokenValidationParameters.ValidIssuer = null;
+        //     });
+        // services.AddAuthorization();
 
         // CORS Configuration
         services.AddCors(opt =>
@@ -205,7 +236,7 @@ public class Startup
             app.UseSwaggerUI();
         }
 
-        app.UseHttpsRedirection();
+        // app.UseHttpsRedirection();
 
         app.UseCors("CorsPolicy");
 
@@ -214,8 +245,7 @@ public class Startup
         app.UseAuthentication();
 
         app.UseAuthorization();
-        
-        
+
 
         app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
     }

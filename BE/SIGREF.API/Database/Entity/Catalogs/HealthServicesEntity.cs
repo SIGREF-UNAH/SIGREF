@@ -2,37 +2,38 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using SIGREF.API.Database.Entity.Administration;
+using SIGREF.API.Database.Entity.common;
 
 namespace SIGREF.API.Database.Entity.Catalogs;
 
 [Table("health_services")]
-public class HealthServicesEntity
+public class HealthServicesEntity:BaseEntity
 {
     [Key]
     [Column("id")]
     public Guid Id { get; set; }
 
-    [Required]
-    [StringLength(150)]
-    [Column("name")]
-    public string Name { get; set; }
+    // [Required]
+    // [StringLength(150)]
+    // [Column("name")]
+    // public string Name { get; set; }
 
-    [StringLength(300)]
-    [Column("description")]
-    public string? Description { get; set; }
+    // [StringLength(300)]
+    // [Column("description")]
+    // public string? Description { get; set; }
 
     [Required]
     [StringLength(64)]
     [Column("health_service_id_fhir")]
     public string HealthServiceIdFHIR { get; set; }
 
-    [StringLength(5)]
-    [Column("abbreviation")]
-    public string? Abbreviation { get; set; }
+    // [StringLength(5)]
+    // [Column("abbreviation")]
+    // public string? Abbreviation { get; set; }
 
-    [Required]
-    [Column("is_active")]
-    public bool IsActive { get; set; }
+    // [Required]
+    // [Column("is_active")]
+    // public bool IsActive { get; set; }
 
     // ======================
     //   PRECIO
@@ -70,9 +71,5 @@ public class HealthServicesEntity
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
     [Column("updated_date")]
-    public DateTime? UpdatedDate { get; set; }
-
-    // fecha de última sincronización FHIR o jobs
-    [Column("last_sync")]
-    public DateTime? LastSync { get; set; }
+    public DateTime? UpdatedDate { get; set; } 
 }

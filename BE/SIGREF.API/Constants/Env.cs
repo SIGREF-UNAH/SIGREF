@@ -14,9 +14,3 @@ public class PhirConfig
 {
     public string BaseUrl { get; set; } = string.Empty;
 }
-
-public class MongoSettings
-{
-    public string ConnectionString { get; set; } = string.Empty;
-    public string Database { get; set; } = string.Empty;
-}
