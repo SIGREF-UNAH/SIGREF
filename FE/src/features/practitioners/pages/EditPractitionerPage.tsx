@@ -1,5 +1,6 @@
 import { PageHeaderTabs } from "../../../shared/components";
-import EditPractitionerForm from "../components/ui/EditPractitionerForm";
+// import EditPractitionerForm from "../components/ui/EditPractitionerForm";
+import PractitionerForm from "../components/ui/PractitionerForm";
 
 export const EditPractitionerPage = () => {
   return (
@@ -22,8 +23,8 @@ export const EditPractitionerPage = () => {
         defaultActive="null"
       />
 
-      {/* Edit Employee Form */}
-      <EditPractitionerForm />
+      {/* Edit Practitioner Form */}
+      <PractitionerForm />
     </div>
   );
 };
