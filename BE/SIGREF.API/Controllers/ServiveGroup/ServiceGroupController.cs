@@ -1,93 +1,96 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SIGREF.API.Constants;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.ServiceGroup;
 using SIGREF.API.Extensions;
 using SIGREF.API.Services.ServiceGroup;
 
-namespace SIGREF.API.Controllers.ServiveGroup
+namespace SIGREF.API.Controllers.ServiveGroup;
+
+[Route("api/[controller]")]
+[ApiController]
+[Authorize(Roles = RolesConstants.AllRoles)]
+public class ServiceGroupController(ServiceGroupService serviceGroupService) : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class ServiceGroupController(ServiceGroupService serviceGroupService) : ControllerBase
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Produces(typeof(PagedResultDto<ServiceGroupDto>))]
+     public async Task<ActionResult<ServiceGroupDto>> GetFiltered([FromQuery] ServiceGroupFilterDto filter)
     {
-        [HttpGet]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [Produces(typeof(PagedResultDto<ServiceGroupDto>))]
-        public async Task<IActionResult> GetFiltered([FromQuery] ServiceGroupFilterDto filter)
+        var (items, pagination) = await serviceGroupService.GetFilteredServiceGroupsAsync(filter);
+
+        var pagedDtos = new PagedResultDto<ServiceGroupDto>
         {
-            var pagedLists = await serviceGroupService.GetFilteredServiceGroupsAsync(filter);
+            Items = items,
+            Pagination = pagination
+        };
 
-            var pagedDtos = new PagedResultDto<ServiceGroupDto>
-            {
-                Items = pagedLists.Items.Select(l => l.ToDto()),
-                Pagination = pagedLists.Pagination
-            };
+        return Ok(pagedDtos);
+    }
 
-            return Ok(pagedDtos);
-        }
+    [HttpGet("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Produces<ServiceGroupDto>()]
+    public async Task<IActionResult> GetById(string id)
+    {
+        var group = await serviceGroupService.GetServiceGroupByIdAsync(id);
+        if (group == null) return NotFound($"ServiceGroup with id '{id}' not found.");
 
-        [HttpGet("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [Produces<ServiceGroupDto>()]
-        public async Task<IActionResult> GetById(string id)
-        {
-            var group = await serviceGroupService.GetServiceGroupByIdAsync(id);
-            if (group == null) return NotFound($"ServiceGroup with id '{id}' not found.");
+        return Ok(group);
+    }
 
-            return Ok(group);
-        }
+    [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [Produces<ServiceGroupDto>()]
+    public async Task<IActionResult> Create([FromBody] CreateServiceGroupDto createDto)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        [HttpPost]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [Produces<ServiceGroupDto>()]
-        public async Task<IActionResult> Create([FromBody] CreateServiceGroupDto createDto)
-        {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+        var list = createDto.ToFhirList();
+        var createdList = await serviceGroupService.CreateServiceGroupAsync(list);
 
-            var list = createDto.ToFhirList();
+        // Usar GetServiceGroupByIdAsync para obtener el DTO completo con locations/services
+        var createdDto = await serviceGroupService.GetServiceGroupByIdAsync(createdList.Id);
 
-            var createdList = await serviceGroupService.CreateServiceGroupAsync(list);
-            var createdDto = createdList.ToDto();
+        return CreatedAtAction(nameof(GetById), new { id = createdList.Id }, createdDto);
+    }
 
-            return CreatedAtAction(nameof(GetById), new { id = createdList.Id }, createdDto);
-        }
+    [HttpPut("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [Produces<ServiceGroupDto>()]
+    public async Task<IActionResult> Update(string id, [FromBody] UpdateServiceGroupDto updateDto)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        [HttpPut("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [Produces<ServiceGroupDto>()]
-        public async Task<IActionResult> Update(string id, [FromBody] UpdateServiceGroupDto updateDto)
-        {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+        var existingList = await serviceGroupService.GetFhirListByIdAsync(id);
+        if (existingList == null) return NotFound($"ServiceGroup with id '{id}' not found.");
 
-            var existingList = await serviceGroupService.GetFhirListByIdAsync(id);
-            if (existingList == null) return NotFound($"ServiceGroup with id '{id}' not found.");
+        existingList.ApplyUpdate(updateDto);
 
-            existingList.ApplyUpdate(updateDto);
+        await serviceGroupService.UpdateServiceGroupAsync(existingList);
 
-            await serviceGroupService.UpdateServiceGroupAsync(existingList);
+        var updatedGroup = await serviceGroupService.GetServiceGroupByIdAsync(id);
 
-            var updatedGroup = await serviceGroupService.GetServiceGroupByIdAsync(id);
+        return Ok(updatedGroup);
+    }
 
-            return Ok(updatedGroup);
-        }
+    [HttpDelete("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(string id)
+    {
+        var existingList = await serviceGroupService.GetFhirListByIdAsync(id);
+        if (existingList == null) return NotFound($"ServiceGroup with id '{id}' not found.");
 
-        [HttpDelete("{id}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Delete(string id)
-        {
-            var existingList = await serviceGroupService.GetFhirListByIdAsync(id);
-            if (existingList == null) return NotFound($"ServiceGroup with id '{id}' not found.");
+        await serviceGroupService.DeleteServiceGroupAsync(id);
 
-            await serviceGroupService.DeleteServiceGroupAsync(id);
-
-            return NoContent();
-        }
+        return NoContent();
     }
 }

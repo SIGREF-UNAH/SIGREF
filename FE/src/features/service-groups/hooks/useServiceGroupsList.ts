@@ -1,0 +1,137 @@
+import { useState, useMemo } from "react";
+import { useNavigate } from "react-router";
+import { useUrlFilters } from "../../../shared/hooks";
+import { useQueryClient } from "@tanstack/react-query";
+import { useMessage } from "../../../shared/hooks";
+import type { TablePaginationConfig } from "antd";
+import {
+  getGetApiServiceGroupQueryKey,
+  useDeleteApiServiceGroupId,
+  useGetApiServiceGroup,
+} from "../../../api/service-group/service-group";
+
+export function useServiceGroupsList() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const msg = useMessage();
+
+  // Estado local para el input de búsqueda
+  const [searchInput, setSearchInput] = useState("");
+
+  // Manejar filtros en la URL
+  const { filters, setFilter, setFilters } = useUrlFilters({
+    defaultValues: {
+      search: "",
+      location: undefined as string | undefined,
+      status: undefined as string | undefined,
+      pageNumber: 1,
+      pageSize: 10,
+    },
+  });
+
+  // Construir parámetros para la petición
+  const queryParams = useMemo(() => {
+    const params: any = {
+      pageNumber: filters.pageNumber,
+      pageSize: filters.pageSize,
+    };
+
+    if (filters.search) {
+      params.title = filters.search;
+    }
+
+    if (filters.location) {
+      params.location = filters.location;
+    }
+
+    if (filters.status) {
+      params.status = filters.status;
+    }
+
+    return params;
+  }, [filters]);
+
+  // Obtener datos con filtros
+  const { data: response, isLoading, isFetching, isError } = useGetApiServiceGroup(queryParams, {
+    query: {
+      placeholderData: (previousData) => previousData,
+    }
+  });
+
+  const serviceGroups = response?.items || [];
+  const pagination = response?.pagination;
+
+  // Procesar datos
+  const processedServiceGroups = useMemo(() => {
+    return serviceGroups.map((serviceGroup) => {
+      const abbreviation = serviceGroup.code?.coding?.[0]?.code || "-";
+
+      return {
+        ...serviceGroup,
+        abbreviation,
+      };
+    });
+  }, [serviceGroups]);
+
+  // Mutación para eliminar
+  const { mutate: deleteServiceGroup } = useDeleteApiServiceGroupId({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: getGetApiServiceGroupQueryKey(),
+        });
+        msg.success("Paquete eliminado correctamente");
+      },
+      onError: () => msg.error("Error al eliminar el paquete"),
+    },
+  });
+
+  const handleEdit = (id: string) => {
+    navigate(`/service-groups/update/${id}`);
+  };
+
+  const handleDelete = (id: string) => {
+    deleteServiceGroup({ id });
+  };
+
+  const handleSearchInputChange = (value: string) => {
+    setSearchInput(value);
+  };
+
+  const handleSearch = () => {
+    setFilter("search", searchInput);
+  };
+
+  const handleClearSearch = () => {
+    setSearchInput("");
+    setFilter("search", "");
+  };
+
+  const paginationConfig: TablePaginationConfig = {
+    current: pagination?.currentPage || 1,
+    pageSize: pagination?.pageSize || 10,
+    showSizeChanger: true,
+    pageSizeOptions: ["10", "20", "50", "100"],
+    total: pagination?.totalItems || 0,
+    onChange: (page, pageSize) => {
+      setFilters({ pageNumber: page, pageSize });
+    },
+    showTotal: (total, range) => `${range[0]}-${range[1]} de ${total}`,
+  };
+
+  return {
+    filters,
+    serviceGroups: processedServiceGroups,
+    paginationConfig,
+    isLoading,
+    isFetching,
+    isError,
+    searchInput,
+    handleEdit,
+    handleDelete,
+    setFilter,
+    handleSearchInputChange,
+    handleSearch,
+    handleClearSearch,
+  };
+}
