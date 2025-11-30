@@ -45,8 +45,16 @@ var mongoPassword = builder.AddParameter("mongodb-password", secret: true);
 var mongoPort = 27017;
 
 var mongoSigrefLogs = builder.AddMongoDB("mongo-sigref-logs", mongoPort, mongoUser, mongoPassword)
-    .WithDataVolume("data-mongo-sigref-logs")
-    .AddDatabase("sigref-logs");
+    .WithDataVolume("data-mongo-sigref-logs");
+
+var mongoDb = mongoSigrefLogs.AddDatabase("sigref-logs");
+
+
+if (builder.ExecutionContext.IsRunMode)
+{
+    mongoSigrefLogs
+     .WithMongoExpress();
+}
 
 // =============================================================
 // KEYCLOAK - Servidor de Autenticación
@@ -84,15 +92,15 @@ var sigrefApi = builder
         // .AddDockerfile("sigref-api", "../", "SIGREF.API/Dockerfile")
         .AddProject<SIGREF_API>("sigref-api")
         .WithReference(sigrefDb)
-        .WithReference(mongoSigrefLogs)
+        .WithReference(mongoDb)
         .WithReference(keycloak)
         .WithReference(hapi)
         .WaitFor(sigrefDb)
-        .WaitFor(mongoSigrefLogs)
+        .WaitFor(mongoDb)
         .WaitFor(hapi)
         .WaitFor(keycloak)
         .WithReferenceRelationship(postgres)
-        .WithReferenceRelationship(mongoSigrefLogs)
+        .WithReferenceRelationship(mongoDb)
         .WithReferenceRelationship(hapi)
         .WithReferenceRelationship(keycloak)
     ;
