@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using SIGREF.API.Database.Entity.Administration;
 using SIGREF.API.Database.Entity.Cashier;
 using SIGREF.API.Database.Entity.common;
 
@@ -62,6 +61,9 @@ public class InvoiceEntity : BaseEntity
     [Column("currency")]
     public string Currency { get; set; } = "LPS";
 
+    
+    // TODO APLICAR TYPE ENUM A ESTE TIPO 
+    // DEJAR EXPLICADO EN EL ENUM QUE ES CADA UNO
     [Required]
     [StringLength(30)]
     [Column("status")]
@@ -91,7 +93,6 @@ public class InvoiceEntity : BaseEntity
     // ===============================
 
     [Column("parent_invoice_id")] public Guid? ParentInvoiceId { get; set; }
-
     [ForeignKey(nameof(ParentInvoiceId))] public InvoiceEntity? ParentInvoice { get; set; }
 
 

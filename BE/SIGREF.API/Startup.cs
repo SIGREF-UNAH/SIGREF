@@ -105,7 +105,7 @@ public class Startup
         // ================= DATABASES ========================
 
         // SIGREF (PostgreSQL via Aspire)
-        services.AddNpgsql<SIGREFContext>("sigref");
+        //services.AddNpgsql<SIGREFContext>("sigref");
 
 
         services.AddScoped<IUserContextService, UserContextService>();
