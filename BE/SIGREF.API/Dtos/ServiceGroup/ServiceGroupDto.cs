@@ -26,4 +26,6 @@ public class ServiceGroupDto
     /// </summary>
     [JsonPropertyName("totalPrice")]
     public decimal TotalPrice { get; set; }
+    
+    [JsonPropertyName("description")] public string? Description { get; set; }
 }

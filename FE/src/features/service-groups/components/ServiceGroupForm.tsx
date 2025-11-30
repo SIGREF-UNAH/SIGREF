@@ -1,24 +1,38 @@
-import type { CreateServiceGroupDto, ServiceGroupDto } from "../../../api/models";
-import {
-    ProForm,
-    ProFormText,
-    ProFormSelect,
-} from "@ant-design/pro-components";
-import { Tag, Space, Typography, Badge, Alert } from "antd";
+import { useState, useEffect } from "react";
+import type {
+    CreateServiceGroupDto,
+    ServiceGroupDto,
+    HealthcareDto,
+    LocationDto,
+    PaginationDto,
+} from "../../../api/models";
+import { ProForm, ProFormText, ProFormSelect } from "@ant-design/pro-components";
+import { Tag, Typography, Badge, Space, Button } from "antd";
+import type { ColumnsType } from "antd/es/table";
 import {
     MedicineBoxOutlined,
     EnvironmentOutlined,
     InfoCircleOutlined,
-    CheckCircleOutlined
 } from "@ant-design/icons";
-import { useHealthcareSearch } from "../hooks/useHealthcareSearch";
-import { useLocationSearch } from "../../../shared/hooks/useLocationSearch";
 import { ListStatus, getListStatusOptions } from "../../../shared/utils";
+import { SelectionTable } from "../../../shared/components/SelectionTable";
 
 const { Text } = Typography;
 
 interface ServiceGroupFormProps {
     initialValues?: Partial<ServiceGroupDto>;
+    healthcares: HealthcareDto[];
+    locations: LocationDto[];
+    healthcarePagination?: PaginationDto;
+    locationPagination?: PaginationDto;
+    isLoadingHealthcares?: boolean;
+    isLoadingLocations?: boolean;
+    isFetchingHealthcares?: boolean;
+    isFetchingLocations?: boolean;
+    onHealthcarePageChange?: (page: number, pageSize: number) => void;
+    onLocationPageChange?: (page: number, pageSize: number) => void;
+    onHealthcareSearch?: (search: string) => void;
+    onLocationSearch?: (search: string) => void;
     onFinish: (values: CreateServiceGroupDto) => Promise<void>;
     submitButtonText?: string;
     isPending?: boolean;
@@ -27,39 +41,96 @@ interface ServiceGroupFormProps {
 
 export const ServiceGroupForm = ({
     initialValues,
+    healthcares,
+    locations,
+    healthcarePagination,
+    locationPagination,
+    isLoadingHealthcares = false,
+    isLoadingLocations = false,
+    isFetchingHealthcares = false,
+    isFetchingLocations = false,
+    onHealthcarePageChange,
+    onLocationPageChange,
+    onHealthcareSearch,
+    onLocationSearch,
     submitButtonText = "Crear paquete",
     isPending = false,
     onFinish,
     onCancel,
 }: ServiceGroupFormProps) => {
-    const { options: healthcareOptions, searchHealthcares } = useHealthcareSearch();
-    const { options: locationOptions, searchLocations } = useLocationSearch();
+    // Estado para servicios de salud seleccionados
+    const [selectedHealthcareKeys, setSelectedHealthcareKeys] = useState<React.Key[]>([]);
 
-    // Crear opciones iniciales desde los valores cargados
-    const initialHealthcareOptions = initialValues?.items?.map(item => ({
-        label: item.name || "",
-        value: item.id || "",
-    })) || [];
+    // Estado para ubicaciones seleccionadas
+    const [selectedLocationKeys, setSelectedLocationKeys] = useState<React.Key[]>([]);
 
-    const initialLocationOptions = initialValues?.locations?.map(loc => ({
-        label: loc.name || "",
-        value: loc.id || "",
-    })) || [];
+    // Inicializar selecciones desde initialValues
+    useEffect(() => {
+        if (initialValues?.items && initialValues.items.length > 0) {
+            const healthcareIds = initialValues.items
+                .map((item) => item.id)
+                .filter(Boolean) as string[];
+            setSelectedHealthcareKeys(healthcareIds);
 
-    // Combinar opciones iniciales con las de búsqueda (evitando duplicados)
-    const allHealthcareOptions = [...initialHealthcareOptions];
-    healthcareOptions.forEach(opt => {
-        if (!allHealthcareOptions.find(o => o.value === opt.value)) {
-            allHealthcareOptions.push(opt);
+            // Los servicios seleccionados se cargarán automáticamente al mostrar la tabla
         }
-    });
+    }, [initialValues?.items, healthcares]);
 
-    const allLocationOptions = [...initialLocationOptions];
-    locationOptions.forEach(opt => {
-        if (!allLocationOptions.find(o => o.value === opt.value)) {
-            allLocationOptions.push(opt);
+    useEffect(() => {
+        if (initialValues?.locations && initialValues.locations.length > 0) {
+            const locationIds = initialValues.locations
+                .map((loc) => loc.id)
+                .filter(Boolean) as string[];
+            setSelectedLocationKeys(locationIds);
+
+            // Las ubicaciones seleccionadas se cargarán automáticamente al mostrar la tabla
         }
-    });
+    }, [initialValues?.locations, locations]);
+
+    // Columnas para tabla de servicios de salud
+    const healthcareColumns: ColumnsType<HealthcareDto> = [
+        {
+            title: "Nombre",
+            dataIndex: "name",
+            key: "name",
+            ellipsis: true,
+        },
+        {
+            title: "Estado",
+            dataIndex: "active",
+            key: "active",
+            width: 100,
+            render: (active: boolean) => (
+                <Tag color={active ? "green" : "red"}>
+                    {active ? "✓ Activo" : "✗ Inactivo"}
+                </Tag>
+            ),
+        },
+    ];
+
+    // Columnas para tabla de ubicaciones
+    const locationColumns: ColumnsType<LocationDto> = [
+        {
+            title: "Nombre",
+            dataIndex: "name",
+            key: "name",
+            ellipsis: true,
+        },
+        {
+            title: "Estado",
+            dataIndex: "status",
+            key: "status",
+            width: 120,
+            render: (status: string) => {
+                const normalized = status?.toLowerCase();
+                if (normalized === "active") return <Tag color="green">✓ Activo</Tag>;
+                if (normalized === "suspended")
+                    return <Tag color="orange">⚠︎ Suspendido</Tag>;
+                if (normalized === "inactive") return <Tag color="red">✗ Inactivo</Tag>;
+                return <Tag>{status}</Tag>;
+            },
+        },
+    ];
 
     const handleFinish = async (values: any) => {
         const serviceGroupData: CreateServiceGroupDto = {
@@ -73,16 +144,14 @@ export const ServiceGroupForm = ({
                     },
                 ],
             },
-            healthcareServiceIds: values.healthcareServiceIds || [],
-            locationIds: values.locationIds || [],
+            healthcareServiceIds: selectedHealthcareKeys as string[],
+            locationIds: selectedLocationKeys as string[],
         };
 
         await onFinish(serviceGroupData);
     };
 
     const abbreviation = initialValues?.code?.coding?.[0]?.code || "";
-    const healthcareServiceIds = initialValues?.items?.map(item => item.id).filter(Boolean) || [];
-    const locationIds = initialValues?.locations?.map(loc => loc.id).filter(Boolean) || [];
 
     return (
         <ProForm
@@ -91,39 +160,40 @@ export const ServiceGroupForm = ({
             submitter={{
                 render: (_) => (
                     <div className="flex justify-end gap-3 mt-4">
-                        <button
-                            type="button"
+                        <Button
                             onClick={onCancel}
                             disabled={isPending}
-                            className="px-8 py-2 text-white bg-red-500 hover:bg-red-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             Cancelar
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={isPending}
-                            className="px-8 py-2 text-white bg-green-500 hover:bg-green-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        </Button>
+                        <Button
+                            disabled={
+                                isPending ||
+                                selectedHealthcareKeys.length === 0 ||
+                                selectedLocationKeys.length === 0
+                            }
+                            type="primary"
                         >
                             {isPending ? "Procesando..." : submitButtonText}
-                        </button>
+                        </Button>
                     </div>
                 ),
             }}
-            grid
             initialValues={{
                 title: initialValues?.title || "",
                 abbreviation: abbreviation,
                 status: initialValues?.status || ListStatus.Current,
-                healthcareServiceIds: healthcareServiceIds,
-                locationIds: locationIds,
             }}
         >
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
-                <div className="space-y-4 bg-gray-50 p-5 rounded-lg border border-gray-200">
-                    <div className="mb-4">
-                        <Text strong className="text-gray-700 text-base">📋 Información General</Text>
-                    </div>
-                    
+            {/* Información General */}
+            <div className="bg-white p-6 rounded-lg border border-gray-200 mb-6">
+                <div className="mb-5">
+                    <Text strong className="text-gray-800 text-lg">
+                        📋 Información General
+                    </Text>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <ProFormText
                         name="title"
                         label="Nombre del Paquete"
@@ -133,7 +203,6 @@ export const ServiceGroupForm = ({
                             { min: 3, message: "El nombre debe tener al menos 3 caracteres" },
                         ]}
                         fieldProps={{
-                            size: "large",
                             disabled: isPending,
                         }}
                     />
@@ -144,10 +213,12 @@ export const ServiceGroupForm = ({
                         placeholder="Ej. PBS"
                         rules={[
                             { required: true, message: "La abreviatura es requerida" },
-                            { max: 10, message: "La abreviatura no puede tener más de 10 caracteres" },
+                            {
+                                max: 10,
+                                message: "La abreviatura no puede tener más de 10 caracteres",
+                            },
                         ]}
                         fieldProps={{
-                            size: "large",
                             disabled: isPending,
                         }}
                     />
@@ -157,190 +228,128 @@ export const ServiceGroupForm = ({
                         label="Estado"
                         placeholder="Seleccione un estado"
                         options={getListStatusOptions()}
-                        rules={[
-                            { required: true, message: "El estado es requerido" },
-                        ]}
+                        rules={[{ required: true, message: "El estado es requerido" }]}
                         fieldProps={{
-                            size: "large",
                             disabled: isPending,
                         }}
                     />
                 </div>
-
-                <div className="space-y-6">
-                    {/* Servicios de Salud */}
-                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        <Space direction="vertical" size="middle" className="w-full">
-                            <div className="flex items-center gap-2">
-                                <MedicineBoxOutlined className="text-blue-600 text-lg" />
-                                <Text strong className="text-blue-900">Servicios de Salud</Text>
-                                <Badge 
-                                    count={healthcareServiceIds.length} 
-                                    showZero 
-                                    style={{ backgroundColor: '#1890ff' }}
-                                />
-                            </div>
-                            
-                            <Alert
-                                message="Haz clic para ver servicios disponibles o busca escribiendo"
-                                type="info"
-                                icon={<InfoCircleOutlined />}
-                                showIcon
-                                closable
-                                className="text-xs"
-                            />
-
-                            <ProFormSelect
-                                name="healthcareServiceIds"
-                                placeholder="🔍 Buscar servicios... (Ej. Consulta, Laboratorio, Rayos X)"
-                                mode="multiple"
-                                showSearch
-                                rules={[
-                                    { required: true, message: "Debe seleccionar al menos un servicio" },
-                                ]}
-                                fieldProps={{
-                                    size: "large",
-                                    loading: isPending,
-                                    filterOption: false,
-                                    onSearch: searchHealthcares,
-                                    onFocus: () => searchHealthcares(''),
-                                    options: allHealthcareOptions,
-                                    maxTagCount: 'responsive',
-                                    maxTagPlaceholder: (omittedValues) => (
-                                        <Tag color="blue">+{omittedValues.length} más</Tag>
-                                    ),
-                                    tagRender: (props) => {
-                                        const { label, closable, onClose } = props;
-                                        return (
-                                            <Tag
-                                                color="blue"
-                                                closable={closable}
-                                                onClose={onClose}
-                                                style={{ marginRight: 3, fontSize: '13px', padding: '2px 8px' }}
-                                                icon={<CheckCircleOutlined />}
-                                            >
-                                                {label}
-                                            </Tag>
-                                        );
-                                    },
-                                    notFoundContent: (
-                                        <div className="text-center py-4 text-gray-500">
-                                            <MedicineBoxOutlined className="text-3xl mb-2" />
-                                            <div>Busca servicios escribiendo su nombre</div>
-                                        </div>
-                                    ),
-                                }}
-                                debounceTime={300}
-                            />
-                        </Space>
-                    </div>
-
-                    {/* Ubicaciones */}
-                    <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                        <Space direction="vertical" size="middle" className="w-full">
-                            <div className="flex items-center gap-2">
-                                <EnvironmentOutlined className="text-green-600 text-lg" />
-                                <Text strong className="text-green-900">Áreas Asistenciales</Text>
-                                <Badge 
-                                    count={locationIds.length} 
-                                    showZero 
-                                    style={{ backgroundColor: '#52c41a' }}
-                                />
-                            </div>
-
-                            <Alert
-                                message="Haz clic para ver ubicaciones o busca escribiendo el nombre"
-                                type="success"
-                                icon={<InfoCircleOutlined />}
-                                showIcon
-                                closable
-                                className="text-xs"
-                            />
-
-                            <ProFormSelect
-                                name="locationIds"
-                                placeholder="📍 Buscar ubicaciones... (Ej. Emergencia, Consulta Externa)"
-                                mode="multiple"
-                                showSearch
-                                rules={[
-                                    { required: true, message: "Debe seleccionar al menos una ubicación" },
-                                ]}
-                                fieldProps={{
-                                    size: "large",
-                                    loading: isPending,
-                                    filterOption: false,
-                                    onSearch: searchLocations,
-                                    onFocus: () => searchLocations(''),
-                                    options: allLocationOptions,
-                                    maxTagCount: 'responsive',
-                                    maxTagPlaceholder: (omittedValues) => (
-                                        <Tag color="green">+{omittedValues.length} más</Tag>
-                                    ),
-                                    tagRender: (props) => {
-                                        const { label, closable, onClose } = props;
-                                        return (
-                                            <Tag
-                                                color="green"
-                                                closable={closable}
-                                                onClose={onClose}
-                                                style={{ marginRight: 3, fontSize: '13px', padding: '2px 8px' }}
-                                                icon={<CheckCircleOutlined />}
-                                            >
-                                                {label}
-                                            </Tag>
-                                        );
-                                    },
-                                    notFoundContent: (
-                                        <div className="text-center py-4 text-gray-500">
-                                            <EnvironmentOutlined className="text-3xl mb-2" />
-                                            <div>Busca ubicaciones escribiendo su nombre</div>
-                                        </div>
-                                    ),
-                                }}
-                                debounceTime={300}
-                            />
-                        </Space>
-                    </div>
-                </div>
             </div>
 
-            {/* Resumen Visual */}
-            {(healthcareServiceIds.length > 0 || locationIds.length > 0) && (
-                <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
+            {/* Tablas de Selección */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Servicios de Salud */}
+                <div className="bg-blue-50 p-5 rounded-lg border border-blue-200">
                     <Space direction="vertical" size="small" className="w-full">
-                        <div className="flex items-center gap-2 mb-2">
-                            <InfoCircleOutlined className="text-blue-600" />
-                            <Text strong className="text-gray-700">Resumen del Paquete</Text>
+                        <div className="flex items-center gap-2 mb-3">
+                            <MedicineBoxOutlined className="text-blue-600 text-lg" />
+                            <Text strong className="text-blue-900 text-base">
+                                Servicios de Salud
+                            </Text>
+                            <Badge
+                                count={selectedHealthcareKeys.length}
+                                showZero
+                                style={{ backgroundColor: "#1890ff" }}
+                            />
                         </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="flex items-start gap-2">
-                                <MedicineBoxOutlined className="text-blue-500 mt-1" />
-                                <div>
-                                    <Text type="secondary" className="text-xs block">Servicios seleccionados:</Text>
-                                    <Badge 
-                                        count={healthcareServiceIds.length} 
-                                        showZero
-                                        style={{ backgroundColor: '#1890ff' }}
-                                    />
-                                </div>
+
+                        <SelectionTable
+                            dataSource={healthcares}
+                            columns={healthcareColumns}
+                            rowKey="id"
+                            selectedRowKeys={selectedHealthcareKeys}
+                            onSelectionChange={(keys) => {
+                                setSelectedHealthcareKeys(keys);
+                            }}
+                            searchPlaceholder="Buscar servicios..."
+                            onSearch={onHealthcareSearch}
+                            loading={isLoadingHealthcares || isFetchingHealthcares}
+                            disabled={isPending}
+                            pagination={
+                                healthcarePagination
+                                    ? {
+                                        current: healthcarePagination.currentPage || 1,
+                                        pageSize: healthcarePagination.pageSize || 15,
+                                        total: healthcarePagination.totalItems || 0,
+                                        showSizeChanger: true,
+                                        showTotal: (total, range) =>
+                                            `${range[0]}-${range[1]} de ${total}`,
+                                        onChange: (page, pageSize) => {
+                                            onHealthcarePageChange?.(page, pageSize);
+                                        },
+                                        pageSizeOptions: ["10", "15", "20", "30"],
+                                        size: "small",
+                                    }
+                                    : false
+                            }
+                            emptyText="No hay servicios disponibles"
+                        />
+
+                        {selectedHealthcareKeys.length === 0 && (
+                            <div className="text-red-600 text-xs mt-1 flex items-center gap-1">
+                                <InfoCircleOutlined />
+                                <span>Debe seleccionar al menos un servicio</span>
                             </div>
-                            
-                            <div className="flex items-start gap-2">
-                                <EnvironmentOutlined className="text-green-500 mt-1" />
-                                <div>
-                                    <Text type="secondary" className="text-xs block">Ubicaciones seleccionadas:</Text>
-                                    <Badge 
-                                        count={locationIds.length} 
-                                        showZero
-                                        style={{ backgroundColor: '#52c41a' }}
-                                    />
-                                </div>
-                            </div>
-                        </div>
+                        )}
                     </Space>
                 </div>
-            )}
+
+                {/* Ubicaciones */}
+                <div className="bg-green-50 p-5 rounded-lg border border-green-200">
+                    <Space direction="vertical" size="small" className="w-full">
+                        <div className="flex items-center gap-2 mb-3">
+                            <EnvironmentOutlined className="text-green-600 text-lg" />
+                            <Text strong className="text-green-900 text-base">
+                                Áreas Asistenciales
+                            </Text>
+                            <Badge
+                                count={selectedLocationKeys.length}
+                                showZero
+                                style={{ backgroundColor: "#52c41a" }}
+                            />
+                        </div>
+
+                        <SelectionTable
+                            dataSource={locations}
+                            columns={locationColumns}
+                            rowKey="id"
+                            selectedRowKeys={selectedLocationKeys}
+                            onSelectionChange={(keys) => {
+                                setSelectedLocationKeys(keys);
+                            }}
+                            searchPlaceholder="Buscar ubicaciones..."
+                            onSearch={onLocationSearch}
+                            loading={isLoadingLocations || isFetchingLocations}
+                            disabled={isPending}
+                            pagination={
+                                locationPagination
+                                    ? {
+                                        current: locationPagination.currentPage || 1,
+                                        pageSize: locationPagination.pageSize || 15,
+                                        total: locationPagination.totalItems || 0,
+                                        showSizeChanger: true,
+                                        showTotal: (total, range) =>
+                                            `${range[0]}-${range[1]} de ${total}`,
+                                        onChange: (page, pageSize) => {
+                                            onLocationPageChange?.(page, pageSize);
+                                        },
+                                        pageSizeOptions: ["10", "15", "20", "30"],
+                                        size: "small",
+                                    }
+                                    : false
+                            }
+                            emptyText="No hay ubicaciones disponibles"
+                        />
+
+                        {selectedLocationKeys.length === 0 && (
+                            <div className="text-red-600 text-xs mt-1 flex items-center gap-1">
+                                <InfoCircleOutlined />
+                                <span>Debe seleccionar al menos una ubicación</span>
+                            </div>
+                        )}
+                    </Space>
+                </div>
+            </div>
         </ProForm>
     );
 };

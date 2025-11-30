@@ -20,4 +20,5 @@ public class CreateServiceGroupDto
     public List<string> HealthcareServiceIds { get; set; } = new();
 
     [JsonPropertyName("locationIds")] public List<string> LocationIds { get; set; } = new();
+    public required string Description { get; set; } = string.Empty;
 }

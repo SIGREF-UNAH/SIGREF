@@ -1,10 +1,36 @@
 import { ServiceGroupForm } from "../components/ServiceGroupForm";
 import { useCreateServiceGroup, useServiceGroupForm } from "../hooks";
 import { PageHeaderTabs } from "../../../shared/components/ui";
+import { Spin } from "antd";
 
 export const CreateServiceGroupPage = () => {
   const { isPending, handleFinish } = useCreateServiceGroup();
-  const { handleCancel } = useServiceGroupForm();
+  const {
+    healthcares,
+    locations,
+    healthcarePagination,
+    locationPagination,
+    isLoadingHealthcares,
+    isLoadingLocations,
+    isFetchingHealthcares,
+    isFetchingLocations,
+    setHealthcarePageNumber,
+    setHealthcarePageSize,
+    setHealthcareSearch,
+    setLocationPageNumber,
+    setLocationPageSize,
+    setLocationSearch,
+    isLoading,
+    handleCancel,
+  } = useServiceGroupForm();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Spin size="large" tip="Cargando datos..." />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -22,7 +48,7 @@ export const CreateServiceGroupPage = () => {
             path: "/service-groups/create",
           },
         ]}
-        defaultActive="listar"
+        defaultActive="crear"
       />
 
       <div className="p-6 border-2 bg-card border-gray-300 shadow-md rounded-lg">
@@ -30,6 +56,24 @@ export const CreateServiceGroupPage = () => {
           <h2 className="text-2xl font-bold text-gray-800">Crear Paquete</h2>
         </div>
         <ServiceGroupForm
+          healthcares={healthcares}
+          locations={locations}
+          healthcarePagination={healthcarePagination}
+          locationPagination={locationPagination}
+          isLoadingHealthcares={isLoadingHealthcares}
+          isLoadingLocations={isLoadingLocations}
+          isFetchingHealthcares={isFetchingHealthcares}
+          isFetchingLocations={isFetchingLocations}
+          onHealthcarePageChange={(page, pageSize) => {
+            setHealthcarePageNumber(page);
+            setHealthcarePageSize(pageSize);
+          }}
+          onLocationPageChange={(page, pageSize) => {
+            setLocationPageNumber(page);
+            setLocationPageSize(pageSize);
+          }}
+          onHealthcareSearch={setHealthcareSearch}
+          onLocationSearch={setLocationSearch}
           onFinish={handleFinish}
           onCancel={handleCancel}
           submitButtonText="Crear paquete"

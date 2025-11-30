@@ -62,8 +62,8 @@ public static class ServiceGroupExtensions
             Code = dto.Code?.ToFhirCodeableConcept(),
             DateElement = new FhirDateTime(DateTime.Now),
             Entry = new List<FhirList.EntryComponent>(),
-            Extension = new List<Extension>(),
-        };
+            Note = [new Annotation(){Text =  dto.Description}],
+         };
 
         // Agregar servicios de salud como entries
         if (dto.HealthcareServiceIds != null)
@@ -97,6 +97,7 @@ public static class ServiceGroupExtensions
         if (!string.IsNullOrEmpty(dto.Title)) list.Title = dto.Title;
         if (dto.Status != list.Status) list.Status = dto.Status;
         if (dto.Code != null) list.Code = dto.Code.ToFhirCodeableConcept();
+        if (!string.IsNullOrEmpty(dto.Description)) list.Note = [new Annotation(){Text = dto.Description}];
 
         // Actualizar servicios de salud y ubicaciones como entries
         if (dto.HealthcareServiceIds != null || dto.LocationIds != null)

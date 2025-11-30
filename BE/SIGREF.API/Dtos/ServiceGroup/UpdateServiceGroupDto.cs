@@ -19,4 +19,6 @@ public class UpdateServiceGroupDto
     public List<string>? HealthcareServiceIds { get; set; }
 
     [JsonPropertyName("locationIds")] public List<string>? LocationIds { get; set; }
+    
+    [JsonPropertyName("description")] public string? Description { get; set; }
 }

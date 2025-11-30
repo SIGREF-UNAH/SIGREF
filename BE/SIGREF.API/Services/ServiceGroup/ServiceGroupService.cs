@@ -1,6 +1,8 @@
 #nullable enable
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
+using Microsoft.EntityFrameworkCore;
+using SIGREF.API.Database;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.ServiceGroup;
 using SIGREF.API.Extensions;
@@ -10,7 +12,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace SIGREF.API.Services.ServiceGroup;
 
-public class ServiceGroupService(FhirClient fhirService)
+public class ServiceGroupService(FhirClient fhirService, SIGREFContext dbContext)
 {
     public async Task<(List<ServiceGroupDto>, PaginationDto)> GetFilteredServiceGroupsAsync(ServiceGroupFilterDto filter)
     {
@@ -67,6 +69,9 @@ public class ServiceGroupService(FhirClient fhirService)
                     .Select(s => s.ToSimplifiedDto())  // DTO simplificado
                     .ToList();
 
+                // Enriquecer con precios desde PostgreSQL
+                await EnrichServicesWithPricesAsync(activeServices);
+
                 dto.HealthcareService = activeServices;
 
                 var locationIds = list.Entry
@@ -79,7 +84,7 @@ public class ServiceGroupService(FhirClient fhirService)
                     .Where(l => locationIds.Contains(l.Id))
                     .Select(l => l.ToSimplifiedDto())];  // DTO simplificado
 
-                // Calcular precio total (por ahora será 0, se actualizará cuando se integre Postgres)
+                // Calcular precio total
                 dto.TotalPrice = activeServices.Sum(s => s.Price ?? 0);
             }
 
@@ -130,6 +135,9 @@ public class ServiceGroupService(FhirClient fhirService)
                 .Where(svc => serviceIds.Contains(svc.Id) && svc.Active == true)  // Solo activos
                 .Select(svc => svc.ToSimplifiedDto())  // DTO simplificado
                 .ToList();
+
+            // Enriquecer con precios desde PostgreSQL
+            await EnrichServicesWithPricesAsync(activeServiceDtos);
 
             dto.HealthcareService = activeServiceDtos;
 
@@ -189,6 +197,34 @@ public class ServiceGroupService(FhirClient fhirService)
         catch (FhirOperationException ex) when (ex.Status == System.Net.HttpStatusCode.NotFound)
         {
             return null;
+        }
+    }
+
+    /// <summary>
+    /// Obtiene los precios de los servicios desde la base de datos PostgreSQL y los asigna a los DTOs
+    /// </summary>
+    private async Task EnrichServicesWithPricesAsync(List<ServiceGroupHealthcareDto> serviceDtos)
+    {
+        if (serviceDtos == null || serviceDtos.Count == 0) return;
+
+        // Obtener los IDs de FHIR de los servicios
+        var fhirServiceIds = serviceDtos.Select(s => s.Id).Where(id => !string.IsNullOrEmpty(id)).ToList();
+        
+        if (fhirServiceIds.Count == 0) return;
+
+        // Consultar la base de datos para obtener los precios
+        var servicePrices = await dbContext.HealthServices
+            .Where(hs => fhirServiceIds.Contains(hs.HealthServiceIdFHIR))
+            .Select(hs => new { hs.HealthServiceIdFHIR, hs.Price })
+            .ToDictionaryAsync(x => x.HealthServiceIdFHIR, x => x.Price);
+
+        // Asignar los precios a los DTOs
+        foreach (var serviceDto in serviceDtos)
+        {
+            if (!string.IsNullOrEmpty(serviceDto.Id) && servicePrices.TryGetValue(serviceDto.Id, out var price))
+            {
+                serviceDto.Price = price;
+            }
         }
     }
 }
