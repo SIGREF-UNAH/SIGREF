@@ -1,5 +1,5 @@
-import CreatePractitionerForm from "../components/ui/CreatePractitionerForm";
 import { PageHeaderTabs } from "../../../shared/components";
+import PractitionerForm from "../components/ui/PractitionerForm";
 
 export const CreatePractitionerPage = () => {
   return (
@@ -22,8 +22,8 @@ export const CreatePractitionerPage = () => {
         defaultActive="listar"
       />
 
-      {/* Form */}
-      <CreatePractitionerForm />
+      {/* Create Practitioner Form */}
+      <PractitionerForm />
     </div>
   );
 };
