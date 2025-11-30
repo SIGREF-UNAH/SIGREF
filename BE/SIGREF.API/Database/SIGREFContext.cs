@@ -23,8 +23,7 @@ public class SIGREFContext : DbContext
 
     public DbSet<MediaFileEntity> MediaFiles { get; set; } = default!;
     // --- Catálogos ---
-    public DbSet<HealthServicePackagesEntity> HealthServicePackages { get; set; } = default!;
-    public DbSet<LocationHealthServicePackageEntity> LocationHealthServicePackages { get; set; } = default!;
+    public DbSet<HealthService> HealthServices { get; set; } = default!;
 
     // --- Facturación ---
     public DbSet<InvoiceEntity> Invoices { get; set; } = default!;

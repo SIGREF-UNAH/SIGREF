@@ -64,5 +64,23 @@ namespace SIGREF.API.Helpers
                 Pagination = pagination
             };
         }
+        
+        /// <summary>
+        /// Extrae los recursos de tipo <typeparamref name="T"/> de un <see cref="Bundle"/> y devuelve un PagedResult.
+        /// </summary>
+        public static (Bundle,PaginationDto ) ToPagedResult(Bundle bundle, int pageNumber, int pageSize)
+        {
+ 
+            var totalItems = bundle.Total?? 0;
+
+            PaginationDto pagination = BuildPagination(
+                totalItems,
+                pageNumber,
+                pageSize,
+                hasNextLink: bundle.NextLink != null
+            );
+
+            return (bundle, pagination);
+        }
     }
 }

@@ -1,0 +1,4 @@
+{
+  "appHostPath": "../SIGREF.API.AppHost/SIGREF.API.AppHost.csproj",
+    "appPath": "../SIGREF.API/SIGREF.API.csproj"
+}

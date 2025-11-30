@@ -1,4 +1,5 @@
 ﻿namespace SIGREF.API.Constants;
+
 public static class RolesConstants
 {
     // ========== Roles de usuario que se pueden asignar ==========
@@ -10,6 +11,11 @@ public static class RolesConstants
     public const string ti = nameof(ti); // Tecnico de informatica
 
     public const string auditor = nameof(auditor); // Auditor
+
+    public const string AllRoles = $"{cashier},{admin},{ti},{auditor}";
+    
+     
+    
 }
 
 
