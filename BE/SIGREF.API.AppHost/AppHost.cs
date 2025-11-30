@@ -68,7 +68,7 @@ var keycloak = builder.AddKeycloak("keycloak", 8080, keyCloakUser, keyCloakPass)
     .WithEnvironment("KC_DB_USERNAME", postgresUsername)
     .WithEnvironment("KC_DB_PASSWORD", postgresPassword)
     .WithEnvironment("KC_HOSTNAME", "localhost")
- 
+    .WithBindMount("./config/themes", "/opt/keycloak/themes")
     .WaitFor(keycloakDb)
     .PublishAsContainer();
 
