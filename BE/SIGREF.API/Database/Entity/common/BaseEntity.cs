@@ -26,16 +26,10 @@ public abstract class BaseEntity
     [Required]
     [Column("created_by_id")]
     public Guid CreatedById { get; set; }
-
-    [ForeignKey(nameof(CreatedById))]
-    public UserLinkEntity CreatedBy { get; set; } = null!;
-
+    
     [Column("updated_by_id")]
     public Guid? UpdatedById { get; set; }
-
-    [ForeignKey(nameof(UpdatedById))]
-    public UserLinkEntity? UpdatedBy { get; set; }
-
+    
     [Required]
     [Column("created_date")]
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;

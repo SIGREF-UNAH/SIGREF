@@ -10,7 +10,6 @@ public class HospitalPropertiesEntity : BaseEntity
     // ===============================
     //        DATOS GENERALES
     // ===============================
-
     [Required]
     [StringLength(200)]
     [Column("name")]
@@ -29,12 +28,20 @@ public class HospitalPropertiesEntity : BaseEntity
     public string? Ubication { get; set; }
 
     // ===============================
-    //       IMÁGENES / LOGOS
+    //       IMEGES / LOGOS
     // ===============================
 
+    // ID del archivo en media_files
+    [Column("logo_media_id")]
+    public Guid? LogoMediaId { get; set; }
+
+    // URL publica construida
     [StringLength(300)]
     [Column("url_logo")]
     public string? UrlLogo { get; set; }
+
+    [Column("health_logo_media_id")]
+    public Guid? HealthLogoMediaId { get; set; }
 
     [StringLength(300)]
     [Column("url_logo_health")]
@@ -43,7 +50,6 @@ public class HospitalPropertiesEntity : BaseEntity
     // ===============================
     //       CONTACTO
     // ===============================
-
     [StringLength(20)]
     [Column("phone_number")]
     public string? PhoneNumber { get; set; }
@@ -56,12 +62,13 @@ public class HospitalPropertiesEntity : BaseEntity
     // ===============================
     //       DATOS ADICIONALES
     // ===============================
-
     [StringLength(20)]
     [Column("hospital_code")]
-    public string? HospitalCode { get; set; } // Código identificador interno
+    public string? HospitalCode { get; set; }
 
-    [StringLength(50)] [Column("rtn")] public string? RTN { get; set; } // Identificación fiscal (si aplica)
+    [StringLength(50)]
+    [Column("rtn")]
+    public string? RTN { get; set; }
 
     [StringLength(200)]
     [Url]
@@ -70,16 +77,16 @@ public class HospitalPropertiesEntity : BaseEntity
 
     [StringLength(10)]
     [Column("currency")]
-    public string Currency { get; set; } = "LPS"; // Moneda del sistema
+    public string Currency { get; set; } = "LPS";
 
-    [StringLength(10)]
-    [Column("exchange_version")]
-    public string? ExchangeVersion { get; set; } // Versión del tipo de cambio usado
+    // TODO : EL DIA QUE SE MANEJEN 2 TIPOS DE MONEDAS SERA NECESARIO ESTAR GUARDANDO CON EL TIPO DE CAMBIO UTILIZADO
+    //[StringLength(10)]
+    //[Column("exchange_version")]
+    //public string? ExchangeVersion { get; set; }
 
     // ===============================
     //      CONTROL DEL SISTEMA
     // ===============================
-
-    [Column("is_singleton")] public bool IsSingleton { get; set; } = true;
-    // Útil para controlar que solo exista un registro
+    [Column("is_singleton")]
+    public bool IsSingleton { get; set; } = true;
 }
