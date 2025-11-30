@@ -51,6 +51,7 @@ public static class HapiResourceExtensions
         var resourceBuilder = builder.AddResource(resource)
             .WithImage(image, tag)
             .WithHttpEndpoint(port: port, targetPort: 8080, name: HapiResource.PrimaryEndpointName)
+                            
             .PublishAsContainer();
 
         return resourceBuilder;
@@ -74,8 +75,7 @@ public static class HapiResourceExtensions
         return builder
             .WithReference(postgresServer)
             .WithReference(database)
-            .WithEnvironment("JAVA_TOOL_OPTIONS", "-Djava.net.preferIPv4Stack=true")
-            .WithEnvironment("SPRING_DATASOURCE_URL",
+             .WithEnvironment("SPRING_DATASOURCE_URL",
                ReferenceExpression.Create($"jdbc:postgresql://{postgresServer.Resource.Name}:5432/{database.Resource.DatabaseName}"))
             .WithEnvironment("SPRING_DATASOURCE_USERNAME", username)
             .WithEnvironment("SPRING_DATASOURCE_PASSWORD", password)

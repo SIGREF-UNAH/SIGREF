@@ -3,7 +3,7 @@ using Projects;
 using SIGREF.API.AppHost;
 
 var builder = DistributedApplication.CreateBuilder(args);
-
+// builder.AddDockerComposeEnvironment("env");
 // =============================================================
 // POSTGRESQL - Instancia principal (HAPI, Keycloak, SIGREF)
 // =============================================================
@@ -11,22 +11,23 @@ var postgresUsername = builder.AddParameter("postgres-username");
 var postgresPassword = builder.AddParameter("postgres-password", secret: true);
 
 var postgres = builder.AddPostgres("postgres", postgresUsername, postgresPassword)
-    .WithImage("postgres", "17")
     .WithEnvironment("POSTGRES_DB", builder.Configuration["Parameters:postgres-db"] ?? "postgres")
-    .WithBindMount("./data/postgres", "/var/lib/postgresql/data")
-    .WithBindMount("./config/init-db.sql", "/docker-entrypoint-initdb.d/init-db.sql")
-    .WithHostPort(5432);
+     .WithDataVolume("data-postgres",isReadOnly:false)
+     .WithHostPort(5432)
+     // .WithInitFiles("./config/init-db.sql")
+    ;
 
 if (builder.ExecutionContext.IsRunMode)
 {
     postgres.WithPgAdmin(builder =>
     {
         builder
-            .WithImage("dpage/pgadmin4", "latest");
+            .WithImage("dpage/pgadmin4", "latest")
+            ;
      });
 }
 
-var creationScript = "CREATE DATABASE {{databaseName}};";
+var creationScript = "CREATE DATABASE  {{databaseName}};";
 var hapiDb = postgres.AddDatabase("hapi")
     .WithCreationScript(creationScript.Replace("{{databaseName}}", "hapi"));
 var sigrefDb = postgres.AddDatabase("sigref")
@@ -43,7 +44,7 @@ var mongoPassword = builder.AddParameter("mongodb-password", secret: true);
 var mongoPort = 27017;
 
 var mongoSigrefLogs = builder.AddMongoDB("mongo-sigref-logs", mongoPort, mongoUser, mongoPassword)
-    .WithBindMount("./data/mongo-sigref-logs", "/data/db")
+    .WithDataVolume("data-mongo-sigref-logs")
     .AddDatabase("sigref-logs");
 
 // =============================================================
@@ -59,6 +60,11 @@ var keycloak = builder.AddKeycloak("keycloak", 8080, keyCloakUser, keyCloakPass)
     .WithEnvironment("KC_HOSTNAME_STRICT", "false")
     .WithEnvironment("KC_HTTP_RELATIVE_PATH", "/keycloak")
     .WithEnvironment("KC_HEALTH_ENABLED", "true")
+    .WithEnvironment("KC_DB", "postgres")
+    .WithEnvironment("KC_DB_URL", keycloakDb.Resource.JdbcConnectionString)
+    .WithEnvironment("KC_DB_USERNAME", postgresUsername)
+    .WithEnvironment("KC_DB_PASSWORD", postgresPassword)
+    .WithEnvironment("KC_HOSTNAME", "localhost")
     .WaitFor(keycloakDb)
     .PublishAsContainer();
 
@@ -66,9 +72,9 @@ var keycloak = builder.AddKeycloak("keycloak", 8080, keyCloakUser, keyCloakPass)
 // HAPI FHIR - Servidor de Datos Clínicos
 // =============================================================
 var hapi = builder
-    .AddHapiFhir("hapi-fhir")
+    .AddHapiFhir("hapifhir")
     .WithPostgresDatabase(postgres, hapiDb, postgresUsername, postgresPassword)
-    .WithConfigurationFile("./config/hapi.application.yaml");
+    ;
 
 // =============================================================
 // SIGREF.API - API Principal del Sistema para Receptoría de Fondos
@@ -76,10 +82,11 @@ var hapi = builder
 var sigrefApi = builder
      // .AddDockerfile("sigref-api", "../", "SIGREF.API/Dockerfile")
      .AddProject<SIGREF_API>("sigref-api")
-    .WithReference(hapiDb)
-    .WithReference(sigrefDb)
+     .WithReference(sigrefDb)
     .WithReference(mongoSigrefLogs)
-    .WithReference(keycloak);
+    .WithReference(keycloak) 
+    .WithReference(hapi)
+    ;
 
 
 // =============================================================
@@ -93,7 +100,8 @@ var yarpProxy = builder.AddYarp("gateway")
         // yarp.AddRoute(catalogService);
 
         // Add specific path route with transforms
-        yarp.AddRoute("/api/{**catch-all}", sigrefApi);
+        yarp.AddRoute("/api/{**catch-all}", sigrefApi.GetEndpoint("http"))
+            .WithTransformPathRemovePrefix("/api");
 
 
         // Add specific path route with transforms
