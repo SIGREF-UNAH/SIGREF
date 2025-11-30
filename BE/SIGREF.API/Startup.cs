@@ -14,9 +14,13 @@ using SIGREF.API.Services.PractitionerRole;
 using SIGREF.API.Services.ServiceGroup;
 using System.Security.Claims;
 using System.Text.Json;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.FileProviders;
 using SIGREF.API.Services.Auth;
 using MongoDB.Driver;
+using SIGREF.API.Services.AdministrationHospital;
+using SIGREF.API.Services.Auth.Keycloak;
+using SIGREF.API.Services.Cashier;
+using SIGREF.API.Services.Files;
 
 
 namespace SIGREF.API;
@@ -30,7 +34,7 @@ public class Startup
         this._configuration = configuration;
     }
 
-    public void ConfigureServices(IServiceCollection services,  WebApplicationBuilder applicationBuilder)
+    public void ConfigureServices(IServiceCollection services, WebApplicationBuilder applicationBuilder)
     {
         // Configurar las opciones de variables de entorno
         services.Configure<Env>(_configuration);
@@ -48,17 +52,33 @@ public class Startup
         services.AddScoped<TiposUbicacionSeeder>();
         services.AddScoped<SIGREFSeeder>();
 
-        // Registrar FhirService (opcional si aún lo necesitas)
+        // ================= HEALTH SERVICES ===============
         services.AddScoped<LocationService>();
         services.AddScoped<HealthcareService>();
         services.AddScoped<IPatientService, PatientService>();
         services.AddScoped<IPractitionerRoleService, PractitionerRoleService>();
         services.AddScoped<IPractitionerService, PractitionerService>();
         services.AddScoped<IOrganizationService, OrganizationService>();
-
         services.AddScoped<ServiceGroupService>();
 
-        services.AddScoped<KeycloakAdminService>();
+        services.AddScoped<IUserContextService, UserContextService>();
+        // ================ SIGREF SERVICES =======================
+        services.AddScoped<IShiftService, ShiftService>();
+        services.AddScoped<ICashierSessionService, CashierSessionService>();
+        services.AddScoped<IHospitalPropertiesService, HospitalPropertiesService>();
+        services.AddScoped<IMediaFileService, MediaFileService>();
+
+
+        // ==============================================================
+        //  KEYCLOAK CLIENT + ADMIN SERVICE 
+        // ==============================================================
+
+        // Cliente HTTP para Keycloak
+        services.AddHttpClient<IKeycloakClient, KeycloakClient>();
+
+        // Servicio administrador de Keycloak
+        services.AddScoped<IKeycloakAdminService, KeycloakAdminService>();
+
 
         services.AddControllers();
         services.AddEndpointsApiExplorer();
@@ -72,9 +92,27 @@ public class Startup
         // No entiendo por que se enlazaba ese contexto aqui, si directamente se utiliza un client
         // el contexto es para tener acceso directo a la base de datos ejemplo contex.users
         //services.AddNpgsql<HapiContext>("hapi");
-
         // MongoDB is now configured via builder.AddMongoDBClient() in Program.cs
         // IMongoClient is automatically available via DI
+        
+        // ================= MVC / Swagger ===================
+        services.AddControllers();
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen();
+        services.AddHttpContextAccessor();
+
+
+        // ================= DATABASES ========================
+
+        // SIGREF (PostgreSQL via Aspire)
+        //services.AddNpgsql<SIGREFContext>("sigref");
+
+
+        services.AddScoped<IUserContextService, UserContextService>();
+
+
+        // ================== MONGO LOGGING ==================
+       // services.Configure<MongoSettings>(_configuration.GetSection("Mongo"));
 
         // Optional: Register IMongoDatabase if needed by services
         services.AddSingleton<IMongoDatabase>(sp =>
@@ -84,11 +122,11 @@ public class Startup
         });
 
         services.AddHttpContextAccessor();
-        
+
         services.AddAuthentication()
             .AddKeycloakJwtBearer(
                 serviceName: "keycloak",
-                realm:   _configuration["Keycloak:RealmName"],
+                realm: _configuration["Keycloak:RealmName"],
                 options =>
                 {
                     options.Audience = _configuration["Keycloak:Audience"];
@@ -116,7 +154,8 @@ public class Startup
                             if (identity == null) return Task.CompletedTask;
 
                             // Usar RolesConstants existente
-                            var validRoles = new[] {
+                            var validRoles = new[]
+                            {
                                 RolesConstants.cashier,
                                 RolesConstants.admin,
                                 RolesConstants.ti,
@@ -187,11 +226,23 @@ public class Startup
             app.UseSwaggerUI();
         }
 
-        // app.UseHttpsRedirection();
+        app.UseHttpsRedirection();
 
         app.UseCors("CorsPolicy");
 
         app.UseRouting();
+
+        //
+        var mediaPath = Path.Combine(env.ContentRootPath, "media");
+        if (!Directory.Exists(mediaPath))
+            Directory.CreateDirectory(mediaPath);
+
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = new PhysicalFileProvider(mediaPath),
+            RequestPath = "/media"
+        });
+
 
         app.UseAuthentication();
 

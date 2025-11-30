@@ -14,10 +14,10 @@ Bruno/
 bruno/
 
 # Ignorar la carpeta de migraciones
-SIGREF.API/Migrations
+#SIGREF.API/Migrations
 
 # Ignorar la carpeta de migraciones
-SIGREF.API/Migrations/
+#SIGREF.API/Migrations/
 
 # User-specific files
 *.suo

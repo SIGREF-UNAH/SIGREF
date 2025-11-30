@@ -27,9 +27,6 @@ public class ReportHistoryEntity : BaseEntity
     [Column("created_by_user_id")]
     public Guid CreatedByUserId { get; set; }
 
-    [ForeignKey(nameof(CreatedByUserId))] public UserLinkEntity? CreatedByUser { get; set; }
-
-
     // ===============================
     //          SQL GENERADO
     // ===============================

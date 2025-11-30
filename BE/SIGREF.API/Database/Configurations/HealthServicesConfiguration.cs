@@ -83,10 +83,7 @@ public class HealthServicesConfiguration : IEntityTypeConfiguration<HealthServic
         //          RELACIONES
         // ============================
 
-        builder.HasOne(x => x.CreatedBy)
-            .WithMany()
-            .HasForeignKey(x => x.CreatedById)
-            .OnDelete(DeleteBehavior.Restrict);
+        
 
 
 
