@@ -101,29 +101,4 @@ var sigrefApi = builder
     ;
 
 
-// =============================================================
-// YARP - Reverse Proxy
-// =============================================================
-builder.AddYarp("gateway")
-    .WithHostPort(5000)
-    .WithConfiguration(yarp =>
-    {
-        // // Add catch-all route for frontend service
-        // yarp.AddRoute(catalogService);
-
-        // Add specific path route with transforms
-        yarp.AddRoute("/api/{**catch-all}", sigrefApi.GetEndpoint("http"))
-            .WithTransformPathRemovePrefix("/api");
-
-
-        // Add specific path route with transforms
-        yarp.AddRoute("/keycloak/{**catch-all}", keycloak);
-
-        yarp.AddRoute("/hapi/fhir/{**catch-all}", hapi)
-            .WithTransformPathRemovePrefix("/hapi");
-
-
-   
-    });
-
 builder.Build().Run();
