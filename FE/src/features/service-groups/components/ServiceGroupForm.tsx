@@ -6,7 +6,7 @@ import type {
     LocationDto,
     PaginationDto,
 } from "../../../api/models";
-import { ProForm, ProFormText, ProFormSelect } from "@ant-design/pro-components";
+import { ProForm, ProFormText, ProFormTextArea, ProFormSelect } from "@ant-design/pro-components";
 import { Tag, Typography, Badge, Space, Button } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
@@ -146,7 +146,7 @@ export const ServiceGroupForm = ({
             },
             healthcareServiceIds: selectedHealthcareKeys as string[],
             locationIds: selectedLocationKeys as string[],
-            description: values.description || null,
+            description: values.description || "",
         };
 
         await onFinish(serviceGroupData);
@@ -168,6 +168,7 @@ export const ServiceGroupForm = ({
                             Cancelar
                         </Button>
                         <Button
+                            htmlType="submit"
                             disabled={
                                 isPending ||
                                 selectedHealthcareKeys.length === 0 ||
@@ -237,12 +238,13 @@ export const ServiceGroupForm = ({
                     />
                 </div>
 
-                <ProFormText
+                <ProFormTextArea
                     name="description"
                     label="Descripción"
                     placeholder="Ej. Paquete que incluye servicios básicos de atención primaria"
                     fieldProps={{
                         disabled: isPending,
+                        rows: 3,
                     }}
                 />
             </div>

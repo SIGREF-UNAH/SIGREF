@@ -19,6 +19,7 @@ public static class ServiceGroupExtensions
             Title = list.Title,
             Code = list.Code?.ToCodeableConceptDto(),
             Date = list.DateElement?.ToDateTime()?.ToDateTimeOffset(TimeSpan.Zero).DateTime,
+            Description = list.Note?.FirstOrDefault()?.Text,
             // Items serán poblados en el service (ya no aquí)
             HealthcareService = [],
             Locations = [],
