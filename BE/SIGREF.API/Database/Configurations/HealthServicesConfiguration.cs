@@ -4,9 +4,9 @@ using SIGREF.API.Database.Entity.Catalogs;
 
 namespace SIGREF.API.Database.Configurations;
 
-public class HealthServicesConfiguration : IEntityTypeConfiguration<HealthServicesEntity>
+public class HealthServicesConfiguration : IEntityTypeConfiguration<HealthService>
 {
-    public void Configure(EntityTypeBuilder<HealthServicesEntity> builder)
+    public void Configure(EntityTypeBuilder<HealthService> builder)
     {
         builder.ToTable("health_services",
             t =>
@@ -35,7 +35,7 @@ public class HealthServicesConfiguration : IEntityTypeConfiguration<HealthServic
         //     .HasMaxLength(300)
         //     .HasComment("Descripción del servicio.");
 
-        builder.Property(x => x.HealthServiceIdFHIR)
+        builder.Property(x => x.HealthServiceFhirId)
             .HasColumnName("health_service_id_fhir")
             .HasMaxLength(64)
             .IsRequired()
@@ -94,7 +94,7 @@ public class HealthServicesConfiguration : IEntityTypeConfiguration<HealthServic
         //          ÍNDICES
         // ============================
 
-        builder.HasIndex(x => x.HealthServiceIdFHIR)
+        builder.HasIndex(x => x.HealthServiceFhirId)
             .IsUnique()
             .HasDatabaseName("idx_health_services_fhir");
 

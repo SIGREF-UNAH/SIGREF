@@ -16,4 +16,6 @@ export interface UpdateServiceGroupDto {
   healthcareServiceIds?: string[] | null;
   /** @nullable */
   locationIds?: string[] | null;
+  /** @nullable */
+  description?: string | null;
 }

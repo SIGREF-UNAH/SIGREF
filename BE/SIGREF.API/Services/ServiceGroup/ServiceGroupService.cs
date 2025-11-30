@@ -214,8 +214,8 @@ public class ServiceGroupService(FhirClient fhirService, SIGREFContext dbContext
 
         // Consultar la base de datos para obtener los precios
         var servicePrices = await dbContext.HealthServices
-            .Where(hs => fhirServiceIds.Contains(hs.HealthServiceIdFHIR))
-            .Select(hs => new { hs.HealthServiceIdFHIR, hs.Price })
+            .Where(hs => fhirServiceIds.Contains(hs.HealthServiceFhirId))
+            .Select(hs => new { HealthServiceIdFHIR = hs.HealthServiceFhirId, hs.Price })
             .ToDictionaryAsync(x => x.HealthServiceIdFHIR, x => x.Price);
 
         // Asignar los precios a los DTOs

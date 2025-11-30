@@ -146,6 +146,7 @@ export const ServiceGroupForm = ({
             },
             healthcareServiceIds: selectedHealthcareKeys as string[],
             locationIds: selectedLocationKeys as string[],
+            description: values.description || null,
         };
 
         await onFinish(serviceGroupData);
@@ -183,6 +184,7 @@ export const ServiceGroupForm = ({
                 title: initialValues?.title || "",
                 abbreviation: abbreviation,
                 status: initialValues?.status || ListStatus.Current,
+                description: initialValues?.description || "",
             }}
         >
             {/* Información General */}
@@ -193,7 +195,7 @@ export const ServiceGroupForm = ({
                     </Text>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <ProFormText
                         name="title"
                         label="Nombre del Paquete"
@@ -234,6 +236,15 @@ export const ServiceGroupForm = ({
                         }}
                     />
                 </div>
+
+                <ProFormText
+                    name="description"
+                    label="Descripción"
+                    placeholder="Ej. Paquete que incluye servicios básicos de atención primaria"
+                    fieldProps={{
+                        disabled: isPending,
+                    }}
+                />
             </div>
 
             {/* Tablas de Selección */}

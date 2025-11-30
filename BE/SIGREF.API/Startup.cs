@@ -67,8 +67,7 @@ public class Startup
 
         // Configuración de PostgreSQL con Aspire
         // ========================================================
-        // Base de datos SIGREF (Gestion de Receptoraa de Fondos)
-        services.AddNpgsql<SIGREFContext>("sigref");
+        // NOTA: AddNpgsql ahora está en Program.cs donde debe estar en Aspire 9
         // Base de datos HAPI FHIR
         // No entiendo por que se enlazaba ese contexto aqui, si directamente se utiliza un client
         // el contexto es para tener acceso directo a la base de datos ejemplo contex.users

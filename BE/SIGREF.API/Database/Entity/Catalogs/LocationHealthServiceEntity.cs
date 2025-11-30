@@ -24,5 +24,5 @@ public class LocationHealthServiceEntity : BaseEntity
     public LocationEntity? Location { get; set; }
 
     [ForeignKey(nameof(ServiceId))]
-    public HealthServicesEntity? Service { get; set; }
+    public HealthService? Service { get; set; }
 }

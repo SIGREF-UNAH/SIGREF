@@ -22,7 +22,7 @@ public class SIGREFContext : DbContext
     public DbSet<HospitalPropertiesEntity> HospitalProperties { get; set; } = default!;
 
     // --- Catálogos ---
-    public DbSet<HealthServicesEntity> HealthServices { get; set; } = default!;
+    public DbSet<HealthService> HealthServices { get; set; } = default!;
     public DbSet<HealthServicePackagesEntity> HealthServicePackages { get; set; } = default!;
     public DbSet<HealthServicesPackagesNnEntity> HealthServicesPackagesNn { get; set; } = default!;
     public DbSet<LocationEntity> Locations { get; set; } = default!;

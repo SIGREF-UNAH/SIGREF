@@ -23,4 +23,6 @@ export interface ServiceGroupDto {
   /** @nullable */
   locations?: ServiceGroupLocationDto[] | null;
   totalPrice?: number;
+  /** @nullable */
+  description?: string | null;
 }
