@@ -104,7 +104,7 @@ var sigrefApi = builder
 // =============================================================
 // YARP - Reverse Proxy
 // =============================================================
-var yarpProxy = builder.AddYarp("gateway")
+builder.AddYarp("gateway")
     .WithHostPort(5000)
     .WithConfiguration(yarp =>
     {
