@@ -20,7 +20,7 @@ public class HealthServicesPackagesNnEntity: BaseEntity
     public Guid PackageId { get; set; }
 
     [ForeignKey(nameof(HealthServiceId))]
-    public HealthServicesEntity? HealthService { get; set; }
+    public HealthService? HealthService { get; set; }
 
     [ForeignKey(nameof(PackageId))]
     public HealthServicePackagesEntity? Package { get; set; }

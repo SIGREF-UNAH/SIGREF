@@ -4,6 +4,10 @@ using SIGREF.API.Database.Entity.Administration;
 using SIGREF.API.Database.Entity.common;
 
 namespace SIGREF.API.Database.Entity.Cashier;
+// crearTurno
+// ui nos envia  location_id y propiedades del turno
+// vallidar  ue la location exista en fhir y esté habilitada (opcional)
+// se manda a crear la entidad a nuestra db
 
 [Table("shifts")]
 public class ShiftEntity : BaseEntity
@@ -15,9 +19,7 @@ public class ShiftEntity : BaseEntity
     [Required]
     [Column("location_id")]
     public Guid LocationId { get; set; }
-
-    [ForeignKey(nameof(LocationId))]
-    public LocationEntity? Location { get; set; }
+ 
 
 
     // ======================================

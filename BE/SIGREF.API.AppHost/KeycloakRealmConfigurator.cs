@@ -16,19 +16,14 @@ public static class KeycloakRealmConfigurator
     public static IResourceBuilder<ContainerResource> AddKeycloakWithAutoSetup(
         this IDistributedApplicationBuilder builder,
         string containerName,
-        IResourceBuilder<PostgresServerResource>? postgresResource = null,
-        string databaseName = "keycloak",
+        IResourceBuilder<PostgresDatabaseResource> dbResource,
         string? realmConfigPath = null)
     {
         realmConfigPath ??= DefaultRealmPath;
 
         EnsureRealmConfig(realmConfigPath);
 
-        postgresResource ??= builder.Resources.OfType<IResourceBuilder<PostgresServerResource>>().FirstOrDefault()
-            ?? throw new InvalidOperationException("No se encontró un recurso PostgreSQL en la aplicación.");
-
-        var keycloakDb = postgresResource.AddDatabase(databaseName);
-
+        var databaseName = dbResource.Resource.Name;
         var dbUser = Environment.GetEnvironmentVariable("KEYCLOAK_DB_USER") ?? "sigref";
         var dbPass = Environment.GetEnvironmentVariable("KEYCLOAK_DB_PASS") ?? "sigref";
         var adminUser = Environment.GetEnvironmentVariable("KEYCLOAK_ADMIN") ?? "admin";
@@ -37,8 +32,8 @@ public static class KeycloakRealmConfigurator
 
         var keycloak = CreateBaseKeycloakContainer(builder, containerName, databaseName, dbUser, dbPass, adminUser, adminPass, hostname)
             .WithBindMount(realmConfigPath, "/opt/keycloak/data/import/realm.json")
-            .WithArgs("start-dev", "--import-realm")
-            .WaitFor(postgresResource);
+            .WithArgs("start-dev", "--import-realm","--debug")
+            .WaitFor(dbResource);
 
         Console.WriteLine("[SIGREF] Keycloak se inicializará automáticamente con --import-realm.");
         Console.WriteLine($"[SIGREF] Realm generado dinámicamente desde variables .env → {realmConfigPath}");
