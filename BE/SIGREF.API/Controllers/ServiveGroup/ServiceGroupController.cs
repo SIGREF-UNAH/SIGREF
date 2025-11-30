@@ -10,7 +10,7 @@ namespace SIGREF.API.Controllers.ServiveGroup;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = RolesConstants.AllRoles)]
+[Authorize(Roles = $"{RolesConstants.admin},{RolesConstants.ti},{RolesConstants.auditor}")]
 public class ServiceGroupController(ServiceGroupService serviceGroupService) : ControllerBase
 {
     [HttpGet]

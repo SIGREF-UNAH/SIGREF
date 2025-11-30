@@ -64,10 +64,7 @@ public class HealthServicesConfiguration : IEntityTypeConfiguration<HealthServic
             .HasColumnName("created_by_id")
             .IsRequired()
             .HasComment("Usuario que creó el registro.");
-
-        builder.Property(x => x.ModifiedById)
-            .HasColumnName("modified_by_id")
-            .HasComment("Usuario que actualizó el registro.");
+ 
 
         builder.Property(x => x.CreatedDate)
             .HasColumnName("created_date")
@@ -91,10 +88,7 @@ public class HealthServicesConfiguration : IEntityTypeConfiguration<HealthServic
             .HasForeignKey(x => x.CreatedById)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(x => x.ModifiedBy)
-            .WithMany()
-            .HasForeignKey(x => x.ModifiedById)
-            .OnDelete(DeleteBehavior.Restrict);
+
 
         // ============================
         //          ÍNDICES
