@@ -15,12 +15,12 @@ namespace SIGREF.API.Services.Cashier;
 public class CashierSessionService : ICashierSessionService
 {
     private readonly SIGREFContext _db;
-    private readonly UserContextService _userContext;
+    private readonly IUserContextService _userContext;
 
-    public CashierSessionService(SIGREFContext db, UserContextService userContext)
+    public CashierSessionService(SIGREFContext db, IUserContextService userContext)
     {
-        _db = db;
         _userContext = userContext;
+        _db = db;
     }
 
     public async Task<ResponseDto<CashierSessionMinimalDto>> OpenSessionAsync(CreateCashierSessionDto dto)

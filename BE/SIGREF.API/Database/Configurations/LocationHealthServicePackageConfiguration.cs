@@ -42,6 +42,27 @@ public class LocationHealthServicePackageConfiguration : IEntityTypeConfiguratio
             .WithMany()
             .HasForeignKey(e => e.PackageId)
             .OnDelete(DeleteBehavior.Restrict);
+        
+        // ============================
+        //          AUDITORÍA
+        // ============================
+        builder.Property(x => x.CreatedById)
+            .HasColumnName("created_by_id")
+            .IsRequired()
+            .HasComment("ID del usuario que creó el registro.");
+
+        builder.Property(x => x.UpdatedById)
+            .HasColumnName("updated_by_id")
+            .HasComment("ID del usuario que realizó la última actualización.");
+
+        builder.Property(x => x.CreatedDate)
+            .HasColumnName("created_date")
+            .IsRequired()
+            .HasComment("Fecha de creación del turno (UTC).");
+
+        builder.Property(x => x.UpdatedDate)
+            .HasColumnName("updated_date")
+            .HasComment("Fecha de última actualización (UTC).");
 
         // ===============================
         //           ÍNDICES

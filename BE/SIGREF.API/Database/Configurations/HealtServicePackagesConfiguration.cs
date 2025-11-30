@@ -49,27 +49,26 @@ public class HealtServicePackagesConfiguration : IEntityTypeConfiguration<Health
             .IsRequired()
             .HasComment("Precio asignado al paquete. Se usa para facturación y reportes.");
 
+        // ============================
+        //          AUDITORÍA
+        // ============================
         builder.Property(x => x.CreatedById)
             .HasColumnName("created_by_id")
             .IsRequired()
-            .HasComment("ID del usuario (UserLink) que creó el registro.");
+            .HasComment("ID del usuario que creó el registro.");
 
         builder.Property(x => x.UpdatedById)
             .HasColumnName("updated_by_id")
-            .HasComment("ID del usuario (UserLink) que modificó por última vez el registro.");
+            .HasComment("ID del usuario que realizó la última actualización.");
 
         builder.Property(x => x.CreatedDate)
             .HasColumnName("created_date")
             .IsRequired()
-            .HasComment("Fecha de creación del registro (UTC).");
+            .HasComment("Fecha de creación del turno (UTC).");
 
         builder.Property(x => x.UpdatedDate)
             .HasColumnName("updated_date")
             .HasComment("Fecha de última actualización (UTC).");
-
-        builder.Property(x => x.LastSync)
-            .HasColumnName("last_sync")
-            .HasComment("Fecha de última sincronización realizada por procesos automáticos.");
 
         // ============================
         //        RELACIONES

@@ -13,11 +13,14 @@ using SIGREF.API.Services.Practitioner;
 using SIGREF.API.Services.PractitionerRole;
 using System.Security.Claims;
 using System.Text.Json;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using SIGREF.API.Services.Auth;
 using MongoDB.Driver;
+using SIGREF.API.Services.AdministrationHospital;
 using SIGREF.API.Services.Auth.Keycloak;
 using SIGREF.API.Services.Cashier;
+using SIGREF.API.Services.Files;
 
 
 namespace SIGREF.API;
@@ -57,9 +60,13 @@ public class Startup
     services.AddScoped<IPractitionerService, PractitionerService>();
     services.AddScoped<IOrganizationService, OrganizationService>();
     
-    
+    services.AddScoped<IUserContextService, UserContextService>();
     // ================ SIGREF SERVICES =======================
     services.AddScoped<IShiftService, ShiftService>();
+    services.AddScoped<ICashierSessionService, CashierSessionService>();
+    services.AddScoped<IHospitalPropertiesService, HospitalPropertiesService>();
+    services.AddScoped<IMediaFileService, MediaFileService>();
+
 
 
     // ==============================================================
@@ -71,7 +78,9 @@ public class Startup
 
     // Servicio administrador de Keycloak
     services.AddScoped<IKeycloakAdminService, KeycloakAdminService>();
-
+    
+    
+    
 
     // ================= MVC / Swagger ===================
     services.AddControllers();
@@ -192,7 +201,7 @@ public class Startup
     });
 
     services.AddAuthorization();
-
+    
 
     // ================== CORS ==================
     services.AddCors(opt =>
@@ -218,6 +227,20 @@ public class Startup
         app.UseCors("CorsPolicy");
 
         app.UseRouting();
+        
+        //
+        var mediaPath = Path.Combine(env.ContentRootPath, "media");
+        if (!Directory.Exists(mediaPath))
+            Directory.CreateDirectory(mediaPath);
+
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = new PhysicalFileProvider(mediaPath),
+            RequestPath = "/media"
+        });
+
+
+
 
         app.UseAuthentication();
 

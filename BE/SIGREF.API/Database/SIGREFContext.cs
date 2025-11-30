@@ -3,6 +3,7 @@ using SIGREF.API.Database.Entity.Administration;
 using SIGREF.API.Database.Entity.Billing;
 using SIGREF.API.Database.Entity.Cashier;
 using SIGREF.API.Database.Entity.Catalogs;
+using SIGREF.API.Database.Entity.Files;
 using SIGREF.API.Database.Entity.Reports;
 
 namespace SIGREF.API.Database;
@@ -20,6 +21,7 @@ public class SIGREFContext : DbContext
     // --- Administración ---
     public DbSet<HospitalPropertiesEntity> HospitalProperties { get; set; } = default!;
 
+    public DbSet<MediaFileEntity> MediaFiles { get; set; } = default!;
     // --- Catálogos ---
     public DbSet<HealthServicePackagesEntity> HealthServicePackages { get; set; } = default!;
     public DbSet<LocationHealthServicePackageEntity> LocationHealthServicePackages { get; set; } = default!;
