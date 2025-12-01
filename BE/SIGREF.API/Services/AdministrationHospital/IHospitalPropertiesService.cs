@@ -10,13 +10,15 @@ public interface IHospitalPropertiesService
     /// </summary>
     Task<ResponseDto<HospitalPublicDto>> GetPublicAsync();
 
+    Task<ResponseDto<HospitalDetailsDto>> GetAllDetailsAsync();
+    
     /// <summary>
     /// Crea las propiedades del hospital (solo debe llamarse una vez).
     /// </summary>
-    Task<ResponseDto<HospitalAdminDto>> CreateAsync(CreateHospitalPropertiesDto dto);
+    Task<ResponseDto<HospitalDetailsDto>> CreateAsync(CreateHospitalPropertiesDto dto);
 
     /// <summary>
     /// Actualiza los datos del hospital.
     /// </summary>
-    Task<ResponseDto<HospitalAdminDto>> UpdateAsync(UpdateHospitalPropertiesDto dto);
+    Task<ResponseDto<HospitalDetailsDto>> UpdateAsync(UpdateHospitalPropertiesDto dto);
 }

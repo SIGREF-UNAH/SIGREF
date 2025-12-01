@@ -51,11 +51,37 @@ public class HospitalPropertiesService : IHospitalPropertiesService
         };
     }
 
+    public async Task<ResponseDto<HospitalDetailsDto>> GetAllDetailsAsync()
+    {
+        var hospital = await _context.HospitalProperties
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.IsSingleton);
+
+        if (hospital == null)
+        {
+            return new ResponseDto<HospitalDetailsDto>
+            {
+                Status = false,
+                StatusCode = 404,
+                Message = "Hospital no configurado.",
+                Data = null
+            };
+        }
+
+        return new ResponseDto<HospitalDetailsDto>
+        {
+            Status = true,
+            StatusCode = 200,
+            Message = "Detalles del hospital obtenidos correctamente.",
+            Data = hospital.ToDto()
+        };
+    }
+
 
     // ============================================================
     //                 CREATE (solo se usa 1 vez)
     // ============================================================
-    public async Task<ResponseDto<HospitalAdminDto>> CreateAsync(CreateHospitalPropertiesDto dto)
+    public async Task<ResponseDto<HospitalDetailsDto>> CreateAsync(CreateHospitalPropertiesDto dto)
     {
         // Verificar si ya existe un singleton
         var existing = await _context.HospitalProperties
@@ -63,7 +89,7 @@ public class HospitalPropertiesService : IHospitalPropertiesService
 
         if (existing != null)
         {
-            return new ResponseDto<HospitalAdminDto>
+            return new ResponseDto<HospitalDetailsDto>
             {
                 Status = false,
                 Message = "Ya existe una configuración del hospital.",
@@ -90,7 +116,7 @@ public class HospitalPropertiesService : IHospitalPropertiesService
         _context.HospitalProperties.Add(entity);
         await _context.SaveChangesAsync();
 
-        return new ResponseDto<HospitalAdminDto>
+        return new ResponseDto<HospitalDetailsDto>
         {
             Status = true,
             StatusCode = 201,
@@ -103,14 +129,14 @@ public class HospitalPropertiesService : IHospitalPropertiesService
     // ============================================================
     //                 UPDATE
     // ============================================================
-    public async Task<ResponseDto<HospitalAdminDto>> UpdateAsync(UpdateHospitalPropertiesDto dto)
+    public async Task<ResponseDto<HospitalDetailsDto>> UpdateAsync(UpdateHospitalPropertiesDto dto)
     {
         var hospital = await _context.HospitalProperties
             .FirstOrDefaultAsync(x => x.IsSingleton);
 
         if (hospital == null)
         {
-            return new ResponseDto<HospitalAdminDto>
+            return new ResponseDto<HospitalDetailsDto>
             {
                 Status = false,
                 StatusCode = 404,
@@ -123,7 +149,7 @@ public class HospitalPropertiesService : IHospitalPropertiesService
 
         await _context.SaveChangesAsync();
 
-        return new ResponseDto<HospitalAdminDto>
+        return new ResponseDto<HospitalDetailsDto>
         {
             Status = true,
             StatusCode = 200,
@@ -131,6 +157,4 @@ public class HospitalPropertiesService : IHospitalPropertiesService
             Data = hospital.ToDto()
         };
     }
-    
-    
 }
