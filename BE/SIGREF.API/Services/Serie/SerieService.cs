@@ -81,14 +81,13 @@ public class SerieService : ISerieService
             Status = true,
             StatusCode = 201,
             Message = "Serie creada correctamente.",
-            Data =
+            Data = new SerieDto
             {
                 Name = entity.Name,
                 Prefix = entity.Prefix,
                 StartNumber = entity.StartNumber,
                 EndNumber = entity.EndNumber,
-                CurrentNumber = entity.CurrentNumber,
-                CreatedDate = entity.CreatedDate,
+                CurrentNumber = entity.CurrentNumber
             }
         };
     }
@@ -209,11 +208,12 @@ public class SerieService : ISerieService
         // ==========================
         // FILTROS
 
+        // FILTROS STRING
         if (!string.IsNullOrWhiteSpace(dto.Name))
-            query = query.Where(x => x.Name.ToLower().Contains(dto.Name.ToLower()));
+            query = query.Where(x => EF.Functions.ILike(x.Name, $"%{dto.Name}%"));
 
         if (!string.IsNullOrWhiteSpace(dto.Prefix))
-            query = query.Where(x => x.Prefix.ToLower().Contains(dto.Prefix.ToLower()));
+            query = query.Where(x => EF.Functions.ILike(x.Prefix, $"%{dto.Prefix}%"));
 
         if (dto.StartNumber.HasValue)
             query = query.Where(x => x.StartNumber == dto.StartNumber.Value);
