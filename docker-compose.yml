@@ -12,11 +12,9 @@ services:
       - seq
     networks:
       - sigref-network
-    # Para Cloudflare Tunnel - solo exponer internamente
+    # Solo expose - Coolify/Traefik maneja el routing externo
     expose:
       - "80"
-    ports:
-        - "${NGINX_PORT:-80}:80"
     restart: "always"
 
   # Seq - Persistencia de logs y búsqueda
@@ -42,8 +40,7 @@ services:
     expose:
       - "5341"  # Ingestion API
       - "80"    # UI
-    ports:
-      - "${SEQ_PORT:-5341}:80"  # UI accesible en este puerto
+    # ports manejados por Coolify
     networks:
       - sigref-network
     restart: "always"
@@ -89,9 +86,7 @@ services:
     expose:
       - "18888"
       - "18889"
-    # Puerto adicional para acceso directo al dashboard (solo local/admin)
-    ports:
-      - "${DASHBOARD_PORT:-18888}:18888"
+    # ports manejados por Coolify
     networks:
       - "sigref-network"
     restart: "always"
