@@ -1,17 +1,124 @@
 services:
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./nginx/sites/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - keycloak
+      - env-dashboard
+      - sigref-api
+      - hapifhir
+      - frontend
+      - seq
+    networks:
+      - sigref-network
+    # Para Cloudflare Tunnel - solo exponer internamente
+    expose:
+      - "80"
+    ports:
+        - "${NGINX_PORT:-80}:80"
+    restart: "always"
+
+  # Seq - Persistencia de logs y búsqueda
+  # NOTA: Para habilitar autenticación con Keycloak, después de iniciar:
+  # 1. Acceder a http://localhost:5341 con admin/seqadmin123
+  # 2. Ir a Settings > System > Authentication > Change
+  # 3. Seleccionar "OpenID Connect"
+  # 4. Configurar:
+  #    - Authority: http://localhost/auth/realms/sigref (o tu dominio)
+  #    - Client ID: seq
+  #    - Client Secret: (el secreto del cliente seq en Keycloak)
+  # 5. Configurar callback URL en Keycloak: http://localhost:5341/oidc, http://localhost:5341/oidc-logout
+  seq:
+    image: datalust/seq:latest
+    environment:
+      ACCEPT_EULA: "Y"
+      # Contraseña inicial para admin (cambiar después de configurar OIDC)
+      SEQ_FIRSTRUN_ADMINPASSWORD: "${SEQ_ADMIN_PASSWORD:-seqadmin123}"
+      # URL canónica para redirecciones OIDC (importante para proxy)
+      SEQ_API_CANONICALURI: "${SEQ_CANONICAL_URI:-http://localhost:5341}"
+    volumes:
+      - seq-data:/data
+    expose:
+      - "5341"  # Ingestion API
+      - "80"    # UI
+    ports:
+      - "${SEQ_PORT:-5341}:80"  # UI accesible en este puerto
+    networks:
+      - sigref-network
+    restart: "always"
+
+  # OpenTelemetry Collector - Hub central de telemetría
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    command: ["--config=/etc/otelcol/config.yaml"]
+    environment:
+      SEQ_API_KEY: "${SEQ_API_KEY}"
+    volumes:
+      - ./config/otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
+    depends_on:
+      - seq
+      - env-dashboard
+    expose:
+      - "4317"   # OTLP gRPC
+      - "4318"   # OTLP HTTP
+    networks:
+      - sigref-network
+    restart: "always"
+
+  env-dashboard:
+    image: "mcr.microsoft.com/dotnet/nightly/aspire-dashboard:latest"
+    environment:
+      # Frontend Authentication con Keycloak OIDC
+      Dashboard__Frontend__AuthMode: "OpenIdConnect"
+      Dashboard__Frontend__OpenIdConnect__NameClaimType: "name"
+      Dashboard__Frontend__OpenIdConnect__UsernameClaimType: "preferred_username"
+      # Restringir acceso solo a usuarios con rol 'ti' o 'admin'
+      Dashboard__Frontend__OpenIdConnect__RequiredClaimType: "realm_roles"
+      Dashboard__Frontend__OpenIdConnect__RequiredClaimValue: "${DASHBOARD_REQUIRED_ROLE:-ti}"
+      Authentication__Schemes__OpenIdConnect__Authority: "http://keycloak:8080/auth/realms/sigref"
+      Authentication__Schemes__OpenIdConnect__ClientId: "aspire-dashboard"
+      Authentication__Schemes__OpenIdConnect__ClientSecret: "${DASHBOARD_CLIENT_SECRET:-aspire-dashboard-secret}"
+      Authentication__Schemes__OpenIdConnect__RequireHttpsMetadata: "false"
+      # Solicitar el scope de roles
+      Authentication__Schemes__OpenIdConnect__Scope: "openid profile email roles"
+      # OTLP sin autenticacion (solo accesible internamente)
+      Dashboard__Otlp__AuthMode: "Unsecured"
+      # Para proxy reverso
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+    expose:
+      - "18888"
+      - "18889"
+    # Puerto adicional para acceso directo al dashboard (solo local/admin)
+    ports:
+      - "${DASHBOARD_PORT:-18888}:18888"
+    networks:
+      - "sigref-network"
+    restart: "always"
+
   postgres:
     image: postgres:17-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-sigref_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./config/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sigref_user}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sigref_user}" ]
       interval: 10s
       timeout: 5s
       retries: 5
+    labels:
+      - "logging=promtail"
+      - "logging_jobname=postgres"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        tag: "{{.Name}}"
     networks:
       - sigref-network
 
@@ -27,6 +134,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    labels:
+      - "logging=promtail"
+      - "logging_jobname=mongodb"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        tag: "{{.Name}}"
     networks:
       - sigref-network
 
@@ -35,63 +151,129 @@ services:
       context: ./BE/SIGREF.API.AppHost/config
       dockerfile: Keycloak.Dockerfile
     environment:
-      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_PASSWORD}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_PASSWORD}
       KC_HTTP_ENABLED: "true"
-      KC_PROXY_HEADERS: xforwarded
-      KC_HOSTNAME_STRICT: "false"
       KC_HEALTH_ENABLED: "true"
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_URL: ${KEYCLOAK_DB_URL:-jdbc:postgresql://postgres:5432/keycloak}
       KC_DB_USERNAME: ${POSTGRES_USER:-sigref_user}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
-      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME:-localhost}
+      # Hostname Configuration
+      KC_HOSTNAME: "http://${KEYCLOAK_HOSTNAME:-localhost}/auth"
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      # Proxy Configuration
+      KC_PROXY_HEADERS: "xforwarded"
+      KC_HTTP_RELATIVE_PATH: "/auth"
+      # OpenTelemetry para Keycloak (documentado en keycloak.org)
+      KC_FEATURES: "preview"
+      KC_METRICS_ENABLED: "true"
+      OTEL_SERVICE_NAME: "keycloak"
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4317}
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_METRICS_EXPORTER: "otlp"
+      OTEL_LOGS_EXPORTER: "otlp"
+      OTEL_TRACES_EXPORTER: "otlp"
     command: start
     depends_on:
       postgres:
         condition: service_healthy
+      otel-collector:
+        condition: service_started
     networks:
       - sigref-network
-    ports:
-      - "8080:8080"
+    # No exponer puertos - solo acceso via nginx
+    expose:
+      - "8080"
 
   hapifhir:
     image: hapiproject/hapi:latest
     environment:
-      spring.datasource.url: jdbc:postgresql://postgres:5432/hapi
+      # Database Configuration
+      spring.datasource.url: ${HAPI_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/hapi}
       spring.datasource.username: ${POSTGRES_USER:-sigref_user}
       spring.datasource.password: ${POSTGRES_PASSWORD}
-      spring.datasource.driverClassName: org.postgresql.Driver
-      spring.jpa.properties.hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgres94Dialect
-      hapi.fhir.allow_external_references: "true"
-      hapi.fhir.allow_multiple_delete: "true"
-      hapi.fhir.fhir_version: R4
+      spring.datasource.driverClassName: ${HAPI_DRIVER_CLASS:-org.postgresql.Driver}
+      spring.jpa.properties.hibernate.dialect: ${HAPI_HIBERNATE_DIALECT:-ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect}
+      # HAPI Configuration
+      hapi.fhir.allow_external_references: ${HAPI_ALLOW_EXTERNAL_REFS:-true}
+      hapi.fhir.allow_multiple_delete: ${HAPI_ALLOW_MULTIPLE_DELETE:-true}
+      hapi.fhir.fhir_version: ${HAPI_FHIR_VERSION:-R4}
+      hapi.fhir.openapi_enabled: "true"
+      hapi.fhir.cors.allowed_origin: "*"
+      hapi.fhir.server_address: ${HAPI_SERVER_ADDRESS}
+      # OAuth Configuration
+      hapi.fhir.security.oauth_enabled: "true"
+      hapi.fhir.security.oauth_issuer_url: ${HAPI_OAUTH_ISSUER}
+      hapi.fhir.security.oauth_client_id: ${HAPI_OAUTH_CLIENT_ID:-hapi-fhir}
+      hapi.fhir.security.oauth_client_secret: ${HAPI_OAUTH_CLIENT_SECRET}
+      hapi.fhir.security.oauth_scope: "openid profile email fhirUser"
+      # OpenTelemetry Configuration (documentado en hapifhir.io)
+      JAVA_TOOL_OPTIONS: "-javaagent:/app/opentelemetry-javaagent.jar"
+      OTEL_SERVICE_NAME: "hapi-fhir"
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4317}
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_METRICS_EXPORTER: "otlp"
+      OTEL_LOGS_EXPORTER: "otlp"
+      OTEL_TRACES_EXPORTER: "otlp"
     depends_on:
       postgres:
         condition: service_healthy
+      keycloak:
+        condition: service_started
+      otel-collector:
+        condition: service_started
     networks:
       - sigref-network
-    ports:
-      - "8081:8080"
+    # No exponer puertos públicos con Cloudflare Tunnel
+    expose:
+      - "8080"
 
   sigref-api:
     build:
       context: ./BE
       dockerfile: SIGREF.API/Dockerfile
     environment:
-      ConnectionStrings__SIGREFContext: Host=postgres;Database=sigref;Username=${POSTGRES_USER:-sigref_user};Password=${POSTGRES_PASSWORD}
-      ConnectionStrings__MongoDb: mongodb://${MONGODB_USER:-mongo_user}:${MONGODB_PASSWORD}@mongodb:27017
-      ASPNETCORE_ENVIRONMENT: Production
-      ASPNETCORE_URLS: http://+:8080
+      # OpenTelemetry Experimental Features
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
+      # Database Connections
+      ConnectionStrings__SIGREFContext: Host=${POSTGRES_HOST:-postgres};Database=sigref;Username=${POSTGRES_USER:-sigref_user};Password=${POSTGRES_PASSWORD}
+      ConnectionStrings__MongoDb: mongodb://${MONGODB_USER:-mongo_user}:${MONGODB_PASSWORD}@${MONGODB_HOST:-mongodb}:${MONGODB_PORT:-27017}
+      # ASP.NET Core Configuration
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_URLS: ${ASPNETCORE_URLS:-http://+:8080}
+      # Keycloak Configuration (internal HTTP - Cloudflare handles SSL)
+      Keycloak__Authority: http://keycloak:8080/auth/realms/sigref
+      Keycloak__Audience: sigref-api
+      Keycloak__Url: http://keycloak:8080/auth/
+      Keycloak__RealmName: sigref
+      Keycloak__AdminUser: ${KEYCLOAK_ADMIN:-admin}
+      Keycloak__AdminPassword: ${KEYCLOAK_PASSWORD}
+      # FHIR Configuration
+      HAPIFHIR_HTTP: http://hapifhir:8080
+      # CORS - Allow frontend URL
+      AllowURLS__0: ${FRONTEND_URL:-http://localhost}
+      # OpenTelemetry Configuration
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4317}
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_SERVICE_NAME: "sigref-api"
     depends_on:
       postgres:
         condition: service_healthy
       mongodb:
         condition: service_healthy
+      keycloak:
+        condition: service_started
+      otel-collector:
+        condition: service_started
     networks:
       - sigref-network
-    ports:
-      - "5226:8080"
+    # No exponer puertos públicos con Cloudflare Tunnel
+    expose:
+      - "8080"
 
   frontend:
     build:
@@ -104,14 +286,15 @@ services:
         VITE_API_URL: ${FRONTEND_API_URL}
     depends_on:
       - sigref-api
+    expose:
+      - "80"
     networks:
       - sigref-network
-    ports:
-      - "3000:80"
 
 volumes:
   postgres-data:
   mongodb-data:
+  seq-data:
 
 networks:
   sigref-network:

@@ -93,18 +93,12 @@ public class Startup
                 {
                     options.Audience = _configuration["Keycloak:Audience"];
 
-                    // For development only - disable HTTPS metadata validation
-                    // In production, use explicit Authority configuration instead
-                    if (applicationBuilder.Environment.IsDevelopment())
-                    {
-                        options.RequireHttpsMetadata = false;
-                    }
+                    // Disable HTTPS metadata validation - Cloudflare handles SSL termination
+                    // Internal communication between services is HTTP
+                    options.RequireHttpsMetadata = false;
 
-                    // Explicitly set the Authority for production
-                    if (!applicationBuilder.Environment.IsDevelopment())
-                    {
-                        options.Authority = _configuration["Keycloak:Authority"];
-                    }
+                    // Set the Authority from configuration
+                    options.Authority = _configuration["Keycloak:Authority"];
 
                     // Configurar claim types
                     options.TokenValidationParameters = new TokenValidationParameters

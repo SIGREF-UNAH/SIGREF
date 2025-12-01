@@ -1,0 +1,97 @@
+# OpenTelemetry Collector Configuration
+# Este collector recibe telemetría de todos los servicios y la distribuye a múltiples destinos
+
+receivers:
+  # OTLP receiver para servicios que soportan OpenTelemetry nativo
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  # Batch processor para mejorar eficiencia
+  batch:
+    send_batch_size: 1000
+    timeout: 10s
+    send_batch_max_size: 1500
+
+  # Memory limiter para prevenir OOM
+  memory_limiter:
+    check_interval: 5s
+    limit_mib: 512
+    spike_limit_mib: 128
+
+  # Resource processor para agregar metadatos
+  resource:
+    attributes:
+      - key: deployment.environment
+        value: production
+        action: upsert
+      - key: service.namespace
+        value: sigref
+        action: upsert
+
+  # Attributes processor para limpiar datos sensibles
+  attributes/remove_sensitive:
+    actions:
+      - key: db.statement
+        action: hash  # Hash SQL statements para no exponer datos
+      - key: http.request.header.authorization
+        action: delete
+
+exporters:
+  # Exportador OTLP al Aspire Dashboard (tiempo real)
+  otlp/aspire:
+    endpoint: env-dashboard:18889
+    tls:
+      insecure: true
+
+  # Exportador OTLP a Seq (persistencia)
+  # Nota: Usar puerto 80 interno de Seq, no 5341
+  otlphttp/seq:
+    endpoint: http://seq:80/ingest/otlp
+    tls:
+      insecure: true
+    headers:
+      X-Seq-ApiKey: "${SEQ_API_KEY}"
+
+  # Debug exporter (solo para desarrollo)
+  debug:
+    verbosity: basic
+    sampling_initial: 5
+    sampling_thereafter: 200
+
+extensions:
+  # Health check extension
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+service:
+  extensions: [health_check]
+  
+  pipelines:
+    # Pipeline de traces
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, resource, attributes/remove_sensitive]
+      exporters: [otlp/aspire, otlphttp/seq, debug]
+
+    # Pipeline de métricas (Seq no soporta métricas, solo enviar a Aspire)
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, resource]
+      exporters: [otlp/aspire, debug]
+
+    # Pipeline de logs
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, resource]
+      exporters: [otlp/aspire, otlphttp/seq, debug]
+
+  telemetry:
+    logs:
+      level: debug
+    metrics:
+      level: detailed
