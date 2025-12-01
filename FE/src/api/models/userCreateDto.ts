@@ -6,14 +6,13 @@
  */
 
 export interface UserCreateDto {
-  /** @nullable */
-  username?: string | null;
-  /** @nullable */
-  practitionerId?: string | null;
-  /** @nullable */
-  email?: string | null;
-  /** @nullable */
-  password?: string | null;
-  /** @nullable */
-  roles?: string[] | null;
+  /** @minLength 1 */
+  username: string;
+  /** @minLength 1 */
+  practitionerId: string;
+  /** @minLength 1 */
+  email: string;
+  /** @minLength 1 */
+  password: string;
+  roles: string[];
 }

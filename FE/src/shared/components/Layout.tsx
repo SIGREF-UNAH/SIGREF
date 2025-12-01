@@ -5,6 +5,7 @@ import { useKeycloak } from "@react-keycloak/web";
 import { RoutesByRole } from "../../config";
 import { validRoles } from "../../auth";
 import {
+  BankOutlined,
   BookOutlined,
   LogoutOutlined,
   PhoneOutlined,
@@ -132,16 +133,21 @@ export const Layout = () => {
             const userMenu = [
               {
                 key: "1",
+                label: <Link to="/hospital">Hospital</Link>,
+                icon: <BankOutlined />,
+              },
+              {
+                key: "2",
                 label: <Link to="/documentation">Documentación</Link>,
                 icon: <BookOutlined />,
               },
               {
-                key: "2",
+                key: "3",
                 label: <Link to="/support">Soporte</Link>,
                 icon: <PhoneOutlined />,
               },
               {
-                key: "3",
+                key: "4",
                 label: "Cerrar Sesión",
                 onClick: () => keycloak.logout(),
                 danger: true,
