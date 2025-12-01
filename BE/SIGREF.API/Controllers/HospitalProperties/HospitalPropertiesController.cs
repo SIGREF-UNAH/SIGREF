@@ -30,7 +30,15 @@ public class HospitalPropertiesController : ControllerBase
         var result = await _hospitalService.GetPublicAsync();
         return StatusCode(result.StatusCode, result);
     }
-
+    
+    [HttpGet("details")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetAllDetails()
+    {
+        var result = await _hospitalService.GetAllDetailsAsync();
+        return StatusCode(result.StatusCode, result);
+    }
     // ============================================================
     //                 CREAR (solo 1 vez)
     // ============================================================

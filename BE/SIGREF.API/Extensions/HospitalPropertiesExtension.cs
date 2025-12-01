@@ -5,9 +5,9 @@ namespace SIGREF.API.Extensions;
 
 public static class HospitalPropertiesExtension
 {
-    public static HospitalAdminDto ToDto(this HospitalPropertiesEntity h)
+    public static HospitalDetailsDto ToDto(this HospitalPropertiesEntity h)
     {
-        return new HospitalAdminDto
+        return new HospitalDetailsDto
         {
             Name = h.Name,
             Director = h.Director,
