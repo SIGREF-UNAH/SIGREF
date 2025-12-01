@@ -1,0 +1,118 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sigref_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sigref_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sigref-network
+
+  mongodb:
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER:-mongo_user}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+    volumes:
+      - mongodb-data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sigref-network
+
+  keycloak:
+    build:
+      context: ./BE/SIGREF.API.AppHost/config
+      dockerfile: Keycloak.Dockerfile
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_PASSWORD}
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
+      KC_HOSTNAME_STRICT: "false"
+      KC_HEALTH_ENABLED: "true"
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: ${POSTGRES_USER:-sigref_user}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME:-localhost}
+    command: start
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - sigref-network
+    ports:
+      - "8080:8080"
+
+  hapifhir:
+    image: hapiproject/hapi:latest
+    environment:
+      spring.datasource.url: jdbc:postgresql://postgres:5432/hapi
+      spring.datasource.username: ${POSTGRES_USER:-sigref_user}
+      spring.datasource.password: ${POSTGRES_PASSWORD}
+      spring.datasource.driverClassName: org.postgresql.Driver
+      spring.jpa.properties.hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgres94Dialect
+      hapi.fhir.allow_external_references: "true"
+      hapi.fhir.allow_multiple_delete: "true"
+      hapi.fhir.fhir_version: R4
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - sigref-network
+    ports:
+      - "8081:8080"
+
+  sigref-api:
+    build:
+      context: ./BE
+      dockerfile: SIGREF.API/Dockerfile
+    environment:
+      ConnectionStrings__SIGREFContext: Host=postgres;Database=sigref;Username=${POSTGRES_USER:-sigref_user};Password=${POSTGRES_PASSWORD}
+      ConnectionStrings__MongoDb: mongodb://${MONGODB_USER:-mongo_user}:${MONGODB_PASSWORD}@mongodb:27017
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    networks:
+      - sigref-network
+    ports:
+      - "5226:8080"
+
+  frontend:
+    build:
+      context: ./FE
+      dockerfile: Dockerfile
+      args:
+        VITE_KEYCLOAK_URL: ${FRONTEND_KEYCLOAK_URL}
+        VITE_KEYCLOAK_REALM: sigref
+        VITE_KEYCLOAK_CLIENT_ID: frontend
+        VITE_API_URL: ${FRONTEND_API_URL}
+    depends_on:
+      - sigref-api
+    networks:
+      - sigref-network
+    ports:
+      - "3000:80"
+
+volumes:
+  postgres-data:
+  mongodb-data:
+
+networks:
+  sigref-network:
+    driver: bridge
