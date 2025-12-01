@@ -154,8 +154,8 @@ services:
       KC_DB_URL: ${KEYCLOAK_DB_URL:-jdbc:postgresql://postgres:5432/keycloak}
       KC_DB_USERNAME: ${POSTGRES_USER:-sigref_user}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
-      # Hostname Configuration
-      KC_HOSTNAME: "http://${KEYCLOAK_HOSTNAME:-localhost}/auth"
+      # Hostname Configuration - usar HTTPS para producción con Cloudflare
+      KC_HOSTNAME: "${KC_HOSTNAME_URL:-https://localhost/auth}"
       KC_HOSTNAME_STRICT: "false"
       KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
       # Proxy Configuration
