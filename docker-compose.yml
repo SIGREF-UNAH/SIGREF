@@ -175,7 +175,7 @@ services:
       OTEL_METRICS_EXPORTER: "otlp"
       OTEL_LOGS_EXPORTER: "otlp"
       OTEL_TRACES_EXPORTER: "otlp"
-    command: start
+    command: start --import-realm
     depends_on:
       postgres:
         condition: service_healthy
