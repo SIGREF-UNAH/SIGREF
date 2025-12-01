@@ -8,7 +8,7 @@ public class HospitalPublicDto
     public string? UrlLogoHealth { get; set; }
 }
 
-public class HospitalAdminDto : HospitalPublicDto
+public class HospitalDetailsDto : HospitalPublicDto
 {
     public string? Director { get; set; }
     public string? Subdirector { get; set; }
