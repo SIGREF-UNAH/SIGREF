@@ -19,6 +19,7 @@ using SIGREF.API.Services.Auth;
 using MongoDB.Driver;
 using SIGREF.API.Services.AdministrationHospital;
 using SIGREF.API.Services.Auth.Keycloak;
+using SIGREF.API.Services.Billing;
 using SIGREF.API.Services.Cashier;
 using SIGREF.API.Services.Files;
 using SIGREF.API.Services.Serie;
@@ -69,6 +70,8 @@ public class Startup
         services.AddScoped<IHospitalPropertiesService, HospitalPropertiesService>();
         services.AddScoped<IMediaFileService, MediaFileService>();
         services.AddScoped<ISerieService, SerieService>();
+        services.AddScoped<IInvoiceService,InvoiceService>();
+        
 
 
         // ==============================================================
