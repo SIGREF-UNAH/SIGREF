@@ -235,7 +235,7 @@ services:
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
       OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
       # Database Connections
-      ConnectionStrings__SIGREFContext: Host=${POSTGRES_HOST:-postgres};Database=sigref;Username=${POSTGRES_USER:-sigref_user};Password=${POSTGRES_PASSWORD}
+      ConnectionStrings__sigref: Host=${POSTGRES_HOST:-postgres};Database=sigref;Username=${POSTGRES_USER:-sigref_user};Password=${POSTGRES_PASSWORD}
       ConnectionStrings__MongoDb: mongodb://${MONGODB_USER:-mongo_user}:${MONGODB_PASSWORD}@${MONGODB_HOST:-mongodb}:${MONGODB_PORT:-27017}
       # ASP.NET Core Configuration
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
