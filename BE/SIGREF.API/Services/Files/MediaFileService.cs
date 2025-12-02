@@ -1,11 +1,11 @@
-﻿using System.Net.Mime;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using SIGREF.API.Database;
 using SIGREF.API.Database.Entity.common;
 using SIGREF.API.Database.Entity.Files;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Files;
 using SIGREF.API.Helpers;
+using SIGREF.API.Services.Auth;
 
 
 namespace SIGREF.API.Services.Files;
@@ -14,13 +14,15 @@ public class MediaFileService : IMediaFileService
 {
     private readonly SIGREFContext _context;
     private readonly IWebHostEnvironment _env;
+    private readonly IUserContextService _userContextService;
 
-    public MediaFileService(SIGREFContext context, IWebHostEnvironment env)
+    public MediaFileService(SIGREFContext context, IWebHostEnvironment env, IUserContextService userContextService)
     {
         _context = context;
         _env = env;
+        _userContextService = userContextService;
     }
-    
+
 
     // este enpoint seria solo para logo y logo de salud
     public async Task<ResponseDto<MediaFileDto>> UploadAsync(UploadMediaFileDto dto)
@@ -70,99 +72,106 @@ public class MediaFileService : IMediaFileService
                 return response;
             }
 
-            // ================= TRANSACCIÓN =================
+            // ================= TRANSACCIÓN CON EXECUTION STRATEGY =================
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            var strategy = _context.Database.CreateExecutionStrategy();
 
-            var entity = new MediaFileEntity
+            await strategy.ExecuteAsync(async () =>
             {
-                FileName = file.FileName,
-                ContentType = file.ContentType,
-                Type = dto.Type,
-                Description = dto.Description,
-                SizeBytes = file.Length,
-                SystemDescription = "PENDING"
-            };
+                using var transaction = await _context.Database.BeginTransactionAsync();
 
-            _context.MediaFiles.Add(entity);
-            await _context.SaveChangesAsync(); // genera ID
-
-            var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
-            var finalFileName = $"{entity.Id}_{timestamp}_{dto.Type}{ext}";
-
-            var basePath = Path.Combine(_env.ContentRootPath, "media", systemFolder);
-            if (!Directory.Exists(basePath))
-                Directory.CreateDirectory(basePath);
-
-            var finalPhysicalPath = Path.Combine(basePath, finalFileName);
-
-            try
-            {
-                using var stream = new FileStream(finalPhysicalPath, FileMode.Create);
-                await file.CopyToAsync(stream);
-            }
-            catch
-            {
-                _context.MediaFiles.Remove(entity);
-                await _context.SaveChangesAsync();
-                await transaction.RollbackAsync();
-
-                response.Status = false;
-                response.Message = "No se pudo guardar la imagen en el servidor.";
-                response.StatusCode = 500;
-                return response;
-            }
-
-            entity.RelativePath = $"/media/{systemFolder}/{finalFileName}";
-            entity.SystemDescription = $"{entity.Id}-{timestamp}-{file.FileName}";
-
-            await _context.SaveChangesAsync();
-
-            // ================= Actualizar hospital =================
-
-            var hospital = await _context.HospitalProperties
-                .FirstOrDefaultAsync(x => x.IsSingleton);
-
-            if (hospital != null)
-            {
-                if (dto.Type == MediaFileType.AppHospital)
+                var entity = new MediaFileEntity
                 {
-                    hospital.LogoMediaId = entity.Id;
-                    hospital.UrlLogo = entity.RelativePath;
+                    FileName = file.FileName,
+                    ContentType = file.ContentType,
+                    Type = dto.Type,
+                    Description = dto.Description,
+                    SizeBytes = file.Length,
+                    SystemDescription = "PENDING",
+                    RelativePath = "Pending"
+                };
+
+                _context.MediaFiles.Add(entity);
+                await _context.SaveChangesAsync(); // genera ID
+
+                var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+                var finalFileName = $"{entity.Id}_{timestamp}_{dto.Type}{ext}";
+
+                var basePath = Path.Combine(_env.ContentRootPath, "media", systemFolder);
+                if (!Directory.Exists(basePath))
+                    Directory.CreateDirectory(basePath);
+
+                var finalPhysicalPath = Path.Combine(basePath, finalFileName);
+
+                try
+                {
+                    using var stream = new FileStream(finalPhysicalPath, FileMode.Create);
+                    await file.CopyToAsync(stream);
                 }
-                else if (dto.Type == MediaFileType.HealthGuilt)
+                catch
                 {
-                    hospital.HealthLogoMediaId = entity.Id;
-                    hospital.UrlLogoHealth = entity.RelativePath;
+                    _context.MediaFiles.Remove(entity);
+                    await _context.SaveChangesAsync();
+                    await transaction.RollbackAsync();
+
+                    response.Status = false;
+                    response.Message = "No se pudo guardar la imagen en el servidor.";
+                    response.StatusCode = 500;
+                    return;
                 }
 
+                entity.RelativePath = $"/media/{systemFolder}/{finalFileName}";
+                entity.SystemDescription = $"{entity.Id}-{timestamp}-{file.FileName}";
+
                 await _context.SaveChangesAsync();
-            }
 
-            // ================= Commit final =================
+                // ================= Actualizar hospital =================
 
-            await transaction.CommitAsync();
+                var hospital = await _context.HospitalProperties
+                    .FirstOrDefaultAsync(x => x.IsSingleton);
 
-            response.Status = true;
-            response.Data = new MediaFileDto
-            {
-                Id = entity.Id,
-                FileName = entity.FileName,
-                ContentType = entity.ContentType,
-                Description = entity.Description,
-                SystemDescription = entity.SystemDescription,
-                Type = entity.Type,
-                RelativePath = entity.RelativePath,
-                SizeBytes = entity.SizeBytes
-            };
-            response.Message = "Archivo subido correctamente.";
-            response.StatusCode = 200;
+                if (hospital != null)
+                {
+                    if (dto.Type == MediaFileType.AppHospital)
+                    {
+                        hospital.LogoMediaId = entity.Id;
+                        hospital.UrlLogo = entity.RelativePath;
+                    }
+                    else if (dto.Type == MediaFileType.HealthGuilt)
+                    {
+                        hospital.HealthLogoMediaId = entity.Id;
+                        hospital.UrlLogoHealth = entity.RelativePath;
+                    }
+
+                    await _context.SaveChangesAsync();
+                }
+
+                await transaction.CommitAsync();
+
+                // respuesta final
+                response.Status = true;
+                response.StatusCode = 200;
+                response.Message = "Archivo subido correctamente.";
+                response.Data = new MediaFileDto
+                {
+                    Id = entity.Id,
+                    FileName = entity.FileName,
+                    ContentType = entity.ContentType,
+                    Description = entity.Description,
+                    SystemDescription = entity.SystemDescription,
+                    Type = entity.Type,
+                    RelativePath = entity.RelativePath,
+                    SizeBytes = entity.SizeBytes
+                };
+            });
+
             return response;
         }
         catch (Exception ex)
         {
             response.Status = false;
-            response.Message = $"Error inesperado: {ex.Message}";
+            response.Message = $"Error inesperado: {ex.Message} ";
+            //| {ex.StackTrace} | {ex.InnerException?.Message}
             response.StatusCode = 500;
             return response;
         }
@@ -221,20 +230,68 @@ public class MediaFileService : IMediaFileService
 
     public async Task<bool> DeleteAsync(Guid id)
     {
-        var entity = await _context.MediaFiles.FindAsync(id);
-        if (entity == null) return false;
+        try
+        {
+            var entity = await _context.MediaFiles.FindAsync(id);
+            if (entity == null)
+                return false;
 
-        // 1. Borrar archivo físico
-        var fullPath = Path.Combine(_env.ContentRootPath, entity.RelativePath.TrimStart('/'));
-        if (File.Exists(fullPath))
-            File.Delete(fullPath);
+            // =============================
+            // 1. ELIMINAR REFERENCIAS EN HOSPITAL PROPERTIES
+            // =============================
+            var hospital = await _context.HospitalProperties
+                .FirstOrDefaultAsync(x => x.IsSingleton);
 
-        // 2. Borrar de la DB
-        _context.MediaFiles.Remove(entity);
-        await _context.SaveChangesAsync();
+            if (hospital != null)
+            {
+                bool changed = false;
 
-        return true;
+                if (hospital.LogoMediaId == id)
+                {
+                    hospital.LogoMediaId = null;
+                    hospital.UrlLogo = null;
+                    changed = true;
+                }
+
+                if (hospital.HealthLogoMediaId == id)
+                {
+                    hospital.HealthLogoMediaId = null;
+                    hospital.UrlLogoHealth = null;
+                    changed = true;
+                }
+
+                if (changed)
+                {
+                    hospital.UpdatedById = _userContextService.GetUserId();
+                    hospital.UpdatedDate = DateTime.Now;
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            // =============================
+            // 2. BORRAR ARCHIVO FÍSICO
+            // =============================
+            var physicalPath = Path.Combine(_env.ContentRootPath, entity.RelativePath.TrimStart('/'));
+
+            if (File.Exists(physicalPath))
+                File.Delete(physicalPath);
+
+            // =============================
+            // 3. BORRAR DE LA BD
+            // =============================
+            _context.MediaFiles.Remove(entity);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error eliminando media: {ex.Message} | {ex.StackTrace}");
+
+            return false;
+        }
     }
+
 
     public async Task<ResponseDto<bool>> SetHospitalMediaAsync(Guid mediaId, MediaFileType type)
     {
@@ -356,7 +413,6 @@ public class MediaFileService : IMediaFileService
 
             // Aplicar paginación
             var items = await query
-                
                 .OrderByDescending(x => x.CreatedDate)
                 .Skip((filter.PageNumber - 1) * filter.PageSize)
                 .Take(filter.PageSize)

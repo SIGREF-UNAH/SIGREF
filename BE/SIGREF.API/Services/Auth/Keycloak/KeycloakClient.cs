@@ -23,11 +23,26 @@ public class KeycloakClient : IKeycloakClient
     {
         _http = http;
 
-        _baseUrl      = config["Keycloak:BaseUrl"] ?? "http://localhost:8081";
-        _realm        = config["Keycloak:Realm"]    ?? "sigref";
-        _clientId     = config["Keycloak:AdminClientId"]     ?? throw new Exception("AdminClientId missing");
-        _clientSecret = config["Keycloak:AdminClientSecret"] ?? throw new Exception("AdminClientSecret missing");
+        // BASE URL DEL SERVIDOR KEYCLOAK (sin /realms)
+        _baseUrl = config["Keycloak:BaseUrl"]
+                   ?? config["Keycloak:Url"]        
+                   ?? "http://localhost:8080";      
+
+
+        // NOMBRE DEL REALM
+        _realm = config["Keycloak:Realm"]
+                 ?? config["Keycloak:RealmName"]    
+                 ?? "sigref";
+
+
+        // CREDENCIALES DEL CLIENTE ADMIN (OBLIGATORIO)
+        _clientId = config["Keycloak:AdminClientId"]
+                    ?? throw new Exception("AdminClientId missing in configuration.");
+
+        _clientSecret = config["Keycloak:AdminClientSecret"]
+                        ?? throw new Exception("AdminClientSecret missing in configuration.");
     }
+
 
     // ======================================================
     // TOKEN (OPTIMIZADO CON CACHE)
