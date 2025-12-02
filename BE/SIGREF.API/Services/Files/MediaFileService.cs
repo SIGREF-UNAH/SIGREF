@@ -1,5 +1,4 @@
-﻿using System.Net.Mime;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using SIGREF.API.Database;
 using SIGREF.API.Database.Entity.common;
 using SIGREF.API.Database.Entity.Files;

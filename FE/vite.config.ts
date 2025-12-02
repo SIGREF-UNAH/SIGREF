@@ -4,13 +4,29 @@ import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
-   server: {
-    proxy: {
-      '/realms': 'http://localhost:8081'
-    }
-  },
   plugins: [
     tailwindcss(),
     react()
   ],
+  build: {
+    // Ignorar errores de TypeScript en producción
+    rollupOptions: {
+      onwarn(warning, warn) {
+        // Suprimir ciertos warnings
+        if (warning.code === 'UNUSED_EXTERNAL_IMPORT') return
+        warn(warning)
+      }
+    }
+  },
+  server: {
+    host: true,
+    port: parseInt(process.env.PORT ?? "5173"),
+    proxy: {
+      '/api': {
+        target: process.env.VITE_API_URL || 'http://localhost:5226',
+        changeOrigin: true,
+        secure: false
+      }
+    }
+  }
 })
