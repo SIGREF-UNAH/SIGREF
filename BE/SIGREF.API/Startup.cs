@@ -23,6 +23,7 @@ using SIGREF.API.Services.Billing;
 using SIGREF.API.Services.Cashier;
 using SIGREF.API.Services.Files;
 using SIGREF.API.Services.Serie;
+using SIGREF.API.Audit.Extensions;
 
 
 namespace SIGREF.API;
@@ -124,6 +125,9 @@ public class Startup
             var client = sp.GetRequiredService<IMongoClient>();
             return client.GetDatabase("sigref-logs");
         });
+
+        // ================== AUDIT SERVICES ==================
+        services.AddAuditServices();
 
         services.AddHttpContextAccessor();
 
@@ -240,6 +244,9 @@ public class Startup
         app.UseCors("CorsPolicy");
 
         app.UseRouting();
+
+        // Middleware de auditoría (después de routing, antes de auth)
+        app.UseAuditMiddleware();
 
         //
         var mediaPath = Path.Combine(env.ContentRootPath, "media");
