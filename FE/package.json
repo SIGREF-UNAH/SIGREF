@@ -7,6 +7,7 @@
     "dev": "vite",
     "orval": "npx orval",
     "build": "tsc -b && vite build",
+    "build:prod": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -42,10 +43,8 @@
   },
   "devDependencies": {
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
-    "@esbuild/win32-x64": "^0.25.12",
-    "@eslint/js": "^9.33.0",
-    "@rollup/rollup-win32-x64-msvc": "^4.53.1",
-    "@types/react": "^19.1.10",
+     "@eslint/js": "^9.33.0",
+     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^5.0.0",
     "eslint": "^9.33.0",

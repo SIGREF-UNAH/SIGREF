@@ -4,6 +4,7 @@
 
 # Ignorar el archivo appsettings.Development.json
 SIGREF.API/appsettings.Development.json
+SIGREF.API.AppHost/appsettings.Development.json
 
 # Ignorar los datos de la aplicación
 SIGREF.API.AppHost/data
@@ -13,10 +14,10 @@ Bruno/
 bruno/
 
 # Ignorar la carpeta de migraciones
-SIGREF.API/Migrations
+#SIGREF.API/Migrations
 
 # Ignorar la carpeta de migraciones
-SIGREF.API/Migrations/
+#SIGREF.API/Migrations/
 
 # User-specific files
 *.suo

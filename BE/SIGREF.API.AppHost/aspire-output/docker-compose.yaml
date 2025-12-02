@@ -1,0 +1,169 @@
+services:
+  env-dashboard:
+    image: "mcr.microsoft.com/dotnet/nightly/aspire-dashboard:latest"
+    expose:
+      - "18888"
+      - "18889"
+    networks:
+      - "aspire"
+    restart: "always"
+  postgres:
+    image: "docker.io/postgres:17-alpine"
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: "scram-sha-256"
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
+      POSTGRES_USER: "${POSTGRES_USERNAME}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: "postgres"
+    expose:
+      - "5432"
+    volumes:
+      - type: "volume"
+        target: "/var/lib/postgresql/data"
+        source: "data-postgres"
+        read_only: false
+    networks:
+      - "aspire"
+  mongo-sigref-logs:
+    image: "docker.io/library/mongo:8.2"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${MONGODB_USER}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGODB_PASSWORD}"
+    expose:
+      - "27017"
+    volumes:
+      - type: "volume"
+        target: "/data/db"
+        source: "data-mongo-sigref-logs"
+        read_only: false
+    networks:
+      - "aspire"
+  keycloak:
+    image: "${KEYCLOAK_IMAGE}"
+    command:
+      - "start"
+      - "--import-realm"
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: "${KEYCLOAK_USER}"
+      KC_BOOTSTRAP_ADMIN_PASSWORD: "${KEYCLOAK_PASS}"
+      KC_HEALTH_ENABLED: "true"
+      ConnectionStrings__keycloakDb: "Host=postgres;Port=5432;Username=${POSTGRES_USERNAME};Password=${POSTGRES_PASSWORD};Database=keycloak"
+      KEYCLOAKDB_HOST: "postgres"
+      KEYCLOAKDB_PORT: "5432"
+      KEYCLOAKDB_USERNAME: "${POSTGRES_USERNAME}"
+      KEYCLOAKDB_PASSWORD: "${POSTGRES_PASSWORD}"
+      KEYCLOAKDB_URI: "postgresql://${POSTGRES_USERNAME}:${POSTGRES_PASSWORD}@postgres:5432/keycloak"
+      KEYCLOAKDB_JDBCCONNECTIONSTRING: "jdbc:postgresql://postgres:5432/keycloak"
+      KEYCLOAKDB_DATABASE: "keycloak"
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: "xforwarded"
+      KC_HOSTNAME_STRICT: "false"
+      KC_DB: "postgres"
+      KC_DB_URL: "jdbc:postgresql://postgres:5432/keycloak"
+      KC_DB_USERNAME: "${POSTGRES_USERNAME}"
+      KC_DB_PASSWORD: "${POSTGRES_PASSWORD}"
+      KC_HOSTNAME: "localhost"
+    expose:
+      - "8080"
+      - "9000"
+    depends_on:
+      postgres:
+        condition: "service_started"
+    networks:
+      - "aspire"
+  hapifhir:
+    image: "hapiproject/hapi:latest"
+    environment:
+      ConnectionStrings__postgres: "Host=postgres;Port=5432;Username=${POSTGRES_USERNAME};Password=${POSTGRES_PASSWORD}"
+      POSTGRES_HOST: "postgres"
+      POSTGRES_PORT: "5432"
+      POSTGRES_USERNAME: "${POSTGRES_USERNAME}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_URI: "postgresql://${POSTGRES_USERNAME}:${POSTGRES_PASSWORD}@postgres:5432"
+      POSTGRES_JDBCCONNECTIONSTRING: "jdbc:postgresql://postgres:5432"
+      ConnectionStrings__hapi: "Host=postgres;Port=5432;Username=${POSTGRES_USERNAME};Password=${POSTGRES_PASSWORD};Database=hapi"
+      HAPI_HOST: "postgres"
+      HAPI_PORT: "5432"
+      HAPI_USERNAME: "${POSTGRES_USERNAME}"
+      HAPI_PASSWORD: "${POSTGRES_PASSWORD}"
+      HAPI_URI: "postgresql://${POSTGRES_USERNAME}:${POSTGRES_PASSWORD}@postgres:5432/hapi"
+      HAPI_JDBCCONNECTIONSTRING: "jdbc:postgresql://postgres:5432/hapi"
+      HAPI_DATABASE: "hapi"
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/hapi"
+      SPRING_DATASOURCE_USERNAME: "${POSTGRES_USERNAME}"
+      SPRING_DATASOURCE_PASSWORD: "${POSTGRES_PASSWORD}"
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: "org.postgresql.Driver"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: "ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect"
+    expose:
+      - "8080"
+    depends_on:
+      postgres:
+        condition: "service_started"
+    networks:
+      - "aspire"
+  sigref-api:
+    image: "${SIGREF_API_IMAGE}"
+    environment:
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      HTTP_PORTS: "${SIGREF_API_PORT}"
+      ConnectionStrings__sigref: "Host=postgres;Port=5432;Username=${POSTGRES_USERNAME};Password=${POSTGRES_PASSWORD};Database=sigref"
+      SIGREF_HOST: "postgres"
+      SIGREF_PORT: "5432"
+      SIGREF_USERNAME: "${POSTGRES_USERNAME}"
+      SIGREF_PASSWORD: "${POSTGRES_PASSWORD}"
+      SIGREF_URI: "postgresql://${POSTGRES_USERNAME}:${POSTGRES_PASSWORD}@postgres:5432/sigref"
+      SIGREF_JDBCCONNECTIONSTRING: "jdbc:postgresql://postgres:5432/sigref"
+      SIGREF_DATABASE: "sigref"
+      ConnectionStrings__sigref-logs: "mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@mongo-sigref-logs:27017/sigref-logs?authSource=admin&authMechanism=SCRAM-SHA-256"
+      SIGREF-LOGS_HOST: "mongo-sigref-logs"
+      SIGREF-LOGS_PORT: "27017"
+      SIGREF-LOGS_USERNAME: "${MONGODB_USER}"
+      SIGREF-LOGS_PASSWORD: "${MONGODB_PASSWORD}"
+      SIGREF-LOGS_AUTHENTICATIONDATABASE: "admin"
+      SIGREF-LOGS_AUTHENTICATIONMECHANISM: "SCRAM-SHA-256"
+      SIGREF-LOGS_URI: "mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@mongo-sigref-logs:27017/sigref-logs?authSource=admin&authMechanism=SCRAM-SHA-256"
+      SIGREF-LOGS_DATABASE: "sigref-logs"
+      KEYCLOAK_HTTP: "http://keycloak:8080"
+      services__keycloak__http__0: "http://keycloak:8080"
+      KEYCLOAK_MANAGEMENT: "http://keycloak:9000"
+      services__keycloak__management__0: "http://keycloak:9000"
+      HAPIFHIR_HTTP: "http://hapifhir:8080"
+      services__hapifhir__http__0: "http://hapifhir:8080"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://env-dashboard:18889"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_SERVICE_NAME: "sigref-api"
+    ports:
+      - "${SIGREF_API_PORT}"
+    depends_on:
+      postgres:
+        condition: "service_started"
+      mongo-sigref-logs:
+        condition: "service_started"
+      hapifhir:
+        condition: "service_started"
+      keycloak:
+        condition: "service_started"
+    networks:
+      - "aspire"
+  frontend:
+    image: "${FRONTEND_IMAGE}"
+    ports:
+      - "5173:80"
+    depends_on:
+      sigref-api:
+        condition: "service_started"
+      keycloak:
+        condition: "service_started"
+    networks:
+      - "aspire"
+networks:
+  aspire:
+    driver: "bridge"
+volumes:
+  data-postgres:
+    driver: "local"
+  data-mongo-sigref-logs:
+    driver: "local"

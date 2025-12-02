@@ -74,13 +74,32 @@ public class HospitalPropertiesConfiguration : IEntityTypeConfiguration<Hospital
             .HasMaxLength(10)
             .HasColumnName("currency");
 
-        builder.Property(e => e.ExchangeVersion)
-            .HasMaxLength(10)
-            .HasColumnName("exchange_version");
+        //builder.Property(e => e.ExchangeVersion)
+        //    .HasMaxLength(10)
+        //    .HasColumnName("exchange_version");
 
         builder.Property(e => e.IsSingleton)
             .HasColumnName("is_singleton");
+        // ============================
+        //          AUDITORÍA
+        // ============================
+        builder.Property(x => x.CreatedById)
+            .HasColumnName("created_by_id")
+            .IsRequired()
+            .HasComment("ID del usuario que creó el registro.");
 
+        builder.Property(x => x.UpdatedById)
+            .HasColumnName("updated_by_id")
+            .HasComment("ID del usuario que realizó la última actualización.");
+
+        builder.Property(x => x.CreatedDate)
+            .HasColumnName("created_date")
+            .IsRequired()
+            .HasComment("Fecha de creación del turno (UTC).");
+
+        builder.Property(x => x.UpdatedDate)
+            .HasColumnName("updated_date")
+            .HasComment("Fecha de última actualización (UTC).");
         // ===============================
         //         ÍNDICE ÚNICO REAL
         // ===============================

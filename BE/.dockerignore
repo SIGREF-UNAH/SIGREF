@@ -1,0 +1,37 @@
+# Build artifacts
+**/bin/
+**/obj/
+**/out/
+
+# Visual Studio / Rider
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.cache
+*.sln.DotSettings.user
+
+# Docker
+**/Dockerfile*
+**/docker-compose*
+.dockerignore
+# Data directories (mounted volumes)
+**/data/
+SIGREF.API.AppHost/data/
+**/.mongodb
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+LICENSE*
+
+# Other
+**/node_modules/
+**/.DS_Store
+**/appsettings.Development.json
+

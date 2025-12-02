@@ -60,14 +60,27 @@ public class ReportHistoryEntityConfiguration : IEntityTypeConfiguration<ReportH
             .HasColumnName("hospital_properties_snapshot");
 
 
-        // =====================================
-        //         USUARIO CREADOR
-        // =====================================
-
-        builder.Property(e => e.CreatedByUserId)
+        // ============================
+        //          AUDITORÍA
+        // ============================
+        builder.Property(x => x.CreatedById)
+            .HasColumnName("created_by_id")
             .IsRequired()
-            .HasColumnName("created_by_user_id");
-        
+            .HasComment("ID del usuario que creó el registro.");
+
+        builder.Property(x => x.UpdatedById)
+            .HasColumnName("updated_by_id")
+            .HasComment("ID del usuario que realizó la última actualización.");
+
+        builder.Property(x => x.CreatedDate)
+            .HasColumnName("created_date")
+            .IsRequired()
+            .HasComment("Fecha de creación del turno (UTC).");
+
+        builder.Property(x => x.UpdatedDate)
+            .HasColumnName("updated_date")
+            .HasComment("Fecha de última actualización (UTC).");
+
 
 
         // ===============================
