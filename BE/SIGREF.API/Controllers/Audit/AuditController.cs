@@ -9,9 +9,6 @@ namespace SIGREF.API.Controllers.Audit;
 [ApiController]
 public class AuditController(IAuditService auditService) : ControllerBase
 {
-    /// <summary>
-    /// Obtener todos los logs de auditoría con paginación
-    /// </summary>
     [HttpGet]
     [Authorize(AuthenticationSchemes = "Bearer", Roles = RolesConstants.ti)]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -20,11 +17,12 @@ public class AuditController(IAuditService auditService) : ControllerBase
     public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
         var logs = await auditService.GetAllLogsAsync(page, pageSize);
+        var dtos = logs.Select(SIGREF.API.Audit.Models.AuditLogDto.FromAuditLog).ToList();
         return Ok(new
         {
             page,
             pageSize,
-            data = logs
+            data = dtos
         });
     }
 
@@ -43,7 +41,8 @@ public class AuditController(IAuditService auditService) : ControllerBase
         if (log == null)
             return NotFound(new { message = "Log no encontrado" });
 
-        return Ok(log);
+        var dto = SIGREF.API.Audit.Models.AuditLogDto.FromAuditLog(log);
+        return Ok(dto);
     }
 
     /// <summary>
@@ -57,7 +56,8 @@ public class AuditController(IAuditService auditService) : ControllerBase
     public async Task<IActionResult> GetByAction(string action, [FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null)
     {
         var logs = await auditService.GetLogsByActionAsync(action, from, to);
-        return Ok(logs);
+        var dtos = logs.Select(SIGREF.API.Audit.Models.AuditLogDto.FromAuditLog).ToList();
+        return Ok(dtos);
     }
 
     /// <summary>
@@ -71,12 +71,42 @@ public class AuditController(IAuditService auditService) : ControllerBase
     public async Task<IActionResult> GetByStatusCode(int statusCode, [FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null)
     {
         var logs = await auditService.GetLogsByStatusCodeAsync(statusCode, from, to);
-        return Ok(logs);
+        var dtos = logs.Select(SIGREF.API.Audit.Models.AuditLogDto.FromAuditLog).ToList();
+        return Ok(dtos);
     }
 
     /// <summary>
-    /// Registrar inicio de sesión (llamar desde el frontend después de autenticarse)
+    /// Ver información del token actual (para debug - ELIMINAR EN PRODUCCIÓN)
     /// </summary>
-   
-    
+    [HttpGet("debug/token")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public IActionResult DebugToken()
+    {
+        var claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList();
+        var isAuthenticated = User.Identity?.IsAuthenticated ?? false;
+        var roles = User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(c => c.Value).ToList();
+        var hasTiRole = User.IsInRole(RolesConstants.ti);
+        
+        return Ok(new
+        {
+            isAuthenticated,
+            hasTiRole,
+            tiRoleConstant = RolesConstants.ti,
+            roles,
+            allClaims = claims
+        });
+    }
+
+    /// <summary>
+    /// Limpiar todos los logs (para testing - ELIMINAR EN PRODUCCIÓN)
+    /// </summary>
+    [HttpDelete("test/clear")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ClearAllLogs()
+    {
+        await auditService.ClearAllLogsAsync();
+        return Ok(new { message = "Todos los logs han sido eliminados" });
+    }
 }

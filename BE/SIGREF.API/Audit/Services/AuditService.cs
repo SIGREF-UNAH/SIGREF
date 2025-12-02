@@ -149,13 +149,10 @@ public class AuditService : IAuditService
             ResourceType = "Authentication",
             ResourceId = userId,
             UserId = userId,
-            UserName = userName,
-            UserRoles = roles ?? new List<string>(),
             Timestamp = DateTime.UtcNow,
             Endpoint = "/auth/login",
             HttpMethod = "POST",
             StatusCode = success ? 200 : 401,
-            ClientIp = clientIp,
             Success = success,
             ErrorMessage = errorMessage,
             AdditionalInfo = new Dictionary<string, string>
@@ -165,5 +162,10 @@ public class AuditService : IAuditService
         };
 
         await LogAsync(auditLog);
+    }
+
+    public async Task ClearAllLogsAsync()
+    {
+        await _auditCollection.DeleteManyAsync(Builders<AuditLog>.Filter.Empty);
     }
 }

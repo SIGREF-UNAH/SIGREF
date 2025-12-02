@@ -37,18 +37,6 @@ public class AuditLog
     public string UserId { get; set; }
 
     /// <summary>
-    /// Nombre del usuario
-    /// </summary>
-    [BsonElement("userName")]
-    public string UserName { get; set; }
-
-    /// <summary>
-    /// Roles del usuario
-    /// </summary>
-    [BsonElement("userRoles")]
-    public List<string> UserRoles { get; set; }
-
-    /// <summary>
     /// Fecha y hora de la acción
     /// </summary>
     [BsonElement("timestamp")]
@@ -73,22 +61,18 @@ public class AuditLog
     public int StatusCode { get; set; }
 
     /// <summary>
-    /// IP del cliente
-    /// </summary>
-    [BsonElement("clientIp")]
-    public string ClientIp { get; set; }
-
-    /// <summary>
-    /// Datos antes del cambio (para update/delete)
+    /// Datos antes del cambio (para update/delete) - Objeto JSON
     /// </summary>
     [BsonElement("dataBefore")]
-    public string DataBefore { get; set; }
+    [BsonIgnoreIfNull]
+    public BsonDocument DataBefore { get; set; }
 
     /// <summary>
-    /// Datos después del cambio (para create/update)
+    /// Datos después del cambio (para create/update) - Objeto JSON
     /// </summary>
     [BsonElement("dataAfter")]
-    public string DataAfter { get; set; }
+    [BsonIgnoreIfNull]
+    public BsonDocument DataAfter { get; set; }
 
     /// <summary>
     /// Información adicional

@@ -137,29 +137,42 @@ public class AuditMiddleware
             Endpoint = request.Path.Value,
             HttpMethod = request.Method,
             StatusCode = response.StatusCode,
-            ClientIp = context.Connection.RemoteIpAddress?.ToString(),
             Success = response.StatusCode >= 200 && response.StatusCode < 300,
             UserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? user.FindFirst("sub")?.Value,
-            UserName = user.FindFirst(ClaimTypes.Name)?.Value ?? user.FindFirst("preferred_username")?.Value,
-            UserRoles = user.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList(),
             AdditionalInfo = new Dictionary<string, string>()
         };
 
         // Extraer información del recurso FHIR del path
         ExtractResourceInfo(request.Path.Value, auditLog);
 
-        // Agregar datos según el método
+        // Agregar datos según el método - convertir a BsonDocument
         if (request.Method == "POST" || request.Method == "PUT")
         {
-            auditLog.DataAfter = requestBody;
+            auditLog.DataAfter = TryParseToBsonDocument(requestBody);
         }
 
         if (request.Method == "GET" && !string.IsNullOrEmpty(responseBody))
         {
-            auditLog.DataAfter = responseBody;
+            auditLog.DataAfter = TryParseToBsonDocument(responseBody);
         }
 
         return auditLog;
+    }
+
+    private static MongoDB.Bson.BsonDocument TryParseToBsonDocument(string jsonString)
+    {
+        if (string.IsNullOrWhiteSpace(jsonString))
+            return null;
+
+        try
+        {
+            return MongoDB.Bson.BsonDocument.Parse(jsonString);
+        }
+        catch
+        {
+            // Si no es JSON válido, guardar como string en un objeto
+            return new MongoDB.Bson.BsonDocument { { "raw", jsonString } };
+        }
     }
 
     private string MapHttpMethodToAction(string httpMethod)
