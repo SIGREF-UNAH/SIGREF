@@ -1,0 +1,23 @@
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Data directories
+**/data/
+**/.mongodb
+
+# IDE
+.vs/
+.vscode/
+.idea/
+
+# Build outputs
+**/bin/
+**/obj/
+**/dist/
+**/node_modules/
+
+# Logs
+*.log
+nginx/.htpasswd

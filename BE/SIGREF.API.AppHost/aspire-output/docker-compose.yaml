@@ -39,7 +39,7 @@ services:
     networks:
       - "aspire"
   keycloak:
-    image: "quay.io/keycloak/keycloak:26.4"
+    image: "${KEYCLOAK_IMAGE}"
     command:
       - "start"
       - "--import-realm"
@@ -135,7 +135,7 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://env-dashboard:18889"
       OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
       OTEL_SERVICE_NAME: "sigref-api"
-    expose:
+    ports:
       - "${SIGREF_API_PORT}"
     depends_on:
       postgres:
@@ -148,38 +148,15 @@ services:
         condition: "service_started"
     networks:
       - "aspire"
-  gateway:
-    image: "mcr.microsoft.com/dotnet/nightly/yarp:2.3.0-preview.4"
-    command:
-      - "/app/yarp.dll"
-    entrypoint:
-      - "dotnet"
-    environment:
-      ASPNETCORE_ENVIRONMENT: "Production"
-      SIGREF-API_HTTP: "http://sigref-api:${SIGREF_API_PORT}"
-      REVERSEPROXY__ROUTES__route0__MATCH__PATH: "/api/{**catch-all}"
-      REVERSEPROXY__ROUTES__route0__CLUSTERID: "cluster_sigref-api"
-      REVERSEPROXY__ROUTES__route0__TRANSFORMS__0__PathRemovePrefix: "/api"
-      REVERSEPROXY__ROUTES__route1__MATCH__PATH: "/keycloak/{**catch-all}"
-      REVERSEPROXY__ROUTES__route1__CLUSTERID: "cluster_keycloak"
-      REVERSEPROXY__ROUTES__route2__MATCH__PATH: "/hapi/fhir/{**catch-all}"
-      REVERSEPROXY__ROUTES__route2__CLUSTERID: "cluster_hapifhir"
-      REVERSEPROXY__ROUTES__route2__TRANSFORMS__0__PathRemovePrefix: "/hapi"
-      REVERSEPROXY__CLUSTERS__cluster_sigref-api__DESTINATIONS__destination1__ADDRESS: "http://_http.sigref-api"
-      REVERSEPROXY__CLUSTERS__cluster_keycloak__DESTINATIONS__destination1__ADDRESS: "http://keycloak"
-      REVERSEPROXY__CLUSTERS__cluster_hapifhir__DESTINATIONS__destination1__ADDRESS: "http://hapifhir"
-      services__sigref-api__http__0: "http://sigref-api:${SIGREF_API_PORT}"
-      KEYCLOAK_HTTP: "http://keycloak:8080"
-      services__keycloak__http__0: "http://keycloak:8080"
-      KEYCLOAK_MANAGEMENT: "http://keycloak:9000"
-      services__keycloak__management__0: "http://keycloak:9000"
-      HAPIFHIR_HTTP: "http://hapifhir:8080"
-      services__hapifhir__http__0: "http://hapifhir:8080"
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://env-dashboard:18889"
-      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
-      OTEL_SERVICE_NAME: "gateway"
-    expose:
-      - "5000"
+  frontend:
+    image: "${FRONTEND_IMAGE}"
+    ports:
+      - "5173:80"
+    depends_on:
+      sigref-api:
+        condition: "service_started"
+      keycloak:
+        condition: "service_started"
     networks:
       - "aspire"
 networks:

@@ -17,8 +17,9 @@
 **/docker-compose*
 .dockerignore
 # Data directories (mounted volumes)
-#**/data/
-#SIGREF.API.AppHost/data/
+**/data/
+SIGREF.API.AppHost/data/
+**/.mongodb
 
 # Git
 .git/
