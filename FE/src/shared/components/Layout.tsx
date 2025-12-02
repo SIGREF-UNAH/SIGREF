@@ -4,6 +4,9 @@ import { Button, Dropdown } from "antd";
 import { useKeycloak } from "@react-keycloak/web";
 import { RoutesByRole } from "../../config";
 import { validRoles } from "../../auth";
+import { ShortcutsGuideModal } from "./modals";
+import { useState } from "react";
+import { useGetApiHospitalPropertiesDetails } from "../../api/hospital-properties/hospital-properties";
 import {
   BankOutlined,
   BookOutlined,
@@ -11,13 +14,47 @@ import {
   PhoneOutlined,
   QuestionCircleOutlined,
 } from "@ant-design/icons";
-import { ShortcutsGuideModal } from "./modals";
-import { useState } from "react";
+
+// Función helper para construir URLs de media
+const getMediaUrl = (relativePath?: string | null): string => {
+  if (!relativePath) return '';
+  
+  const API_BASE_URL = import.meta.env.VITE_API_URL || window.location.origin;
+  const baseUrl = API_BASE_URL.endsWith('/') 
+    ? API_BASE_URL.slice(0, -1) 
+    : API_BASE_URL;
+  
+  if (relativePath.startsWith('http://') || relativePath.startsWith('https://')) {
+    return relativePath;
+  }
+  
+  if (relativePath.startsWith('/files/') || relativePath.startsWith('/media/')) {
+    return `${baseUrl}${relativePath}`;
+  }
+  
+  return `${baseUrl}${relativePath.startsWith('/') ? '' : '/'}${relativePath}`;
+};
 
 export const Layout = () => {
   const navigate = useNavigate();
   const { keycloak } = useKeycloak();
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Obtener información del hospital con los logos
+  const { data: hospitalResponse } = useGetApiHospitalPropertiesDetails();
+  const hospitalResponseData = hospitalResponse as any;
+const hospitalData = hospitalResponseData?.data;
+
+  // Construir URLs de los logos
+  const logoHealthUrl = hospitalData?.urlLogoHealth 
+    ? getMediaUrl(hospitalData.urlLogoHealth) 
+    : "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Logo_de_SESAL.svg/1200px-Logo_de_SESAL.svg.png";
+  
+  const logoHospitalUrl = hospitalData?.urlLogo 
+    ? getMediaUrl(hospitalData.urlLogo) 
+    : "https://krti.cl/wp-content/uploads/2021/04/Logo-Hospital-Final.png";
+
+  const hospitalName = hospitalData?.name || "Hospital";
 
   // Obtener todos los roles del token
   const roles = keycloak.tokenParsed?.realm_access?.roles || [];
@@ -43,13 +80,15 @@ export const Layout = () => {
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
       <ProLayout
         title={`SIGREF - Panel de ${rolesValidos}`}
-        logo="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Logo_de_SESAL.svg/1200px-Logo_de_SESAL.svg.png"
+        logo={logoHealthUrl}
         layout="top"
         fixedHeader
+        // Estilos 
         style={{
           height: "100%",
           minHeight: "100vh",
         }}
+        // Estilos para el contenido
         contentStyle={{
           height: "100%",
           minHeight: "calc(100vh - 128px)",
@@ -85,17 +124,22 @@ export const Layout = () => {
             <div className="flex">
               <div className="flex items-center gap-2">
                 <img
-                  src="https://krti.cl/wp-content/uploads/2021/04/Logo-Hospital-Final.png"
-                  alt="Hospital de Occidente"
-                  className="h-6 md:h-8"
+                  src={logoHospitalUrl}
+                  alt={hospitalName}
+                  className="h-6 md:h-8 object-contain"
+                  onError={(e) => {
+                    // Fallback en caso de error al cargar la imagen
+                    e.currentTarget.src = "https://krti.cl/wp-content/uploads/2021/04/Logo-Hospital-Final.png";
+                  }}
                 />
               </div>
               <div className="ml-4 mr-8 text-xs md:text-xl font-semibold text-general truncate max-w-[150px] md:max-w-none">
-                {`SIGREF - Panel de ${rolesValidos}`}{" "}
+                {`SIGREF - Panel de ${rolesValidos}`}
               </div>
             </div>
           </div>
         )}
+        // Estilos para el token
         token={{
           header: {
             colorBgHeader: "#fff",
@@ -106,7 +150,7 @@ export const Layout = () => {
             heightLayoutHeader: 64,
           },
         }}
-        
+        // Botones
         actionsRender={() => {
           return [
             <Button 
@@ -118,8 +162,7 @@ export const Layout = () => {
             </Button>
           ];
         }}
-
-        // Avatar / Acciones
+        // Menu Desplegable y Avatar
         avatarProps={{
           src: undefined,
           size: "default",
