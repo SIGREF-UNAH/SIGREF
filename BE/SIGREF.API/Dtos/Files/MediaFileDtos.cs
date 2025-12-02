@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿#nullable enable
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using SIGREF.API.Database.Entity.common;
 using SIGREF.API.Dtos.Common;

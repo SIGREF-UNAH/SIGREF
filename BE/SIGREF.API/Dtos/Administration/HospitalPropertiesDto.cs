@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿#nullable enable
+using System.ComponentModel.DataAnnotations;
 
 namespace SIGREF.API.Dtos.Administration;
 
@@ -30,7 +31,6 @@ public class UpdateHospitalPropertiesDto
     public string? RTN { get; set; }
     public string? Website { get; set; }
     public string? Currency { get; set; }
-//    public string? ExchangeVersion { get; set; }
 
     // No incluimos URLLogo ni URLs de imagen aquí
     // porque las imágenes se manejan en un endpoint separado.

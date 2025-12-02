@@ -22,6 +22,7 @@ import type {
 
 import type {
   GetApiMediaFilesParams,
+  MediaFileDto,
   PostApiMediaFilesMediaIdAssignParams,
   PostApiMediaFilesUploadBody,
   ProblemDetails,
@@ -40,7 +41,7 @@ export const postApiMediaFilesUpload = (
     formData.append(`Description`, postApiMediaFilesUploadBody.Description);
   }
 
-  return customInstance<void>({
+  return customInstance<MediaFileDto>({
     url: `/api/MediaFiles/upload`,
     method: "POST",
     headers: { "Content-Type": "multipart/form-data" },
@@ -116,7 +117,7 @@ export const usePostApiMediaFilesUpload = <
   return useMutation(mutationOptions, queryClient);
 };
 export const getApiMediaFilesId = (id: string, signal?: AbortSignal) => {
-  return customInstance<void>({
+  return customInstance<MediaFileDto>({
     url: `/api/MediaFiles/${id}`,
     method: "GET",
     signal,
@@ -346,7 +347,7 @@ export const postApiMediaFilesMediaIdAssign = (
   params?: PostApiMediaFilesMediaIdAssignParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<void>({
+  return customInstance<MediaFileDto>({
     url: `/api/MediaFiles/${mediaId}/assign`,
     method: "POST",
     params,
@@ -425,7 +426,7 @@ export const getApiMediaFiles = (
   params?: GetApiMediaFilesParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<void>({
+  return customInstance<MediaFileDto>({
     url: `/api/MediaFiles`,
     method: "GET",
     params,

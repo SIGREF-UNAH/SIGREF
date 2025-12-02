@@ -47,6 +47,16 @@ export const UpdateServiceGroupPage = () => {
         tabs={[
           {
             key: "listar",
+            label: "Lista de Servicios",
+            path: "/healthcares/list",
+          },
+          {
+            key: "crear",
+            label: "Crear Servicio",
+            path: "/healthcares/create",
+          },
+          {
+            key: "listar",
             label: "Lista de Paquetes",
             path: "/service-groups/list",
           },
