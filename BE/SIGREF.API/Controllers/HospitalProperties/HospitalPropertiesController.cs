@@ -25,6 +25,7 @@ public class HospitalPropertiesController : ControllerBase
     [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Produces<HospitalPublicDto>()]
     public async Task<IActionResult> GetPublic()
     {
         var result = await _hospitalService.GetPublicAsync();
@@ -34,6 +35,7 @@ public class HospitalPropertiesController : ControllerBase
     [HttpGet("details")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Produces<HospitalDetailsDto>()]
     public async Task<IActionResult> GetAllDetails()
     {
         var result = await _hospitalService.GetAllDetailsAsync();
@@ -45,6 +47,7 @@ public class HospitalPropertiesController : ControllerBase
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [Produces<HospitalDetailsDto>()]
     public async Task<IActionResult> Create([FromBody] CreateHospitalPropertiesDto dto)
     {
         var result = await _hospitalService.CreateAsync(dto);
@@ -57,6 +60,7 @@ public class HospitalPropertiesController : ControllerBase
     [HttpPut]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Produces<HospitalDetailsDto>()]
     public async Task<IActionResult> Update([FromBody] UpdateHospitalPropertiesDto dto)
     {
         var result = await _hospitalService.UpdateAsync(dto);

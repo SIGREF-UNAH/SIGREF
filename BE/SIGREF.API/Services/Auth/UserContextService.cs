@@ -39,14 +39,17 @@ public class UserContextService : IUserContextService
         return _httpContext.HttpContext?.User?.Claims
                ?? Enumerable.Empty<Claim>();
     }
+
     public List<string> GetUserRoles()
     {
-        return _httpContext.HttpContext?
-                   .User?
-                   .FindAll(ClaimTypes.Role)
-                   .Select(c => c.Value)
-                   .ToList()
-               ?? new List<string>();
-    }
+        var roles = _httpContext.HttpContext?
+            .User?
+            .Claims
+            .Where(c => c.Type == ClaimTypes.Role)
+            .Select(c => c.Value.ToLower())
+            .Distinct()
+            .ToList();
 
+        return roles ?? new List<string>();
+    }
 }
