@@ -12,8 +12,6 @@ namespace SIGREF.API.Services.Billing;
 // NOTA :
 // LOS INVOICES SE ENTIENEN COMO ORDENES DE DONACION
 
-
-
 public class InvoiceService : IInvoiceService
 {
     private readonly SIGREFContext _dbContext;
@@ -201,9 +199,19 @@ public class InvoiceService : IInvoiceService
         return ResponseHelper.Success(201, "Factura creada correctamente.", detail);
     }
 
-    public async Task<ResponseDto<InvoiceDetailDto>> GetInvoiceByIdAsync(Guid id, bool includeNotes = true)
+    public async Task<ResponseDto<InvoiceDetailDto>> GetInvoiceByIdAsync(
+        Guid id,
+        bool includeNotes = true,
+        int notesPage = 1,
+        int notesPageSize = 10)
     {
-        var invoiceDto = await _dbContext.Invoices
+        // Validaciones
+        if (notesPage < 1) notesPage = 1;
+        if (notesPageSize < 1) notesPageSize = 20;
+        if (notesPageSize > 100) notesPageSize = 100;
+
+        // Query 1: Factura principal
+        var invoice = await _dbContext.Invoices
             .AsNoTracking()
             .Where(i => i.Id == id)
             .Select(i => new InvoiceDetailDto
@@ -211,68 +219,289 @@ public class InvoiceService : IInvoiceService
                 Id = i.Id,
                 PatientIdFhir = i.PatientIdFhir,
                 PatientDisplay = i.PatientDisplay,
-
                 TotalOriginal = i.TotalOriginal,
                 AdjustmentTotal = i.AdjustmentTotal,
                 FinalTotal = i.FinalTotal,
                 AmountPaid = i.AmountPaid,
                 AmountDue = i.AmountDue,
-
                 Status = i.Status,
                 InvoiceType = i.InvoiceType,
                 PaymentMethod = i.PaymentMethod,
-
                 SerieId = i.SerieId,
+                SerieName = i.Serie.Name,
                 Number = i.Number,
                 CreatedDate = i.CreatedDate,
                 CreatedById = i.CreatedById,
-
-                Items = i.Items
-                    .Select(x => new InvoiceItemDetailDto
-                    {
-                        Id = x.Id,
-                        Description = x.Description,
-                        Quantity = x.Quantity,
-                        UnitPrice = x.UnitPrice,
-                        Discount = x.Discount,
-                        TotalAmount = x.TotalAmount
-                    }).ToList()
+                ParentInvoiceId = i.ParentInvoiceId,
+                ParentInvoiceNumber = i.ParentInvoice != null ? i.ParentInvoice.Number.ToString() : null,
+                Items = i.Items.Select(x => new InvoiceItemDetailDto
+                {
+                    Id = x.Id,
+                    Description = x.Description,
+                    Quantity = x.Quantity,
+                    UnitPrice = x.UnitPrice,
+                    Discount = x.Discount,
+                    TotalAmount = x.TotalAmount
+                }).ToList()
             })
             .FirstOrDefaultAsync();
 
-        if (invoiceDto == null)
+        if (invoice == null)
             return ResponseHelper.Fail<InvoiceDetailDto>(404, "La factura no existe.");
 
-        // Si no tiene notas → no calcular resumen
-        if (invoiceDto.Children == null || invoiceDto.Children.Count == 0)
-            return ResponseHelper.Success(200, "Factura encontrada.", invoiceDto);
+        if (!includeNotes || invoice.ParentInvoiceId != null)
+            return ResponseHelper.Success(200, "Factura encontrada.", invoice);
 
-        // ===================================================
-        // 5. RESUMEN DE NOTAS (Summary)
-        // ===================================================
-        invoiceDto.NotesSummary = new InvoiceNotesSummaryDto
+        // Query 2: Summary (SIEMPRE completo)
+        var summary = await _dbContext.Invoices
+            .AsNoTracking()
+            .Where(n => n.ParentInvoiceId == id)
+            .GroupBy(n => 1)
+            .Select(g => new
+            {
+                TotalCredit = g
+                    .Where(n => n.InvoiceType == InvoiceType.CreditNote)
+                    .Sum(n => (decimal?)n.FinalTotal) ?? 0,
+                TotalDebit = g
+                    .Where(n => n.InvoiceType == InvoiceType.DebitNote)
+                    .Sum(n => (decimal?)n.FinalTotal) ?? 0,
+                CountCredit = g.Count(n => n.InvoiceType == InvoiceType.CreditNote),
+                CountDebit = g.Count(n => n.InvoiceType == InvoiceType.DebitNote),
+                TotalCount = g.Count()
+            })
+            .FirstOrDefaultAsync();
+
+        // Si no hay notas, retornar
+        if (summary == null || summary.TotalCount == 0)
+            return ResponseHelper.Success(200, "Factura encontrada.", invoice);
+
+        // Query 3: Children paginados
+        var skip = (notesPage - 1) * notesPageSize;
+        invoice.Children = await _dbContext.Invoices
+            .AsNoTracking()
+            .Where(n => n.ParentInvoiceId == id)
+            .OrderByDescending(n => n.CreatedDate)
+            .Skip(skip)
+            .Take(notesPageSize)
+            .Select(n => new InvoiceChildDto
+            {
+                Id = n.Id,
+                InvoiceType = n.InvoiceType,
+                Status = n.Status,
+                FinalTotal = n.FinalTotal,
+                CreatedDate = n.CreatedDate,
+                Number = n.Number,
+                SerieId = n.SerieId
+            })
+            .ToListAsync();
+
+        // Asignar summary con paginación
+        invoice.NotesSummary = new InvoiceNotesSummaryDto
         {
-            TotalCreditNotes = invoiceDto.Children
-                .Where(x => x.InvoiceType == InvoiceType.CreditNote)
-                .Sum(x => x.FinalTotal),
-
-            TotalDebitNotes = invoiceDto.Children
-                .Where(x => x.InvoiceType == InvoiceType.DebitNote)
-                .Sum(x => x.FinalTotal),
-
-            CountCredit = invoiceDto.Children.Count(x => x.InvoiceType == InvoiceType.CreditNote),
-            CountDebit = invoiceDto.Children.Count(x => x.InvoiceType == InvoiceType.DebitNote)
+            TotalCreditNotes = summary.TotalCredit,
+            TotalDebitNotes = summary.TotalDebit,
+            CountCredit = summary.CountCredit,
+            CountDebit = summary.CountDebit,
+            TotalNotes = summary.TotalCount,
+            CurrentPage = notesPage,
+            PageSize = notesPageSize,
+            TotalPages = (int)Math.Ceiling(summary.TotalCount / (double)notesPageSize)
         };
 
-
-        return ResponseHelper.Success(200, "Factura encontrada.", invoiceDto);
+        return ResponseHelper.Success(200, "Factura encontrada.", invoice);
     }
 
 
-    public Task<ResponseDto<PagedResultDto<InvoiceGetDto>>> GetInvoicesAsync(int page, int pageSize)
+    // =====================================================================
+    // InvoiceService.cs - Método GetInvoicesAsync
+    // =====================================================================
+    public async Task<ResponseDto<PagedResultDto<InvoiceGetDto>>> GetInvoicesAsync(InvoiceFilterDto filter)
     {
-        throw new NotImplementedException();
+        // ================================
+        // PAGINACIÓN (con defaults)
+        // ================================
+        filter.PageNumber = filter.PageNumber < 1 ? 1 : filter.PageNumber;
+        filter.PageSize = filter.PageSize < 1 ? 10 : filter.PageSize;
+        filter.PageSize = filter.PageSize > 100 ? 100 : filter.PageSize;
+
+        // ================================
+        // VALIDACIONES LÓGICAS
+        // ================================
+        if (filter.OnlyInvoices == true && filter.OnlyNotes == true)
+            return ResponseHelper.Fail<PagedResultDto<InvoiceGetDto>>(400,
+                "No se puede filtrar por facturas y notas al mismo tiempo.");
+
+        if (filter.DateFrom is not null && filter.DateTo is not null &&
+            filter.DateFrom > filter.DateTo)
+            return ResponseHelper.Fail<PagedResultDto<InvoiceGetDto>>(400,
+                "La fecha inicial no puede ser mayor a la fecha final.");
+
+        if (filter.MinTotal is not null && filter.MaxTotal is not null &&
+            filter.MinTotal > filter.MaxTotal)
+            return ResponseHelper.Fail<PagedResultDto<InvoiceGetDto>>(400,
+                "El total mínimo no puede ser mayor al total máximo.");
+
+        // ================================
+        // QUERY BASE
+        // ================================
+        var query = _dbContext.Invoices
+            .AsNoTracking()
+            .AsQueryable();
+
+        // ================================
+        // APLICAR FILTROS
+        // ================================
+        // Facturas reales
+        if (filter.OnlyInvoices == true)
+            query = query.Where(i =>
+                i.InvoiceType != InvoiceType.CreditNote &&
+                i.InvoiceType != InvoiceType.DebitNote);
+
+        // Notas
+        if (filter.OnlyNotes == true)
+            query = query.Where(i =>
+                i.InvoiceType == InvoiceType.CreditNote ||
+                i.InvoiceType == InvoiceType.DebitNote);
+
+        // Tipo
+        if (filter.InvoiceType is not null)
+            query = query.Where(i => i.InvoiceType == filter.InvoiceType);
+
+        // Estado
+        if (filter.Status is not null)
+            query = query.Where(i => i.Status == filter.Status);
+
+        // Serie
+        if (filter.SerieId is not null)
+            query = query.Where(i => i.SerieId == filter.SerieId);
+
+        // Número
+        if (filter.Number is not null)
+            query = query.Where(i => i.Number == filter.Number);
+
+        // Paciente por ID FHIR
+        if (!string.IsNullOrWhiteSpace(filter.PatientIdFhir))
+            query = query.Where(i => i.PatientIdFhir == filter.PatientIdFhir);
+
+        // Paciente por nombre
+        if (!string.IsNullOrWhiteSpace(filter.PatientDisplay))
+        {
+            var searchP = filter.PatientDisplay.ToLower();
+            query = query.Where(i =>
+                i.PatientDisplay != null &&
+                i.PatientDisplay.ToLower().Contains(searchP));
+        }
+
+        // Sesión de caja
+        if (filter.CashierSessionId is not null)
+            query = query.Where(i => i.CashierSessionId == filter.CashierSessionId);
+
+        // Fecha desde
+        if (filter.DateFrom is not null)
+        {
+            var from = filter.DateFrom.Value.Date;
+            query = query.Where(i => i.CreatedDate >= from);
+        }
+
+        // Fecha hasta (incluyente)
+        if (filter.DateTo is not null)
+        {
+            var to = filter.DateTo.Value.Date.AddDays(1);
+            query = query.Where(i => i.CreatedDate < to);
+        }
+
+        // Total mínimo
+        if (filter.MinTotal is not null)
+            query = query.Where(i => i.FinalTotal >= filter.MinTotal);
+
+        // Total máximo
+        if (filter.MaxTotal is not null)
+            query = query.Where(i => i.FinalTotal <= filter.MaxTotal);
+
+        // Búsqueda global
+        if (!string.IsNullOrWhiteSpace(filter.Search))
+        {
+            var search = filter.Search.ToLower();
+            query = query.Where(i =>
+                i.Number.ToString().Contains(search) ||
+                (i.PatientDisplay != null && i.PatientDisplay.ToLower().Contains(search)) ||
+                (i.Serie != null && i.Serie.Name.ToLower().Contains(search))
+            );
+        }
+
+        // ================================
+        // CONTAR RESULTADOS
+        // ================================
+        var totalItems = await query.CountAsync();
+        if (totalItems == 0)
+        {
+            return ResponseHelper.Success(200, "No se encontraron facturas.",
+                new PagedResultDto<InvoiceGetDto>
+                {
+                    Items = Enumerable.Empty<InvoiceGetDto>(),
+                    Pagination = new PaginationDto
+                    {
+                        CurrentPage = filter.PageNumber,
+                        PageSize = filter.PageSize,
+                        TotalItems = 0,
+                        TotalPages = 0,
+                        HasPrevious = false,
+                        HasNext = false
+                    }
+                });
+        }
+
+        // ================================
+        // ORDENAMIENTO CON ENUM
+        // ================================
+        var sortBy = filter.SortBy ?? InvoiceSortField.CreatedDate;
+        var desc = filter.SortDescending;
+
+        query = query.ApplyInvoiceSorting(filter.SortBy, filter.SortDescending);
+
+
+        var skip = (filter.PageNumber - 1) * filter.PageSize;
+
+        var items = await query
+            .Skip(skip)
+            .Take(filter.PageSize)
+            .Select(i => new InvoiceGetDto
+            {
+                Id = i.Id,
+                PatientDisplay = i.PatientDisplay,
+                Status = i.Status,
+                InvoiceType = i.InvoiceType,
+                TotalOriginal = i.TotalOriginal,
+                AdjustmentTotal = i.AdjustmentTotal,
+                FinalTotal = i.FinalTotal,
+                AmountPaid = i.AmountPaid,
+                AmountDue = i.AmountDue,
+                Number = i.Number,
+                CreatedDate = i.CreatedDate
+            })
+            .ToListAsync();
+
+        // ================================
+        // RESPUESTA FINAL
+        // ================================
+        var totalPages = (int)Math.Ceiling(totalItems / (double)filter.PageSize);
+
+        return ResponseHelper.Success(200, "Facturas obtenidas correctamente.",
+            new PagedResultDto<InvoiceGetDto>
+            {
+                Items = items,
+                Pagination = new PaginationDto
+                {
+                    CurrentPage = filter.PageNumber,
+                    PageSize = filter.PageSize,
+                    TotalItems = totalItems,
+                    TotalPages = totalPages,
+                    HasPrevious = filter.PageNumber > 1,
+                    HasNext = filter.PageNumber < totalPages
+                }
+            });
     }
+
 
     public async Task<ResponseDto<InvoiceDetailDto>> CancelInvoiceAsync(Guid id)
     {
@@ -400,7 +629,7 @@ public class InvoiceService : IInvoiceService
         if (invoice.Status == InvoiceStatus.Paid && invoice.AmountDue == 0)
             return ResponseHelper.Fail<InvoiceDetailDto>(400, "La factura ya está pagada.");
 
-        // Pago mayor al saldo  error
+        // Pago mayor al saldo error
         if (amountPaid > invoice.AmountDue)
         {
             return ResponseHelper.Fail<InvoiceDetailDto>(400,

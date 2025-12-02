@@ -1,4 +1,5 @@
-﻿using SIGREF.API.Database.Entity.common;
+﻿using System.Text.Json.Serialization;
+using SIGREF.API.Database.Entity.common;
 
 namespace SIGREF.API.Dtos.Invoice;
 
@@ -24,8 +25,11 @@ public class InvoiceDetailDto
     // ============================
     // ESTADO Y TIPO
     // ============================
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public InvoiceStatus Status { get; set; }
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public InvoiceType InvoiceType { get; set; }
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public PaymentMethodType PaymentMethod { get; set; }
 
     // ============================
@@ -103,21 +107,24 @@ public class InvoiceChildDto
 // =======================================
 public class InvoiceNotesSummaryDto
 {
-    /// <summary>
-    /// Total de notas de crédito aplicadas (montos negativos).
-    /// </summary>
+    // ===== SUMMARY FINANCIERO (SIEMPRE COMPLETO) =====
     public decimal TotalCreditNotes { get; set; }
-
-    /// <summary>
-    /// Total de notas de débito aplicadas (montos positivos).
-    /// </summary>
     public decimal TotalDebitNotes { get; set; }
-
-    /// <summary>
-    /// Ajuste neto: sum(debito) - sum(credito).
-    /// </summary>
-    public decimal NetAdjustment => TotalDebitNotes - TotalCreditNotes;
-
     public int CountCredit { get; set; }
     public int CountDebit { get; set; }
+
+    // ===== INFORMACIÓN DE PAGINACIÓN =====
+    public int TotalNotes { get; set; }        // Total de notas (credit + debit)
+    public int CurrentPage { get; set; }        // Página actual
+    public int PageSize { get; set; }           // Tamaño de página
+    public int TotalPages { get; set; }         // Total de páginas
+    
+    // ===== PROPIEDADES COMPUTADAS (OPCIONALES) =====
+    public bool HasPreviousPage => CurrentPage > 1;
+    public bool HasNextPage => CurrentPage < TotalPages;
+    
+    // Balance neto de todas las notas
+    public decimal NetAdjustment => TotalCreditNotes + TotalDebitNotes;
 }
+
+

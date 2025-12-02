@@ -15,13 +15,17 @@ public interface IInvoiceService
     // ================================
     //      OBTENER FACTURAS
     // ================================
-    Task<ResponseDto<InvoiceDetailDto?>> GetInvoiceByIdAsync(Guid id, bool includeNotes = true);
+    Task<ResponseDto<InvoiceDetailDto?>> GetInvoiceByIdAsync(
+        Guid id,
+        bool includeNotes = true,
+        int notesPage = 1,
+        int notesPageSize = 10);
 
 
     // ================================
     //      LISTAR FACTURAS
     // ================================
-    Task<ResponseDto<PagedResultDto<InvoiceGetDto>>> GetInvoicesAsync(int page, int pageSize);
+    Task<ResponseDto<PagedResultDto<InvoiceGetDto>>> GetInvoicesAsync(InvoiceFilterDto filter);
 
     // ================================
     //   ESTADO, PAGO Y CANCELACIÓN
