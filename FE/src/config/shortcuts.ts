@@ -73,6 +73,22 @@ export const appShortcuts: ShortcutConfig[] = [
     category: "healthcares",
     roles: ["admin", "cashier", "auditor"],
   },
+  {
+    keys: "alt+s",
+    description: "Listar paquetes",
+    action: (navigate) => navigate("/service-groups/list"),
+    title: "Gestión de Servicios",
+    category: "healthcares",
+    roles: ["admin", "cashier", "auditor"],
+  },
+  {
+    keys: "alt+shift+s",
+    description: "Crear paquete",
+    action: (navigate) => navigate("/service-groups/create"),
+    title: "Gestión de Servicios",
+    category: "healthcares",
+    roles: ["admin", "cashier", "auditor"],
+  },
 
   // Gestión de Organizaciones
   {

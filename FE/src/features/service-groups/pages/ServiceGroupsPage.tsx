@@ -140,17 +140,27 @@ export const ServiceGroupsPage = () => {
         title="Gestión de Paquetes"
         tabs={[
           {
-            key: "listar",
+            key: "listar1",
+            label: "Lista de Servicios",
+            path: "/healthcares/list",
+          },
+          {
+            key: "crear1",
+            label: "Crear Servicio",
+            path: "/healthcares/create",
+          },
+          {
+            key: "listar2",
             label: "Lista de Paquetes",
             path: "/service-groups/list",
           },
           {
-            key: "crear",
+            key: "crear2",
             label: "Crear Paquete",
             path: "/service-groups/create",
           },
         ]}
-        defaultActive="crear"
+        defaultActive="listar2"
       />
 
       <div className="primary-card">

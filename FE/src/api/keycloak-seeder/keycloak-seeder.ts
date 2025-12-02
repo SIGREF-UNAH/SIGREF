@@ -20,10 +20,7 @@ import type {
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import type {
-  GetApiKeycloakSeederSearchParams,
-  UserCreateDto,
-} from ".././models";
+import type { UserCreateDto } from ".././models";
 
 import { customInstance } from ".././mutator/customInstance";
 
@@ -107,33 +104,30 @@ export const usePostApiKeycloakSeederCreateUser = <
 
   return useMutation(mutationOptions, queryClient);
 };
-export const getApiKeycloakSeederSearch = (
-  params?: GetApiKeycloakSeederSearchParams,
+export const getApiKeycloakSeederByIdId = (
+  id: string,
   signal?: AbortSignal,
 ) => {
   return customInstance<void>({
-    url: `/api/KeycloakSeeder/search`,
+    url: `/api/KeycloakSeeder/by-id/${id}`,
     method: "GET",
-    params,
     signal,
   });
 };
 
-export const getGetApiKeycloakSeederSearchQueryKey = (
-  params?: GetApiKeycloakSeederSearchParams,
-) => {
-  return [`/api/KeycloakSeeder/search`, ...(params ? [params] : [])] as const;
+export const getGetApiKeycloakSeederByIdIdQueryKey = (id?: string) => {
+  return [`/api/KeycloakSeeder/by-id/${id}`] as const;
 };
 
-export const getGetApiKeycloakSeederSearchQueryOptions = <
-  TData = Awaited<ReturnType<typeof getApiKeycloakSeederSearch>>,
+export const getGetApiKeycloakSeederByIdIdQueryOptions = <
+  TData = Awaited<ReturnType<typeof getApiKeycloakSeederByIdId>>,
   TError = unknown,
 >(
-  params?: GetApiKeycloakSeederSearchParams,
+  id: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof getApiKeycloakSeederSearch>>,
+        Awaited<ReturnType<typeof getApiKeycloakSeederByIdId>>,
         TError,
         TData
       >
@@ -143,42 +137,47 @@ export const getGetApiKeycloakSeederSearchQueryOptions = <
   const { query: queryOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ?? getGetApiKeycloakSeederSearchQueryKey(params);
+    queryOptions?.queryKey ?? getGetApiKeycloakSeederByIdIdQueryKey(id);
 
   const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof getApiKeycloakSeederSearch>>
-  > = ({ signal }) => getApiKeycloakSeederSearch(params, signal);
+    Awaited<ReturnType<typeof getApiKeycloakSeederByIdId>>
+  > = ({ signal }) => getApiKeycloakSeederByIdId(id, signal);
 
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getApiKeycloakSeederSearch>>,
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getApiKeycloakSeederByIdId>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetApiKeycloakSeederSearchQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getApiKeycloakSeederSearch>>
+export type GetApiKeycloakSeederByIdIdQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getApiKeycloakSeederByIdId>>
 >;
-export type GetApiKeycloakSeederSearchQueryError = unknown;
+export type GetApiKeycloakSeederByIdIdQueryError = unknown;
 
-export function useGetApiKeycloakSeederSearch<
-  TData = Awaited<ReturnType<typeof getApiKeycloakSeederSearch>>,
+export function useGetApiKeycloakSeederByIdId<
+  TData = Awaited<ReturnType<typeof getApiKeycloakSeederByIdId>>,
   TError = unknown,
 >(
-  params: undefined | GetApiKeycloakSeederSearchParams,
+  id: string,
   options: {
     query: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof getApiKeycloakSeederSearch>>,
+        Awaited<ReturnType<typeof getApiKeycloakSeederByIdId>>,
         TError,
         TData
       >
     > &
       Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiKeycloakSeederSearch>>,
+          Awaited<ReturnType<typeof getApiKeycloakSeederByIdId>>,
           TError,
-          Awaited<ReturnType<typeof getApiKeycloakSeederSearch>>
+          Awaited<ReturnType<typeof getApiKeycloakSeederByIdId>>
         >,
         "initialData"
       >;
@@ -187,24 +186,24 @@ export function useGetApiKeycloakSeederSearch<
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
-export function useGetApiKeycloakSeederSearch<
-  TData = Awaited<ReturnType<typeof getApiKeycloakSeederSearch>>,
+export function useGetApiKeycloakSeederByIdId<
+  TData = Awaited<ReturnType<typeof getApiKeycloakSeederByIdId>>,
   TError = unknown,
 >(
-  params?: GetApiKeycloakSeederSearchParams,
+  id: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof getApiKeycloakSeederSearch>>,
+        Awaited<ReturnType<typeof getApiKeycloakSeederByIdId>>,
         TError,
         TData
       >
     > &
       Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiKeycloakSeederSearch>>,
+          Awaited<ReturnType<typeof getApiKeycloakSeederByIdId>>,
           TError,
-          Awaited<ReturnType<typeof getApiKeycloakSeederSearch>>
+          Awaited<ReturnType<typeof getApiKeycloakSeederByIdId>>
         >,
         "initialData"
       >;
@@ -213,15 +212,15 @@ export function useGetApiKeycloakSeederSearch<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
-export function useGetApiKeycloakSeederSearch<
-  TData = Awaited<ReturnType<typeof getApiKeycloakSeederSearch>>,
+export function useGetApiKeycloakSeederByIdId<
+  TData = Awaited<ReturnType<typeof getApiKeycloakSeederByIdId>>,
   TError = unknown,
 >(
-  params?: GetApiKeycloakSeederSearchParams,
+  id: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof getApiKeycloakSeederSearch>>,
+        Awaited<ReturnType<typeof getApiKeycloakSeederByIdId>>,
         TError,
         TData
       >
@@ -232,15 +231,15 @@ export function useGetApiKeycloakSeederSearch<
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
-export function useGetApiKeycloakSeederSearch<
-  TData = Awaited<ReturnType<typeof getApiKeycloakSeederSearch>>,
+export function useGetApiKeycloakSeederByIdId<
+  TData = Awaited<ReturnType<typeof getApiKeycloakSeederByIdId>>,
   TError = unknown,
 >(
-  params?: GetApiKeycloakSeederSearchParams,
+  id: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof getApiKeycloakSeederSearch>>,
+        Awaited<ReturnType<typeof getApiKeycloakSeederByIdId>>,
         TError,
         TData
       >
@@ -250,10 +249,429 @@ export function useGetApiKeycloakSeederSearch<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getGetApiKeycloakSeederSearchQueryOptions(
-    params,
-    options,
-  );
+  const queryOptions = getGetApiKeycloakSeederByIdIdQueryOptions(id, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const getApiKeycloakSeederByPractitionerPractitionerId = (
+  practitionerId: string,
+  signal?: AbortSignal,
+) => {
+  return customInstance<void>({
+    url: `/api/KeycloakSeeder/by-practitioner/${practitionerId}`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getGetApiKeycloakSeederByPractitionerPractitionerIdQueryKey = (
+  practitionerId?: string,
+) => {
+  return [`/api/KeycloakSeeder/by-practitioner/${practitionerId}`] as const;
+};
+
+export const getGetApiKeycloakSeederByPractitionerPractitionerIdQueryOptions = <
+  TData = Awaited<
+    ReturnType<typeof getApiKeycloakSeederByPractitionerPractitionerId>
+  >,
+  TError = unknown,
+>(
+  practitionerId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<typeof getApiKeycloakSeederByPractitionerPractitionerId>
+        >,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getGetApiKeycloakSeederByPractitionerPractitionerIdQueryKey(practitionerId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getApiKeycloakSeederByPractitionerPractitionerId>>
+  > = ({ signal }) =>
+    getApiKeycloakSeederByPractitionerPractitionerId(practitionerId, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!practitionerId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<
+      ReturnType<typeof getApiKeycloakSeederByPractitionerPractitionerId>
+    >,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetApiKeycloakSeederByPractitionerPractitionerIdQueryResult =
+  NonNullable<
+    Awaited<ReturnType<typeof getApiKeycloakSeederByPractitionerPractitionerId>>
+  >;
+export type GetApiKeycloakSeederByPractitionerPractitionerIdQueryError =
+  unknown;
+
+export function useGetApiKeycloakSeederByPractitionerPractitionerId<
+  TData = Awaited<
+    ReturnType<typeof getApiKeycloakSeederByPractitionerPractitionerId>
+  >,
+  TError = unknown,
+>(
+  practitionerId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<typeof getApiKeycloakSeederByPractitionerPractitionerId>
+        >,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<
+            ReturnType<typeof getApiKeycloakSeederByPractitionerPractitionerId>
+          >,
+          TError,
+          Awaited<
+            ReturnType<typeof getApiKeycloakSeederByPractitionerPractitionerId>
+          >
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiKeycloakSeederByPractitionerPractitionerId<
+  TData = Awaited<
+    ReturnType<typeof getApiKeycloakSeederByPractitionerPractitionerId>
+  >,
+  TError = unknown,
+>(
+  practitionerId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<typeof getApiKeycloakSeederByPractitionerPractitionerId>
+        >,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<
+            ReturnType<typeof getApiKeycloakSeederByPractitionerPractitionerId>
+          >,
+          TError,
+          Awaited<
+            ReturnType<typeof getApiKeycloakSeederByPractitionerPractitionerId>
+          >
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiKeycloakSeederByPractitionerPractitionerId<
+  TData = Awaited<
+    ReturnType<typeof getApiKeycloakSeederByPractitionerPractitionerId>
+  >,
+  TError = unknown,
+>(
+  practitionerId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<typeof getApiKeycloakSeederByPractitionerPractitionerId>
+        >,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useGetApiKeycloakSeederByPractitionerPractitionerId<
+  TData = Awaited<
+    ReturnType<typeof getApiKeycloakSeederByPractitionerPractitionerId>
+  >,
+  TError = unknown,
+>(
+  practitionerId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<typeof getApiKeycloakSeederByPractitionerPractitionerId>
+        >,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions =
+    getGetApiKeycloakSeederByPractitionerPractitionerIdQueryOptions(
+      practitionerId,
+      options,
+    );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const getApiKeycloakSeederExistsPractitionerPractitionerId = (
+  practitionerId: string,
+  signal?: AbortSignal,
+) => {
+  return customInstance<void>({
+    url: `/api/KeycloakSeeder/exists/practitioner/${practitionerId}`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getGetApiKeycloakSeederExistsPractitionerPractitionerIdQueryKey = (
+  practitionerId?: string,
+) => {
+  return [`/api/KeycloakSeeder/exists/practitioner/${practitionerId}`] as const;
+};
+
+export const getGetApiKeycloakSeederExistsPractitionerPractitionerIdQueryOptions =
+  <
+    TData = Awaited<
+      ReturnType<typeof getApiKeycloakSeederExistsPractitionerPractitionerId>
+    >,
+    TError = unknown,
+  >(
+    practitionerId: string,
+    options?: {
+      query?: Partial<
+        UseQueryOptions<
+          Awaited<
+            ReturnType<
+              typeof getApiKeycloakSeederExistsPractitionerPractitionerId
+            >
+          >,
+          TError,
+          TData
+        >
+      >;
+    },
+  ) => {
+    const { query: queryOptions } = options ?? {};
+
+    const queryKey =
+      queryOptions?.queryKey ??
+      getGetApiKeycloakSeederExistsPractitionerPractitionerIdQueryKey(
+        practitionerId,
+      );
+
+    const queryFn: QueryFunction<
+      Awaited<
+        ReturnType<typeof getApiKeycloakSeederExistsPractitionerPractitionerId>
+      >
+    > = ({ signal }) =>
+      getApiKeycloakSeederExistsPractitionerPractitionerId(
+        practitionerId,
+        signal,
+      );
+
+    return {
+      queryKey,
+      queryFn,
+      enabled: !!practitionerId,
+      ...queryOptions,
+    } as UseQueryOptions<
+      Awaited<
+        ReturnType<typeof getApiKeycloakSeederExistsPractitionerPractitionerId>
+      >,
+      TError,
+      TData
+    > & { queryKey: DataTag<QueryKey, TData, TError> };
+  };
+
+export type GetApiKeycloakSeederExistsPractitionerPractitionerIdQueryResult =
+  NonNullable<
+    Awaited<
+      ReturnType<typeof getApiKeycloakSeederExistsPractitionerPractitionerId>
+    >
+  >;
+export type GetApiKeycloakSeederExistsPractitionerPractitionerIdQueryError =
+  unknown;
+
+export function useGetApiKeycloakSeederExistsPractitionerPractitionerId<
+  TData = Awaited<
+    ReturnType<typeof getApiKeycloakSeederExistsPractitionerPractitionerId>
+  >,
+  TError = unknown,
+>(
+  practitionerId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<
+            typeof getApiKeycloakSeederExistsPractitionerPractitionerId
+          >
+        >,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<
+            ReturnType<
+              typeof getApiKeycloakSeederExistsPractitionerPractitionerId
+            >
+          >,
+          TError,
+          Awaited<
+            ReturnType<
+              typeof getApiKeycloakSeederExistsPractitionerPractitionerId
+            >
+          >
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiKeycloakSeederExistsPractitionerPractitionerId<
+  TData = Awaited<
+    ReturnType<typeof getApiKeycloakSeederExistsPractitionerPractitionerId>
+  >,
+  TError = unknown,
+>(
+  practitionerId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<
+            typeof getApiKeycloakSeederExistsPractitionerPractitionerId
+          >
+        >,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<
+            ReturnType<
+              typeof getApiKeycloakSeederExistsPractitionerPractitionerId
+            >
+          >,
+          TError,
+          Awaited<
+            ReturnType<
+              typeof getApiKeycloakSeederExistsPractitionerPractitionerId
+            >
+          >
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiKeycloakSeederExistsPractitionerPractitionerId<
+  TData = Awaited<
+    ReturnType<typeof getApiKeycloakSeederExistsPractitionerPractitionerId>
+  >,
+  TError = unknown,
+>(
+  practitionerId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<
+            typeof getApiKeycloakSeederExistsPractitionerPractitionerId
+          >
+        >,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useGetApiKeycloakSeederExistsPractitionerPractitionerId<
+  TData = Awaited<
+    ReturnType<typeof getApiKeycloakSeederExistsPractitionerPractitionerId>
+  >,
+  TError = unknown,
+>(
+  practitionerId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<
+            typeof getApiKeycloakSeederExistsPractitionerPractitionerId
+          >
+        >,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions =
+    getGetApiKeycloakSeederExistsPractitionerPractitionerIdQueryOptions(
+      practitionerId,
+      options,
+    );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,
