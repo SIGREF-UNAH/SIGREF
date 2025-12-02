@@ -8,6 +8,7 @@ namespace SIGREF.API.Controllers.Auth;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(AuthenticationSchemes = "Bearer")]
 public class KeycloakSeederController : ControllerBase
 {
     private readonly IKeycloakAdminService _kcAdmin;
