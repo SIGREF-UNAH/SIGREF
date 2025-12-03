@@ -31,17 +31,29 @@ public class ShiftService : IShiftService
             // =======================================================
             // VALIDAR QUE EL LOCATION EXISTA EN FHIR 
             // =======================================================
-            try
-            {
-                await _fhirClient.ReadAsync<Hl7.Fhir.Model.Location>(
-                    $"Location/{dto.LocationId}?_elements=id"
-                );
-            }
-            catch (FhirOperationException ex)
-                when (ex.Status == System.Net.HttpStatusCode.NotFound)
+            var bundle = await _fhirClient.SearchByIdAsync<FhirLocation>(
+                dto.LocationId,
+                includes: null,
+                pageSize: 1
+            );
+
+            // Si no hay entradas, no existe el recurso
+            if (bundle.Entry == null || bundle.Entry.Count == 0)
             {
                 return ResponseHelper.Fail<ShiftDto>(400, "La ubicación especificada no existe en el servidor FHIR.");
             }
+            
+           // try
+           //{
+           //    await _fhirClient.ReadAsync<Hl7.Fhir.Model.Location>(
+           //        $"Location/{dto.LocationId}?_elements=id"
+           //    );
+           //}
+           // catch (FhirOperationException ex)
+           //    when (ex.Status == System.Net.HttpStatusCode.NotFound)
+           //{
+           //    return ResponseHelper.Fail<ShiftDto>(400, "La ubicación especificada no existe en el servidor FHIR.");
+           // //}
 
             // =======================================================
             // VALIDAR EXISTENCIA DE NOMBRE DUPLICADO
@@ -51,7 +63,8 @@ public class ShiftService : IShiftService
             var existsSameName = await _db.Shifts.AnyAsync(s =>
                 s.IsActive &&
                 s.LocationId == dto.LocationId &&
-                s.Name.ToUpper() == normalizedName
+               // s.Name.ToUpper() == normalizedName
+               EF.Functions.ILike(s.Name, dto.Name.Trim())
             );
 
 
@@ -94,7 +107,7 @@ public class ShiftService : IShiftService
         }
         catch (Exception ex)
         {
-            return ResponseHelper.Fail<ShiftDto>(500, $"Error interno al crear el turno: {ex.Message}");
+            return ResponseHelper.Fail<ShiftDto>(500, $"Error interno al crear el turno: {ex.Message} | {ex.StackTrace} | {ex.InnerException?.Message}");
         }
     }
 
