@@ -74,38 +74,27 @@ public class AuditController(IAuditService auditService) : ControllerBase
             logs = await auditService.GetAllLogsAsync(page, pageSize);
         }
 
-        // Aplicar paginación si se usaron filtros
-        if (!string.IsNullOrWhiteSpace(action) || !string.IsNullOrWhiteSpace(userId) || !string.IsNullOrWhiteSpace(userName) || from.HasValue || to.HasValue)
-        {
-            var totalItems = logs.Count;
-            var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+        // Calcular totales
+        var totalItems = logs.Count;
+        var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
 
-            logs = [.. logs
-                .OrderByDescending(l => l.Timestamp)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)];
+        // Aplicar paginación
+        logs = [.. logs
+            .OrderByDescending(l => l.Timestamp)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)];
 
-            var dtos = logs.Select(AuditLogDto.FromAuditLog);
+        var dtos = logs.Select(AuditLogDto.FromAuditLog);
 
-            return Ok(new
-            {
-                page,
-                pageSize,
-                totalItems,
-                totalPages,
-                hasNextPage = page < totalPages,
-                hasPreviousPage = page > 1,
-                data = dtos
-            });
-        }
-
-        // Respuesta sin filtros
-        var simpleDtos = logs.Select(AuditLogDto.FromAuditLog);
         return Ok(new
         {
-            page,
+            currentPage = page,
             pageSize,
-            data = simpleDtos
+            totalItems,
+            totalPages,
+            hasPrevious = page > 1,
+            hasNext = page < totalPages,
+            data = dtos
         });
     }
 
