@@ -19,6 +19,8 @@ export interface AuditLogDto {
   resourceId?: string | null;
   /** @nullable */
   userId?: string | null;
+  /** @nullable */
+  userName?: string | null;
   timestamp?: string;
   /** @nullable */
   endpoint?: string | null;

@@ -24,6 +24,148 @@ import type { UserCreateDto } from ".././models";
 
 import { customInstance } from ".././mutator/customInstance";
 
+export const getApiKeycloakSeederDebugRoles = (signal?: AbortSignal) => {
+  return customInstance<void>({
+    url: `/api/KeycloakSeeder/debug/roles`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getGetApiKeycloakSeederDebugRolesQueryKey = () => {
+  return [`/api/KeycloakSeeder/debug/roles`] as const;
+};
+
+export const getGetApiKeycloakSeederDebugRolesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getApiKeycloakSeederDebugRoles>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof getApiKeycloakSeederDebugRoles>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetApiKeycloakSeederDebugRolesQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getApiKeycloakSeederDebugRoles>>
+  > = ({ signal }) => getApiKeycloakSeederDebugRoles(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getApiKeycloakSeederDebugRoles>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetApiKeycloakSeederDebugRolesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getApiKeycloakSeederDebugRoles>>
+>;
+export type GetApiKeycloakSeederDebugRolesQueryError = unknown;
+
+export function useGetApiKeycloakSeederDebugRoles<
+  TData = Awaited<ReturnType<typeof getApiKeycloakSeederDebugRoles>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getApiKeycloakSeederDebugRoles>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiKeycloakSeederDebugRoles>>,
+          TError,
+          Awaited<ReturnType<typeof getApiKeycloakSeederDebugRoles>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiKeycloakSeederDebugRoles<
+  TData = Awaited<ReturnType<typeof getApiKeycloakSeederDebugRoles>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getApiKeycloakSeederDebugRoles>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiKeycloakSeederDebugRoles>>,
+          TError,
+          Awaited<ReturnType<typeof getApiKeycloakSeederDebugRoles>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiKeycloakSeederDebugRoles<
+  TData = Awaited<ReturnType<typeof getApiKeycloakSeederDebugRoles>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getApiKeycloakSeederDebugRoles>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useGetApiKeycloakSeederDebugRoles<
+  TData = Awaited<ReturnType<typeof getApiKeycloakSeederDebugRoles>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getApiKeycloakSeederDebugRoles>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getGetApiKeycloakSeederDebugRolesQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
 export const postApiKeycloakSeederCreateUser = (
   userCreateDto: UserCreateDto,
   signal?: AbortSignal,

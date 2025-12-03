@@ -13,6 +13,7 @@ import {
   Col,
   Typography,
   Select,
+  Input,
 } from "antd";
 import { SearchOutlined, EyeOutlined, UserOutlined } from "@ant-design/icons";
 import dayjs, { Dayjs } from "dayjs";
@@ -21,9 +22,9 @@ import { useUrlFilters } from "../../../shared/hooks";
 import { EventHistoryModal } from "../components/modals";
 import type { AuditLogDto } from "../../../api/models";
 import { useGetApiAudit } from "../../../api/audit/audit";
-import { Option } from "antd/es/mentions";
 
 const { RangePicker } = DatePicker;
+const { Option } = Select;
 
 export const EventHistoryPage = () => {
   const [form] = Form.useForm();
@@ -34,6 +35,7 @@ export const EventHistoryPage = () => {
   const { filters, setFilters, resetFilters } = useUrlFilters({
     defaultValues: {
       action: undefined as string | undefined,
+      userName: undefined as string | undefined,
       from: undefined as string | undefined,
       to: undefined as string | undefined,
       page: 1,
@@ -43,6 +45,7 @@ export const EventHistoryPage = () => {
 
   const [formValues, setFormValues] = useState({
     action: filters.action,
+    userName: filters.userName || "",
     dateRange:
       filters.from && filters.to
         ? ([dayjs(filters.from), dayjs(filters.to)] as [Dayjs, Dayjs])
@@ -54,6 +57,7 @@ export const EventHistoryPage = () => {
     page: filters.page,
     pageSize: filters.pageSize,
     action: filters.action,
+    userName: filters.userName,
     from: filters.from,
     to: filters.to,
   }), [filters]);
@@ -63,11 +67,12 @@ export const EventHistoryPage = () => {
 
   const responseData = response as any;
   const data = responseData?.data || [];
-  const pagination = responseData?.pagination;
+  const pagination = responseData;
 
   const handleSearch = () => {
     const newFilters: any = {
       action: formValues.action,
+      userName: formValues.userName || undefined,
       page: 1, // Resetear a página 1 al buscar
     };
 
@@ -86,6 +91,7 @@ export const EventHistoryPage = () => {
     // Limpiar formulario
     setFormValues({
       action: undefined,
+      userName: "",
       dateRange: null,
     });
     form.resetFields();
@@ -119,16 +125,15 @@ export const EventHistoryPage = () => {
   const columns: ProColumns<AuditLogDto>[] = [
     {
       title: "Usuario",
-      dataIndex: "userId",
-      key: "userId",
-      render: (_, record) => (
-        <Space>
-          <UserOutlined />
-          <div>
-            <div style={{ fontSize: 12, color: "#999" }}>
-              {record.userId ? `${record.userId.substring(0, 8)}...` : "N/A"}
-            </div>
-          </div>
+      dataIndex: "userName",
+      key: "userName",
+      width: 150,
+      render: (_, record: any) => (
+        <Space direction="vertical" size={0}>
+          <Space>
+            <UserOutlined />
+            <span style={{ fontWeight: 500 }}>{record.userName || "N/A"}</span>
+          </Space>
         </Space>
       ),
     },
@@ -136,27 +141,24 @@ export const EventHistoryPage = () => {
       title: "Acción",
       dataIndex: "action",
       key: "action",
-      render: (_, record) => (
+      render: (_, record: any) => (
         <div>
-          <div style={{ marginTop: 4 }}>
-            <Tag color={getActionColor(record.action)}>{record.action || "N/A"}</Tag>
-            <span style={{ fontWeight: 500 }}>{record.httpMethod}</span>{" "}
-            <code style={{ fontSize: 12 }}>{record.endpoint}</code>
+          <div style={{ marginTop: 4, fontSize: 12 }}>
+            <Tag color={getActionColor(record.action)}>
+              {record.action || "N/A"}
+            </Tag>
+            <code style={{ fontSize: 11 }}>{record.endpoint}</code>
           </div>
         </div>
       ),
     },
-    // {
-    //   title: "Tipo de Recurso",
-    //   dataIndex: "resourceType",
-    //   key: "resourceType",
-    //   render: (text) => text || "-",
-    // },
     {
       title: "Código",
       dataIndex: "statusCode",
       key: "statusCode",
-      render: (_, record) => (
+      width: 100,
+      align: "center",
+      render: (_, record: any) => (
         <Tag color={getStatusColor(record.statusCode)}>
           {record.statusCode || "N/A"}
         </Tag>
@@ -166,7 +168,9 @@ export const EventHistoryPage = () => {
       title: "Resultado",
       dataIndex: "success",
       key: "success",
-      render: (_, record) => (
+      width: 100,
+      align: "center",
+      render: (_, record: any) => (
         <Tag color={record.success ? "success" : "error"}>
           {record.success ? "Exitoso" : "Fallido"}
         </Tag>
@@ -176,7 +180,8 @@ export const EventHistoryPage = () => {
       title: "Fecha",
       dataIndex: "timestamp",
       key: "timestamp",
-      render: (_, record) =>
+      width: 180,
+      render: (_, record: any) =>
         record.timestamp
           ? dayjs(record.timestamp).format("YYYY-MM-DD HH:mm:ss")
           : "N/A",
@@ -184,7 +189,8 @@ export const EventHistoryPage = () => {
     {
       title: "Acciones",
       key: "actions",
-      width: 120,
+      width: 100,
+      align: "center",
       render: (_, record) => (
         <Button
           type="link"
@@ -209,8 +215,22 @@ export const EventHistoryPage = () => {
         {/* Filtros */}
         <Form layout="vertical" form={form}>
           <Row gutter={16}>
+            {/* Nombre de Usuario */}
+            <Col span={6}>
+              <Form.Item label="Nombre de Usuario">
+                <Input
+                  placeholder="Buscar por usuario..."
+                  value={formValues.userName}
+                  onChange={(e) =>
+                    setFormValues({ ...formValues, userName: e.target.value })
+                  }
+                  onPressEnter={handleSearch}
+                  allowClear
+                />
+              </Form.Item>
+            </Col>
             {/* Acción */}
-            <Col span={8}>
+            <Col span={6}>
               <Form.Item label="Acción">
                 <Select
                   placeholder="Seleccionar tipo de acción"
@@ -228,7 +248,7 @@ export const EventHistoryPage = () => {
               </Form.Item>
             </Col>
             {/* Rango de Fechas */}
-            <Col span={10}>
+            <Col span={8}>
               <Form.Item label="Rango de Fechas">
                 <RangePicker
                   showTime
@@ -245,7 +265,7 @@ export const EventHistoryPage = () => {
               </Form.Item>
             </Col>
             {/* Botones */}
-            <Col span={6}>
+            <Col span={4}>
               <Form.Item label=" " colon={false}>
                 <Space>
                   <Button
@@ -272,8 +292,8 @@ export const EventHistoryPage = () => {
           search={false}
           loading={isLoading}
           pagination={{
-            current: filters.page,
-            pageSize: filters.pageSize,
+            current: pagination?.currentPage || filters.page,
+            pageSize: pagination?.pageSize || filters.pageSize,
             total: pagination?.totalItems || 0,
             showTotal: (total) => `Total ${total} registros`,
             showSizeChanger: true,
