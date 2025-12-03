@@ -116,16 +116,6 @@ public class Startup
         services.AddScoped<IUserContextService, UserContextService>();
 
 
-        // ================== MONGO LOGGING ==================
-        // services.Configure<MongoSettings>(_configuration.GetSection("Mongo"));
-
-        // Optional: Register IMongoDatabase if needed by services
-        services.AddSingleton<IMongoDatabase>(sp =>
-        {
-            var client = sp.GetRequiredService<IMongoClient>();
-            return client.GetDatabase("sigref-logs");
-        });
-
         // ================== AUDIT SERVICES ==================
         services.AddAuditServices();
 
