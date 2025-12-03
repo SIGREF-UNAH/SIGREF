@@ -21,6 +21,8 @@ using SIGREF.API.Services.AdministrationHospital;
 using SIGREF.API.Services.Auth.Keycloak;
 using SIGREF.API.Services.Billing;
 using SIGREF.API.Services.Cashier;
+using SIGREF.API.Services.Dashboard;
+using SIGREF.API.Services.FhirUtils;
 using SIGREF.API.Services.Files;
 using SIGREF.API.Services.Serie;
 
@@ -62,6 +64,11 @@ public class Startup
         services.AddScoped<IPractitionerService, PractitionerService>();
         services.AddScoped<IOrganizationService, OrganizationService>();
         services.AddScoped<ServiceGroupService>();
+        
+        // ============= RECUPERADORES FHIR ==========
+        services.AddScoped<IFhirLookupService, FhirLookupService>();
+        services.AddScoped<IDashboardReportingService, DashboardReportingService>();
+        
 
         services.AddScoped<IUserContextService, UserContextService>();
         // ================ SIGREF SERVICES =======================
