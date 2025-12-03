@@ -6,6 +6,7 @@
  */
 
 export interface CreateShiftDto {
+  /** @minLength 1 */
   locationId: string;
   /**
    * @minLength 0

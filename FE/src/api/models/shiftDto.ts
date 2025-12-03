@@ -7,7 +7,8 @@
 
 export interface ShiftDto {
   id?: string;
-  locationId?: string;
+  /** @nullable */
+  locationId?: string | null;
   /** @nullable */
   name?: string | null;
   startTime?: string;
