@@ -10,7 +10,7 @@ builder.AddServiceDefaults();
 builder.AddNpgsqlDbContext<SIGREF.API.Database.SIGREFContext>("sigref");
 
 // Add MongoDB client with Aspire integration
-builder.AddMongoDBClient("sigref-logs");
+builder.AddMongoDBClient("MongoDb");
 
 // Log configuration sources for debugging
 builder.Logging.AddConsole();

@@ -65,7 +65,6 @@ public class ShiftService : IShiftService
                 s.LocationId == dto.LocationId &&
                // s.Name.ToUpper() == normalizedName
                EF.Functions.ILike(s.Name, dto.Name.Trim())
-
             );
 
 

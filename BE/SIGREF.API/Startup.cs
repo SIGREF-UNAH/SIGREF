@@ -25,6 +25,7 @@ using SIGREF.API.Services.Dashboard;
 using SIGREF.API.Services.FhirUtils;
 using SIGREF.API.Services.Files;
 using SIGREF.API.Services.Serie;
+using SIGREF.API.Audit.Extensions;
 
 
 namespace SIGREF.API;
@@ -122,15 +123,8 @@ public class Startup
         services.AddScoped<IUserContextService, UserContextService>();
 
 
-        // ================== MONGO LOGGING ==================
-        // services.Configure<MongoSettings>(_configuration.GetSection("Mongo"));
-
-        // Optional: Register IMongoDatabase if needed by services
-        services.AddSingleton<IMongoDatabase>(sp =>
-        {
-            var client = sp.GetRequiredService<IMongoClient>();
-            return client.GetDatabase("sigref-logs");
-        });
+        // ================== AUDIT SERVICES ==================
+        services.AddAuditServices();
 
         services.AddHttpContextAccessor();
 
@@ -247,6 +241,9 @@ public class Startup
         app.UseCors("CorsPolicy");
 
         app.UseRouting();
+
+        // Middleware de auditoría (después de routing, antes de auth)
+        app.UseAuditMiddleware();
 
         //
         var mediaPath = Path.Combine(env.ContentRootPath, "media");
