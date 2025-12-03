@@ -58,8 +58,8 @@ public class KeycloakClient : IKeycloakClient
 
             var form = new Dictionary<string, string>
             {
-                ["grant_type"]    = "client_credentials",
-                ["client_id"]     = _clientId,
+                ["grant_type"] = "client_credentials",
+                ["client_id"] = _clientId,
                 ["client_secret"] = _clientSecret
             };
 
@@ -92,7 +92,7 @@ public class KeycloakClient : IKeycloakClient
         // LIMPIAR HEADERS PREVIOS SIEMPRE
         _http.DefaultRequestHeaders.Remove("Authorization");
         _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-       // Console.WriteLine("===== TOKEN USADO =====");
+        // Console.WriteLine("===== TOKEN USADO =====");
         //Console.WriteLine(token);
         //Console.WriteLine("=======================");
 

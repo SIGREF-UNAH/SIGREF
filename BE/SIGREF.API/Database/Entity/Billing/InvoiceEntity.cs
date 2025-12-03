@@ -48,11 +48,11 @@ public class InvoiceEntity : BaseEntity
     //      SERIE DE FACTURACIÓN
     // ===============================
 
-    [Required] [Column("serie_id")] public Guid SerieId { get; set; }
+    [Required][Column("serie_id")] public Guid SerieId { get; set; }
 
     [ForeignKey(nameof(SerieId))] public InvoiceSerieEntity? Serie { get; set; }
 
-    [Required] [Column("number")] public long Number { get; set; }
+    [Required][Column("number")] public long Number { get; set; }
 
 
     // ===========================================================
@@ -111,8 +111,8 @@ public class InvoiceEntity : BaseEntity
     /// - Paid      : Factura pagada completamente.
     /// - Cancelled : Factura anulada (sin efectos contables).
     /// - Refunded  : Factura reembolsada parcial o totalmente.
-    
-    
+
+
     // ===============================
     //        TIPO DE FACTURA
     //  (Normal, Emergency, Exempt, CreditNote, DebitNote)
@@ -122,7 +122,7 @@ public class InvoiceEntity : BaseEntity
     [Column("invoice_type", TypeName = "varchar(30)")]
     [EnumDataType(typeof(InvoiceType))]
     public InvoiceType InvoiceType { get; set; } = InvoiceType.Normal;
-    
+
     // ===============================
     //        MÉTODO DE PAGO
     // ===============================

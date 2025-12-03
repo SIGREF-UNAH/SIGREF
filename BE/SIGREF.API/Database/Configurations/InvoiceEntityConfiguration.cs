@@ -12,7 +12,7 @@ public class InvoiceEntityConfiguration : IEntityTypeConfiguration<InvoiceEntity
             "invoices",
             t => t.HasComment("Tabla principal de facturación: contiene facturas normales, emergencias, exentas y notas de crédito/débito.")
         );
-        
+
         // ============================
         // PRIMARY KEY
         // ============================
@@ -86,7 +86,7 @@ public class InvoiceEntityConfiguration : IEntityTypeConfiguration<InvoiceEntity
             .WithMany()
             .HasForeignKey(i => i.CashierSessionId)
             .OnDelete(DeleteBehavior.Restrict);
-    
+
         // ============================
         //          AUDITORÍA
         // ============================
@@ -111,15 +111,15 @@ public class InvoiceEntityConfiguration : IEntityTypeConfiguration<InvoiceEntity
         // INDEXES 
         // ============================
 
-        builder.HasIndex(i => new { i.CreatedById})
+        builder.HasIndex(i => new { i.CreatedById })
             .HasDatabaseName("idx_invoice_created_by");
-        
+
         builder.HasIndex(i => new { i.CashierSessionId })
             .HasDatabaseName("idx_invoice_cashier_sesion");
-        
+
         builder.HasIndex(i => new { i.SerieId })
             .HasDatabaseName("idx_invoice_serie");
-        
+
         // Index para buscar facturas por serie/número 
         builder.HasIndex(i => new { i.SerieId, i.Number })
             .HasDatabaseName("idx_invoice_serie_number");

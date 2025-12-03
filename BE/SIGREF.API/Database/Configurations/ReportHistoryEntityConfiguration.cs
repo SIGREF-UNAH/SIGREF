@@ -80,7 +80,7 @@ public class ReportHistoryEntityConfiguration : IEntityTypeConfiguration<ReportH
         builder.Property(x => x.UpdatedDate)
             .HasColumnName("updated_date")
             .HasComment("Fecha de última actualización (UTC).");
-        
+
 
 
         // ===============================

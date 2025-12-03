@@ -2,7 +2,7 @@ import { ProLayout } from "@ant-design/pro-components";
 import { Link, Outlet, useNavigate } from "react-router";
 import { Button, Dropdown } from "antd";
 import { useKeycloak } from "@react-keycloak/web";
-import { RoutesByRole } from "../../config";
+import { RoutesByRole, useAbility } from "../../config";
 import { validRoles } from "../../auth";
 import { ShortcutsGuideModal } from "./modals";
 import { useState } from "react";
@@ -13,6 +13,7 @@ import {
   LogoutOutlined,
   PhoneOutlined,
   QuestionCircleOutlined,
+  UserAddOutlined,
 } from "@ant-design/icons";
 
 // Función helper para construir URLs de media
@@ -39,6 +40,7 @@ export const Layout = () => {
   const navigate = useNavigate();
   const { keycloak } = useKeycloak();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const ability = useAbility();
 
   // Obtener información del hospital con los logos
   const { data: hospitalResponse } = useGetApiHospitalPropertiesDetails();
@@ -174,6 +176,11 @@ const hospitalData = hospitalResponseData?.data;
           icon: <span className="text-xs font-thin text-white">{getInitials(name)}</span>,
           render: (_props, dom) => {
             const userMenu = [
+              ...(ability.can("read", "users") ? [{
+                key: "0",
+                label: <Link to="/users">Crear Usuarios</Link>,
+                icon: <UserAddOutlined />,
+              }] : []),
               {
                 key: "1",
                 label: <Link to="/hospital">Hospital</Link>,

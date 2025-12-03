@@ -29,7 +29,7 @@ public class InvoiceItemEntity : BaseEntity
 
     [ForeignKey(nameof(ServiceId))]
     public HealthService Service { get; set; }
-    
+
 
     // ===============================
     //        DATOS DEL ÍTEM
