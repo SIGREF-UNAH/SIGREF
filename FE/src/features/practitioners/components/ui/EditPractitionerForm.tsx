@@ -46,7 +46,7 @@ export default function EditPractitionerForm() {
   const { id } = useParams();
   const formRef = useRef<any>(null);
   const [loading, setLoading] = useState(true);
-  const [initialValues, setInitialValues] = useState<any>({});
+  const [formValues, setFormValues] = useState<any>({});
 
   const { data } = useGetApiPractitionerId<EmployeeDetail>(id!);
 
@@ -70,7 +70,7 @@ export default function EditPractitionerForm() {
     active: data.active ?? true,
   };
 
-  setInitialValues(values);
+  setFormValues(values);
 
   setTimeout(() => {
     if (formRef.current) {
@@ -82,11 +82,11 @@ export default function EditPractitionerForm() {
 }, [data]);
 
 
-  useEffect(() => {
-  if (formRef.current && Object.keys(initialValues).length) {
-    formRef.current.setFieldsValue(initialValues);
+  useEffect(() => {formValues
+  if (formRef.current && Object.keys(formValues).length) {
+    formRef.current.setFieldsValue(formValues);
   }
-  }, [initialValues]);
+  }, [formValues]);
 
   const onFinish = async (values: any) => {
 
@@ -166,7 +166,7 @@ if (values.email) {
 
       <ProForm
         formRef={formRef}
-        initialValues={initialValues}
+        initialValues={formValues}
         onFinish={onFinish}
         submitter={{
           searchConfig: { submitText: "Guardar Cambios" },

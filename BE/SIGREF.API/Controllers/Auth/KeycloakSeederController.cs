@@ -8,7 +8,7 @@ namespace SIGREF.API.Controllers.Auth;
 
 [ApiController]
 [Route("api/[controller]")]
-//[Authorize(AuthenticationSchemes = "Bearer")]
+[Authorize(AuthenticationSchemes = "Bearer")]
 public class KeycloakSeederController : ControllerBase
 {
     private readonly IKeycloakAdminService _kcAdmin;
@@ -17,11 +17,18 @@ public class KeycloakSeederController : ControllerBase
     {
         _kcAdmin = kcAdmin;
     }
+    [HttpGet("debug/roles")]
+    public IActionResult DebugRoles([FromServices] IUserContextService ctx)
+    {
+        return Ok(new {
+            Roles = ctx.GetUserRoles()
+        });
+    }
 
     // ============================================================
     // CREATE USER
     // ============================================================
-    //[Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}")]
+    [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}")]
     [HttpPost("create-user")]
     public async Task<IActionResult> CreateUser([FromBody] UserCreateDto dto)
     {

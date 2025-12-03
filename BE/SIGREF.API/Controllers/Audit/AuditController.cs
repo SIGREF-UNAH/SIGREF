@@ -10,16 +10,6 @@ namespace SIGREF.API.Controllers.Audit;
 [ApiController]
 public class AuditController(IAuditService auditService) : ControllerBase
 {
-    /// <summary>
-    /// Obtener logs de auditoría con filtros opcionales
-    /// </summary>
-    /// <param name="page">Número de página (default: 1)</param>
-    /// <param name="pageSize">Tamaño de página (default: 50, max: 100)</param>
-    /// <param name="action">Filtrar por acción (create, update, delete, read, login, login-failed)</param>
-    /// <param name="userId">Filtrar por ID de usuario</param>
-    /// <param name="userName">Filtrar por nombre de usuario</param>
-    /// <param name="from">Fecha inicial del rango (formato: yyyy-MM-dd o yyyy-MM-ddTHH:mm:ss)</param>
-    /// <param name="to">Fecha final del rango (formato: yyyy-MM-dd o yyyy-MM-ddTHH:mm:ss)</param>
     /// <returns>Lista paginada de logs de auditoría</returns>
     [HttpGet]
     [Authorize(AuthenticationSchemes = "Bearer", Roles = RolesConstants.ti)]

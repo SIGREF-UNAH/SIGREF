@@ -45,33 +45,26 @@ namespace SIGREF.API.Database.Migrations
                     -- Shift & Location
                     cs.shift_id                              AS shift_id,
                     s.name                                   AS shift_name,
-                    s.location_fhir_id                       AS location_id,
-                    loc.name                                 AS location_name,
+                    s.location_id                            AS location_id,
 
                     -- Servicio / Paquete
                     it.service_id                            AS service_id,
-                    hs.fhir_display                          AS service_name,
                     i.service_group_fhir_id                  AS package_id,
-                    hsp.package_name                         AS package_name,
 
                     -- Contadores
                     CASE WHEN it.id IS NOT NULL THEN 1 ELSE 0 END AS total_items,
 
                     -- Cashier Session
                     cs.id                                    AS cashier_session_id,
-                    cs.created_by_id                         AS cashier_user_id,
-                    u.username                               AS cashier_user_name
+                    cs.created_by_id                         AS cashier_user_id
+
 
                 FROM invoices i
                 LEFT JOIN cashier_sessions cs ON cs.id = i.cashier_session_id
                 LEFT JOIN shifts s ON s.id = cs.shift_id
-                LEFT JOIN locations loc ON loc.id = s.location_id
 
                 LEFT JOIN invoice_items it ON it.invoice_id = i.id
                 LEFT JOIN health_services hs ON hs.id = it.service_id
-                LEFT JOIN health_service_packages hsp ON hsp.id = i.service_group_fhir_id
-
-                LEFT JOIN users u ON u.id = cs.created_by_id
 
                 WHERE i.is_active = TRUE;
             ");

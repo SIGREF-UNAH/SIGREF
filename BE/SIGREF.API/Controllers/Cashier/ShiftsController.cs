@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SIGREF.API.Constants;
 using SIGREF.API.Dtos.Cashier;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Services.Cashier;
@@ -8,7 +9,7 @@ namespace SIGREF.API.Controllers.Cashier;
 
 [Route("api/[controller]")]
 [ApiController]
-//[Authorize(AuthenticationSchemes = "Bearer")]
+[Authorize(AuthenticationSchemes = "Bearer")]
 public class ShiftsController(IShiftService shiftService) : ControllerBase
 {
     // ============================================================
@@ -18,6 +19,7 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces(typeof(PagedResultDto<ShiftDto>))]
+    [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor}")]
     public async Task<IActionResult> GetFiltered([FromQuery] ShiftFilterDto filter)
     {
         var response = await shiftService.GetFilteredShiftsAsync(filter);
@@ -35,6 +37,7 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
     [HttpGet("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor}")]
     [Produces(typeof(ShiftDto))]
     public async Task<IActionResult> GetById(Guid id)
     {
@@ -52,6 +55,7 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [Produces(typeof(ShiftDto))]
+    [Authorize(Roles = $"{RolesConstants.admin}")]
     public async Task<IActionResult> Create([FromBody] CreateShiftDto dto)
     {
         if (!ModelState.IsValid)
@@ -71,6 +75,7 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
     [HttpPut("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Roles = $"{RolesConstants.admin}")]
     [Produces(typeof(ShiftDto))]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateShiftDto dto)
     {
@@ -91,6 +96,7 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Roles = $"{RolesConstants.admin}")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var response = await shiftService.DeleteShiftAsync(id);

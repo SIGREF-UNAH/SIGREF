@@ -44,16 +44,16 @@ public class DashboardFact
     // ===============================
     // Locations viene de FHIR SU ID ES STRING
     public string? LocationId { get; set; }
-    public string? LocationName { get; set; } // Recuperado en Bundle
+    //public string? LocationName { get; set; } // Recuperado en Bundle
 
     // ===============================
     // DIMENSIÓN DE SERVICIOS/PAQUETES
     // ===============================
     public Guid? ServiceId { get; set; }
     public string FhirServiceId { get; set; }
-    public string? ServiceName { get; set; }
+    //public string? ServiceName { get; set; }
     public string? PackageId { get; set; }
-    public string? PackageName { get; set; }
+    //public string? PackageName { get; set; }
 
     // ===============================
     // DIMENSIÓN DE PACIENTE
@@ -69,6 +69,6 @@ public class DashboardFact
     // DIMENSIÓN CASHIER (OPCIONAL PERO ÚTIL)
     // ===============================
     public Guid? CashierSessionId { get; set; }
-    public string? CashierUserName { get; set; }
+    //public string? CashierUserName { get; set; }
 }
 
