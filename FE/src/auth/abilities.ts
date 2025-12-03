@@ -12,13 +12,16 @@ export type Subjects =
   | "reports"         // Reportes
   | "users"            // Usuarios
   | "all";
-
+  
 export const defineAbilitiesFor = (roles: string[]) => {
   const { can, cannot, build } = new AbilityBuilder(Ability);
 
   // Administrador
   if (roles.includes("admin")) {
     can("manage", "all");
+
+    //* Administrador no puede crear todos los usuarios
+    can("create", "users");
   }
 
   // Auxiliar de caja
@@ -26,6 +29,9 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can(["create", "read", "update"], "incomes");
     can(["create", "read", "update"], "healthcares");
     can(["create", "read", "update"], "patients");
+
+    //* No puede crear usuarios
+    cannot("create", "users");
   }
 
   // Auditor
@@ -34,6 +40,9 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can("read", "practitioners");
     can("read", "events");
     can("read", "incomes");
+
+    //* No puede crear usuarios
+    cannot("create", "users");
   }
 
   // Tecnico de Informática
@@ -43,6 +52,9 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can(["create", "read", "update"], "organizations");
     can(["create", "read", "update"], "locations");
     can(["create", "read", "update"], "users");
+
+    //* Puede crear cualquier tipo de usuario
+    can("create", "users");
   }
 
   // Restricciones generales

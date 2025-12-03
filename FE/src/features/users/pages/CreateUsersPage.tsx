@@ -13,6 +13,8 @@ import { useGetApiLocations } from "../../../api/locations/locations";
 import { USER_ROLE_OPTIONS } from "../../../shared/constants/UserRolesConstants";
 import { FaCheck } from "react-icons/fa";
 import { usePostApiKeycloakSeederCreateUser } from "../../../api/keycloak-seeder/keycloak-seeder";
+import { useAbility } from "../../../config";
+import { useKeycloak } from "@react-keycloak/web";
 
 type Practitioner = {
   id: number;
@@ -52,8 +54,12 @@ export default function CreateUsersPage() {
   const [searchRole, setSearchRole] = useState<string | undefined>(undefined);
   const [searchArea, setSearchArea] = useState<string | undefined>(undefined);
   const [searchStatus, setSearchStatus] = useState<string | undefined>(undefined);
+  const { keycloak } = useKeycloak();
+  const ability = useAbility();
 
   const createUserMutation = usePostApiKeycloakSeederCreateUser();
+
+  const currentUserRole = keycloak.tokenParsed?.realm_access?.roles || [];
 
   const { data } = useGetApiPractitioner<{
       items: Practitioner[];
@@ -124,6 +130,23 @@ export default function CreateUsersPage() {
     role: undefined,
   });
 }, [selected]);
+
+    const allRoles = ["admin", "ti", "cashier", "auditor"];
+
+// Filtra los roles que puede crear el usuario actual
+const allowedRoles = allRoles.filter((r) => {
+  // Admin no puede crear admin ni ti
+  if (ability.can("create", "users")) {
+    if (currentUserRole.includes("admin")) {
+      return r === "cashier" || r === "auditor";
+    }
+    if (currentUserRole.includes("ti")) {
+      return true; // TI puede crear todos
+    }
+  }
+  return false;
+})
+
 
 
   return (
@@ -250,6 +273,13 @@ export default function CreateUsersPage() {
               resetButtonProps: { 
                 className: "px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-md transition-colors duration-200" 
               },
+              render: (_, dom) => {
+                return (
+                  <div className="flex justify-end w-full mt-4 gap-3">
+                    {dom}
+                  </div>
+                );
+              },
             }}
             onFinish={async (values) => {
               if (!selected) {
@@ -262,7 +292,6 @@ export default function CreateUsersPage() {
                 return;
               }
 
-              // Construir el payload que espera el backend
               const payload = {
                 username: values.username,
                 practitionerId: String(selected.id),
@@ -341,10 +370,7 @@ export default function CreateUsersPage() {
                   name="role"
                   label="Rol del Usuario"
                   placeholder="Seleccione un rol"
-                  options={USER_ROLE_OPTIONS.map((r) => ({
-                    label: r.label,
-                    value: r.value,
-                  }))}
+                  options={USER_ROLE_OPTIONS.filter(r => allowedRoles.includes(r.value))}
                 />
               </div>
 
