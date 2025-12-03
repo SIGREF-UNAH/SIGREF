@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SIGREF.API.Constants;
 using SIGREF.API.Extensions;
 using SIGREF.API.Dtos.Location;
 using SIGREF.API.Services.Location;
@@ -14,12 +15,12 @@ public class LocationsController(LocationService locationService) : ControllerBa
 {
     // GET: api/locations
     [HttpGet]
-    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
     [Produces(typeof(PagedResultDto<LocationDto>))]
     public async Task<IActionResult> Get([FromQuery] LocationFilterDto filter)
     {
@@ -39,9 +40,9 @@ public class LocationsController(LocationService locationService) : ControllerBa
 
     // GET api/locations/5
     [HttpGet("{id}")]
-    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
     [Produces<LocationDto>()]
     public async Task<IActionResult> GetById(int id)
     {
@@ -54,7 +55,7 @@ public class LocationsController(LocationService locationService) : ControllerBa
     }
 
     [HttpPost]
-    [AllowAnonymous]
+    [Authorize(Roles = $"{RolesConstants.admin}")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [Produces<LocationDto>()]
@@ -70,11 +71,11 @@ public class LocationsController(LocationService locationService) : ControllerBa
     }
 
     [HttpPut("{id}")]
-    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [Produces<LocationDto>()]
+    [Authorize(Roles = $"{RolesConstants.admin}")]
     public async Task<IActionResult> UpdateLocation(int id, [FromBody] UpdateLocationDto updateLocationDto)
     {
         if (!ModelState.IsValid)
@@ -94,9 +95,9 @@ public class LocationsController(LocationService locationService) : ControllerBa
     }
 
     [HttpDelete("{id}")]
-    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Roles = $"{RolesConstants.admin}")]
     public async Task<IActionResult> DeleteLocation(int id)
     {
         var location = await locationService.GetLocationByIdAsync(id);

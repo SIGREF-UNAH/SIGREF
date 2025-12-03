@@ -11,6 +11,7 @@ import { PatientsRouter } from "../features/patients/routers";
 import { LocationsRouter } from "../features/locations/routers";
 import { ServiceGroupsRouter } from "../features/service-groups/routers";
 import { HospitalRouter } from "../features/hospital/routers";
+import { UsersRouter } from "../features/users/routers";
 
  export const AppRouter = () => {
   return (
@@ -55,6 +56,9 @@ import { HospitalRouter } from "../features/hospital/routers";
         
         {/* Rutas de Información del Hospital */}
         <Route path="/hospital/*" element={<HospitalRouter />} />
+
+        {/* Rutas de Usuarios */}
+        <Route path="/users/*" element={<UsersRouter />} />
 
       </Route>
     </Routes>
