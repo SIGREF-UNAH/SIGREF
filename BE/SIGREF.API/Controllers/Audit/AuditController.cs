@@ -10,15 +10,6 @@ namespace SIGREF.API.Controllers.Audit;
 [ApiController]
 public class AuditController(IAuditService auditService) : ControllerBase
 {
-    /// <summary>
-    /// Obtener logs de auditoría con filtros opcionales
-    /// </summary>
-    /// <param name="page">Número de página (default: 1)</param>
-    /// <param name="pageSize">Tamaño de página (default: 50, max: 100)</param>
-    /// <param name="action">Filtrar por acción (create, update, delete, read, login, login-failed)</param>
-    /// <param name="from">Fecha inicial del rango (formato: yyyy-MM-dd o yyyy-MM-ddTHH:mm:ss)</param>
-    /// <param name="to">Fecha final del rango (formato: yyyy-MM-dd o yyyy-MM-ddTHH:mm:ss)</param>
-    /// <returns>Lista paginada de logs de auditoría</returns>
     [HttpGet]
     [Authorize(AuthenticationSchemes = "Bearer", Roles = RolesConstants.ti)]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -104,11 +95,6 @@ public class AuditController(IAuditService auditService) : ControllerBase
         });
     }
 
-    /// <summary>
-    /// Obtener un log de auditoría por su ID
-    /// </summary>
-    /// <param name="id">ID del log de auditoría (ObjectId de MongoDB)</param>
-    /// <returns>Detalle completo del log de auditoría</returns>
     [HttpGet("{id}")]
     [Authorize(AuthenticationSchemes = "Bearer", Roles = RolesConstants.ti)]
     [ProducesResponseType(StatusCodes.Status200OK)]
