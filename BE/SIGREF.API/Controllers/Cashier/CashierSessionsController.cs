@@ -26,6 +26,7 @@ public class CashierSessionsController : ControllerBase
     /// Abre una nueva sesión de caja para el cajero.
     /// </summary>
     [HttpPost("open")]
+    [Authorize(Roles = $"{RolesConstants.cashier}")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> OpenSession([FromBody] CreateCashierSessionDto dto)
@@ -43,6 +44,7 @@ public class CashierSessionsController : ControllerBase
     /// Cierra una sesión de caja e incluye el monto declarado.
     /// </summary>
     [HttpPost("{sessionId:guid}/close")]
+    [Authorize(Roles = $"{RolesConstants.cashier}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CloseSession(Guid sessionId, [FromBody] CloseCashierSessionDto dto)
@@ -59,6 +61,7 @@ public class CashierSessionsController : ControllerBase
     /// <summary>
     /// El cajero solicita una corrección del arqueo , caja cerro pero inconsistencias.
     /// </summary>
+    [Authorize(Roles = $"{RolesConstants.cashier}")]
     [HttpPost("{sessionId:guid}/request-correction")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -77,6 +80,7 @@ public class CashierSessionsController : ControllerBase
     /// Admin o auditor revisan y resuelven la corrección.
     /// TODO VERIFICA ARCHIVO DE SERVICIO 
     /// </summary>
+    [Authorize(Roles = $"{RolesConstants.admin}")]
     [HttpPost("{sessionId:guid}/resolve-correction")]
     [Authorize(Roles = $"{RolesConstants.admin},{RolesConstants.auditor}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -97,6 +101,7 @@ public class CashierSessionsController : ControllerBase
     /// Admin/Auditor ven todas, cajero solo las suyas.
     /// </summary>
     [HttpGet]
+    [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetFiltered([FromQuery] CashierSessionFilterDto filter)
     {
@@ -113,6 +118,7 @@ public class CashierSessionsController : ControllerBase
     /// Obtiene una sesión de caja por su ID.
     /// </summary>
     [HttpGet("{sessionId:guid}")]
+    [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(Guid sessionId)

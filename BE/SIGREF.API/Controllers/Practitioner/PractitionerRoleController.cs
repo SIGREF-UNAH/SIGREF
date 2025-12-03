@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using SIGREF.API.Constants;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.PractitionerRole;
 using SIGREF.API.Services.PractitionerRole;
@@ -7,6 +9,7 @@ namespace SIGREF.API.Controllers.PractitionerC;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize(AuthenticationSchemes = "Bearer")]
 public class PractitionerRoleController : ControllerBase
 {
     private readonly IPractitionerRoleService _prService;
@@ -23,6 +26,7 @@ public class PractitionerRoleController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor} , {RolesConstants.ti}")]
     [Produces(typeof(PagedResultDto<PractitionerRoleDto>))]
     public async Task<IActionResult> GetFiltered([FromQuery] PractitionerRoleFilterDto filters)
     {
@@ -45,6 +49,7 @@ public class PractitionerRoleController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.auditor} , {RolesConstants.ti}")]
     [Produces<PractitionerRoleDto>()]
     public async Task<IActionResult> GetById(string id)
     {
@@ -62,6 +67,7 @@ public class PractitionerRoleController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces<PractitionerRoleDto>()]
+    [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.auditor} , {RolesConstants.ti}")]
     public async Task<IActionResult> GetByPractitionerId(string id)
     {
         var roles = await _prService.GetByPractitionerIdAsync(id);
@@ -76,6 +82,7 @@ public class PractitionerRoleController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.ti}")]
     [Produces<PractitionerRoleDto>()]
     public async Task<IActionResult> Create([FromBody] CreatePractitionerRoleDto dto)
     {
@@ -108,6 +115,7 @@ public class PractitionerRoleController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = $"{RolesConstants.admin}, {RolesConstants.ti}")]
     [Produces<PractitionerRoleDto>()]
     public async Task<IActionResult> Update(string id, [FromBody] UpdatePractitionerRoleDto dto)
     {
@@ -138,6 +146,7 @@ public class PractitionerRoleController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.ti}")]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Delete(string id)
     {

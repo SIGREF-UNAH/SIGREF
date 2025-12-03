@@ -10,9 +10,6 @@ export const IncomesRoutes = [
 export const HealthcaresRoutes = [
   { path: "/healthcares/list", name: "Lista de Servicios" },
   { path: "/healthcares/create", name: "Crear Servicio" },
-];
-
-export const ServiceGroupsRoutes = [
   { path: "/service-groups/list", name: "Lista de Paquetes" },
   { path: "/service-groups/create", name: "Crear Paquete" },
 ];
@@ -65,7 +62,6 @@ export const RoutesByRole: Record<
   [validRoles.admin]: {
     fondos: IncomesRoutes,
     servicios: HealthcaresRoutes,
-    paquetes: ServiceGroupsRoutes,
     pacientes: PatientsRoutes,
     empleados: PractitionersRoutes,
     ubicaciones: LocationsRoutes,
@@ -76,14 +72,12 @@ export const RoutesByRole: Record<
   [validRoles.auditor]: {
     fondos: IncomesRoutes,
     servicios: HealthcaresRoutes,
-    paquetes: ServiceGroupsRoutes,
     empleados: PractitionersRoutes,
     eventos: EventsRoutes,
   },
   [validRoles.cashier]: {
     fondos: IncomesRoutes,
     servicios: HealthcaresRoutes,
-    paquetes: ServiceGroupsRoutes,
     pacientes: PatientsRoutes,
   },
   [validRoles.ti]: {

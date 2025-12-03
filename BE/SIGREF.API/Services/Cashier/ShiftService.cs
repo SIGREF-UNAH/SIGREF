@@ -1,4 +1,5 @@
-﻿﻿using Hl7.Fhir.Rest;
+using System.ComponentModel;
+using Hl7.Fhir.Rest;
 using FhirLocation = Hl7.Fhir.Model.Location;
 using Microsoft.EntityFrameworkCore;
 using SIGREF.API.Database;
@@ -38,6 +39,18 @@ public class ShiftService : IShiftService
             {
                 ResponseHelper.Fail<ShiftDto>(400, "La ubicación especificada no existe en el servidor FHIR.");
             }
+            
+           // try
+           //{
+           //    await _fhirClient.ReadAsync<Hl7.Fhir.Model.Location>(
+           //        $"Location/{dto.LocationId}?_elements=id"
+           //    );
+           //}
+           // catch (FhirOperationException ex)
+           //    when (ex.Status == System.Net.HttpStatusCode.NotFound)
+           //{
+           //    return ResponseHelper.Fail<ShiftDto>(400, "La ubicación especificada no existe en el servidor FHIR.");
+           // //}
 
             // try
             //{
@@ -341,6 +354,7 @@ public class ShiftService : IShiftService
                     .Select(e => ((FhirLocation)e.Resource).Id)
                     .ToList();
 
+
                 if (fhirLocationIds.Count == 0)
                 {
                     return ResponseHelper.Success(200, "No hay resultados.", new PagedResult<ShiftDto>
@@ -401,6 +415,7 @@ public class ShiftService : IShiftService
                             loc => loc.Id,   // string key
                             loc => loc.Name  // display name
                         );
+
                 }
                 catch
                 {

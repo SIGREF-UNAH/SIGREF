@@ -19,9 +19,13 @@ using SIGREF.API.Services.Auth;
 using MongoDB.Driver;
 using SIGREF.API.Services.AdministrationHospital;
 using SIGREF.API.Services.Auth.Keycloak;
+using SIGREF.API.Services.Billing;
 using SIGREF.API.Services.Cashier;
+using SIGREF.API.Services.Dashboard;
+using SIGREF.API.Services.FhirUtils;
 using SIGREF.API.Services.Files;
 using SIGREF.API.Services.Serie;
+using SIGREF.API.Audit.Extensions;
 
 
 namespace SIGREF.API;
@@ -61,6 +65,11 @@ public class Startup
         services.AddScoped<IPractitionerService, PractitionerService>();
         services.AddScoped<IOrganizationService, OrganizationService>();
         services.AddScoped<ServiceGroupService>();
+        
+        // ============= RECUPERADORES FHIR ==========
+        services.AddScoped<IFhirLookupService, FhirLookupService>();
+        services.AddScoped<IDashboardReportingService, DashboardReportingService>();
+        
 
         services.AddScoped<IUserContextService, UserContextService>();
         // ================ SIGREF SERVICES =======================
@@ -69,6 +78,7 @@ public class Startup
         services.AddScoped<IHospitalPropertiesService, HospitalPropertiesService>();
         services.AddScoped<IMediaFileService, MediaFileService>();
         services.AddScoped<ISerieService, SerieService>();
+        services.AddScoped<IInvoiceService, InvoiceService>();
 
 
         // ==============================================================
@@ -96,7 +106,7 @@ public class Startup
         //services.AddNpgsql<HapiContext>("hapi");
         // MongoDB is now configured via builder.AddMongoDBClient() in Program.cs
         // IMongoClient is automatically available via DI
-        
+
         // ================= MVC / Swagger ===================
         services.AddControllers();
         services.AddEndpointsApiExplorer();
@@ -113,15 +123,8 @@ public class Startup
         services.AddScoped<IUserContextService, UserContextService>();
 
 
-        // ================== MONGO LOGGING ==================
-       // services.Configure<MongoSettings>(_configuration.GetSection("Mongo"));
-
-        // Optional: Register IMongoDatabase if needed by services
-        services.AddSingleton<IMongoDatabase>(sp =>
-        {
-            var client = sp.GetRequiredService<IMongoClient>();
-            return client.GetDatabase("sigref-logs");
-        });
+        // ================== AUDIT SERVICES ==================
+        services.AddAuditServices();
 
         services.AddHttpContextAccessor();
 
@@ -132,22 +135,15 @@ public class Startup
                 options =>
                 {
                     options.Audience = _configuration["Keycloak:Audience"];
-
-                    // Disable HTTPS metadata validation - Cloudflare handles SSL termination
-                    // Internal communication between services is HTTP
                     options.RequireHttpsMetadata = false;
-
-                    // Set the Authority from configuration
                     options.Authority = _configuration["Keycloak:Authority"];
 
-                    // Configurar claim types
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         NameClaimType = "preferred_username",
                         RoleClaimType = ClaimTypes.Role
                     };
 
-                    // Mapear roles de Keycloak a ASP.NET Core
                     options.Events = new JwtBearerEvents
                     {
                         OnTokenValidated = context =>
@@ -155,26 +151,32 @@ public class Startup
                             var identity = context.Principal?.Identity as ClaimsIdentity;
                             if (identity == null) return Task.CompletedTask;
 
-                            // Usar RolesConstants existente
+                            // Roles válidos dentro del sistema
                             var validRoles = new[]
                             {
-                                RolesConstants.cashier,
-                                RolesConstants.admin,
-                                RolesConstants.ti,
-                                RolesConstants.auditor
+                                RolesConstants.cashier, // "cashier"
+                                RolesConstants.admin, // "admin"
+                                RolesConstants.ti, // "ti"
+                                RolesConstants.auditor // "auditor"
                             };
 
-                            // Extraer realm roles
-                            var realmAccess = context.Principal?.FindFirst("realm_access")?.Value;
-                            if (!string.IsNullOrEmpty(realmAccess))
+                            // ======================================================
+                            //  EXTRAER ROLES DE REALM
+                            // ======================================================
+                            var realmAccessClaim = context.Principal?.Claims
+                                .FirstOrDefault(c => c.Type == "realm_access");
+
+                            if (realmAccessClaim != null)
                             {
-                                using var doc = JsonDocument.Parse(realmAccess);
+                                using var doc = JsonDocument.Parse(realmAccessClaim.Value);
+
                                 if (doc.RootElement.TryGetProperty("roles", out var roles))
                                 {
                                     foreach (var role in roles.EnumerateArray())
                                     {
-                                        var roleName = role.GetString();
-                                        if (validRoles.Contains(roleName))
+                                        var roleName = role.GetString()?.ToLower();
+                                        if (!string.IsNullOrEmpty(roleName) &&
+                                            validRoles.Contains(roleName))
                                         {
                                             identity.AddClaim(new Claim(ClaimTypes.Role, roleName));
                                         }
@@ -182,19 +184,24 @@ public class Startup
                                 }
                             }
 
-                            // Extraer client roles (resource_access)
-                            var audience = options.Audience;
-                            var resourceAccess = context.Principal?.FindFirst("resource_access")?.Value;
-                            if (!string.IsNullOrEmpty(resourceAccess))
+                            // ======================================================
+                            // EXTRAER ROLES DE CLIENTE (resource_access)
+                            // ======================================================
+                            var resourceAccessClaim = context.Principal?.Claims
+                                .FirstOrDefault(c => c.Type == "resource_access");
+
+                            if (resourceAccessClaim != null)
                             {
-                                using var doc = JsonDocument.Parse(resourceAccess);
-                                if (doc.RootElement.TryGetProperty(audience, out var client) &&
-                                    client.TryGetProperty("roles", out var roles))
+                                using var doc = JsonDocument.Parse(resourceAccessClaim.Value);
+
+                                if (doc.RootElement.TryGetProperty(options.Audience, out var client) &&
+                                    client.TryGetProperty("roles", out var clientRoles))
                                 {
-                                    foreach (var role in roles.EnumerateArray())
+                                    foreach (var role in clientRoles.EnumerateArray())
                                     {
-                                        var roleName = role.GetString();
-                                        if (validRoles.Contains(roleName))
+                                        var roleName = role.GetString()?.ToLower();
+                                        if (!string.IsNullOrEmpty(roleName) &&
+                                            validRoles.Contains(roleName))
                                         {
                                             identity.AddClaim(new Claim(ClaimTypes.Role, roleName));
                                         }
@@ -206,6 +213,7 @@ public class Startup
                         }
                     };
                 });
+
         services.AddAuthorization();
 
         // CORS Configuration
@@ -233,6 +241,9 @@ public class Startup
         app.UseCors("CorsPolicy");
 
         app.UseRouting();
+
+        // Middleware de auditoría (después de routing, antes de auth)
+        app.UseAuditMiddleware();
 
         //
         var mediaPath = Path.Combine(env.ContentRootPath, "media");

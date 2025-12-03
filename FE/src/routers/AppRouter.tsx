@@ -11,6 +11,8 @@ import { PatientsRouter } from "../features/patients/routers";
 import { LocationsRouter } from "../features/locations/routers";
 import { ServiceGroupsRouter } from "../features/service-groups/routers";
 import { ShiftsRouter } from "../features/shifts/routers/ShiftsRouter";
+import { HospitalRouter } from "../features/hospital/routers";
+import { UsersRouter } from "../features/users/routers";
 
  export const AppRouter = () => {
   return (
@@ -52,6 +54,12 @@ import { ShiftsRouter } from "../features/shifts/routers/ShiftsRouter";
 
         {/* Rutas de Eventos/Logs */}
         <Route path="/events/*" element={<EventsRouter />} />
+        
+        {/* Rutas de Información del Hospital */}
+        <Route path="/hospital/*" element={<HospitalRouter />} />
+
+        {/* Rutas de Usuarios */}
+        <Route path="/users/*" element={<UsersRouter />} />
 
         {/* Rutas de Turnos */}
         <Route path="/shifts/*" element={<ShiftsRouter />} />

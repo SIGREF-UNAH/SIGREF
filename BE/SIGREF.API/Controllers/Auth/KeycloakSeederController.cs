@@ -8,6 +8,7 @@ namespace SIGREF.API.Controllers.Auth;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(AuthenticationSchemes = "Bearer")]
 public class KeycloakSeederController : ControllerBase
 {
     private readonly IKeycloakAdminService _kcAdmin;
@@ -15,6 +16,13 @@ public class KeycloakSeederController : ControllerBase
     public KeycloakSeederController(IKeycloakAdminService kcAdmin)
     {
         _kcAdmin = kcAdmin;
+    }
+    [HttpGet("debug/roles")]
+    public IActionResult DebugRoles([FromServices] IUserContextService ctx)
+    {
+        return Ok(new {
+            Roles = ctx.GetUserRoles()
+        });
     }
 
     // ============================================================

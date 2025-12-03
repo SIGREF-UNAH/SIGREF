@@ -3,6 +3,7 @@ using SIGREF.API.Database.Entity.Administration;
 using SIGREF.API.Database.Entity.Billing;
 using SIGREF.API.Database.Entity.Cashier;
 using SIGREF.API.Database.Entity.Catalogs;
+using SIGREF.API.Database.Entity.Dashboard;
 using SIGREF.API.Database.Entity.Files;
 using SIGREF.API.Database.Entity.Reports;
 
@@ -37,7 +38,8 @@ public class SIGREFContext : DbContext
     // --- Reportes ---
     public DbSet<ReportHistoryEntity> ReportHistory { get; set; } = default!;
 
-
+    // --- Vistas Materializadas ---
+    public DbSet<DashboardFact> DashboardFacts { get; set; } = default!;
     // ============================
     //         MODEL BUILDING
     // ============================
@@ -48,5 +50,14 @@ public class SIGREFContext : DbContext
 
         // Aplica automáticamente TODAS las configuraciones
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(SIGREFContext).Assembly);
+        // =======================
+        // MATERIALIZED VIEW MAP
+        // =======================
+        modelBuilder.Entity<DashboardFact>(entity =>
+        {
+            entity.ToView("mv_dashboard_facts");  // nombre exacto de la MV en Postgres
+            entity.HasNoKey();                    // obligatorio para VIEW o MV
+        });
+
     }
 }

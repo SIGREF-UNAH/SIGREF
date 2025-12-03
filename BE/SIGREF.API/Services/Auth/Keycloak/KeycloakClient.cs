@@ -10,48 +10,56 @@ public class KeycloakClient : IKeycloakClient
     private readonly string _realm;
     private readonly string _clientId;
     private readonly string _clientSecret;
-    
-    
+
     // ================================
-    // TOKEN CACHE (COMPARTIDO)
+    // TOKEN CACHE (POR INSTANCIA)
     // ================================
-    private static string? _cachedToken;
-    private static DateTime _tokenExpiresAt = DateTime.MinValue;
-    private static readonly SemaphoreSlim _tokenLock = new(1, 1);
+    private string? _cachedToken;
+    private DateTime _tokenExpiresAt = DateTime.MinValue;
+    private readonly SemaphoreSlim _tokenLock = new(1, 1);
 
     public KeycloakClient(HttpClient http, IConfiguration config)
     {
         _http = http;
 
-        _baseUrl      = config["Keycloak:BaseUrl"] ?? "http://localhost:8081";
-        _realm        = config["Keycloak:Realm"]    ?? "sigref";
-        _clientId     = config["Keycloak:AdminClientId"]     ?? throw new Exception("AdminClientId missing");
-        _clientSecret = config["Keycloak:AdminClientSecret"] ?? throw new Exception("AdminClientSecret missing");
+        // BASE URL DEL SERVIDOR KEYCLOAK (sin /realms)
+        _baseUrl = config["Keycloak:BaseUrl"]
+                   ?? config["Keycloak:Url"]
+                   ?? "http://localhost:8080";
+
+        // NOMBRE DEL REALM
+        _realm = config["Keycloak:Realm"]
+                 ?? config["Keycloak:RealmName"]
+                 ?? "sigref";
+
+        // CREDENCIALES DEL CLIENTE ADMIN
+        _clientId = config["Keycloak:AdminClientId"]
+                    ?? throw new Exception("AdminClientId missing in configuration.");
+
+        _clientSecret = config["Keycloak:AdminClientSecret"]
+                        ?? throw new Exception("AdminClientSecret missing in configuration.");
     }
 
     // ======================================================
-    // TOKEN (OPTIMIZADO CON CACHE)
+    // OBTENER TOKEN ADMIN
     // ======================================================
     public async Task<string> GetAdminTokenAsync(CancellationToken ct)
     {
-        // Si existe un token válido, se reutiliza
         if (!string.IsNullOrEmpty(_cachedToken) && DateTime.UtcNow < _tokenExpiresAt)
             return _cachedToken;
 
         await _tokenLock.WaitAsync(ct);
         try
         {
-            // Revísalo de nuevo por si otro thread ya lo renovó
             if (!string.IsNullOrEmpty(_cachedToken) && DateTime.UtcNow < _tokenExpiresAt)
                 return _cachedToken;
 
-            // Solicitar token nuevo
             var url = $"{_baseUrl}/realms/{_realm}/protocol/openid-connect/token";
 
             var form = new Dictionary<string, string>
             {
-                ["grant_type"]    = "client_credentials",
-                ["client_id"]     = _clientId,
+                ["grant_type"] = "client_credentials",
+                ["client_id"] = _clientId,
                 ["client_secret"] = _clientSecret
             };
 
@@ -62,9 +70,12 @@ public class KeycloakClient : IKeycloakClient
 
             _cachedToken = json.GetProperty("access_token").GetString()!;
             var expiresIn = json.GetProperty("expires_in").GetInt32();
-
-            // Renovar un poco antes del expiry 
             _tokenExpiresAt = DateTime.UtcNow.AddSeconds(expiresIn - 10);
+
+            // LOG DEL TOKEN (puedes quitarlo luego)
+            Console.WriteLine("=== TOKEN ADMIN OBTENIDO ===");
+            Console.WriteLine(_cachedToken);
+            Console.WriteLine("============================");
 
             return _cachedToken;
         }
@@ -78,11 +89,13 @@ public class KeycloakClient : IKeycloakClient
     {
         var token = await GetAdminTokenAsync(ct);
 
-        // limpiar antes
-        _http.DefaultRequestHeaders.Authorization = null;
+        // LIMPIAR HEADERS PREVIOS SIEMPRE
+        _http.DefaultRequestHeaders.Remove("Authorization");
+        _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        // Console.WriteLine("===== TOKEN USADO =====");
+        //Console.WriteLine(token);
+        //Console.WriteLine("=======================");
 
-        _http.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", token);
     }
 
     // ======================================================
@@ -93,40 +106,31 @@ public class KeycloakClient : IKeycloakClient
         await SetAuth(ct);
 
         var url = $"{_baseUrl}/admin/realms/{_realm}/users?search={Uri.EscapeDataString(search)}";
-        var result = await _http.GetFromJsonAsync<List<JsonElement>>(url, ct);
+        var list = await _http.GetFromJsonAsync<List<JsonElement>>(url, ct);
 
-        return result ?? new List<JsonElement>();
+        return list ?? new List<JsonElement>();
     }
 
-    // ======================================================
-    // SEARCH BY USERNAME
-    // ======================================================
     public async Task<JsonElement?> SearchUserByUsernameAsync(string username, CancellationToken ct)
     {
         await SetAuth(ct);
 
         var url = $"{_baseUrl}/admin/realms/{_realm}/users?username={Uri.EscapeDataString(username)}";
-
         var list = await _http.GetFromJsonAsync<List<JsonElement>>(url, ct);
+
         return list?.FirstOrDefault();
     }
 
-    // ======================================================
-    // SEARCH BY EMAIL
-    // ======================================================
     public async Task<JsonElement?> SearchUserByEmailAsync(string email, CancellationToken ct)
     {
         await SetAuth(ct);
 
         var url = $"{_baseUrl}/admin/realms/{_realm}/users?email={Uri.EscapeDataString(email)}";
-
         var list = await _http.GetFromJsonAsync<List<JsonElement>>(url, ct);
+
         return list?.FirstOrDefault();
     }
 
-    // ======================================================
-    // PAGINACIÓN REAL
-    // ======================================================
     public async Task<List<JsonElement>> GetUsersPaginatedAsync(int first, int max, CancellationToken ct)
     {
         await SetAuth(ct);
@@ -137,9 +141,6 @@ public class KeycloakClient : IKeycloakClient
         return list ?? new List<JsonElement>();
     }
 
-    // ======================================================
-    // GET BY ID
-    // ======================================================
     public async Task<JsonElement?> GetUserByIdAsync(string userId, CancellationToken ct)
     {
         await SetAuth(ct);
@@ -156,15 +157,11 @@ public class KeycloakClient : IKeycloakClient
         }
     }
 
-    // ======================================================
-    // CREATE USER
-    // ======================================================
     public async Task<string?> CreateUserAsync(object kcUser, CancellationToken ct)
     {
         await SetAuth(ct);
 
         var url = $"{_baseUrl}/admin/realms/{_realm}/users";
-
         var res = await _http.PostAsJsonAsync(url, kcUser, ct);
 
         if (!res.IsSuccessStatusCode)
@@ -174,9 +171,6 @@ public class KeycloakClient : IKeycloakClient
         return location?.Split('/').Last();
     }
 
-    // ======================================================
-    // ASSIGN ROLE
-    // ======================================================
     public async Task<bool> AssignRoleAsync(string userId, string roleName, CancellationToken ct)
     {
         await SetAuth(ct);
@@ -187,8 +181,8 @@ public class KeycloakClient : IKeycloakClient
         var mappingUrl =
             $"{_baseUrl}/admin/realms/{_realm}/users/{userId}/role-mappings/realm";
 
-        var response = await _http.PostAsJsonAsync(mappingUrl, new[] { role }, ct);
+        var res = await _http.PostAsJsonAsync(mappingUrl, new[] { role }, ct);
 
-        return response.IsSuccessStatusCode;
+        return res.IsSuccessStatusCode;
     }
 }

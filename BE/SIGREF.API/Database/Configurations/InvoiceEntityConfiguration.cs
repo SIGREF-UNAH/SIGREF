@@ -8,138 +8,85 @@ public class InvoiceEntityConfiguration : IEntityTypeConfiguration<InvoiceEntity
 {
     public void Configure(EntityTypeBuilder<InvoiceEntity> builder)
     {
-        // ===============================
-        //            TABLE
-        // ===============================
-        builder.ToTable("invoices",
-            t =>
-            {
-                t.HasComment(
-                    "Ordenes de Donacion emitidas por SIGREF, con información FHIR del paciente, series, métodos de pago y relaciones administrativas.");
-            });
+        builder.ToTable(
+            "invoices",
+            t => t.HasComment("Tabla principal de facturación: contiene facturas normales, emergencias, exentas y notas de crédito/débito.")
+        );
 
+        // ============================
+        // PRIMARY KEY
+        // ============================
+        builder.HasKey(i => i.Id);
 
-        // ===============================
-        //           PRIMARY KEY
-        // ===============================
-        builder.HasKey(e => e.Id);
-
-
-        // ===============================
-        //        PROPIEDADES FHIR
-        // ===============================
-
-        builder.Property(e => e.PatientIdFhir)
-            .HasMaxLength(64)
-            .IsRequired()
-            .HasColumnName("patient_id_fhir");
-
-        builder.Property(e => e.PatientDisplay)
-            .HasMaxLength(200)
-            .HasColumnName("patient_display");
-
-        builder.Property(e => e.PatientSystem)
-            .HasMaxLength(50)
-            .HasColumnName("patient_system");
-
-        builder.Property(e => e.PatientValue)
-            .HasMaxLength(200)
-            .HasColumnName("patient_value");
-
-
-        // ===============================
-        //      USUARIO (CAJERO)
-        // ===============================
-
-        builder.Property(e => e.UserId)
-            .IsRequired()
-            .HasColumnName("user_id");
-        
-
-
-        // ===============================
-        //       SERIE DE FACTURACIÓN
-        // ===============================
-
-        builder.Property(e => e.SerieId)
-            .IsRequired()
-            .HasColumnName("serie_id");
-
-        builder.HasOne(e => e.Serie)
-            .WithMany()
-            .HasForeignKey(e => e.SerieId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-
-        // ===============================
-        //        DATOS DE FACTURA
-        // ===============================
-
-        builder.Property(e => e.Number)
-            .IsRequired()
-            .HasColumnName("number");
-
-        builder.Property(e => e.TotalAmount)
-            .IsRequired()
-            .HasColumnName("total_amount");
-
-        builder.Property(e => e.Currency)
-            .HasMaxLength(10)
-            .IsRequired()
-            .HasColumnName("currency");
-
-        builder.Property(e => e.Status)
-            .HasMaxLength(30)
-            .IsRequired()
-            .HasColumnName("status");
-
-
-        // ===============================
-        //        MÉTODO DE PAGO (ENUM)
-        // ===============================
-
-        builder.Property(e => e.PaymentMethod)
+        // ============================
+        // ENUMS (store as varchar)
+        // ============================
+        builder
+            .Property(i => i.Status)
             .HasConversion<string>()
             .HasMaxLength(30)
-            .IsRequired()
-            .HasColumnName("payment_method");
+            .HasColumnName("status")
+            .HasComment("Created: Creada | Paid: pagada | Cancelled: anulada | Refunded: reembolsada");
 
 
-        // ===============================
-        //        TIPO DE FACTURA (ENUM)
-        // ===============================
-
-        builder.Property(e => e.InvoiceType)
+        builder
+            .Property(i => i.InvoiceType)
+            .HasConversion<string>()
+            .HasMaxLength(30)
+            .HasColumnName("invoice_type")
+            .HasComment("Normal: Todos Datos | Emergency: Se reconoce Servicio Dado Datos pueden quedar pendientes | Exempt: Descuento del 100% | Refunded: reembolsada | CreditNote: Devolucion de Dinero | DebitNote: Ingreso de Dinero");
+       
+        builder
+            .Property(i => i.PaymentMethod)
             .HasConversion<string>()
             .HasMaxLength(20)
-            .IsRequired()
-            .HasColumnName("invoice_type");
+            .HasColumnName("payment_method")
+            .HasComment("Método de pago: Cash, Card, Transfer, Mixed");
 
+        // ============================
+        // PATIENT FIELDS
+        // ============================
+        builder.Property(i => i.PatientIdFhir).HasMaxLength(64);
+        builder.Property(i => i.PatientDisplay).HasMaxLength(200);
+        builder.Property(i => i.PatientSystem).HasMaxLength(50);
+        builder.Property(i => i.PatientValue).HasMaxLength(200);
 
-        // ===============================
-        //     FACTURA PADRE (RELACIÓN)
-        // ===============================
+        // ============================
+        // RELACIÓN: Invoice Items
+        // ============================
+        builder
+            .HasMany(i => i.Items)
+            .WithOne(i => i.Invoice)
+            .HasForeignKey(i => i.InvoiceId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Property(e => e.ParentInvoiceId)
-            .HasColumnName("parent_invoice_id");
-
-        builder.HasOne(e => e.ParentInvoice)
+        // ============================
+        // RELACIÓN: Serie
+        // ============================
+        builder
+            .HasOne(i => i.Serie)
             .WithMany()
-            .HasForeignKey(e => e.ParentInvoiceId)
+            .HasForeignKey(i => i.SerieId)
             .OnDelete(DeleteBehavior.Restrict);
 
-
-        // ===============================
-        //      SESIÓN DE CAJA (FK)
-        // ===============================
-
-        builder.Property(e => e.CashierSessionId)
-            .HasColumnName("cashier_session_id");
-
-        builder.HasOne(e => e.CashierSession)
+        // ============================
+        // RELACIÓN: ParentInvoice (ajustes)
+        // ============================
+        builder
+            .HasOne(i => i.ParentInvoice)
             .WithMany()
-            .HasForeignKey(e => e.CashierSessionId)
+            .HasForeignKey(i => i.ParentInvoiceId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // ============================
+        // RELACIÓN: CashierSession
+        // ============================
+        builder
+            .HasOne(i => i.CashierSession)
+            .WithMany()
+            .HasForeignKey(i => i.CashierSessionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         // ============================
         //          AUDITORÍA
         // ============================
@@ -160,21 +107,59 @@ public class InvoiceEntityConfiguration : IEntityTypeConfiguration<InvoiceEntity
         builder.Property(x => x.UpdatedDate)
             .HasColumnName("updated_date")
             .HasComment("Fecha de última actualización (UTC).");
+        // ============================
+        // INDEXES 
+        // ============================
 
-        // ===============================
-        //           ÍNDICES
-        // ===============================
+        builder.HasIndex(i => new { i.CreatedById })
+            .HasDatabaseName("idx_invoice_created_by");
 
-        builder.HasIndex(e => e.Number)
-            .HasDatabaseName("idx_invoice_number");
+        builder.HasIndex(i => new { i.CashierSessionId })
+            .HasDatabaseName("idx_invoice_cashier_sesion");
 
-        builder.HasIndex(e => e.UserId)
-            .HasDatabaseName("idx_invoice_user");
-
-        builder.HasIndex(e => e.SerieId)
+        builder.HasIndex(i => new { i.SerieId })
             .HasDatabaseName("idx_invoice_serie");
 
-        builder.HasIndex(e => e.CashierSessionId)
-            .HasDatabaseName("idx_invoice_session");
+        // Index para buscar facturas por serie/número 
+        builder.HasIndex(i => new { i.SerieId, i.Number })
+            .HasDatabaseName("idx_invoice_serie_number");
+
+        // Index por paciente
+        builder.HasIndex(i => i.PatientIdFhir)
+            .HasDatabaseName("idx_invoice_patient_id");
+
+        // Index para velocidad de ajustes
+        builder.HasIndex(i => i.ParentInvoiceId)
+            .HasDatabaseName("idx_invoice_parent");
+
+        // Index para filtro por tipo (normal/emergencia/exento/nota)
+        builder.HasIndex(i => i.InvoiceType)
+            .HasDatabaseName("idx_invoice_type");
+
+        // Index para listar por estado (Created, Paid…)
+        builder.HasIndex(i => i.Status)
+            .HasDatabaseName("idx_invoice_status");
+        
+        builder.HasIndex(i => new { i.CreatedDate, i.Status, i.InvoiceType })
+            .HasDatabaseName("idx_invoice_created_status_type");
+
+        // Index para filtros por fecha 
+        builder.HasIndex(i => i.CreatedDate)
+            .HasDatabaseName("idx_invoice_created_date");
+
+        // ============================
+        // PRECALCULATED TOTALS 
+        // ============================
+
+        builder.Property(i => i.TotalOriginal).HasPrecision(14, 2);
+        builder.Property(i => i.AdjustmentTotal).HasPrecision(14, 2);
+        builder.Property(i => i.FinalTotal).HasPrecision(14, 2);
+        builder.Property(i => i.AmountPaid).HasPrecision(14, 2);
+        builder.Property(i => i.AmountDue).HasPrecision(14, 2);
+
+        // ============================
+        // SERVICE / GROUP FIELDS
+        // ============================
+        builder.Property(i => i.ServiceGroupFhirId).HasMaxLength(64);
     }
 }

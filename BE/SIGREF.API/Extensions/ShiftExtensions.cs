@@ -25,6 +25,7 @@ public static class ShiftExtensions
     {
         if (!string.IsNullOrWhiteSpace(dto.LocationId))
             entity.LocationId = dto.LocationId;
+
         if (!string.IsNullOrWhiteSpace(dto.Name))
             entity.Name = dto.Name;
         

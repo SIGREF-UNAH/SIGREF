@@ -27,25 +27,37 @@ public class UserContextService : IUserContextService
 
     public string? GetUsername()
     {
-        return _httpContext.HttpContext?
-            .User?
-            .FindFirst("preferred_username")?
-            .Value;
+        var user = _httpContext.HttpContext?.User;
+
+        return user?.FindFirst("preferred_username")?.Value ??
+               user?.FindFirst(ClaimTypes.Name)?.Value;
     }
+
 
     public IEnumerable<Claim> GetAllClaims()
     {
         return _httpContext.HttpContext?.User?.Claims
                ?? Enumerable.Empty<Claim>();
     }
+
+    // Probar -- Falta probar esto 
+    //-- Si falla revisar el HTTPCONTEXT QUE ESTA LLEGANDO, puedeser que el parseo este distinto
     public List<string> GetUserRoles()
     {
-        return _httpContext.HttpContext?
-                   .User?
-                   .FindAll(ClaimTypes.Role)
-                   .Select(c => c.Value)
-                   .ToList()
-               ?? new List<string>();
+        var roles = new List<string>();
+        var user = _httpContext.HttpContext?.User;
+
+        // Realm roles
+        var realmAccess = user?.FindFirst("realm_access")?.Value;
+        if (realmAccess != null)
+        {
+            var realmObj = System.Text.Json.JsonDocument.Parse(realmAccess);
+            if (realmObj.RootElement.TryGetProperty("roles", out var realmRoles))
+            {
+                roles.AddRange(realmRoles.EnumerateArray().Select(r => r.GetString()!.ToLower()));
+            }
+        }
+        return roles.Distinct().ToList();
     }
 
 }

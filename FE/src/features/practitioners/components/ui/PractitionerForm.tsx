@@ -7,39 +7,22 @@ import {
 } from "@ant-design/pro-components";
 import { FaUserPlus, FaUserEdit, FaCheck } from "react-icons/fa";
 import { BsPersonVcardFill } from "react-icons/bs";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Form, message } from "antd";
 import {
   useGetApiPractitionerId,
   usePostApiPractitioner,
   usePutApiPractitionerId,
 } from "../../../../api/practitioner/practitioner";
-import { message } from "antd";
 
 type EmployeeDetail = {
   id: { value: string };
-  meta: { lastUpdated: { value: string }, versionId: { value: string } };
-  identifier: {
-    use: { value: string };
-    type: { text: { value: string } };
-    system: { value: string };
-    value: { value: string };
-  }[];
+  meta: { lastUpdated: { value: string }; versionId: { value: string } };
+  identifier: { use: { value: string }; type: { text: { value: string } }; system: { value: string }; value: { value: string } }[];
   active: { value: boolean };
-  name: {
-    use: { value: string };
-    text: { value: string };
-    family: { value: string };
-    given: { value: string }[];
-    prefix?: { value: string }[];
-    suffix?: { value: string }[];
-  }[];
-  telecom: {
-    system: string;
-    value: { value: string };
-    use: { value: string };
-    rank: { value: number };
-  }[];
+  name: { use: { value: string }; text: { value: string }; family: { value: string }; given: { value: string }[] }[];
+  telecom: { system: string; value: { value: string }; use: { value: string }; rank: { value: number } }[];
   gender: number;
   birthDate: string;
 };
@@ -47,16 +30,15 @@ type EmployeeDetail = {
 export default function PractitionerForm() {
   const { id } = useParams(); // Si existe, es edición
   const navigate = useNavigate();
-  const formRef = useRef<any>(null);
+  const [form] = Form.useForm();
   const [loading, setLoading] = useState(!!id);
-  const [setInitialValues] = useState<any>({});
 
   // Hooks API
   const { data } = useGetApiPractitionerId<EmployeeDetail>(id!);
   const { mutateAsync: createPractitioner, isPending: creating } = usePostApiPractitioner({
     mutation: {
       onSuccess: () => {
-        formRef.current?.resetFields();
+        form.resetFields();
         message.success("Empleado creado correctamente");
         navigate("/practitioners/list");
       },
@@ -89,19 +71,16 @@ export default function PractitionerForm() {
       lastName: data.name?.[0]?.family ?? "",
       dni: data.identifier?.[0]?.value ?? "",
       idType: data.identifier?.[0]?.type?.text ?? "",
-      phone: data.telecom?.find((t) => t.system?.toLowerCase() === "phone")?.value ?? "",
-      email: data.telecom?.find((t) => t.system?.toLowerCase() === "email")?.value ?? "",
+      phone: data.telecom?.find((t) => t.system.toLowerCase() === "phone")?.value ?? "",
+      email: data.telecom?.find((t) => t.system.toLowerCase() === "email")?.value ?? "",
       gender: data.gender ?? 0,
       birthDate: data.birthDate ? new Date(data.birthDate) : null,
       active: data.active?.value ?? true,
     };
 
-    setInitialValues(values);
-    
-
-    setTimeout(() => formRef.current?.setFieldsValue(values), 50);
+    form.setFieldsValue(values);
     setLoading(false);
-  }, [data]);
+  }, [data, form]);
 
   const onFinish = async (values: any) => {
     const telecom: any[] = [];
@@ -109,9 +88,7 @@ export default function PractitionerForm() {
     if (values.email) telecom.push({ system: "Email", value: values.email, use: "Home", rank: telecom.length + 1 });
 
     const payload = {
-      identifier: [
-        { use: "Usual", type: { text: values.idType }, system: "https://localhost:7107", value: values.dni },
-      ],
+      identifier: [{ use: "Usual", type: { text: values.idType }, system: "https://localhost:7107", value: values.dni }],
       active: values.active,
       name: [
         {
@@ -123,7 +100,7 @@ export default function PractitionerForm() {
       ],
       telecom,
       gender: values.gender,
-      birthDate: values.birthDate ? new Date(values.birthDate).toISOString() : null,
+      birthDate: values.birthDate ? values.birthDate.toISOString() : null,
     };
 
     try {
@@ -143,41 +120,30 @@ export default function PractitionerForm() {
     <div className="primary-card">
       <div className="flex items-center gap-3 mb-8">
         {id ? <FaUserEdit className="w-10 h-10 text-blue-500" /> : <FaUserPlus className="w-10 h-10 text-blue-500" />}
-        <span className="text-xl font-semibold text-general">
-          {id ? "Editar Empleado" : "Crear Empleado"}
-        </span>
+        <span className="text-xl font-semibold text-general">{id ? "Editar Empleado" : "Crear Empleado"}</span>
       </div>
 
-      <ProForm
-        formRef={formRef}
-        onFinish={onFinish}
-        submitter={{
-          searchConfig: { submitText: id ? "Guardar Cambios" : "Crear Empleado" },
-          resetButtonProps: false,
-          submitButtonProps: {
-            loading: id ? updating : creating,
-            icon: <FaCheck className="w-4 h-4" />,
-            className:
-              `px-6 py-2 ${id ? "!bg-blue-500 hover:!bg-blue-600" : "!bg-green-500 hover:!bg-green-600"} 
-              text-white font-medium rounded-md transition-colors duration-200 flex items-center gap-2`,
-          },
-          render: (_, dom) => (
-            <div className="flex justify-end pt-4 pb-2 gap-2">
-              {/* Botón Cancelar */}
-              <button
-                type="button"
-                onClick={() => navigate("/practitioners/list")}
-                className="px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-md transition-colors duration-200"
-              >
-                Cancelar
-              </button>
-              {/* Botón Crear / Guardar */}
-              {dom[0]}
-            </div>
-          ),
-        }}
-      >
-        {/* Datos Personales */}
+      <ProForm form={form} onFinish={onFinish} submitter={{
+        searchConfig: { submitText: id ? "Guardar Cambios" : "Crear Empleado" },
+        resetButtonProps: false,
+        submitButtonProps: {
+          loading: id ? updating : creating,
+          icon: <FaCheck className="w-4 h-4" />,
+          className: `px-6 py-2 ${id ? "!bg-blue-500 hover:!bg-blue-600" : "!bg-green-500 hover:!bg-green-600"} text-white font-medium rounded-md transition-colors duration-200 flex items-center gap-2`,
+        },
+        render: (_, dom) => (
+          <div className="flex justify-end pt-4 pb-2 gap-2">
+            <button
+              type="button"
+              onClick={() => navigate("/practitioners/list")}
+              className="px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-md transition-colors duration-200"
+            >
+              Cancelar
+            </button>
+            {dom[0]}
+          </div>
+        ),
+      }}>
         <section className="mb-8">
           <div className="flex items-center gap-3 mb-6">
             <BsPersonVcardFill className="w-8 h-8 text-blue-500" />

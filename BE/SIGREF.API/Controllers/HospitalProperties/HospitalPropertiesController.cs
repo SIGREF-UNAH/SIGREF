@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SIGREF.API.Constants;
 using SIGREF.API.Dtos.Administration;
 using SIGREF.API.Services.AdministrationHospital;
 
@@ -9,6 +10,7 @@ namespace SIGREF.API.Controllers.HospitalProperties;
 // TODO QUE SOLO TI PUEDA ACTUALIZAR LOGOS Y SUBIR LOGOS
 // TODO PONERLE AUTENTIFICACION A TODOS LOS ROLES PERMITIDOS PARA PEDIR LAS IMAGENES
 [ApiController]
+[Authorize]
 public class HospitalPropertiesController : ControllerBase
 {
     private readonly IHospitalPropertiesService _hospitalService;
@@ -22,9 +24,10 @@ public class HospitalPropertiesController : ControllerBase
     //       GET PUBLICO  (Nombre + logos) - SIN TOKEN
     // ============================================================
     [HttpGet("public")]
-    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Produces<HospitalPublicDto>()]
+    [Authorize(Roles = $"{RolesConstants.auditor},{RolesConstants.admin},{RolesConstants.ti},{RolesConstants.cashier}")]
     public async Task<IActionResult> GetPublic()
     {
         var result = await _hospitalService.GetPublicAsync();
@@ -34,6 +37,8 @@ public class HospitalPropertiesController : ControllerBase
     [HttpGet("details")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Produces<HospitalDetailsDto>()]
+    [Authorize(Roles = $"{RolesConstants.auditor},{RolesConstants.admin},{RolesConstants.ti},{RolesConstants.cashier}")]
     public async Task<IActionResult> GetAllDetails()
     {
         var result = await _hospitalService.GetAllDetailsAsync();
@@ -45,6 +50,8 @@ public class HospitalPropertiesController : ControllerBase
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [Produces<HospitalDetailsDto>()]
+    [Authorize(Roles = $"{RolesConstants.ti}")]
     public async Task<IActionResult> Create([FromBody] CreateHospitalPropertiesDto dto)
     {
         var result = await _hospitalService.CreateAsync(dto);
@@ -57,6 +64,8 @@ public class HospitalPropertiesController : ControllerBase
     [HttpPut]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Produces<HospitalDetailsDto>()]
+    [Authorize(Roles = $"{RolesConstants.ti}")]
     public async Task<IActionResult> Update([FromBody] UpdateHospitalPropertiesDto dto)
     {
         var result = await _hospitalService.UpdateAsync(dto);
