@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SIGREF.API.Audit.Models;
 using SIGREF.API.Audit.Services;
 using SIGREF.API.Constants;
 
@@ -25,7 +26,7 @@ public class AuditController(IAuditService auditService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetAll(
-        [FromQuery] int page = 1, 
+        [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50,
         [FromQuery] string action = null,
         [FromQuery] DateTime? from = null,
@@ -41,7 +42,7 @@ public class AuditController(IAuditService auditService) : ControllerBase
         if (from.HasValue && to.HasValue && from.Value > to.Value)
             return BadRequest(new { message = "La fecha inicial no puede ser mayor a la fecha final" });
 
-        List<SIGREF.API.Audit.Models.AuditLog> logs;
+        List<AuditLog> logs;
 
         // Si se especifica action, filtrar por acción y rango de fechas
         if (!string.IsNullOrWhiteSpace(action))
@@ -53,14 +54,14 @@ public class AuditController(IAuditService auditService) : ControllerBase
         {
             // Obtener todos los logs y filtrar por fechas
             var allLogs = await auditService.GetAllLogsAsync(1, int.MaxValue);
-            logs = allLogs.Where(log =>
+            logs = [.. allLogs.Where(log =>
             {
                 if (from.HasValue && log.Timestamp < from.Value)
                     return false;
                 if (to.HasValue && log.Timestamp > to.Value)
                     return false;
                 return true;
-            }).ToList();
+            })];
         }
         else
         {
@@ -73,14 +74,13 @@ public class AuditController(IAuditService auditService) : ControllerBase
         {
             var totalItems = logs.Count;
             var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-            
-            logs = logs
+
+            logs = [.. logs
                 .OrderByDescending(l => l.Timestamp)
                 .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
+                .Take(pageSize)];
 
-            var dtos = logs.Select(SIGREF.API.Audit.Models.AuditLogDto.FromAuditLog).ToList();
+            var dtos = logs.Select(AuditLogDto.FromAuditLog);
 
             return Ok(new
             {
@@ -95,7 +95,7 @@ public class AuditController(IAuditService auditService) : ControllerBase
         }
 
         // Respuesta sin filtros
-        var simpleDtos = logs.Select(SIGREF.API.Audit.Models.AuditLogDto.FromAuditLog).ToList();
+        var simpleDtos = logs.Select(AuditLogDto.FromAuditLog);
         return Ok(new
         {
             page,
@@ -118,11 +118,11 @@ public class AuditController(IAuditService auditService) : ControllerBase
     public async Task<IActionResult> GetById(string id)
     {
         var log = await auditService.GetLogByIdAsync(id);
-        
+
         if (log == null)
             return NotFound(new { message = $"Log de auditoría con ID '{id}' no encontrado" });
 
-        var dto = SIGREF.API.Audit.Models.AuditLogDto.FromAuditLog(log);
+        var dto = AuditLogDto.FromAuditLog(log);
         return Ok(dto);
     }
 }
