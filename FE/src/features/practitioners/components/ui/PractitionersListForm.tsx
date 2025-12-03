@@ -68,8 +68,6 @@ export const PractitionersListForm = () => {
     },
   });
 
-  // const [modal, contextHolder] = Modal.useModal();
-
   const practitioners: Practitioner[] =
     data?.items?.map((p: any, index: number) => {
       const role = p.roles?.[0]; // Tomar el primer rol asignado
@@ -105,24 +103,6 @@ export const PractitionersListForm = () => {
   const handleEdit = (practitioner: Practitioner) => {
     navigate(`/practitioners/update/${practitioner.id}`);
   };
-
-  // const handleDelete = (practitioner: Practitioner) => {
-  //   modal.confirm({
-  //     title: "¿Eliminar empleado?",
-  //     icon: <ExclamationCircleOutlined />,
-  //     content: `¿Estás seguro de que deseas eliminar a ${practitioner.name}? Esta acción no se puede deshacer.`,
-  //     okText: "Eliminar",
-  //     okType: "danger",
-  //     cancelText: "Cancelar",
-  //     onOk: async () => {
-  //       try {
-  //         await deleteMutation.mutateAsync({ id: practitioner.id });
-  //       } catch (error) {
-  //         message.error("No se pudo eliminar el empleado");
-  //       }
-  //     },
-  //   });
-  // };
 
   const columns = [
     {

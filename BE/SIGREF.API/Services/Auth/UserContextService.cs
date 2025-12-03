@@ -13,14 +13,13 @@ public class UserContextService : IUserContextService
 
     public Guid GetUserId()
     {
-        var userId = _httpContext.HttpContext?
-            .User?
-            .FindFirst("sub")?
-            .Value;
+        var userId =
+            _httpContext.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
+            _httpContext.HttpContext?.User?.FindFirst("sub")?.Value;
 
         if (string.IsNullOrEmpty(userId))
             throw new UnauthorizedAccessException(
-                "No se pudo obtener el ID del usuario desde el token. El usuario no está autenticado."
+                "No se pudo obtener el ID del usuario desde el token."
             );
 
         return Guid.Parse(userId);
@@ -28,11 +27,12 @@ public class UserContextService : IUserContextService
 
     public string? GetUsername()
     {
-        return _httpContext.HttpContext?
-            .User?
-            .FindFirst("preferred_username")?
-            .Value;
+        var user = _httpContext.HttpContext?.User;
+
+        return user?.FindFirst("preferred_username")?.Value ??
+               user?.FindFirst(ClaimTypes.Name)?.Value;
     }
+
 
     public IEnumerable<Claim> GetAllClaims()
     {
@@ -40,16 +40,24 @@ public class UserContextService : IUserContextService
                ?? Enumerable.Empty<Claim>();
     }
 
+    // Probar -- Falta probar esto 
+    //-- Si falla revisar el HTTPCONTEXT QUE ESTA LLEGANDO, puedeser que el parseo este distinto
     public List<string> GetUserRoles()
     {
-        var roles = _httpContext.HttpContext?
-            .User?
-            .Claims
-            .Where(c => c.Type == ClaimTypes.Role)
-            .Select(c => c.Value.ToLower())
-            .Distinct()
-            .ToList();
+        var roles = new List<string>();
+        var user = _httpContext.HttpContext?.User;
 
-        return roles ?? new List<string>();
+        // Realm roles
+        var realmAccess = user?.FindFirst("realm_access")?.Value;
+        if (realmAccess != null)
+        {
+            var realmObj = System.Text.Json.JsonDocument.Parse(realmAccess);
+            if (realmObj.RootElement.TryGetProperty("roles", out var realmRoles))
+            {
+                roles.AddRange(realmRoles.EnumerateArray().Select(r => r.GetString()!.ToLower()));
+            }
+        }
+        return roles.Distinct().ToList();
     }
+
 }

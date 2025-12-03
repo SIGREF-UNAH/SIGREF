@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using SIGREF.API.Constants;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Healthcare;
 using SIGREF.API.Extensions;
@@ -8,6 +10,7 @@ namespace SIGREF.API.Controllers.Healthcare
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class HealthcaresController(HealthcareService healthcareService) : ControllerBase
     {
         [HttpGet]
@@ -17,6 +20,7 @@ namespace SIGREF.API.Controllers.Healthcare
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [Produces(typeof(PagedResultDto<HealthcareDto>))]
+        [Authorize(Roles = $"{RolesConstants.auditor},{RolesConstants.admin},{RolesConstants.ti}")]
         public async Task<IActionResult> GetFiltered([FromQuery] HealthcareFilterDto filter)
         {
             var pagedHealthcares = await healthcareService.GetFilteredHealthcaresAsync(filter);
@@ -34,6 +38,7 @@ namespace SIGREF.API.Controllers.Healthcare
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [Produces<HealthcareDto>()]
+        [Authorize(Roles = $"{RolesConstants.auditor},{RolesConstants.admin},{RolesConstants.ti}")]
         public async Task<IActionResult> GetById(string id)
         {
             var healthcare = await healthcareService.GetHealthcareByIdAsync(id);
@@ -48,6 +53,7 @@ namespace SIGREF.API.Controllers.Healthcare
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [Produces<HealthcareDto>()]
+        [Authorize(Roles = $"{RolesConstants.admin}")]
         public async Task<IActionResult> Create([FromBody] CreateHealthcareDto createHealthcareDto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -65,6 +71,7 @@ namespace SIGREF.API.Controllers.Healthcare
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [Produces<HealthcareDto>()]
+        [Authorize(Roles = $"{RolesConstants.admin}")]
         public async Task<IActionResult> Update(string id, [FromBody] UpdateHealthcareDto updateHealthcareDto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -84,6 +91,7 @@ namespace SIGREF.API.Controllers.Healthcare
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Authorize(Roles = $"{RolesConstants.admin}")]
         public async Task<IActionResult> Delete(string id)
         {
             var healthcare = await healthcareService.GetHealthcareByIdAsync(id);

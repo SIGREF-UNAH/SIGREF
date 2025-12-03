@@ -12,6 +12,7 @@ public class AuditLogDto
     public string ResourceType { get; set; }
     public string ResourceId { get; set; }
     public string UserId { get; set; }
+    public string UserName { get; set; }
     public DateTime Timestamp { get; set; }
     public string Endpoint { get; set; }
     public string HttpMethod { get; set; }
@@ -31,6 +32,7 @@ public class AuditLogDto
             ResourceType = log.ResourceType,
             ResourceId = log.ResourceId,
             UserId = log.UserId,
+            UserName = log.UserName,
             Timestamp = log.Timestamp,
             Endpoint = log.Endpoint,
             HttpMethod = log.HttpMethod,

@@ -1,4 +1,5 @@
-﻿using Hl7.Fhir.Rest;
+﻿using System.ComponentModel;
+using Hl7.Fhir.Rest;
 using FhirLocation = Hl7.Fhir.Model.Location;
 using Microsoft.EntityFrameworkCore;
 using SIGREF.API.Database;

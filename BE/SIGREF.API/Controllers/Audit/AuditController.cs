@@ -10,6 +10,7 @@ namespace SIGREF.API.Controllers.Audit;
 [ApiController]
 public class AuditController(IAuditService auditService) : ControllerBase
 {
+    /// <returns>Lista paginada de logs de auditoría</returns>
     [HttpGet]
     [Authorize(AuthenticationSchemes = "Bearer", Roles = RolesConstants.ti)]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -21,6 +22,8 @@ public class AuditController(IAuditService auditService) : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50,
         [FromQuery] string action = null,
+        [FromQuery] string userId = null,
+        [FromQuery] string userName = null,
         [FromQuery] DateTime? from = null,
         [FromQuery] DateTime? to = null)
     {
@@ -36,12 +39,22 @@ public class AuditController(IAuditService auditService) : ControllerBase
 
         List<AuditLog> logs;
 
+        // Si se especifica userId, filtrar por usuario y rango de fechas
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            logs = await auditService.GetLogsByUserAsync(userId, from, to);
+        }
+        // Si se especifica userName, filtrar por nombre de usuario y rango de fechas
+        else if (!string.IsNullOrWhiteSpace(userName))
+        {
+            logs = await auditService.GetLogsByUserNameAsync(userName, from, to);
+        }
         // Si se especifica action, filtrar por acción y rango de fechas
-        if (!string.IsNullOrWhiteSpace(action))
+        else if (!string.IsNullOrWhiteSpace(action))
         {
             logs = await auditService.GetLogsByActionAsync(action.ToLower(), from, to);
         }
-        // Si solo se especifica rango de fechas sin action, obtener todos con filtro de fechas
+        // Si solo se especifica rango de fechas sin action ni userId, obtener todos con filtro de fechas
         else if (from.HasValue || to.HasValue)
         {
             // Obtener todos los logs y filtrar por fechas
@@ -62,7 +75,7 @@ public class AuditController(IAuditService auditService) : ControllerBase
         }
 
         // Aplicar paginación si se usaron filtros
-        if (!string.IsNullOrWhiteSpace(action) || from.HasValue || to.HasValue)
+        if (!string.IsNullOrWhiteSpace(action) || !string.IsNullOrWhiteSpace(userId) || !string.IsNullOrWhiteSpace(userName) || from.HasValue || to.HasValue)
         {
             var totalItems = logs.Count;
             var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
