@@ -13,6 +13,7 @@ import {
   TeamOutlined,
   UserOutlined,
   BarChartOutlined,
+  UserSwitchOutlined,
 } from "@ant-design/icons";
 
 interface ModuleCardProps {
@@ -92,7 +93,7 @@ export const HomePage: React.FC = () => {
       </div>
 
       {/* Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
         {/* Gestión de Fondos */}
         <Can I="read" a="incomes" ability={ability}>
           <ModuleCard
@@ -101,6 +102,17 @@ export const HomePage: React.FC = () => {
             icon={<DollarOutlined />}
             shortcut="Ctrl + F"
             path="/incomes/list"
+          />
+        </Can>
+        
+        {/* Gestión de Turnos */}
+        <Can I="read" a="shifts" ability={ability}>
+          <ModuleCard
+            title="Gestión de Turnos"
+            description={"Administre los turnos de trabajo del hospital por su ubicación"}
+            icon={<UserSwitchOutlined />}
+            shortcut="Ctrl + T"
+            path="/shifts/list"
           />
         </Can>
 

@@ -178,7 +178,7 @@ const hospitalData = hospitalResponseData?.data;
             const userMenu = [
               ...(ability.can("read", "users") ? [{
                 key: "0",
-                label: <Link to="/users">Crear Usuarios</Link>,
+                label: <Link to="/users">Usuarios</Link>,
                 icon: <UserAddOutlined />,
               }] : []),
               {

@@ -25,7 +25,7 @@ export const appShortcuts: ShortcutConfig[] = [
   // Gestión de Fondos
   {
     keys: "ctrl+f",
-    description: "Lista de Ingresos",
+    description: "Listar Ingresos",
     action: (navigate) => navigate("/incomes/list"),
     title: "Gestión de Fondos",
     category: "incomes",
@@ -53,6 +53,16 @@ export const appShortcuts: ShortcutConfig[] = [
     action: (navigate) => navigate("/incomes/history"),
     title: "Gestión de Fondos",
     category: "incomes",
+    roles: ["admin", "cashier", "auditor"],
+  },
+
+  // Gestión de Turnos
+  {
+    keys: "ctrl+t",
+    description: "Listar Turnos",
+    action: (navigate) => navigate("/shifts/list"),
+    title: "Gestión de Turnos",
+    category: "shifts",
     roles: ["admin", "cashier", "auditor"],
   },
 

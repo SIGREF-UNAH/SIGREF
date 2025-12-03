@@ -3,6 +3,7 @@ import { AbilityBuilder, Ability } from "@casl/ability";
 export type Actions = "manage" | "read" | "create" | "update" | "delete";
 export type Subjects =
   | "incomes"         // Fondos
+  | "shifts"          // Turnos
   | "healthcares"     // Servicios
   | "patients"        // Pacientes
   | "practitioners"   // Empleados
@@ -29,6 +30,7 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can(["create", "read", "update"], "incomes");
     can(["create", "read", "update"], "healthcares");
     can(["create", "read", "update"], "patients");
+    can("read", "shifts");
 
     //* No puede crear usuarios
     cannot("create", "users");
@@ -40,6 +42,7 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can("read", "practitioners");
     can("read", "events");
     can("read", "incomes");
+    can("read", "shifts");
 
     //* No puede crear usuarios
     cannot("create", "users");

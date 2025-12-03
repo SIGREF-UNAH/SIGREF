@@ -7,6 +7,10 @@ export const IncomesRoutes = [
   { path: "/incomes/history", name: "Historial de Cierres de Caja" },
 ];
 
+export const ShiftsRoutes = [
+  { path: "/shifts/list", name: "Lista de Turnos" },
+];
+
 export const HealthcaresRoutes = [
   { path: "/healthcares/list", name: "Lista de Servicios" },
   { path: "/healthcares/create", name: "Crear Servicio" },
@@ -50,6 +54,7 @@ export const RoutesByRole: Record<
   {
     fondos?: any[];
     servicios?: any[];
+    turnos?: any[];
     paquetes?: any[];
     pacientes?: any[];
     empleados?: any[];
@@ -62,6 +67,7 @@ export const RoutesByRole: Record<
   [validRoles.admin]: {
     fondos: IncomesRoutes,
     servicios: HealthcaresRoutes,
+    turnos: ShiftsRoutes,
     pacientes: PatientsRoutes,
     empleados: PractitionersRoutes,
     ubicaciones: LocationsRoutes,
@@ -71,12 +77,14 @@ export const RoutesByRole: Record<
   },
   [validRoles.auditor]: {
     fondos: IncomesRoutes,
+    turnos: ShiftsRoutes,
     servicios: HealthcaresRoutes,
     empleados: PractitionersRoutes,
     eventos: EventsRoutes,
   },
   [validRoles.cashier]: {
     fondos: IncomesRoutes,
+    turnos: ShiftsRoutes,
     servicios: HealthcaresRoutes,
     pacientes: PatientsRoutes,
   },

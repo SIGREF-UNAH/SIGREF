@@ -154,19 +154,13 @@ const allowedRoles = allRoles.filter((r) => {
       {/* Header */}
       <PageHeaderTabs
         title="Gestión de Usuarios"
-        tabs={[
-          {
-            key: "crear",
-            label: "Crear Usuario",
-            path: "/users/create",
-          },
-        ]}
-        defaultActive="crear"
+        tabs={[]}
+        defaultActive="null"
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* ===================== PANEL IZQUIERDO ===================== */}
-        <Card title="Elija un Empleado" className="primary-card">
+        <Card title="Elija un Empleado" className="primary-card!">
           <Space direction="vertical" style={{ width: "100%" }}>
             <ProForm submitter={false}>
               <ProFormText
@@ -256,7 +250,7 @@ const allowedRoles = allRoles.filter((r) => {
         </Card>
 
         {/* ===================== PANEL DERECHO ===================== */}
-        <Card title="Crear Usuario" className="primary-card">
+        <Card title="Crear Usuario" className="primary-card!">
           <ProForm
             formRef={formRef}
             submitter={{
