@@ -13,14 +13,13 @@ public class UserContextService : IUserContextService
 
     public Guid GetUserId()
     {
-        var userId = _httpContext.HttpContext?
-            .User?
-            .FindFirst("sub")?
-            .Value;
+        var userId =
+            _httpContext.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
+            _httpContext.HttpContext?.User?.FindFirst("sub")?.Value;
 
         if (string.IsNullOrEmpty(userId))
             throw new UnauthorizedAccessException(
-                "No se pudo obtener el ID del usuario desde el token. El usuario no está autenticado."
+                "No se pudo obtener el ID del usuario desde el token."
             );
 
         return Guid.Parse(userId);
