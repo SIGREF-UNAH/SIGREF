@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SIGREF.API.Constants;
 using SIGREF.API.Dtos;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Healthcare;
@@ -23,6 +24,7 @@ public class OrganizationsController : ControllerBase
 
     [HttpGet()]
     [Produces(typeof(PagedResultDto<OrganizationDto>))]
+    [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.auditor} , {RolesConstants.ti}")]
     public async Task<IActionResult> GetFilteredOrganizations([FromQuery] OrganizationFilterDto filter)
     {
         var pagedOrganizations = await _organizationService.GetFilteredOrganizationsAsync(filter);
@@ -38,6 +40,7 @@ public class OrganizationsController : ControllerBase
 
     [HttpGet("{id}")]
     [Produces<OrganizationDto>()]
+    [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.auditor} , {RolesConstants.ti}")]
     public async Task<ActionResult<OrganizationDto>> GetOrganizationById(string id)
     {
         try
@@ -58,6 +61,7 @@ public class OrganizationsController : ControllerBase
 
     [HttpPost]
     [Produces<OrganizationDto>()]
+    [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.ti}")]
     public async Task<ActionResult<OrganizationDto>> CreateOrganization([FromBody] CreateOrganizationDto createDto)
     {
         try
@@ -79,6 +83,7 @@ public class OrganizationsController : ControllerBase
 
     [HttpPut("{id}")]
     [Produces<OrganizationDto>()]
+    [Authorize(Roles = $"{RolesConstants.admin}, {RolesConstants.ti}")]
     public async Task<ActionResult<OrganizationDto>> UpdateOrganization(string id, [FromBody] UpdateOrganizationDto updateDto)
     {
         try
@@ -103,6 +108,7 @@ public class OrganizationsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = $"{RolesConstants.admin}  , {RolesConstants.ti}")]
     public async Task<ActionResult> DeleteOrganization(string id)
     {
         try

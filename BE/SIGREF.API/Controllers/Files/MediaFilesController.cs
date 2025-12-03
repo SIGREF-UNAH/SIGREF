@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SIGREF.API.Constants;
 using SIGREF.API.Database.Entity.common;
 using SIGREF.API.Dtos.Files;
 using SIGREF.API.Services.Files;
@@ -36,7 +37,7 @@ public class MediaFilesController : ControllerBase
     //             GET BY ID  (URL + info del archivo)
     // ============================================================
     [HttpGet("{id:guid}")]
-    [AllowAnonymous] // Para que clientes y FE puedan cargar logos
+    [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor},{RolesConstants.ti}")] // Para que clientes y FE puedan cargar logos
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Produces<MediaFileDto>()]
@@ -52,6 +53,7 @@ public class MediaFilesController : ControllerBase
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Roles = $"{RolesConstants.ti}")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var ok = await _mediaService.DeleteAsync(id);
@@ -67,7 +69,9 @@ public class MediaFilesController : ControllerBase
     // ============================================================
     [HttpPost("{mediaId:guid}/assign")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [Authorize(Roles = $"{RolesConstants.ti}")]
     [Produces<MediaFileDto>()]
+    
     public async Task<IActionResult> SetHospitalMedia(
         Guid mediaId,
         [FromQuery] MediaFileType type)
@@ -82,6 +86,7 @@ public class MediaFilesController : ControllerBase
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [Produces<MediaFileDto>()]
+    [Authorize(Roles = $"{RolesConstants.ti}")]
     public async Task<IActionResult> GetPaged([FromQuery] MediaFileFilterDto filter)
     {
         var result = await _mediaService.GetPagedAsync(filter);

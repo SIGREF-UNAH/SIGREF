@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SIGREF.API.Constants;
 using SIGREF.API.Dtos;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Patient;
@@ -27,6 +28,7 @@ public class PractitionerController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces("application/json")]
+    [Authorize(Roles = $" {RolesConstants.admin} , {RolesConstants.auditor} , {RolesConstants.ti}")]
     public async Task<IActionResult> GetFiltered([FromQuery] PractitionerFilterDto filter)
     {
         var pagedPractitioners = await _practitionerService.GetFilteredPractitionersAsync(filter);
@@ -44,6 +46,7 @@ public class PractitionerController : ControllerBase
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.auditor} , {RolesConstants.ti}")]
     [Produces("application/json")]
     public async Task<IActionResult> GetById(string id)
     {
@@ -58,6 +61,7 @@ public class PractitionerController : ControllerBase
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [Authorize(Roles = $" {RolesConstants.admin} , {RolesConstants.ti}")]
     [Produces("application/json")]
     public async Task<IActionResult> CreatePractitioner([FromBody] CreatePractitionerDto createPractitionerDto)
     {
@@ -73,6 +77,7 @@ public class PractitionerController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.ti}")]
     [Produces("application/json")]
     public async Task<IActionResult> UpdatePractitioner(string id, [FromBody] UpdatePractitionerDto updatePractitionerDto)
     {
@@ -90,6 +95,7 @@ public class PractitionerController : ControllerBase
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.ti}")]
     public async Task<IActionResult> DeletePractitioner(string id)
     {
         // 1. Verificar que el paciente exista

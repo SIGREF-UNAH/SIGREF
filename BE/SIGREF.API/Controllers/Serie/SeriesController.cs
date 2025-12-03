@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SIGREF.API.Constants;
 using SIGREF.API.Dtos.Series;
 using SIGREF.API.Services.Serie;
 
@@ -23,6 +24,7 @@ public class SeriesController : ControllerBase
     //                     CREAR SERIE
     // ============================================================
     [HttpPost]
+    [Authorize(Roles = $"{RolesConstants.admin}")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Create([FromBody] CreateSeriesDto dto)
@@ -38,6 +40,7 @@ public class SeriesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [Authorize(Roles = $"{RolesConstants.admin}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateSeriesDto dto)
     {
         var result = await _serieService.UpdateSerieAsync(dto, id);
@@ -48,8 +51,8 @@ public class SeriesController : ControllerBase
     //      LISTAR SERIES (FILTRADO + PAGINACION)
     // ============================================================
     [HttpGet]
-    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor} ")]
     public async Task<IActionResult> GetSeries([FromQuery] FilterSerieDto filter)
     {
         var result = await _serieService.GetSeriesAsync(filter);
@@ -60,7 +63,7 @@ public class SeriesController : ControllerBase
     //              OBTENER POR ID
     // ============================================================
     [HttpGet("{id:guid}")]
-    [AllowAnonymous]
+    [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(Guid id)
@@ -74,6 +77,7 @@ public class SeriesController : ControllerBase
     // ============================================================
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [Authorize(Roles = $"{RolesConstants.admin}")]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SoftDelete(Guid id)
     {

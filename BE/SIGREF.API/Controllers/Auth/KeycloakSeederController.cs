@@ -28,7 +28,7 @@ public class KeycloakSeederController : ControllerBase
     // ============================================================
     // CREATE USER
     // ============================================================
-    //[Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}")]
+    [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}")]
     [HttpPost("create-user")]
     public async Task<IActionResult> CreateUser([FromBody] UserCreateDto dto)
     {
