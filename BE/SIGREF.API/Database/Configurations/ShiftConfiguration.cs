@@ -25,6 +25,7 @@ public class ShiftConfiguration : IEntityTypeConfiguration<ShiftEntity>
 
         builder.Property(x => x.LocationId)
             .HasColumnName("location_id")
+            .HasMaxLength(64)
             .IsRequired()
             .HasComment("ID de la Location en FHIR asociada a este turno.");
 

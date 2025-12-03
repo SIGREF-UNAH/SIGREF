@@ -52,7 +52,7 @@ var mongoSigrefLogs = builder.AddMongoDB("mongo-sigref-logs", mongoPort, mongoUs
     .WithChildRelationship(mongoUser)
     .WithChildRelationship(mongoPassword);
 
-var mongoDb = mongoSigrefLogs.AddDatabase("sigref-logs");
+var mongoDb = mongoSigrefLogs.AddDatabase("MongoDb");
 
 
 if (builder.ExecutionContext.IsRunMode)

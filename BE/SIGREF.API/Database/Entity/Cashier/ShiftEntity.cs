@@ -18,8 +18,8 @@ public class ShiftEntity : BaseEntity
 
     [Required]
     [Column("location_id")]
-    public Guid LocationId { get; set; }
-
+    [StringLength(64)]
+    public string LocationId { get; set; }
 
 
     // ======================================
