@@ -65,4 +65,43 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
         var response = await shiftService.CreateShiftAsync(dto);
         return StatusCode(response.StatusCode, response);
     }
+
+    // ============================================================
+    // PUT: api/shifts/{id}  (ACTUALIZAR)
+    // ============================================================
+    [HttpPut("{id:guid}")]
+    [Authorize(Roles = $"{RolesConstants.admin}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Produces(typeof(ResponseDto<ShiftDto>))]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateShiftDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var response = await shiftService.UpdateShiftAsync(id, dto);
+        return StatusCode(response.StatusCode, response);
+    }
+
+    // ============================================================
+    // DELETE: api/shifts/{id}  (ELIMINAR)
+    // ============================================================
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = $"{RolesConstants.admin}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Produces(typeof(ResponseDto<bool>))]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var response = await shiftService.DeleteShiftAsync(id);
+        return StatusCode(response.StatusCode, response);
+    }
 }
