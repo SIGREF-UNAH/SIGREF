@@ -1,5 +1,5 @@
-using MongoDB.Driver;
-using SIGREF.API.Audit.Models;
+ using MongoDB.Driver;
+ using SIGREF.API.Audit.Models;
 
 namespace SIGREF.API.Audit.Services;
 
@@ -8,9 +8,10 @@ public class AuditService : IAuditService
     private readonly IMongoCollection<AuditLog> _auditCollection;
     private readonly ILogger<AuditService> _logger;
 
-    public AuditService(IMongoDatabase mongoDatabase, ILogger<AuditService> logger)
+    public AuditService( ILogger<AuditService> logger,IMongoClient client)
     {
-        _auditCollection = mongoDatabase.GetCollection<AuditLog>("audit_logs");
+        var database = client.GetDatabase("MongoDb");
+         _auditCollection = database.GetCollection<AuditLog>("audit_logs");
         _logger = logger;
 
         // Crear índices para mejorar el rendimiento de las consultas
