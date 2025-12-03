@@ -219,9 +219,12 @@ namespace SIGREF.API.Database.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("patient_value");
 
-                    b.Property<int>("PaymentMethod")
-                        .HasColumnType("integer")
-                        .HasColumnName("payment_method");
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("payment_method")
+                        .HasComment("Método de pago: Cash, Card, Transfer, Mixed");
 
                     b.Property<Guid>("SerieId")
                         .HasColumnType("uuid")
@@ -286,6 +289,9 @@ namespace SIGREF.API.Database.Migrations
 
                     b.HasIndex("SerieId", "Number")
                         .HasDatabaseName("idx_invoice_serie_number");
+
+                    b.HasIndex("CreatedDate", "Status", "InvoiceType")
+                        .HasDatabaseName("idx_invoice_created_status_type");
 
                     b.ToTable("invoices", null, t =>
                         {
@@ -364,6 +370,9 @@ namespace SIGREF.API.Database.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedDate")
+                        .HasDatabaseName("idx_invoiceitems_created_date");
+
                     b.HasIndex("InvoiceId")
                         .HasDatabaseName("idx_invoiceitems_invoiceid");
 
@@ -372,6 +381,9 @@ namespace SIGREF.API.Database.Migrations
 
                     b.HasIndex("InvoiceId", "ServiceId")
                         .HasDatabaseName("idx_invoiceitems_invoiceid_serviceid");
+
+                    b.HasIndex("ServiceId", "CreatedDate")
+                        .HasDatabaseName("idx_invoiceitems_serviceid_created");
 
                     b.ToTable("invoice_items", null, t =>
                         {
@@ -586,8 +598,10 @@ namespace SIGREF.API.Database.Migrations
                         .HasColumnName("is_active")
                         .HasComment("Indica si el turno está activo.");
 
-                    b.Property<Guid>("LocationId")
-                        .HasColumnType("uuid")
+                    b.Property<string>("LocationId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
                         .HasColumnName("location_id")
                         .HasComment("ID de la Location en FHIR asociada a este turno.");
 
@@ -682,6 +696,73 @@ namespace SIGREF.API.Database.Migrations
                         {
                             t.HasComment("Catálogo de servicios de salud registrados en SIGREF. Sincronizado parcialmente con FHIR HealthcareService.");
                         });
+                });
+
+            modelBuilder.Entity("SIGREF.API.Database.Entity.Dashboard.DashboardFact", b =>
+                {
+                    b.Property<Guid?>("CashierSessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CashierUserName")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FhirServiceId")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("FinalTotal")
+                        .HasColumnType("numeric");
+
+                    b.Property<Guid>("InvoiceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("InvoiceType")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("ItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("LocationId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("LocationName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PackageId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PackageName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PatientIdFhir")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("RealIncome")
+                        .HasColumnType("numeric");
+
+                    b.Property<Guid?>("ServiceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ServiceName")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("ShiftId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ShiftName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("text");
+
+                    b.Property<int>("TotalItems")
+                        .HasColumnType("integer");
+
+                    b.ToTable((string)null);
+
+                    b.ToView("mv_dashboard_facts", (string)null);
                 });
 
             modelBuilder.Entity("SIGREF.API.Database.Entity.Files.MediaFileEntity", b =>

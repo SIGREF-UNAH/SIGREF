@@ -35,6 +35,13 @@ public class InvoiceEntityConfiguration : IEntityTypeConfiguration<InvoiceEntity
             .HasMaxLength(30)
             .HasColumnName("invoice_type")
             .HasComment("Normal: Todos Datos | Emergency: Se reconoce Servicio Dado Datos pueden quedar pendientes | Exempt: Descuento del 100% | Refunded: reembolsada | CreditNote: Devolucion de Dinero | DebitNote: Ingreso de Dinero");
+       
+        builder
+            .Property(i => i.PaymentMethod)
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .HasColumnName("payment_method")
+            .HasComment("Método de pago: Cash, Card, Transfer, Mixed");
 
         // ============================
         // PATIENT FIELDS
@@ -132,6 +139,9 @@ public class InvoiceEntityConfiguration : IEntityTypeConfiguration<InvoiceEntity
         // Index para listar por estado (Created, Paid…)
         builder.HasIndex(i => i.Status)
             .HasDatabaseName("idx_invoice_status");
+        
+        builder.HasIndex(i => new { i.CreatedDate, i.Status, i.InvoiceType })
+            .HasDatabaseName("idx_invoice_created_status_type");
 
         // Index para filtros por fecha 
         builder.HasIndex(i => i.CreatedDate)

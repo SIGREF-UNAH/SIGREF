@@ -136,7 +136,7 @@ namespace SIGREF.API.Database.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
-                    location_id = table.Column<Guid>(type: "uuid", nullable: false, comment: "ID de la Location en FHIR asociada a este turno."),
+                    location_id = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false, comment: "ID de la Location en FHIR asociada a este turno."),
                     name = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false, comment: "Nombre del turno (ejemplo: 'Matutino', 'Vespertino', etc.)."),
                     start_time = table.Column<TimeOnly>(type: "time without time zone", nullable: false, comment: "Hora de inicio del turno (TimeOnly)."),
                     end_time = table.Column<TimeOnly>(type: "time without time zone", nullable: false, comment: "Hora de finalización del turno (TimeOnly)."),
@@ -196,14 +196,18 @@ namespace SIGREF.API.Database.Migrations
                     patient_display = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
                     patient_system = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     patient_value = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
-                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    service_group_fhir_id = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: true),
+                    single_service_id = table.Column<Guid>(type: "uuid", nullable: true),
                     serie_id = table.Column<Guid>(type: "uuid", nullable: false),
                     number = table.Column<long>(type: "bigint", nullable: false),
-                    total_amount = table.Column<decimal>(type: "numeric", nullable: false),
-                    currency = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
-                    status = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
-                    payment_method = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
-                    invoice_type = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    total_original = table.Column<decimal>(type: "numeric(14,2)", precision: 14, scale: 2, nullable: false),
+                    adjustment_total = table.Column<decimal>(type: "numeric(14,2)", precision: 14, scale: 2, nullable: false),
+                    final_total = table.Column<decimal>(type: "numeric(14,2)", precision: 14, scale: 2, nullable: false),
+                    amount_paid = table.Column<decimal>(type: "numeric(14,2)", precision: 14, scale: 2, nullable: false),
+                    amount_due = table.Column<decimal>(type: "numeric(14,2)", precision: 14, scale: 2, nullable: false),
+                    status = table.Column<string>(type: "varchar(30)", maxLength: 30, nullable: false, comment: "Created: Creada | Paid: pagada | Cancelled: anulada | Refunded: reembolsada"),
+                    invoice_type = table.Column<string>(type: "varchar(30)", maxLength: 30, nullable: false, comment: "Normal: Todos Datos | Emergency: Se reconoce Servicio Dado Datos pueden quedar pendientes | Exempt: Descuento del 100% | Refunded: reembolsada | CreditNote: Devolucion de Dinero | DebitNote: Ingreso de Dinero"),
+                    payment_method = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false, comment: "Método de pago: Cash, Card, Transfer, Mixed"),
                     parent_invoice_id = table.Column<Guid>(type: "uuid", nullable: true),
                     cashier_session_id = table.Column<Guid>(type: "uuid", nullable: true),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
@@ -234,7 +238,7 @@ namespace SIGREF.API.Database.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                 },
-                comment: "Ordenes de Donacion emitidas por SIGREF, con información FHIR del paciente, series, métodos de pago y relaciones administrativas.");
+                comment: "Tabla principal de facturación: contiene facturas normales, emergencias, exentas y notas de crédito/débito.");
 
             migrationBuilder.CreateTable(
                 name: "invoice_items",
@@ -242,16 +246,17 @@ namespace SIGREF.API.Database.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     invoice_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    service_id = table.Column<Guid>(type: "uuid", nullable: true),
-                    package_id = table.Column<Guid>(type: "uuid", nullable: true),
-                    quantity = table.Column<int>(type: "integer", nullable: false),
-                    unit_price = table.Column<decimal>(type: "numeric", nullable: false),
-                    discount = table.Column<decimal>(type: "numeric", nullable: true),
+                    service_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    description = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false, comment: "Nombre del servicio copiado al momento de facturar (histórico)."),
+                    quantity = table.Column<int>(type: "integer", nullable: false, comment: "Cantidad facturada del servicio."),
+                    unit_price = table.Column<decimal>(type: "numeric(14,2)", precision: 14, scale: 2, nullable: false, comment: "Precio unitario histórico del servicio facturado."),
+                    discount = table.Column<decimal>(type: "numeric(14,2)", precision: 14, scale: 2, nullable: true, comment: "Descuento aplicado al item (si aplica)."),
+                    total_amount = table.Column<decimal>(type: "numeric(14,2)", precision: 14, scale: 2, nullable: false, comment: "Total del item: (quantity * unit_price) - discount (congelado)."),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
-                    created_by_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    updated_by_id = table.Column<Guid>(type: "uuid", nullable: true),
-                    created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    created_by_id = table.Column<Guid>(type: "uuid", nullable: false, comment: "Usuario que creó el item."),
+                    updated_by_id = table.Column<Guid>(type: "uuid", nullable: true, comment: "Usuario que actualizó el item (si aplica)."),
+                    created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, comment: "Fecha de creación del item (UTC)."),
+                    updated_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true, comment: "Fecha de última actualización del item (UTC).")
                 },
                 constraints: table =>
                 {
@@ -260,14 +265,16 @@ namespace SIGREF.API.Database.Migrations
                         name: "FK_invoice_items_health_services_service_id",
                         column: x => x.service_id,
                         principalTable: "health_services",
-                        principalColumn: "id");
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_invoice_items_invoices_invoice_id",
                         column: x => x.invoice_id,
                         principalTable: "invoices",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
-                });
+                },
+                comment: "Items facturados: cada servicio congelado con precio histórico.");
 
             migrationBuilder.CreateIndex(
                 name: "idx_cashier_sessions_closed_at",
@@ -318,19 +325,59 @@ namespace SIGREF.API.Database.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_invoice_items_invoice_id",
+                name: "idx_invoiceitems_created_date",
+                table: "invoice_items",
+                column: "created_date");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_invoiceitems_invoiceid",
                 table: "invoice_items",
                 column: "invoice_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_invoice_items_service_id",
+                name: "idx_invoiceitems_invoiceid_serviceid",
+                table: "invoice_items",
+                columns: new[] { "invoice_id", "service_id" });
+
+            migrationBuilder.CreateIndex(
+                name: "idx_invoiceitems_serviceid",
                 table: "invoice_items",
                 column: "service_id");
 
             migrationBuilder.CreateIndex(
-                name: "idx_invoice_number",
+                name: "idx_invoiceitems_serviceid_created",
+                table: "invoice_items",
+                columns: new[] { "service_id", "created_date" });
+
+            migrationBuilder.CreateIndex(
+                name: "idx_invoice_cashier_sesion",
                 table: "invoices",
-                column: "number");
+                column: "cashier_session_id");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_invoice_created_by",
+                table: "invoices",
+                column: "created_by_id");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_invoice_created_date",
+                table: "invoices",
+                column: "created_date");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_invoice_created_status_type",
+                table: "invoices",
+                columns: new[] { "created_date", "status", "invoice_type" });
+
+            migrationBuilder.CreateIndex(
+                name: "idx_invoice_parent",
+                table: "invoices",
+                column: "parent_invoice_id");
+
+            migrationBuilder.CreateIndex(
+                name: "idx_invoice_patient_id",
+                table: "invoices",
+                column: "patient_id_fhir");
 
             migrationBuilder.CreateIndex(
                 name: "idx_invoice_serie",
@@ -338,19 +385,19 @@ namespace SIGREF.API.Database.Migrations
                 column: "serie_id");
 
             migrationBuilder.CreateIndex(
-                name: "idx_invoice_session",
+                name: "idx_invoice_serie_number",
                 table: "invoices",
-                column: "cashier_session_id");
+                columns: new[] { "serie_id", "number" });
 
             migrationBuilder.CreateIndex(
-                name: "idx_invoice_user",
+                name: "idx_invoice_status",
                 table: "invoices",
-                column: "user_id");
+                column: "status");
 
             migrationBuilder.CreateIndex(
-                name: "IX_invoices_parent_invoice_id",
+                name: "idx_invoice_type",
                 table: "invoices",
-                column: "parent_invoice_id");
+                column: "invoice_type");
 
             migrationBuilder.CreateIndex(
                 name: "idx_media_files_created_date",

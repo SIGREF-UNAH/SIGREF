@@ -94,5 +94,11 @@ public class InvoiceItemEntityConfiguration : IEntityTypeConfiguration<InvoiceIt
         builder.Property(x => x.UpdatedDate)
             .HasColumnName("updated_date")
             .HasComment("Fecha de última actualización del item (UTC).");
+        
+        builder.HasIndex(i => i.CreatedDate)
+            .HasDatabaseName("idx_invoiceitems_created_date");
+        builder.HasIndex(i => new { i.ServiceId, i.CreatedDate })
+            .HasDatabaseName("idx_invoiceitems_serviceid_created");
+
     }
 }
