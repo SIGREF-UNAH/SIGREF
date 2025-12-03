@@ -95,7 +95,7 @@ public class MediaFileService : IMediaFileService
                 await _context.SaveChangesAsync(); // genera ID
 
                 var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
-                var finalFileName = $"{entity.Id}_{timestamp}_{dto.Type}{ext}";
+                var finalFileName = $"{entity.Id}{timestamp}{dto.Type}{ext}";
 
                 var basePath = Path.Combine(_env.ContentRootPath, "media", systemFolder);
                 if (!Directory.Exists(basePath))
@@ -286,6 +286,9 @@ public class MediaFileService : IMediaFileService
         }
         catch (Exception ex)
         {
+            // Aquí podés logear si querés
+            // _logger.LogError(ex, "Error al eliminar MediaFile");
+
             Console.WriteLine($"Error eliminando media: {ex.Message} | {ex.StackTrace}");
 
             return false;
