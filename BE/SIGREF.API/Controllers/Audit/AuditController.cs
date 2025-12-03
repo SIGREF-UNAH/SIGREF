@@ -17,6 +17,7 @@ public class AuditController(IAuditService auditService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [Produces<AuditLogDto>()]
     public async Task<IActionResult> GetAll(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50,
@@ -114,6 +115,7 @@ public class AuditController(IAuditService auditService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [Produces<AuditLogDto>()]
     public async Task<IActionResult> GetById(string id)
     {
         var log = await auditService.GetLogByIdAsync(id);
@@ -123,5 +125,14 @@ public class AuditController(IAuditService auditService) : ControllerBase
 
         var dto = AuditLogDto.FromAuditLog(log);
         return Ok(dto);
+    }
+
+    [HttpDelete("test/clear")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ClearAllLogs()
+    {
+        await auditService.ClearAllLogsAsync();
+        return Ok(new { message = "Todos los logs han sido eliminados" });
     }
 }
