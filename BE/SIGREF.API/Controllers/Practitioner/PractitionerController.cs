@@ -29,6 +29,7 @@ public class PractitionerController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces("application/json")]
     [Authorize(Roles = $" {RolesConstants.admin} , {RolesConstants.auditor} , {RolesConstants.ti}")]
+    
     public async Task<IActionResult> GetFiltered([FromQuery] PractitionerFilterDto filter)
     {
         var pagedPractitioners = await _practitionerService.GetFilteredPractitionersAsync(filter);

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Constants;
 using SIGREF.API.Database.Entity.common;
+using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Invoice;
 using SIGREF.API.Services.Billing;
 
@@ -23,6 +24,12 @@ public class InvoiceController : ControllerBase
     // CREAR FACTURA
     // ============================================
     [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Produces(typeof(ResponseDto<InvoiceDetailDto>))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin}")]
     public async Task<IActionResult> CreateInvoice([FromBody] InvoiceCreateDto dto)
     {
@@ -34,6 +41,12 @@ public class InvoiceController : ControllerBase
     // OBTENER FACTURA POR ID
     // ============================================
     [HttpGet("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Produces(typeof(ResponseDto<InvoiceDetailDto?>))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
     public async Task<IActionResult> GetInvoiceById(
         Guid id,
@@ -49,6 +62,12 @@ public class InvoiceController : ControllerBase
     // LISTAR FACTURAS
     // ============================================
     [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Produces(typeof(ResponseDto<PagedResultDto<InvoiceGetDto>>))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
     public async Task<IActionResult> GetInvoices([FromQuery] InvoiceFilterDto filter)
     {
@@ -60,6 +79,12 @@ public class InvoiceController : ControllerBase
     // CANCELAR FACTURA
     // ============================================
     [HttpPost("{id:guid}/cancel")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Produces(typeof(ResponseDto<InvoiceDetailDto>))]
     [Authorize(Roles = $"{RolesConstants.admin},")]
     public async Task<IActionResult> CancelInvoice(Guid id)
     {
@@ -71,6 +96,12 @@ public class InvoiceController : ControllerBase
     // PAGAR FACTURA
     // ============================================
     [HttpPost("{id:guid}/pay")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Produces(typeof(ResponseDto<InvoiceDetailDto>))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} ")]
     public async Task<IActionResult> MarkAsPaid(
         Guid id,
@@ -84,6 +115,12 @@ public class InvoiceController : ControllerBase
     // CREAR NOTA DE CRÉDITO / DÉBITO
     // ============================================
     [HttpPost("{parentId:guid}/notes/{noteType}")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Produces(typeof(ResponseDto<InvoiceDetailDto>))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} ")]
     public async Task<IActionResult> CreateNote(
         Guid parentId,
@@ -98,6 +135,11 @@ public class InvoiceController : ControllerBase
     // VERIFICAR SI TIENE NOTAS HIJAS
     // ============================================
     [HttpGet("{id:guid}/child-notes")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Produces(typeof(ResponseDto<List<MinimalInvoiceDto>>))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
     public async Task<IActionResult> HasChildNotes(Guid id)
     {
@@ -109,6 +151,12 @@ public class InvoiceController : ControllerBase
     // RECALCULAR TOTALES
     // ============================================
     [HttpPost("{id:guid}/recalculate")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Produces(typeof(ResponseDto<bool>))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
     public async Task<IActionResult> RecalculateTotals(Guid id)
     {
@@ -118,6 +166,11 @@ public class InvoiceController : ControllerBase
     
     // SUMMARY DE NOTAS (CREDIT/DEBIT)
     [HttpGet("{id:guid}/notes-summary")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Produces(typeof(ResponseDto<InvoiceNotesSummaryDto>))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
     public async Task<IActionResult> GetNotesSummary(Guid id)
     {
