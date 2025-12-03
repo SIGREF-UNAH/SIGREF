@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Patient;
@@ -11,6 +12,7 @@ namespace SIGREF.API.Controllers.PractitionerC;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class PractitionerController : ControllerBase
 {
     private readonly IPractitionerService _practitionerService;

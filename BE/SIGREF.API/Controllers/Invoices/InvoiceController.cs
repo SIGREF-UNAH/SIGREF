@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Database.Entity.common;
 using SIGREF.API.Dtos.Invoice;
 using SIGREF.API.Services.Billing;
@@ -7,6 +8,7 @@ namespace SIGREF.API.Controllers.Invoices;
 
 [ApiController]
 [Route("api/invoices")]
+[Authorize]
 public class InvoiceController : ControllerBase
 {
     private readonly IInvoiceService _service;

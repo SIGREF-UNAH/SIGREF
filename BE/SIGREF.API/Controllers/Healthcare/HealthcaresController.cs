@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Healthcare;
 using SIGREF.API.Extensions;
@@ -8,6 +9,7 @@ namespace SIGREF.API.Controllers.Healthcare
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class HealthcaresController(HealthcareService healthcareService) : ControllerBase
     {
         [HttpGet]

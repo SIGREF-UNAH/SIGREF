@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace SIGREF.API.Controllers.Seeder;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class SeedController : ControllerBase
 {
     private readonly RolesAdminSeeder _rolesSeeder;

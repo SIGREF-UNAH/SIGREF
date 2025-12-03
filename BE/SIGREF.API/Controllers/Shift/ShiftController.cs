@@ -1,10 +1,12 @@
 using Hl7.Fhir.Utility;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.ServiceGroup;
 
 namespace SIGREF.API.Controllers.Shift;
 
+[Authorize]
 public class ShiftController
 {
     [HttpGet]
