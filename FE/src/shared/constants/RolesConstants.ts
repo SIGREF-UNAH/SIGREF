@@ -1,0 +1,17 @@
+export const ROLE_OPTIONS = [
+    { label: "Doctor", value: "doctor" },
+    { label: "Enfermero", value: "nurse" },
+    { label: "Farmacéutico", value: "pharmacist" },
+    { label: "Recepcionista", value: "receptionist" },
+    { label: "Técnico de Laboratorio", value: "laboratory-technician" },
+    { label: "Fisioterapeuta", value: "physiotherapist" },
+    { label: "Dietista", value: "dietitian" },
+    { label: "Optometrista", value: "optometrist" },
+    { label: "Dentista", value: "dentist" },
+    { label: "Psicólogo", value: "psychologist" },
+    { label: "Partera", value: "midwife" },
+    { label: "Paramédico", value: "paramedic" },
+    { label: "Anestesista", value: "anesthetist" },
+    { label: "Cardiólogo", value: "cardiologist" },
+    { label: "Radiólogo", value: "radiologist" },
+  ];

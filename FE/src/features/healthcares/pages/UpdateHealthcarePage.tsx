@@ -45,6 +45,16 @@ export const UpdateHealthcarePage = () => {
             label: "Crear Servicio",
             path: "/healthcares/create",
           },
+          {
+            key: "listar",
+            label: "Lista de Paquetes",
+            path: "/service-groups/list",
+          },
+          {
+            key: "crear",
+            label: "Crear Paquete",
+            path: "/service-groups/create",
+          },
         ]}
         defaultActive="null"
       />

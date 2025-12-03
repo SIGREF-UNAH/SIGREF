@@ -9,6 +9,8 @@ import { ReportsRouter } from "../features/reports/routers";
 import { EventsRouter } from "../features/events/routers";
 import { PatientsRouter } from "../features/patients/routers";
 import { LocationsRouter } from "../features/locations/routers";
+import { ServiceGroupsRouter } from "../features/service-groups/routers";
+import { HospitalRouter } from "../features/hospital/routers";
 
  export const AppRouter = () => {
   return (
@@ -29,6 +31,10 @@ import { LocationsRouter } from "../features/locations/routers";
 
         {/* Rutas de Servicios Médicos */}
         <Route path="/healthcares/*" element={<HealthcaresRouter />} />
+        
+        {/* Rutas de Paquetes */}
+        <Route path="/service-groups/*" element={<ServiceGroupsRouter />} />
+        
         {/* Rutas de Ingresos/Fondos */}
         <Route path="/incomes/*" element={<IncomesRouter />} />
 
@@ -46,6 +52,9 @@ import { LocationsRouter } from "../features/locations/routers";
 
         {/* Rutas de Eventos/Logs */}
         <Route path="/events/*" element={<EventsRouter />} />
+        
+        {/* Rutas de Información del Hospital */}
+        <Route path="/hospital/*" element={<HospitalRouter />} />
 
       </Route>
     </Routes>

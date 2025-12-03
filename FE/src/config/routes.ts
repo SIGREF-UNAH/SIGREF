@@ -10,6 +10,8 @@ export const IncomesRoutes = [
 export const HealthcaresRoutes = [
   { path: "/healthcares/list", name: "Lista de Servicios" },
   { path: "/healthcares/create", name: "Crear Servicio" },
+  { path: "/service-groups/list", name: "Lista de Paquetes" },
+  { path: "/service-groups/create", name: "Crear Paquete" },
 ];
 
 export const PatientsRoutes = [
@@ -48,6 +50,7 @@ export const RoutesByRole: Record<
   {
     fondos?: any[];
     servicios?: any[];
+    paquetes?: any[];
     pacientes?: any[];
     empleados?: any[];
     ubicaciones?: any[];

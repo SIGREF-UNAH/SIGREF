@@ -17,27 +17,32 @@ public class InvoiceItemEntity : BaseEntity
     public Guid InvoiceId { get; set; }
 
     [ForeignKey(nameof(InvoiceId))]
-    public InvoiceEntity? Invoice { get; set; }
+    public InvoiceEntity Invoice { get; set; }
 
     // ===============================
     //     FK SERVICIO / PAQUETE
     // ===============================
 
+    // Servicio individual facturado
     [Column("service_id")]
-    public Guid? ServiceId { get; set; }
+    public Guid ServiceId { get; set; }
 
     [ForeignKey(nameof(ServiceId))]
-    public HealthServicesEntity? Service { get; set; }
-
-    [Column("package_id")]
-    public Guid? PackageId { get; set; }
-
-    [ForeignKey(nameof(PackageId))]
-    public HealthServicePackagesEntity? Package { get; set; }
+    public HealthService Service { get; set; }
+    
 
     // ===============================
     //        DATOS DEL ÍTEM
     // ===============================
+
+    /// <summary>
+    /// Nombre del servicio copiado al momento de facturar.
+    /// Esto congela la información histórica.
+    /// </summary>
+    [Required]
+    [Column("description")]
+    [StringLength(200)]
+    public string Description { get; set; } = string.Empty;
 
     [Required]
     [Column("quantity")]
@@ -49,5 +54,13 @@ public class InvoiceItemEntity : BaseEntity
 
     [Column("discount")]
     public decimal? Discount { get; set; }
-    
+
+    /// <summary>
+    /// Total del ítem:
+    /// (quantity * unit_price) - discount
+    /// Congelado al momento de facturar y hacer los llamados mas facil
+    /// </summary>
+    [Required]
+    [Column("total_amount")]
+    public decimal TotalAmount { get; set; }
 }

@@ -62,7 +62,7 @@ namespace SIGREF.API.Services.Healthcare
         // Filtrar
         public async Task<PagedResult<FhirHealthcare>> GetFilteredHealthcaresAsync(HealthcareFilterDto filter)
         {
-            // Normalizar paginación
+      
             var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
 
             var searchParams = new SearchParams();
@@ -82,7 +82,7 @@ namespace SIGREF.API.Services.Healthcare
 
             if (!string.IsNullOrWhiteSpace(filter.Location))
                 searchParams.Add("location", filter.Location);
-
+           
             // Paginación FHIR
             searchParams.Count = pageSize;
             searchParams.Add("_offset", offset.ToString());

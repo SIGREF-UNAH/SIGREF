@@ -13,10 +13,28 @@ public static class TerminologyConstants
     public static readonly Dictionary<string, string> RolesAdminConcepts = new()
     {
         // Llave: Constante en Roles.cs
+        // Roles de usuarios
         [RolesConstants.cashier] = "aux-recepcion",
         [RolesConstants.admin] = "admin-fondos",
         [RolesConstants.ti] = "personal-tic",
-        [RolesConstants.auditor] = "auditor-sistema"
+        [RolesConstants.auditor] = "auditor-sistema",
+
+        // Roles de empleados
+        ["doctor"] = "Doctor",
+        ["nurse"] = "Enfermero",
+        ["pharmacist"] = "Farmacéutico",
+        ["receptionist"] = "Recepcionista",
+        ["laboratory-technician"] = "Técnico de Laboratorio",
+        ["physiotherapist"] = "Fisioterapeuta",
+        ["dietitian"] = "Dietista",
+        ["optometrist"] = "Optometrista",
+        ["dentist"] = "Dentista",
+        ["psychologist"] = "Psicólogo",
+        ["midwife"] = "Partera",
+        ["paramedic"] = "Paramédico",
+        ["anesthetist"] = "Anestesista",
+        ["cardiologist"] = "Cardiólogo",
+        ["radiologist"] = "Radiólogo"
     };
 
     // Conceptos: Ubicaciones

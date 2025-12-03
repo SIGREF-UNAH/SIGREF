@@ -1,412 +1,263 @@
-﻿using System.Net.Http.Headers;
-using System.Security.Claims;
-using System.Text.Json;
+﻿using System.Security.Claims;
 using Hl7.Fhir.Rest;
-using Microsoft.EntityFrameworkCore;
-using SIGREF.API.Constants;
-using SIGREF.API.Database;
-using SIGREF.API.Database.Entity.Administration;
-using SIGREF.API.Dtos.Common;
-using SIGREF.API.Dtos.UserLink;
-using SIGREF.API.Extensions;
 using FhirPractitioner = Hl7.Fhir.Model.Practitioner;
-
+using SIGREF.API.Dtos.Auth;
+using SIGREF.API.Dtos.Common;
+using SIGREF.API.Services.Auth.Keycloak;
+using System.Text.Json;
 namespace SIGREF.API.Services.Auth;
 
-public class KeycloakAdminService
+public class KeycloakAdminService : IKeycloakAdminService
 {
-    private readonly HttpClient _http;
-    private readonly IConfiguration _config;
-    private readonly SIGREFContext _sigrefDb;
-    private readonly FhirClient _fhirService;
+    private readonly IKeycloakClient _kc;
+    private readonly FhirClient _fhir;
+   // private readonly IConfiguration _config;
 
-    // Cache local del token admin
-    private static string? _cachedToken;
-    private static DateTime _tokenExpiry = DateTime.MinValue;
-
-    private readonly string _kcBaseUrl;
-    private readonly string _kcRealm;
-
-    // =================================================
-    // Reglas de creacion de roles
-    //====================================================
-    private static readonly Dictionary<string, string[]> RoleCreationRules = new()
+    private static readonly Dictionary<string, string[]> RoleRules = new()
     {
-        {
-            RolesConstants.ti,
-            new[] { RolesConstants.ti, RolesConstants.admin, RolesConstants.auditor, RolesConstants.cashier }
-        },
-        { RolesConstants.admin, new[] { RolesConstants.auditor, RolesConstants.cashier } },
-        { RolesConstants.auditor, Array.Empty<string>() },
-        { RolesConstants.cashier, Array.Empty<string>() }
+        { "ti",     new[] { "ti", "admin", "auditor", "cashier" } },
+        { "admin",  new[] { "auditor", "cashier" } },
+        { "auditor", Array.Empty<string>() },
+        { "cashier", Array.Empty<string>() }
     };
-    
-    
 
     public KeycloakAdminService(
-        HttpClient http,
-        IConfiguration config,
-        SIGREFContext db,
-        FhirClient fhirService)
+        IKeycloakClient kc,
+        FhirClient fhir
+        )
     {
-
-        _http = http;
-        _config = config;
-        _sigrefDb = db;
-        _fhirService = fhirService;
-
-        //Fhir client
-
-
-        // Urls de sigref 
-        _kcBaseUrl = _config["Keycloak:BaseUrl"] ?? "http://localhost:8081";
-        _kcRealm = _config["Keycloak:Realm"] ?? "sigref";
-    }
-
-    // ===============================================================
-    // TOKEN ADMIN 
-    // Admite cache por si hay multiples pedidos en un mismo instante
-    // ===============================================================
-    private async Task<string> GetAdminTokenAsync()
-    {
-        if (!string.IsNullOrEmpty(_cachedToken) && DateTime.UtcNow < _tokenExpiry)
-            return _cachedToken;
-
-        var clientId = _config["Keycloak:AdminClientId"] ?? "sigref-admin-api";
-        var clientSecret = _config["Keycloak:AdminClientSecret"] ?? "sigref-admin-secret";
-
-        var form = new Dictionary<string, string>
-        {
-            ["grant_type"] = "client_credentials",
-            ["client_id"] = clientId,
-            ["client_secret"] = clientSecret
-        };
-
-        var tokenUrl = $"{_kcBaseUrl}/realms/{_kcRealm}/protocol/openid-connect/token";
-        var res = await _http.PostAsync(tokenUrl, new FormUrlEncodedContent(form));
-        res.EnsureSuccessStatusCode();
-
-        var json = await res.Content.ReadFromJsonAsync<JsonElement>();
-        _cachedToken = json.GetProperty("access_token").GetString();
-        var expiresIn = json.GetProperty("expires_in").GetInt32();
-        _tokenExpiry = DateTime.UtcNow.AddSeconds(expiresIn - 30);
-
-        return _cachedToken!;
+        _kc = kc;
+        _fhir = fhir;
+        //_config = config;
     }
 
 
-    private void SetAuthHeader(string token)
-    {
-        _http.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", token);
-    }
-
-    //=============================================
-    // Para validar el rol que se asigna y si tiene permisos de asignar dicho rol
-    //==============================================
-    private static bool CanCreate(string creatorRole, string[] requestedRoles)
-    {
-        return RoleCreationRules.TryGetValue(creatorRole, out var allowed)
-               && requestedRoles.All(allowed.Contains);
-    }
-
-    // ===============================================================
-    // CREAR USUARIO (Keycloak + tabla local UserLink)
-    // Se crea el usuario en Keycloak y luego se agrega en la tabla UserLink interna
-    // ===============================================================
-    public async Task<ResponseDto<UserLinkDto>> CreateUserAsync(
+    // ============================================================
+    // CREATE USER
+    // ============================================================
+    public async Task<ResponseDto<KeycloakUserDto>> CreateUserAsync(
         ClaimsPrincipal creator,
         string username,
         string practitionerId,
         string email,
         string password,
-        string[] roles)
+        string[] roles,
+        CancellationToken ct = default)
     {
-        // ================================================================
-        // 0. Validar rol del creador
-        // ================================================================
-        var creatorRole = creator.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+        // 1. Validar rol del creador
+        var creatorRole = creator.Claims
+            .FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
 
         if (creatorRole is null)
-            return new ResponseDto<UserLinkDto>
+        {
+            return new ResponseDto<KeycloakUserDto>
             {
-                Message = "No se pudo determinar el rol del creador.",
+                Status = false,
                 StatusCode = 401,
-                Status = false,
+                Message = "No se pudo determinar el rol del creador.",
                 Data = null
             };
+        }
 
-        if (!CanCreate(creatorRole, roles))
-            return new ResponseDto<UserLinkDto>
+        if (!RoleRules.TryGetValue(creatorRole, out var allowedRoles)
+            || roles.Any(r => !allowedRoles.Contains(r)))
+        {
+            return new ResponseDto<KeycloakUserDto>
             {
-                Message = $"El rol '{creatorRole}' no tiene permisos para crear usuarios con esos roles.",
+                Status = false,
                 StatusCode = 403,
-                Status = false,
+                Message = "El creador no tiene permiso para asignar esos roles.",
                 Data = null
             };
+        }
 
-        var token = await GetAdminTokenAsync();
-        SetAuthHeader(token);
-
-
-        // 1. Validar si el practitioner YA esta vinculado a un usuario
-        // ================================================================
-        var linkedUser = await _sigrefDb.UserLinks
-            .FirstOrDefaultAsync(u => u.PractitionerId == practitionerId);
-
-        if (linkedUser is not null)
-            return new ResponseDto<UserLinkDto>
-            {
-                Message = $"El Practitioner '{practitionerId}' ya está vinculado al usuario '{linkedUser.Username}'.",
-                StatusCode = 400,
-                Status = false,
-                Data = null
-            };
-        // ================================================================
-        // 2. Validar Practitioner en HAPI FHIR
-        // ================================================================
-        FhirPractitioner? practitioner = null;
-
+        // 2. Validar que el Practitioner exista en FHIR
+        FhirPractitioner prac;
         try
         {
-            practitioner = await _fhirService.ReadAsync<FhirPractitioner>($"Practitioner/{practitionerId}");
+            prac = await _fhir.ReadAsync<FhirPractitioner>($"Practitioner/{practitionerId}");
         }
-        catch (FhirOperationException ex) when (ex.Status == System.Net.HttpStatusCode.NotFound)
+        catch
         {
-            return new ResponseDto<UserLinkDto>
+            return new ResponseDto<KeycloakUserDto>
             {
-                Message = $"El Practitioner con ID '{practitionerId}' no existe en el servidor FHIR.",
+                Status = false,
                 StatusCode = 404,
-                Status = false,
+                Message = $"El Practitioner '{practitionerId}' no existe en FHIR.",
                 Data = null
             };
         }
 
-        // ================================================================
-        // 3. Verificar si usuario ya existe en Keycloak
-        // ================================================================
-        var searchUrl = $"{_kcBaseUrl}/admin/realms/{_kcRealm}/users?search={username}";
-        var existingUsers = await _http.GetFromJsonAsync<List<JsonElement>>(searchUrl);
+        // 3. Validar que ese Practitioner NO esté vinculado ya
+        var matches = await _kc.SearchUsersAsync(practitionerId, ct);
 
-        var alreadyExists = existingUsers?.Any(u =>
+        bool exists = matches.Any(u =>
+            u.TryGetProperty("attributes", out var attrs)
+            && attrs.TryGetProperty("practitionerId", out var pid)
+            && pid.ValueKind == JsonValueKind.Array
+            && pid[0].GetString() == practitionerId
+        );
+
+        if (exists)
         {
-            var uname = u.GetProperty("username").GetString();
-            var mail = u.TryGetProperty("email", out var e) ? e.GetString() : null;
-
-            return string.Equals(uname, username, StringComparison.OrdinalIgnoreCase)
-                   || string.Equals(mail, email, StringComparison.OrdinalIgnoreCase);
-
-        }) ?? false;
-
-        if (alreadyExists)
-            return new ResponseDto<UserLinkDto>
+            return new ResponseDto<KeycloakUserDto>
             {
-                Message = $"Ya existe un usuario con ese nombre o correo ({username} / {email}).",
-                StatusCode = 400,
                 Status = false,
+                StatusCode = 400,
+                Message = "El Practitioner ya está vinculado a un usuario.",
                 Data = null
             };
-
-        // ================================================================
-        //  Extraer nombres desde Practitioner FHIR
-        // ================================================================
-        string firstName = "";
-        string middleNames = "";
-        string lastName = "";
-        string displayName;
-
-        if (practitioner?.Name != null && practitioner.Name.Any())
-        {
-            var name = practitioner.Name.First();
-
-            var given = name.Given?.ToList() ?? new List<string>();
-            lastName = name.Family ?? "";
-
-            if (given.Count > 0)
-                firstName = given[0];
-
-            if (given.Count > 1)
-                middleNames = string.Join(" ", given.Skip(1));
-
-            displayName = ($"{string.Join(" ", given)} {lastName}").Trim();
-        }
-        else
-        {
-            // fallback
-            displayName = username;
-            firstName = username;
         }
 
-        // ================================================================
-        // 4. Crear usuario en Keycloak
-        // ================================================================
+        // 4. Preparar nombres desde FHIR
+        var name = prac!.Name?.FirstOrDefault();
+
+        string fn = name?.Given?.FirstOrDefault() ?? username;
+        string ln = name?.Family ?? "";
+        string displayName = $"{fn} {ln}".Trim();
+
+
+
+        // 5. Crear objeto del usuario en Keycloak
         var kcUser = new
         {
             username,
             email,
             enabled = true,
             emailVerified = true,
-            firstName,
-            lastName,
-
-            // Atributos extra para visualizar desde el panel de keycloack
-            attributes = new Dictionary<string, object?>
-            {
-                { "displayName", displayName },
-                { "practitionerId", practitionerId },
-                { "createdBy", "SIGREF_API" }
-            },
-
+            firstName = fn,
+            lastName = ln,
             credentials = new[]
             {
                 new { type = "password", value = password, temporary = false }
+            },
+            attributes = new Dictionary<string, object?>
+            {
+                { "practitionerId", practitionerId },
+                { "displayName", displayName }
             }
         };
 
+        // 6. Crear usuario en Keycloak
+        var userId = await _kc.CreateUserAsync(kcUser, ct);
 
-        var res = await _http.PostAsJsonAsync($"{_kcBaseUrl}/admin/realms/{_kcRealm}/users", kcUser);
-
-        if (!res.IsSuccessStatusCode)
-            return new ResponseDto<UserLinkDto>
+        if (userId is null)
+        {
+            return new ResponseDto<KeycloakUserDto>
             {
-                Message = $"Error HTTP {(int)res.StatusCode} al crear el usuario en Keycloak.",
-                StatusCode = (int)res.StatusCode,
                 Status = false,
+                StatusCode = 500,
+                Message = "No se pudo crear el usuario en Keycloak.",
                 Data = null
             };
-
-        var location = res.Headers.Location?.ToString();
-        var userId = location?.Split('/').Last();
-
-
-        // ================================================================
-        // 5. Asignar roles
-        // ================================================================
-        foreach (var roleName in roles)
-        {
-            try
-            {
-                var roleInfo = await _http.GetFromJsonAsync<JsonElement>(
-                    $"{_kcBaseUrl}/admin/realms/{_kcRealm}/roles/{roleName}");
-
-                await _http.PostAsJsonAsync(
-                    $"{_kcBaseUrl}/admin/realms/{_kcRealm}/users/{userId}/role-mappings/realm",
-                    new[] { roleInfo }
-                );
-            }
-            catch
-            {
-                // Ignorar si el rol no existe
-            }
         }
 
+        // 7. Asignar roles en Keycloak
+        foreach (var role in roles)
+            await _kc.AssignRoleAsync(userId, role, ct);
 
-        // ================================================================
-        // 6. Crear registro local en UserLinks
-        // ================================================================
-        var newLocalUser = new UserLinkEntity
+        // 8. Obtener usuario final desde Keycloak
+        var raw = await _kc.GetUserByIdAsync(userId, ct);
+
+        return new ResponseDto<KeycloakUserDto>
         {
-            KeycloakUserId = userId!,
-            PractitionerId = practitionerId,
-            Username = username,
-            Email = email,
-            DisplayName = displayName,
-            Active = true,
-            SyncStatus = "Created", // pasar a constante
-            LastSync = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _sigrefDb.UserLinks.Add(newLocalUser);
-        await _sigrefDb.SaveChangesAsync();
-
-
-        // ================================================================
-        // Respojse
-        // ================================================================
-        return new ResponseDto<UserLinkDto>
-        {
-            Message = $"Usuario '{username}' creado correctamente y vinculado al Practitioner '{practitionerId}'.",
             Status = true,
             StatusCode = 200,
-            Data = newLocalUser.ToDto()
+            Message = "Usuario creado correctamente.",
+            Data = KeycloakUserMapper.ToDto(raw!.Value)
         };
     }
 
 
     // ============================================================
-    // BUSCAR USUARIOS (SOLO TABLA LOCAL user_links)
-    // =============================================================
-    public async Task<ResponseDto<PaginationDtoSigref<UserLinkDto>>> SearchUsersAsync(
-        string? search = null,
-        bool? enabled = null,
-        int first = 0,
-        int max = 20)
+    // GET USER BY ID
+    // ============================================================
+    public async Task<ResponseDto<KeycloakUserDto?>> GetUserByIdAsync(
+        string keycloakUserId,
+        CancellationToken ct = default)
     {
+        var raw = await _kc.GetUserByIdAsync(keycloakUserId, ct);
 
-        if (max <= 0) max = 20;
-        if (max > 200) max = 200;
-        if (first < 0) first = 0;
-
-        var query = _sigrefDb.UserLinks.AsQueryable();
-
-        // ======================================================
-        // Filtro por activo / inactivo
-        // ======================================================
-        if (enabled.HasValue)
-            query = query.Where(u => u.Active == enabled.Value);
-
-        // ======================================================
-        // Busqueda general
-        // ======================================================
-        if (!string.IsNullOrWhiteSpace(search))
+        if (raw is null)
         {
-            var s = search.ToLower();
-
-            query = query.Where(u =>
-                (u.Username != null && EF.Functions.ILike(u.Username, $"%{s}%")) ||
-                (u.Email != null && EF.Functions.ILike(u.Email, $"%{s}%")) ||
-                (u.DisplayName != null && EF.Functions.ILike(u.DisplayName, $"%{s}%"))
-            );
+            return new ResponseDto<KeycloakUserDto?>
+            {
+                Status = true,
+                StatusCode = 200,
+                Message = "Usuario no encontrado.",
+                Data = null
+            };
         }
 
-        // ======================================================
-        // Total sin paginar
-        // ======================================================
-        var total = await query.CountAsync();
-
-        // ======================================================
-        // Traer usuarios paginados DIRECTO a DTO
-        // ======================================================
-        var users = await query
-            .OrderBy(u => u.Username)
-            .Skip(first)
-            .Take(max)
-            .Select(UserLinkExtensions.ToDtoProjection())
-            .ToListAsync();
-
-        // ======================================================
-        // Calcular paginacion
-        // ======================================================
-        var currentPage = (first / max) + 1;
-        var totalPages = (int)Math.Ceiling((double)total / max);
-
-        // ======================================================
-        // Respuesta final
-        // ======================================================
-        return new ResponseDto<PaginationDtoSigref<UserLinkDto>>
+        return new ResponseDto<KeycloakUserDto?>
         {
             Status = true,
             StatusCode = 200,
-            Message = $"Usuarios encontrados: {users.Count}",
-            Data = new PaginationDtoSigref<UserLinkDto>
-            {
-                TotalItems = total,
-                CurrentPage = currentPage,
-                PageSize = max,
-                TotalPages = totalPages,
-                Items = users
-            }
+            Message = "Usuario encontrado.",
+            Data = KeycloakUserMapper.ToDto(raw.Value)
         };
     }
+
+
+    // ============================================================
+    // GET USER BY PRACTITIONER — OPTIMIZADO
+    // ============================================================
+    public async Task<ResponseDto<KeycloakUserDto?>> GetUserByPractitionerIdAsync(
+        string practitionerId,
+        CancellationToken ct = default)
+    {
+        var results = await _kc.SearchUsersAsync(practitionerId, ct);
+
+        var found = results.FirstOrDefault(u =>
+            u.TryGetProperty("attributes", out var attrs)
+            && attrs.TryGetProperty("practitionerId", out var pid)
+            && pid.ValueKind == JsonValueKind.Array
+            && pid[0].GetString() == practitionerId
+        );
+
+        if (found.ValueKind == default)
+        {
+            return new ResponseDto<KeycloakUserDto?>
+            {
+                Status = true,
+                StatusCode = 200,
+                Message = "Usuario no encontrado.",
+                Data = null
+            };
+        }
+
+        return new ResponseDto<KeycloakUserDto?>
+        {
+            Status = true,
+            StatusCode = 200,
+            Message = "Usuario encontrado.",
+            Data = KeycloakUserMapper.ToDto(found)
+        };
+    }
+    
+    public async Task<ResponseDto<bool>> PractitionerHasUserAsync(
+        string practitionerId,
+        CancellationToken ct = default)
+    {
+        // Buscar por practitionerId usando SEARCH (rápido)
+        var results = await _kc.SearchUsersAsync(practitionerId, ct);
+
+        bool exists = results.Any(u =>
+            u.TryGetProperty("attributes", out var attrs)
+            && attrs.TryGetProperty("practitionerId", out var pid)
+            && pid.ValueKind == JsonValueKind.Array
+            && pid[0].GetString() == practitionerId
+        );
+
+        return new ResponseDto<bool>
+        {
+            Status = true,
+            StatusCode = 200,
+            Message = exists
+                ? "El practitioner ya está asignado a un usuario."
+                : "El practitioner está disponible.",
+            Data = exists
+        };
+    }
+
 }

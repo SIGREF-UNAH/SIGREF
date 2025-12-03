@@ -11,11 +11,19 @@ using SIGREF.API.Services.Organizations;
 using SIGREF.API.Services.Patient;
 using SIGREF.API.Services.Practitioner;
 using SIGREF.API.Services.PractitionerRole;
+using SIGREF.API.Services.ServiceGroup;
 using System.Security.Claims;
 using System.Text.Json;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.FileProviders;
 using SIGREF.API.Services.Auth;
 using MongoDB.Driver;
+using SIGREF.API.Services.AdministrationHospital;
+using SIGREF.API.Services.Auth.Keycloak;
+using SIGREF.API.Services.Billing;
+using SIGREF.API.Services.Cashier;
+using SIGREF.API.Services.Files;
+using SIGREF.API.Services.Serie;
+using SIGREF.API.Audit.Extensions;
 
 
 namespace SIGREF.API;
@@ -29,7 +37,7 @@ public class Startup
         this._configuration = configuration;
     }
 
-    public void ConfigureServices(IServiceCollection services)
+    public void ConfigureServices(IServiceCollection services, WebApplicationBuilder applicationBuilder)
     {
         // Configurar las opciones de variables de entorno
         services.Configure<Env>(_configuration);
@@ -47,142 +55,168 @@ public class Startup
         services.AddScoped<TiposUbicacionSeeder>();
         services.AddScoped<SIGREFSeeder>();
 
-        // Registrar FhirService (opcional si aún lo necesitas)
+        // ================= HEALTH SERVICES ===============
         services.AddScoped<LocationService>();
         services.AddScoped<HealthcareService>();
         services.AddScoped<IPatientService, PatientService>();
         services.AddScoped<IPractitionerRoleService, PractitionerRoleService>();
         services.AddScoped<IPractitionerService, PractitionerService>();
         services.AddScoped<IOrganizationService, OrganizationService>();
-        
-        services.AddScoped<KeycloakAdminService>();
-        
+        services.AddScoped<ServiceGroupService>();
+
+        services.AddScoped<IUserContextService, UserContextService>();
+        // ================ SIGREF SERVICES =======================
+        services.AddScoped<IShiftService, ShiftService>();
+        services.AddScoped<ICashierSessionService, CashierSessionService>();
+        services.AddScoped<IHospitalPropertiesService, HospitalPropertiesService>();
+        services.AddScoped<IMediaFileService, MediaFileService>();
+        services.AddScoped<ISerieService, SerieService>();
+        services.AddScoped<IInvoiceService, InvoiceService>();
+
+
+        // ==============================================================
+        //  KEYCLOAK CLIENT + ADMIN SERVICE 
+        // ==============================================================
+
+        // Cliente HTTP para Keycloak
+        services.AddHttpClient<IKeycloakClient, KeycloakClient>();
+
+        // Servicio administrador de Keycloak
+        services.AddScoped<IKeycloakAdminService, KeycloakAdminService>();
+
+
         services.AddControllers();
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
         services.AddHttpContextAccessor();
-        
+
         // Configuración de PostgreSQL con Aspire
         // ========================================================
-        // Base de datos SIGREF (Gestion de Receptoraa de Fondos)
-        services.AddNpgsql<SIGREFContext>("sigref");
+        // NOTA: AddNpgsql ahora está en Program.cs donde debe estar en Aspire 9
         // Base de datos HAPI FHIR
         // No entiendo por que se enlazaba ese contexto aqui, si directamente se utiliza un client
-        // el contexto es para tener acceso directo a la base de datos ejemplo contex.users 
+        // el contexto es para tener acceso directo a la base de datos ejemplo contex.users
         //services.AddNpgsql<HapiContext>("hapi");
-        
-        
-        // ====================================================
-        // MONGO DB - Logs internos SIGREF
-        // ====================================================
-                services.Configure<MongoSettings>(_configuration.GetSection("Mongo"));
+        // MongoDB is now configured via builder.AddMongoDBClient() in Program.cs
+        // IMongoClient is automatically available via DI
 
-                services.AddSingleton<IMongoClient>(sp =>
-                {
-                    var settings = sp.GetRequiredService<IOptions<MongoSettings>>().Value;
-                    return new MongoClient(settings.ConnectionString);
-                });
-
-                services.AddSingleton(sp =>
-                {
-                    var settings = sp.GetRequiredService<IOptions<MongoSettings>>().Value;
-                    var client = sp.GetRequiredService<IMongoClient>();
-                    return client.GetDatabase(settings.Database);
-                });
-
-        // Servicio para escribir logs
-        // o lo que tenga David
-        //services.AddScoped<SigrefLogService>();
-        
-        
-        
+        // ================= MVC / Swagger ===================
+        services.AddControllers();
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen();
         services.AddHttpContextAccessor();
-        
-        // Configuración de Autenticación con Keycloak
-        services.AddAuthentication(options =>
+
+
+        // ================= DATABASES ========================
+
+        // SIGREF (PostgreSQL via Aspire)
+        //services.AddNpgsql<SIGREFContext>("sigref");
+
+
+        services.AddScoped<IUserContextService, UserContextService>();
+
+
+        // ================== MONGO LOGGING ==================
+        // services.Configure<MongoSettings>(_configuration.GetSection("Mongo"));
+
+        // Optional: Register IMongoDatabase if needed by services
+        services.AddSingleton<IMongoDatabase>(sp =>
         {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        })
-        .AddJwtBearer(options =>
-        {
-            var authority = _configuration["Keycloak:Authority"];
-            var audience = _configuration["Keycloak:Audience"];
-            var requireHttps = _configuration.GetValue<bool>("Keycloak:RequireHttps");
-
-            options.Authority = authority;
-            options.Audience = audience;
-            options.RequireHttpsMetadata = requireHttps;
-
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidAudience = audience,
-                ValidIssuer = $"{authority}",
-                NameClaimType = "preferred_username",
-                RoleClaimType = ClaimTypes.Role
-            };
-
-            // Aquí mapeamos los roles
-            options.Events = new JwtBearerEvents
-            {
-                OnTokenValidated = context =>
-                {
-                    var identity = context.Principal.Identity as ClaimsIdentity;
-
-                    if (identity != null)
-                    {
-                        // Lista de roles
-                        var validRoles = new[] { 
-                            RolesConstants.admin, 
-                            RolesConstants.cashier, 
-                            RolesConstants.ti, 
-                            RolesConstants.auditor 
-                        };
-
-                        // --- Roles de Realm ---
-                        var realmAccess = context.Principal.FindFirst("realm_access")?.Value;
-                        if (!string.IsNullOrEmpty(realmAccess))
-                        {
-                            using var doc = JsonDocument.Parse(realmAccess);
-                            if (doc.RootElement.TryGetProperty("roles", out var rolesElement))
-                            {
-                                foreach (var role in rolesElement.EnumerateArray())
-                                {
-                                    var roleName = role.GetString();
-                                    if (validRoles.Contains(roleName))
-                                    {
-                                        identity.AddClaim(new Claim(ClaimTypes.Role, roleName));
-                                    }
-                                }
-                            }
-                        }
-
-                        // --- Roles del Client ---
-                        var resourceAccess = context.Principal.FindFirst("resource_access")?.Value;
-                        if (!string.IsNullOrEmpty(resourceAccess))
-                        {
-                            using var doc = JsonDocument.Parse(resourceAccess);
-                            if (doc.RootElement.TryGetProperty(audience, out var clientElement) &&
-                                clientElement.TryGetProperty("roles", out var clientRoles))
-                            {
-                                foreach (var role in clientRoles.EnumerateArray())
-                                {
-                                    var roleName = role.GetString();
-                                    if (validRoles.Contains(roleName))
-                                    {
-                                        identity.AddClaim(new Claim(ClaimTypes.Role, roleName));
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    return Task.CompletedTask;
-                }
-            };
-
+            var client = sp.GetRequiredService<IMongoClient>();
+            return client.GetDatabase("sigref-logs");
         });
+
+        // ================== AUDIT SERVICES ==================
+        services.AddAuditServices();
+
+        services.AddHttpContextAccessor();
+
+        services.AddAuthentication()
+            .AddKeycloakJwtBearer(
+                serviceName: "keycloak",
+                realm: _configuration["Keycloak:RealmName"],
+                options =>
+                {
+                    options.Audience = _configuration["Keycloak:Audience"];
+                    options.RequireHttpsMetadata = false;
+                    options.Authority = _configuration["Keycloak:Authority"];
+
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        NameClaimType = "preferred_username",
+                        RoleClaimType = ClaimTypes.Role
+                    };
+
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnTokenValidated = context =>
+                        {
+                            var identity = context.Principal?.Identity as ClaimsIdentity;
+                            if (identity == null) return Task.CompletedTask;
+
+                            // Roles válidos dentro del sistema
+                            var validRoles = new[]
+                            {
+                                RolesConstants.cashier, // "cashier"
+                                RolesConstants.admin, // "admin"
+                                RolesConstants.ti, // "ti"
+                                RolesConstants.auditor // "auditor"
+                            };
+
+                            // ======================================================
+                            //  EXTRAER ROLES DE REALM
+                            // ======================================================
+                            var realmAccessClaim = context.Principal?.Claims
+                                .FirstOrDefault(c => c.Type == "realm_access");
+
+                            if (realmAccessClaim != null)
+                            {
+                                using var doc = JsonDocument.Parse(realmAccessClaim.Value);
+
+                                if (doc.RootElement.TryGetProperty("roles", out var roles))
+                                {
+                                    foreach (var role in roles.EnumerateArray())
+                                    {
+                                        var roleName = role.GetString()?.ToLower();
+                                        if (!string.IsNullOrEmpty(roleName) &&
+                                            validRoles.Contains(roleName))
+                                        {
+                                            identity.AddClaim(new Claim(ClaimTypes.Role, roleName));
+                                        }
+                                    }
+                                }
+                            }
+
+                            // ======================================================
+                            // EXTRAER ROLES DE CLIENTE (resource_access)
+                            // ======================================================
+                            var resourceAccessClaim = context.Principal?.Claims
+                                .FirstOrDefault(c => c.Type == "resource_access");
+
+                            if (resourceAccessClaim != null)
+                            {
+                                using var doc = JsonDocument.Parse(resourceAccessClaim.Value);
+
+                                if (doc.RootElement.TryGetProperty(options.Audience, out var client) &&
+                                    client.TryGetProperty("roles", out var clientRoles))
+                                {
+                                    foreach (var role in clientRoles.EnumerateArray())
+                                    {
+                                        var roleName = role.GetString()?.ToLower();
+                                        if (!string.IsNullOrEmpty(roleName) &&
+                                            validRoles.Contains(roleName))
+                                        {
+                                            identity.AddClaim(new Claim(ClaimTypes.Role, roleName));
+                                        }
+                                    }
+                                }
+                            }
+
+                            return Task.CompletedTask;
+                        }
+                    };
+                });
+
         services.AddAuthorization();
 
         // CORS Configuration
@@ -211,11 +245,25 @@ public class Startup
 
         app.UseRouting();
 
+        // Middleware de auditoría (después de routing, antes de auth)
+        app.UseAuditMiddleware();
+
+        //
+        var mediaPath = Path.Combine(env.ContentRootPath, "media");
+        if (!Directory.Exists(mediaPath))
+            Directory.CreateDirectory(mediaPath);
+
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = new PhysicalFileProvider(mediaPath),
+            RequestPath = "/media"
+        });
+
+
         app.UseAuthentication();
 
         app.UseAuthorization();
-        
-        
+
 
         app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
     }
