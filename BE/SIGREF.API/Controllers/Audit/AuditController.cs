@@ -103,4 +103,26 @@ public class AuditController(IAuditService auditService) : ControllerBase
             data = simpleDtos
         });
     }
+
+    /// <summary>
+    /// Obtener un log de auditoría por su ID
+    /// </summary>
+    /// <param name="id">ID del log de auditoría (ObjectId de MongoDB)</param>
+    /// <returns>Detalle completo del log de auditoría</returns>
+    [HttpGet("{id}")]
+    [Authorize(AuthenticationSchemes = "Bearer", Roles = RolesConstants.ti)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetById(string id)
+    {
+        var log = await auditService.GetLogByIdAsync(id);
+        
+        if (log == null)
+            return NotFound(new { message = $"Log de auditoría con ID '{id}' no encontrado" });
+
+        var dto = SIGREF.API.Audit.Models.AuditLogDto.FromAuditLog(log);
+        return Ok(dto);
+    }
 }
