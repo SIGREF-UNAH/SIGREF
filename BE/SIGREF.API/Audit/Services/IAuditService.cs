@@ -11,6 +11,7 @@ public interface IAuditService
     Task<List<AuditLog>> GetLogsByUserAsync(string userId, DateTime? from = null, DateTime? to = null);
     Task<List<AuditLog>> GetLogsByActionAsync(string action, DateTime? from = null, DateTime? to = null);
     Task<List<AuditLog>> GetLogsByStatusCodeAsync(int statusCode, DateTime? from = null, DateTime? to = null);
+    Task<List<AuditLog>> GetLogsByUserNameAsync(string userName, DateTime? from = null, DateTime? to = null);
     Task LogLoginAsync(string userId, string userName, List<string> roles, string clientIp, bool success, string errorMessage = null);
     Task ClearAllLogsAsync();
 }

@@ -1,4 +1,5 @@
-﻿using Hl7.Fhir.Rest;
+using System.ComponentModel;
+using Hl7.Fhir.Rest;
 using FhirLocation = Hl7.Fhir.Model.Location;
 using Microsoft.EntityFrameworkCore;
 using SIGREF.API.Database;
@@ -8,6 +9,7 @@ using SIGREF.API.Dtos.Common;
 using SIGREF.API.Extensions;
 using SIGREF.API.Helpers;
 using SIGREF.API.Services.Auth;
+using Hl7.Fhir.Model;
 
 namespace SIGREF.API.Services.Cashier;
 
@@ -31,16 +33,11 @@ public class ShiftService : IShiftService
             // =======================================================
             // VALIDAR QUE EL LOCATION EXISTA EN FHIR 
             // =======================================================
-            var bundle = await _fhirClient.SearchByIdAsync<FhirLocation>(
-                dto.LocationId,
-                includes: null,
-                pageSize: 1
-            );
+            Bundle results = await _fhirClient.SearchByIdAsync<FhirLocation>(dto.LocationId);
 
-            // Si no hay entradas, no existe el recurso
-            if (bundle.Entry == null || bundle.Entry.Count == 0)
+            if (results == null)
             {
-                return ResponseHelper.Fail<ShiftDto>(400, "La ubicación especificada no existe en el servidor FHIR.");
+                ResponseHelper.Fail<ShiftDto>(400, "La ubicación especificada no existe en el servidor FHIR.");
             }
             
            // try
@@ -55,6 +52,18 @@ public class ShiftService : IShiftService
            //    return ResponseHelper.Fail<ShiftDto>(400, "La ubicación especificada no existe en el servidor FHIR.");
            // //}
 
+            // try
+            //{
+            //    await _fhirClient.ReadAsync<Hl7.Fhir.Model.Location>(
+            //        $"Location/{dto.LocationId}?_elements=id"
+            //    );
+            //}
+            // catch (FhirOperationException ex)
+            //    when (ex.Status == System.Net.HttpStatusCode.NotFound)
+            //{
+            //    return ResponseHelper.Fail<ShiftDto>(400, "La ubicación especificada no existe en el servidor FHIR.");
+            // //}
+
             // =======================================================
             // VALIDAR EXISTENCIA DE NOMBRE DUPLICADO
             // =======================================================
@@ -63,8 +72,7 @@ public class ShiftService : IShiftService
             var existsSameName = await _db.Shifts.AnyAsync(s =>
                 s.IsActive &&
                 s.LocationId == dto.LocationId &&
-               // s.Name.ToUpper() == normalizedName
-               EF.Functions.ILike(s.Name, dto.Name.Trim())
+                s.Name.ToUpper() == normalizedName
             );
 
 
@@ -115,95 +123,79 @@ public class ShiftService : IShiftService
     {
         try
         {
-            // =======================================================
-            // VALIDAR QUE EL TURNO EXISTA
-            // =======================================================
-            var shift = await _db.Shifts.FirstOrDefaultAsync(s => s.Id == id && s.IsActive);
+            // 1. BUSCAR EL TURNO SIN IMPORTAR SI ESTÁ ACTIVO O NO
+            var shift = await _db.Shifts.FirstOrDefaultAsync(s => s.Id == id);
 
             if (shift == null)
-                return ResponseHelper.Fail<ShiftDto>(404, "El turno especificado no existe o está inactivo.");
+                return ResponseHelper.Fail<ShiftDto>(404, "El turno especificado no existe.");
 
-            // =======================================================
-            // VALIDAR LOCATION SOLO SI SE ACTUALIZA
-            // =======================================================
+            // 2. VALIDAR LOCATION SI SE ESTÁ CAMBIANDO
             if (!string.IsNullOrWhiteSpace(dto.LocationId) && dto.LocationId != shift.LocationId)
             {
-                try
-                {
-                    await _fhirClient.ReadAsync<Hl7.Fhir.Model.Location>(
-                        $"Location/{dto.LocationId}?_elements=id"
-                    );
-                }
-                catch (FhirOperationException ex)
-                    when (ex.Status == System.Net.HttpStatusCode.NotFound)
-                {
-                    return ResponseHelper.Fail<ShiftDto>(400,
-                        "La ubicación indicada no existe en el servidor FHIR.");
-                }
+                var results = await _fhirClient.SearchByIdAsync<FhirLocation>(dto.LocationId);
+                if (results?.Entry?.Any() != true)
+                    return ResponseHelper.Fail<ShiftDto>(400, "La ubicación especificada no existe en el servidor FHIR.");
             }
 
-            // =======================================================
-            // VALIDAR NOMBRE DUPLICADO (solo si cambia)
-            // =======================================================
-            if (!string.IsNullOrWhiteSpace(dto.Name) &&
-                dto.Name.ToUpper() != shift.Name.ToUpper())
-            {
-                var existsSameName = await _db.Shifts.AnyAsync(s =>
-                        s.IsActive &&
-                        s.LocationId == (dto.LocationId ?? shift.LocationId) &&
-                        s.Name.ToUpper() == dto.Name.ToUpper() &&
-                        s.Id != shift.Id // exepto el que estamos actualizando
-                );
+            var targetLocationId = dto.LocationId ?? shift.LocationId;
 
-                if (existsSameName)
+            // 3. VALIDAR NOMBRE DUPLICADO (solo si cambia y solo entre turnos ACTIVOS)
+            if (!string.IsNullOrWhiteSpace(dto.Name) &&
+                dto.Name.Trim().ToUpper() != shift.Name.Trim().ToUpper())
+            {
+                bool nameExists = await _db.Shifts.AnyAsync(s =>
+                    s.Id != shift.Id &&
+                    s.IsActive && // ← solo choca con turnos ACTIVOS
+                    s.LocationId == targetLocationId &&
+                    s.Name.Trim().ToUpper() == dto.Name.Trim().ToUpper());
+
+                if (nameExists)
                     return ResponseHelper.Fail<ShiftDto>(400,
                         "Ya existe un turno activo con este nombre en esta ubicación.");
             }
 
-            // =======================================================
-            // VALIDAR MISMA HORA (solo si cambia)
-            // =======================================================
+            // 4. VALIDAR HORA DE INICIO DUPLICADA (solo entre turnos ACTIVOS)
             if (dto.StartTime.HasValue && dto.StartTime.Value != shift.StartTime)
             {
-                var existsSameStartTime = await _db.Shifts.AnyAsync(s =>
-                        s.IsActive &&
-                        s.LocationId == (dto.LocationId ?? shift.LocationId) &&
-                        s.StartTime == dto.StartTime &&
-                        s.Id != shift.Id // para no chocar con el mismo que estamos mapeando
-                );
+                bool timeExists = await _db.Shifts.AnyAsync(s =>
+                    s.Id != shift.Id &&
+                    s.IsActive && // ← solo con turnos activos
+                    s.LocationId == targetLocationId &&
+                    s.StartTime == dto.StartTime.Value);
 
-                if (existsSameStartTime)
+                if (timeExists)
                     return ResponseHelper.Fail<ShiftDto>(400,
                         "Ya existe un turno activo que inicia a la misma hora en esta ubicación.");
             }
 
-            // =======================================================
-            // 5. APLICAR CAMBIOS
-            // =======================================================
-            Guid userUpdate = _userContext.GetUserId();
-            shift.ApplyUpdate(dto, userUpdate);
+            // 5. APLICAR LOS CAMBIOS
+            Guid userId = _userContext.GetUserId();
 
-            // lo Movi al apli update directamente 
-            //shift.UpdatedById = Guid.NewGuid(); // luego se reemplaza con usuario real
-            //shift.UpdatedDate = DateTime.UtcNow;
+            shift.ApplyUpdate(dto, userId);
 
-            // =======================================================
-            // GUARDAR CAMBIOS
+            // Permitir reactivar o desactivar explícitamente
+            if (dto.IsActive.HasValue)
+            {
+                shift.IsActive = dto.IsActive.Value;
+            }
+
+            // Siempre actualizamos auditoría al modificar
+            shift.UpdatedById = userId;
+            shift.UpdatedDate = DateTime.UtcNow;
+
             await _db.SaveChangesAsync();
 
             return ResponseHelper.Success(200, "Turno actualizado exitosamente.", shift.ToDto());
         }
-        // por si no hay autorizacion
         catch (UnauthorizedAccessException ex)
         {
             return ResponseHelper.Fail<ShiftDto>(401, ex.Message);
         }
         catch (Exception ex)
         {
-            return ResponseHelper.Fail<ShiftDto>(500, $"Error interno al crear el turno: {ex.Message}");
+            return ResponseHelper.Fail<ShiftDto>(500, $"Error interno al actualizar el turno: {ex.Message}");
         }
     }
-
 
     public async Task<ResponseDto<bool>> DeleteShiftAsync(Guid id)
     {
@@ -346,7 +338,6 @@ public class ShiftService : IShiftService
             if (!string.IsNullOrWhiteSpace(filter.LocationId))
                 query = query.Where(s => s.LocationId == filter.LocationId);
 
-
             // =======================================================
             // FILTRO POR LOCATION NAME (FHIR LOOKUP)
             // =======================================================
@@ -407,7 +398,6 @@ public class ShiftService : IShiftService
 
             Dictionary<string, string?> locationNames = new();
 
-
             if (shiftLocationIds.Any())
             {
                 try
@@ -440,14 +430,14 @@ public class ShiftService : IShiftService
             {
                 var dto = shift.ToDto();
 
-                if(locationNames.TryGetValue(shift.LocationId, out var locName))
+                if (locationNames.TryGetValue(shift.LocationId, out var locName))
                     dto.NameLocation = locName;
                 else
                     dto.NameLocation = null;
 
                 return dto;
             }).ToList();
-            
+
             var paged = new PagedResult<ShiftDto>
             {
                 Items = dtoList,

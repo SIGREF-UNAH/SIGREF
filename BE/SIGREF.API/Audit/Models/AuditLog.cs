@@ -37,6 +37,12 @@ public class AuditLog
     public string UserId { get; set; }
 
     /// <summary>
+    /// Nombre del usuario
+    /// </summary>
+    [BsonElement("userName")]
+    public string UserName { get; set; }
+
+    /// <summary>
     /// Fecha y hora de la acción
     /// </summary>
     [BsonElement("timestamp")]
