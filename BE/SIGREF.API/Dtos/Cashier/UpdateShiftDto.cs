@@ -4,7 +4,7 @@ namespace SIGREF.API.Dtos.Cashier;
 
 public class UpdateShiftDto
 {
-    public Guid? LocationId { get; set; }
+    public string LocationId { get; set; }
 
     [StringLength(150, ErrorMessage = "El nombre no puede superar los 150 caracteres.")]
     public string? Name { get; set; }

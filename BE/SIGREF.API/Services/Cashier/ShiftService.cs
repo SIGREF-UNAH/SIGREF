@@ -31,26 +31,42 @@ public class ShiftService : IShiftService
             // =======================================================
             // VALIDAR QUE EL LOCATION EXISTA EN FHIR 
             // =======================================================
-            try
-            {
-                await _fhirClient.ReadAsync<Hl7.Fhir.Model.Location>(
-                    $"Location/{dto.LocationId}?_elements=id"
-                );
-            }
-            catch (FhirOperationException ex)
-                when (ex.Status == System.Net.HttpStatusCode.NotFound)
+            var bundle = await _fhirClient.SearchByIdAsync<FhirLocation>(
+                dto.LocationId,
+                includes: null,
+                pageSize: 1
+            );
+
+            // Si no hay entradas, no existe el recurso
+            if (bundle.Entry == null || bundle.Entry.Count == 0)
             {
                 return ResponseHelper.Fail<ShiftDto>(400, "La ubicación especificada no existe en el servidor FHIR.");
             }
+            
+           // try
+           //{
+           //    await _fhirClient.ReadAsync<Hl7.Fhir.Model.Location>(
+           //        $"Location/{dto.LocationId}?_elements=id"
+           //    );
+           //}
+           // catch (FhirOperationException ex)
+           //    when (ex.Status == System.Net.HttpStatusCode.NotFound)
+           //{
+           //    return ResponseHelper.Fail<ShiftDto>(400, "La ubicación especificada no existe en el servidor FHIR.");
+           // //}
 
             // =======================================================
             // VALIDAR EXISTENCIA DE NOMBRE DUPLICADO
             // =======================================================
+            var normalizedName = dto.Name.Trim().ToUpper();
+
             var existsSameName = await _db.Shifts.AnyAsync(s =>
                 s.IsActive &&
                 s.LocationId == dto.LocationId &&
-                s.Name.ToUpper() == dto.Name.ToUpper()
+               // s.Name.ToUpper() == normalizedName
+               EF.Functions.ILike(s.Name, dto.Name.Trim())
             );
+
 
             if (existsSameName)
                 return ResponseHelper.Fail<ShiftDto>(400,
@@ -91,7 +107,7 @@ public class ShiftService : IShiftService
         }
         catch (Exception ex)
         {
-            return ResponseHelper.Fail<ShiftDto>(500, $"Error interno al crear el turno: {ex.Message}");
+            return ResponseHelper.Fail<ShiftDto>(500, $"Error interno al crear el turno: {ex.Message} | {ex.StackTrace} | {ex.InnerException?.Message}");
         }
     }
 
@@ -110,7 +126,7 @@ public class ShiftService : IShiftService
             // =======================================================
             // VALIDAR LOCATION SOLO SI SE ACTUALIZA
             // =======================================================
-            if (dto.LocationId.HasValue && dto.LocationId.Value != shift.LocationId)
+            if (!string.IsNullOrWhiteSpace(dto.LocationId) && dto.LocationId != shift.LocationId)
             {
                 try
                 {
@@ -327,8 +343,9 @@ public class ShiftService : IShiftService
                 // query = query.Where(s => EF.Functions.ILike(s.Name, $"%{filter.Name.Trim()}%"));
             }
 
-            if (filter.LocationId.HasValue)
-                query = query.Where(s => s.LocationId == filter.LocationId.Value);
+            if (!string.IsNullOrWhiteSpace(filter.LocationId))
+                query = query.Where(s => s.LocationId == filter.LocationId);
+
 
             // =======================================================
             // FILTRO POR LOCATION NAME (FHIR LOOKUP)
@@ -343,8 +360,9 @@ public class ShiftService : IShiftService
 
                 var fhirLocationIds = fhirResults.Entry
                     .Where(e => e.Resource is FhirLocation)
-                    .Select(e => Guid.Parse(((FhirLocation)e.Resource).Id))
+                    .Select(e => ((FhirLocation)e.Resource).Id)
                     .ToList();
+
 
                 if (fhirLocationIds.Count == 0)
                 {
@@ -387,7 +405,8 @@ public class ShiftService : IShiftService
                 .Distinct()
                 .ToList();
 
-            Dictionary<Guid, string?> locationNames = new();
+            Dictionary<string, string?> locationNames = new();
+
 
             if (shiftLocationIds.Any())
             {
@@ -403,9 +422,10 @@ public class ShiftService : IShiftService
                         .Select(e => e.Resource as FhirLocation)
                         .Where(loc => loc != null)
                         .ToDictionary(
-                            loc => Guid.Parse(loc.Id),
-                            loc => loc.Name
+                            loc => loc.Id,   // string key
+                            loc => loc.Name  // display name
                         );
+
                 }
                 catch
                 {

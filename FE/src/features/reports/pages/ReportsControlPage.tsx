@@ -1,5 +1,5 @@
 import { PageHeaderTabs } from "../../../shared/components";
-import { UnderConstructionPage } from "../../../shared/pages";
+import { ControlReport } from "../components/ui";
 
 export const ReportsControlPage = () => {
   return (
@@ -29,7 +29,7 @@ export const ReportsControlPage = () => {
 
       {/* Contenido  */}
       <div className="primary-card">
-        <UnderConstructionPage />
+        <ControlReport/>
       </div>
     </div>
   );

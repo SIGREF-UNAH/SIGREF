@@ -21,6 +21,8 @@ using SIGREF.API.Services.AdministrationHospital;
 using SIGREF.API.Services.Auth.Keycloak;
 using SIGREF.API.Services.Billing;
 using SIGREF.API.Services.Cashier;
+using SIGREF.API.Services.Dashboard;
+using SIGREF.API.Services.FhirUtils;
 using SIGREF.API.Services.Files;
 using SIGREF.API.Services.Serie;
 using SIGREF.API.Audit.Extensions;
@@ -63,6 +65,11 @@ public class Startup
         services.AddScoped<IPractitionerService, PractitionerService>();
         services.AddScoped<IOrganizationService, OrganizationService>();
         services.AddScoped<ServiceGroupService>();
+        
+        // ============= RECUPERADORES FHIR ==========
+        services.AddScoped<IFhirLookupService, FhirLookupService>();
+        services.AddScoped<IDashboardReportingService, DashboardReportingService>();
+        
 
         services.AddScoped<IUserContextService, UserContextService>();
         // ================ SIGREF SERVICES =======================
@@ -115,16 +122,6 @@ public class Startup
 
         services.AddScoped<IUserContextService, UserContextService>();
 
-
-        // ================== MONGO LOGGING ==================
-        // services.Configure<MongoSettings>(_configuration.GetSection("Mongo"));
-
-        // Optional: Register IMongoDatabase if needed by services
-        services.AddSingleton<IMongoDatabase>(sp =>
-        {
-            var client = sp.GetRequiredService<IMongoClient>();
-            return client.GetDatabase("sigref-logs");
-        });
 
         // ================== AUDIT SERVICES ==================
         services.AddAuditServices();

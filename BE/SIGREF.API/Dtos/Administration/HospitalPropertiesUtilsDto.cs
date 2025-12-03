@@ -1,4 +1,5 @@
-﻿namespace SIGREF.API.Dtos.Administration;
+﻿#nullable enable
+namespace SIGREF.API.Dtos.Administration;
 
 // cuando se manda a llamar 
 public class HospitalPublicDto
@@ -18,7 +19,6 @@ public class HospitalDetailsDto : HospitalPublicDto
     public string? HospitalCode { get; set; }
     public string? RTN { get; set; }
     public string? Website { get; set; }
-    public string Currency { get; set; }
-    //public string? ExchangeVersion { get; set; }
+    public string? Currency { get; set; }
 }
 

@@ -5,7 +5,7 @@ namespace SIGREF.API.Dtos.Cashier;
 public class CreateShiftDto
 {
     [Required(ErrorMessage = "El ID de la ubicación (LocationId) es obligatorio.")]
-    public Guid LocationId { get; set; }
+    public string LocationId { get; set; }
 
     [Required(ErrorMessage = "El nombre del turno es obligatorio.")]
     [StringLength(150, ErrorMessage = "El nombre no puede superar los 150 caracteres.")]
