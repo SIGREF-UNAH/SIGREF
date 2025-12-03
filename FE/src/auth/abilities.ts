@@ -10,6 +10,7 @@ export type Subjects =
   | "organizations"   // Organizaciones
   | "locations"       // Ubicaciones
   | "reports"         // Reportes
+  | "users"            // Usuarios
   | "all";
 
 export const defineAbilitiesFor = (roles: string[]) => {
@@ -41,6 +42,7 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can(["create", "read", "update"], "events");
     can(["create", "read", "update"], "organizations");
     can(["create", "read", "update"], "locations");
+    can(["create", "read", "update"], "users");
   }
 
   // Restricciones generales
