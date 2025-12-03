@@ -84,7 +84,10 @@ export const EventHistoryModal = ({
           <Divider orientation="left">
             <UserOutlined /> Información del Usuario
           </Divider>
-          <ProDescriptions column={1}>
+          <ProDescriptions column={2}>
+            <ProDescriptions.Item label="Nombre de Usuario">
+              <strong>{(selectedRecord as any).userName || "N/A"}</strong>
+            </ProDescriptions.Item>
             <ProDescriptions.Item label="ID de Usuario">
               <code>{selectedRecord.userId || "N/A"}</code>
             </ProDescriptions.Item>

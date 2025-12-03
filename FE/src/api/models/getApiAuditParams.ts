@@ -9,6 +9,8 @@ export type GetApiAuditParams = {
   page?: number;
   pageSize?: number;
   action?: string;
+  userId?: string;
+  userName?: string;
   from?: string;
   to?: string;
 };
