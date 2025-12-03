@@ -24,6 +24,7 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can("manage", "all");
     cannot("read", "hospital");
     cannot("read", "support");
+    cannot("read", "events");
 
     //* Administrador no puede crear todos los usuarios
     can("create", "users");
@@ -61,7 +62,6 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can(["create", "read", "update"], "practitioners");
     can(["create", "read", "update"], "events");
     can(["create", "read", "update"], "organizations");
-    can(["create", "read", "update"], "locations");
     can(["create", "read", "update"], "users");
     can("read", "hospital");
     can("read", "support");

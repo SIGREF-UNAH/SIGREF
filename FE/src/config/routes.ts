@@ -7,15 +7,16 @@ export const IncomesRoutes = [
   { path: "/incomes/history", name: "Historial de Cierres de Caja" },
 ];
 
-export const ShiftsRoutes = [
-  { path: "/shifts/list", name: "Lista de Turnos" },
-];
-
 export const HealthcaresRoutes = [
   { path: "/healthcares/list", name: "Lista de Servicios" },
   { path: "/healthcares/create", name: "Crear Servicio" },
   { path: "/service-groups/list", name: "Lista de Paquetes" },
   { path: "/service-groups/create", name: "Crear Paquete" },
+];
+
+export const LocationsRoutes = [
+  { path: "/locations/list", name: "Lista de Ubicaciones" },
+  { path: "/locations/create", name: "Crear Ubicación" },
 ];
 
 export const PatientsRoutes = [
@@ -28,6 +29,10 @@ export const PractitionersRoutes = [
   { path: "/practitioners/create", name: "Crear Empleado" },
 ];
 
+export const ShiftsRoutes = [
+  { path: "/shifts/list", name: "Lista de Turnos" },
+];
+
 export const EventsRoutes = [
   { path: "/events/list", name: "Listar Eventos" },
 ];
@@ -35,11 +40,6 @@ export const EventsRoutes = [
 export const OrganizationsRoutes = [
   { path: "/organizations/list", name: "Lista de Organizaciones" },
   { path: "/organizations/create", name: "Crear Organización" },
-];
-
-export const LocationsRoutes = [
-  { path: "/locations/list", name: "Lista de Ubicaciones" },
-  { path: "/locations/create", name: "Crear Ubicación" },
 ];
 
 export const ReportsRoutes = [
@@ -54,11 +54,11 @@ export const RoutesByRole: Record<
   {
     fondos?: any[];
     servicios?: any[];
-    turnos?: any[];
+    ubicaciones?: any[];
     paquetes?: any[];
+    turnos?: any[];
     pacientes?: any[];
     empleados?: any[];
-    ubicaciones?: any[];
     organizaciones?: any[];
     reportes?: any[];
     eventos?: any[];

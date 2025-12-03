@@ -12,7 +12,7 @@ public class AuditController(IAuditService auditService) : ControllerBase
 {
     /// <returns>Lista paginada de logs de auditoría</returns>
     [HttpGet]
-    [Authorize(AuthenticationSchemes = "Bearer", Roles = RolesConstants.ti)]
+    [Authorize(AuthenticationSchemes = "Bearer", Roles = $"{RolesConstants.ti},{RolesConstants.auditor}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -99,7 +99,7 @@ public class AuditController(IAuditService auditService) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [Authorize(AuthenticationSchemes = "Bearer", Roles = RolesConstants.ti)]
+    [Authorize(AuthenticationSchemes = "Bearer", Roles = $"{RolesConstants.ti},{RolesConstants.auditor}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -117,7 +117,7 @@ public class AuditController(IAuditService auditService) : ControllerBase
     }
 
     [HttpDelete("test/clear")]
-    [AllowAnonymous]
+    [Authorize(AuthenticationSchemes = "Bearer", Roles = $"{RolesConstants.ti},{RolesConstants.auditor}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> ClearAllLogs()
     {
