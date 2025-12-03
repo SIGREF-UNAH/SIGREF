@@ -9,6 +9,7 @@ namespace SIGREF.API.Controllers.Files;
 [Route("api/[controller]")]
 // TODO APLICAR AUTORIZACIONES DE ROLES
 [ApiController]
+[Authorize(AuthenticationSchemes = "Bearer")]
 public class MediaFilesController : ControllerBase
 {
     private readonly IMediaFileService _mediaService;

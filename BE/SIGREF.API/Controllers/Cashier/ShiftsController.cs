@@ -8,7 +8,7 @@ namespace SIGREF.API.Controllers.Cashier;
 
 [Route("api/[controller]")]
 [ApiController]
-//[Authorize(AuthenticationSchemes = "Bearer")]
+[Authorize(AuthenticationSchemes = "Bearer")]
 public class ShiftsController(IShiftService shiftService) : ControllerBase
 {
     // ============================================================

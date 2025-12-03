@@ -9,6 +9,7 @@ namespace SIGREF.API.Controllers.HospitalProperties;
 // TODO QUE SOLO TI PUEDA ACTUALIZAR LOGOS Y SUBIR LOGOS
 // TODO PONERLE AUTENTIFICACION A TODOS LOS ROLES PERMITIDOS PARA PEDIR LAS IMAGENES
 [ApiController]
+[Authorize]
 public class HospitalPropertiesController : ControllerBase
 {
     private readonly IHospitalPropertiesService _hospitalService;

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Patient;
 using SIGREF.API.Services.Patient;
@@ -11,6 +12,7 @@ namespace SIGREF.API.Controllers.PatientC;
 /// </summary>
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class PatientsController : ControllerBase
 {
     private readonly IPatientService _patientService;

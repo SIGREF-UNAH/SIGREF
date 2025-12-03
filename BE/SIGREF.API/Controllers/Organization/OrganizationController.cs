@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Healthcare;
@@ -8,6 +9,7 @@ namespace SIGREF.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class OrganizationsController : ControllerBase
 {
     private readonly IOrganizationService _organizationService;

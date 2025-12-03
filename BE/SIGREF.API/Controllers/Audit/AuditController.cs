@@ -8,6 +8,7 @@ namespace SIGREF.API.Controllers.Audit;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize(AuthenticationSchemes = "Bearer")]
 public class AuditController(IAuditService auditService) : ControllerBase
 {
     [HttpGet]
