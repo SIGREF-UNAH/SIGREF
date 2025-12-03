@@ -9,104 +9,98 @@ namespace SIGREF.API.Controllers.Audit;
 [ApiController]
 public class AuditController(IAuditService auditService) : ControllerBase
 {
+    /// <summary>
+    /// Obtener logs de auditoría con filtros opcionales
+    /// </summary>
+    /// <param name="page">Número de página (default: 1)</param>
+    /// <param name="pageSize">Tamaño de página (default: 50, max: 100)</param>
+    /// <param name="action">Filtrar por acción (create, update, delete, read, login, login-failed)</param>
+    /// <param name="from">Fecha inicial del rango (formato: yyyy-MM-dd o yyyy-MM-ddTHH:mm:ss)</param>
+    /// <param name="to">Fecha final del rango (formato: yyyy-MM-dd o yyyy-MM-ddTHH:mm:ss)</param>
+    /// <returns>Lista paginada de logs de auditoría</returns>
     [HttpGet]
     [Authorize(AuthenticationSchemes = "Bearer", Roles = RolesConstants.ti)]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int page = 1, 
+        [FromQuery] int pageSize = 50,
+        [FromQuery] string action = null,
+        [FromQuery] DateTime? from = null,
+        [FromQuery] DateTime? to = null)
     {
-        var logs = await auditService.GetAllLogsAsync(page, pageSize);
-        var dtos = logs.Select(SIGREF.API.Audit.Models.AuditLogDto.FromAuditLog).ToList();
+        // Validar parámetros
+        if (page < 1)
+            return BadRequest(new { message = "El número de página debe ser mayor a 0" });
+
+        if (pageSize < 1 || pageSize > 100)
+            return BadRequest(new { message = "El tamaño de página debe estar entre 1 y 100" });
+
+        if (from.HasValue && to.HasValue && from.Value > to.Value)
+            return BadRequest(new { message = "La fecha inicial no puede ser mayor a la fecha final" });
+
+        List<SIGREF.API.Audit.Models.AuditLog> logs;
+
+        // Si se especifica action, filtrar por acción y rango de fechas
+        if (!string.IsNullOrWhiteSpace(action))
+        {
+            logs = await auditService.GetLogsByActionAsync(action.ToLower(), from, to);
+        }
+        // Si solo se especifica rango de fechas sin action, obtener todos con filtro de fechas
+        else if (from.HasValue || to.HasValue)
+        {
+            // Obtener todos los logs y filtrar por fechas
+            var allLogs = await auditService.GetAllLogsAsync(1, int.MaxValue);
+            logs = allLogs.Where(log =>
+            {
+                if (from.HasValue && log.Timestamp < from.Value)
+                    return false;
+                if (to.HasValue && log.Timestamp > to.Value)
+                    return false;
+                return true;
+            }).ToList();
+        }
+        else
+        {
+            // Sin filtros, obtener todos con paginación
+            logs = await auditService.GetAllLogsAsync(page, pageSize);
+        }
+
+        // Aplicar paginación si se usaron filtros
+        if (!string.IsNullOrWhiteSpace(action) || from.HasValue || to.HasValue)
+        {
+            var totalItems = logs.Count;
+            var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+            
+            logs = logs
+                .OrderByDescending(l => l.Timestamp)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var dtos = logs.Select(SIGREF.API.Audit.Models.AuditLogDto.FromAuditLog).ToList();
+
+            return Ok(new
+            {
+                page,
+                pageSize,
+                totalItems,
+                totalPages,
+                hasNextPage = page < totalPages,
+                hasPreviousPage = page > 1,
+                data = dtos
+            });
+        }
+
+        // Respuesta sin filtros
+        var simpleDtos = logs.Select(SIGREF.API.Audit.Models.AuditLogDto.FromAuditLog).ToList();
         return Ok(new
         {
             page,
             pageSize,
-            data = dtos
+            data = simpleDtos
         });
-    }
-
-    /// <summary>
-    /// Obtener un log de auditoría por su ID
-    /// </summary>
-    [HttpGet("{id}")]
-    [Authorize(AuthenticationSchemes = "Bearer", Roles = RolesConstants.ti)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetById(string id)
-    {
-        var log = await auditService.GetLogByIdAsync(id);
-        if (log == null)
-            return NotFound(new { message = "Log no encontrado" });
-
-        var dto = SIGREF.API.Audit.Models.AuditLogDto.FromAuditLog(log);
-        return Ok(dto);
-    }
-
-    /// <summary>
-    /// Obtener logs por acción (create, update, delete, read, login, login-failed)
-    /// </summary>
-    [HttpGet("action/{action}")]
-    [Authorize(AuthenticationSchemes = "Bearer", Roles = RolesConstants.ti)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetByAction(string action, [FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null)
-    {
-        var logs = await auditService.GetLogsByActionAsync(action, from, to);
-        var dtos = logs.Select(SIGREF.API.Audit.Models.AuditLogDto.FromAuditLog).ToList();
-        return Ok(dtos);
-    }
-
-    /// <summary>
-    /// Obtener logs por código de estado HTTP
-    /// </summary>
-    [HttpGet("status/{statusCode}")]
-    [Authorize(AuthenticationSchemes = "Bearer", Roles = RolesConstants.ti)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetByStatusCode(int statusCode, [FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null)
-    {
-        var logs = await auditService.GetLogsByStatusCodeAsync(statusCode, from, to);
-        var dtos = logs.Select(SIGREF.API.Audit.Models.AuditLogDto.FromAuditLog).ToList();
-        return Ok(dtos);
-    }
-
-    /// <summary>
-    /// Ver información del token actual (para debug - ELIMINAR EN PRODUCCIÓN)
-    /// </summary>
-    [HttpGet("debug/token")]
-    [AllowAnonymous]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public IActionResult DebugToken()
-    {
-        var claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList();
-        var isAuthenticated = User.Identity?.IsAuthenticated ?? false;
-        var roles = User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(c => c.Value).ToList();
-        var hasTiRole = User.IsInRole(RolesConstants.ti);
-        
-        return Ok(new
-        {
-            isAuthenticated,
-            hasTiRole,
-            tiRoleConstant = RolesConstants.ti,
-            roles,
-            allClaims = claims
-        });
-    }
-
-    /// <summary>
-    /// Limpiar todos los logs (para testing - ELIMINAR EN PRODUCCIÓN)
-    /// </summary>
-    [HttpDelete("test/clear")]
-    [AllowAnonymous]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> ClearAllLogs()
-    {
-        await auditService.ClearAllLogsAsync();
-        return Ok(new { message = "Todos los logs han sido eliminados" });
     }
 }
