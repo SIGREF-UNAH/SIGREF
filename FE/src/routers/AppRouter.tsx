@@ -10,6 +10,7 @@ import { EventsRouter } from "../features/events/routers";
 import { PatientsRouter } from "../features/patients/routers";
 import { LocationsRouter } from "../features/locations/routers";
 import { ServiceGroupsRouter } from "../features/service-groups/routers";
+import { ShiftsRouter } from "../features/shifts/routers/ShiftsRouter";
 import { HospitalRouter } from "../features/hospital/routers";
 import { UsersRouter } from "../features/users/routers";
 
@@ -59,6 +60,9 @@ import { UsersRouter } from "../features/users/routers";
 
         {/* Rutas de Usuarios */}
         <Route path="/users/*" element={<UsersRouter />} />
+
+        {/* Rutas de Turnos */}
+        <Route path="/shifts/*" element={<ShiftsRouter />} />
 
       </Route>
     </Routes>

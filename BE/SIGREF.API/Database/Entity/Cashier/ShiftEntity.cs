@@ -20,6 +20,7 @@ public class ShiftEntity : BaseEntity
     [Column("location_id")]
     [StringLength(64)]
     public string LocationId { get; set; }
+ 
 
 
     // ======================================
