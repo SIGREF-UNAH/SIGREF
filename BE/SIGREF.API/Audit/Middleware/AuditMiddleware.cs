@@ -139,6 +139,7 @@ public class AuditMiddleware
             StatusCode = response.StatusCode,
             Success = response.StatusCode >= 200 && response.StatusCode < 300,
             UserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? user.FindFirst("sub")?.Value,
+            UserName = user.FindFirst(ClaimTypes.Name)?.Value ?? user.FindFirst("preferred_username")?.Value,
             AdditionalInfo = new Dictionary<string, string>()
         };
 
