@@ -149,6 +149,7 @@ public class AuditService : IAuditService
             ResourceType = "Authentication",
             ResourceId = userId,
             UserId = userId,
+            UserName = userName,
             Timestamp = DateTime.UtcNow,
             Endpoint = "/auth/login",
             HttpMethod = "POST",
@@ -162,6 +163,23 @@ public class AuditService : IAuditService
         };
 
         await LogAsync(auditLog);
+    }
+
+    public async Task<List<AuditLog>> GetLogsByUserNameAsync(string userName, DateTime? from = null, DateTime? to = null)
+    {
+        var filterBuilder = Builders<AuditLog>.Filter;
+        var filter = filterBuilder.Eq(x => x.UserName, userName);
+
+        if (from.HasValue)
+            filter &= filterBuilder.Gte(x => x.Timestamp, from.Value);
+
+        if (to.HasValue)
+            filter &= filterBuilder.Lte(x => x.Timestamp, to.Value);
+
+        return await _auditCollection
+            .Find(filter)
+            .SortByDescending(x => x.Timestamp)
+            .ToListAsync();
     }
 
     public async Task ClearAllLogsAsync()

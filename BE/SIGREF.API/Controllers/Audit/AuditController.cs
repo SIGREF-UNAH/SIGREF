@@ -10,6 +10,17 @@ namespace SIGREF.API.Controllers.Audit;
 [ApiController]
 public class AuditController(IAuditService auditService) : ControllerBase
 {
+    /// <summary>
+    /// Obtener logs de auditoría con filtros opcionales
+    /// </summary>
+    /// <param name="page">Número de página (default: 1)</param>
+    /// <param name="pageSize">Tamaño de página (default: 50, max: 100)</param>
+    /// <param name="action">Filtrar por acción (create, update, delete, read, login, login-failed)</param>
+    /// <param name="userId">Filtrar por ID de usuario</param>
+    /// <param name="userName">Filtrar por nombre de usuario</param>
+    /// <param name="from">Fecha inicial del rango (formato: yyyy-MM-dd o yyyy-MM-ddTHH:mm:ss)</param>
+    /// <param name="to">Fecha final del rango (formato: yyyy-MM-dd o yyyy-MM-ddTHH:mm:ss)</param>
+    /// <returns>Lista paginada de logs de auditoría</returns>
     [HttpGet]
     [Authorize(AuthenticationSchemes = "Bearer", Roles = RolesConstants.ti)]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -20,6 +31,8 @@ public class AuditController(IAuditService auditService) : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50,
         [FromQuery] string action = null,
+        [FromQuery] string userId = null,
+        [FromQuery] string userName = null,
         [FromQuery] DateTime? from = null,
         [FromQuery] DateTime? to = null)
     {
@@ -35,12 +48,22 @@ public class AuditController(IAuditService auditService) : ControllerBase
 
         List<AuditLog> logs;
 
+        // Si se especifica userId, filtrar por usuario y rango de fechas
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            logs = await auditService.GetLogsByUserAsync(userId, from, to);
+        }
+        // Si se especifica userName, filtrar por nombre de usuario y rango de fechas
+        else if (!string.IsNullOrWhiteSpace(userName))
+        {
+            logs = await auditService.GetLogsByUserNameAsync(userName, from, to);
+        }
         // Si se especifica action, filtrar por acción y rango de fechas
-        if (!string.IsNullOrWhiteSpace(action))
+        else if (!string.IsNullOrWhiteSpace(action))
         {
             logs = await auditService.GetLogsByActionAsync(action.ToLower(), from, to);
         }
-        // Si solo se especifica rango de fechas sin action, obtener todos con filtro de fechas
+        // Si solo se especifica rango de fechas sin action ni userId, obtener todos con filtro de fechas
         else if (from.HasValue || to.HasValue)
         {
             // Obtener todos los logs y filtrar por fechas
@@ -61,7 +84,7 @@ public class AuditController(IAuditService auditService) : ControllerBase
         }
 
         // Aplicar paginación si se usaron filtros
-        if (!string.IsNullOrWhiteSpace(action) || from.HasValue || to.HasValue)
+        if (!string.IsNullOrWhiteSpace(action) || !string.IsNullOrWhiteSpace(userId) || !string.IsNullOrWhiteSpace(userName) || from.HasValue || to.HasValue)
         {
             var totalItems = logs.Count;
             var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
