@@ -24,6 +24,7 @@ public class MediaFilesController : ControllerBase
     [HttpPost("upload")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [Produces<MediaFileDto>()]
     public async Task<IActionResult> Upload([FromForm] UploadMediaFileDto dto)
     {
         var result = await _mediaService.UploadAsync(dto);
@@ -37,6 +38,7 @@ public class MediaFilesController : ControllerBase
     [AllowAnonymous] // Para que clientes y FE puedan cargar logos
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Produces<MediaFileDto>()]
     public async Task<IActionResult> GetById(Guid id)
     {
         var result = await _mediaService.GetByIdAsync(id);
@@ -64,6 +66,7 @@ public class MediaFilesController : ControllerBase
     // ============================================================
     [HttpPost("{mediaId:guid}/assign")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [Produces<MediaFileDto>()]
     public async Task<IActionResult> SetHospitalMedia(
         Guid mediaId,
         [FromQuery] MediaFileType type)
@@ -77,6 +80,7 @@ public class MediaFilesController : ControllerBase
     // ============================================================
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [Produces<MediaFileDto>()]
     public async Task<IActionResult> GetPaged([FromQuery] MediaFileFilterDto filter)
     {
         var result = await _mediaService.GetPagedAsync(filter);
