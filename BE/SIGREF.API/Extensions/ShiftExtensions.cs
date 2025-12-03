@@ -23,8 +23,9 @@ public static class ShiftExtensions
     }
     public static ShiftEntity ApplyUpdate(this ShiftEntity entity, UpdateShiftDto dto , Guid cashierId)
     {
-        if (dto.LocationId.HasValue)
-            entity.LocationId = dto.LocationId.Value;
+        if (!string.IsNullOrWhiteSpace(dto.LocationId))
+            entity.LocationId = dto.LocationId;
+
         if (!string.IsNullOrWhiteSpace(dto.Name))
             entity.Name = dto.Name;
         
