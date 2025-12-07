@@ -13,6 +13,7 @@ import {
   TeamOutlined,
   UserOutlined,
   BarChartOutlined,
+  UserSwitchOutlined,
 } from "@ant-design/icons";
 
 interface ModuleCardProps {
@@ -115,6 +116,28 @@ export const HomePage: React.FC = () => {
           />
         </Can>
         
+        {/* Gestión de Ubicaciones */}
+        <Can I="read" a="locations" ability={ability}>
+          <ModuleCard
+            title="Gestión de Ubicaciones"
+            description={"Administre las áreas donde se ofrecen los servicios médicos"}
+            icon={<EnvironmentOutlined />}
+            shortcut="Ctrl + U"
+            path="/locations/list"
+          />
+        </Can>
+        
+        {/* Gestión de Turnos */}
+        <Can I="read" a="shifts" ability={ability}>
+          <ModuleCard
+            title="Gestión de Turnos"
+            description={"Administre los turnos de trabajo del hospital por su ubicación"}
+            icon={<UserSwitchOutlined />}
+            shortcut="Ctrl + T"
+            path="/shifts/list"
+          />
+        </Can>
+        
         {/* Gestión de Pacientes */}
         <Can I="read" a="patients" ability={ability}>
           <ModuleCard
@@ -134,17 +157,6 @@ export const HomePage: React.FC = () => {
             icon={<TeamOutlined />}
             shortcut="Ctrl + E"
             path="/practitioners/list"
-          />
-        </Can>
-        
-        {/* Gestión de Ubicaciones */}
-        <Can I="read" a="locations" ability={ability}>
-          <ModuleCard
-            title="Gestión de Ubicaciones"
-            description={"Administre las áreas donde se ofrecen los servicios médicos"}
-            icon={<EnvironmentOutlined />}
-            shortcut="Ctrl + U"
-            path="/locations/list"
           />
         </Can>
         

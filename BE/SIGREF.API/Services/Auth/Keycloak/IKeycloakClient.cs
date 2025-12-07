@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using SIGREF.API.Dtos.Auth;
 
 namespace SIGREF.API.Services.Auth.Keycloak;
 
@@ -18,25 +19,16 @@ public interface IKeycloakClient
     /// </summary>
     Task<List<JsonElement>> SearchUsersAsync(string search, CancellationToken ct);
 
-        /// <summary>
-        /// Buscar por username exacto.
-        ///</summary>
-    Task<JsonElement?> SearchUserByUsernameAsync(string username, CancellationToken ct);
-
-        /// <summary>
-        /// Buscar por email exacto.
-        ///</summary>
-    Task<JsonElement?> SearchUserByEmailAsync(string email, CancellationToken ct);
-
-    // =========================================================
-    // LISTAR USUARIOS CON PAGINACIÓN
-    // =========================================================
+    /// <summary>
+    /// Buscar por username exacto.
+    ///</summary>
+    Task<List<string>> SearchUsernamesAsync(string username, CancellationToken ct);
 
     /// <summary>
-    /// Retorna usuarios paginados desde Keycloak usando first + max.
-    /// Súper eficiente, recomendado cuando sí se necesita la lista completa.
-    /// </summary>
-    Task<List<JsonElement>> GetUsersPaginatedAsync(int first, int max, CancellationToken ct);
+    /// Buscar por email exacto.
+    ///</summary>
+    Task<JsonElement?> SearchUserByEmailAsync(string email, CancellationToken ct);
+
 
     // =========================================================
     // CRUD
@@ -47,4 +39,14 @@ public interface IKeycloakClient
     Task<bool> AssignRoleAsync(string userId, string roleName, CancellationToken ct);
 
     Task<JsonElement?> GetUserByIdAsync(string userId, CancellationToken ct);
+
+    // =========================================================
+    // LISTAR USUARIOS CON PAGINACIÓN
+    // =========================================================
+
+    Task<List<KeycloakUserDto>> GetUsersFilteredAsync(
+        int first,
+        int max,
+        string? usernameFilter,
+        CancellationToken ct =  default);
 }

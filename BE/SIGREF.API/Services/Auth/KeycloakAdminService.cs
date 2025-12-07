@@ -260,4 +260,108 @@ public class KeycloakAdminService : IKeycloakAdminService
         };
     }
 
+    public async Task<ResponseDto<KeycloakUsernameDto>> ExistUserNameAsync(
+        string username,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            return new ResponseDto<KeycloakUsernameDto>
+            {
+                Status = false,
+                StatusCode = 400,
+                Message = "El username es obligatorio.",
+                Data = null
+            };
+        }
+        //  Obtener lista de usernames similares (máx: 5)
+        var matches = await _kc.SearchUsernamesAsync(username, ct);
+
+        //  Detectar si el exacto está dentro de esos usuarios
+        bool exactExists = matches.Any(u => 
+            u.Equals(username, StringComparison.OrdinalIgnoreCase));
+
+        // Crear DTO final
+        var dto = new KeycloakUsernameDto
+        {
+            ExistName = exactExists,
+            NumberList = matches.Count,    // cantidad de similares
+            Usernames = matches            // lista completa de 5 nombres
+        };
+
+        return new ResponseDto<KeycloakUsernameDto>
+        {
+            Status = true,
+            StatusCode = 200,
+            Message = exactExists
+                ? "Existe un usuario con ese username."
+                : "El username exacto NO existe, pero hay similares.",
+            Data = dto
+        };
+    }
+    
+    public async Task<ResponseDto<PagedResult<KeycloakUserDto>>> GetUsersListAsync( KeycloakFilter  filter)
+    {
+        // ============================
+        // VALIDACIONES
+        // ============================
+
+        // Si no viene número de página default = 1
+        int page = filter.PageNumber <= 0 ? 1 : filter.PageNumber;
+
+        // PageSize por defecto = 10
+        int pageSize =
+            filter.PageSize <= 0 ? 10 :          // si viene vacío 10
+            filter.PageSize > 30 ? 30 :          // si viene > 30  30
+            filter.PageSize;                     // si es válido  el mismo
+
+        // ============================
+        // CÁLCULO DE PAGINACIÓN REAL
+        // ============================
+
+        int first = (page - 1) * pageSize;
+        int max = pageSize + 1; // pedimos uno más para detectar "next page"
+
+        // Obtener usuarios paginados desde Keycloak
+        var users = await _kc.GetUsersFilteredAsync(
+            first,
+            max,
+            filter.UserName, 
+            CancellationToken.None
+        );
+
+        // Saber si hay siguiente página (si vinieron más de pageSize)
+        bool hasNext = users.Count > filter.PageSize;
+
+        // Si vino el extra, lo eliminamos porque no pertenece a esta página
+        if (hasNext)
+            users.RemoveAt(users.Count - 1);
+
+        var pagination = new PaginationDto
+        {
+            CurrentPage = filter.PageNumber,
+            PageSize = filter.PageSize,
+
+            // Para Keycloak NO existen estos valores, así que los dejamos null
+            TotalItems = null,
+            TotalPages = null,
+
+            HasPrevious = filter.PageNumber > 1,
+            HasNext = hasNext
+        };
+
+        var paged = new PagedResult<KeycloakUserDto>
+        {
+            Items = users,
+            Pagination = pagination
+        };
+
+        return new ResponseDto<PagedResult<KeycloakUserDto>>
+        {
+            Status = true,
+            StatusCode = 200,
+            Message = "Usuarios obtenidos correctamente.",
+            Data = paged
+        };
+    }
 }

@@ -16,8 +16,11 @@ public static class KeycloakUserMapper
             Username = user.GetProperty("username").GetString()!,
             Email = user.TryGetProperty("email", out var e) ? e.GetString() : null,
             DisplayName = null,
-            PractitionerId = ""
+            PractitionerId = "",
+            Enabled = user.GetProperty("enabled").GetBoolean(),
+
         };
+        
 
         if (user.TryGetProperty("attributes", out var attrs))
         {

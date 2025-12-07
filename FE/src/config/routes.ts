@@ -14,6 +14,11 @@ export const HealthcaresRoutes = [
   { path: "/service-groups/create", name: "Crear Paquete" },
 ];
 
+export const LocationsRoutes = [
+  { path: "/locations/list", name: "Lista de Ubicaciones" },
+  { path: "/locations/create", name: "Crear Ubicación" },
+];
+
 export const PatientsRoutes = [
   { path: "/patients/list", name: "Lista de Pacientes" },
   { path: "/patients/create", name: "Crear Paciente" },
@@ -24,6 +29,10 @@ export const PractitionersRoutes = [
   { path: "/practitioners/create", name: "Crear Empleado" },
 ];
 
+export const ShiftsRoutes = [
+  { path: "/shifts/list", name: "Lista de Turnos" },
+];
+
 export const EventsRoutes = [
   { path: "/events/list", name: "Listar Eventos" },
 ];
@@ -31,11 +40,6 @@ export const EventsRoutes = [
 export const OrganizationsRoutes = [
   { path: "/organizations/list", name: "Lista de Organizaciones" },
   { path: "/organizations/create", name: "Crear Organización" },
-];
-
-export const LocationsRoutes = [
-  { path: "/locations/list", name: "Lista de Ubicaciones" },
-  { path: "/locations/create", name: "Crear Ubicación" },
 ];
 
 export const ReportsRoutes = [
@@ -50,10 +54,11 @@ export const RoutesByRole: Record<
   {
     fondos?: any[];
     servicios?: any[];
+    ubicaciones?: any[];
     paquetes?: any[];
+    turnos?: any[];
     pacientes?: any[];
     empleados?: any[];
-    ubicaciones?: any[];
     organizaciones?: any[];
     reportes?: any[];
     eventos?: any[];
@@ -62,6 +67,7 @@ export const RoutesByRole: Record<
   [validRoles.admin]: {
     fondos: IncomesRoutes,
     servicios: HealthcaresRoutes,
+    turnos: ShiftsRoutes,
     pacientes: PatientsRoutes,
     empleados: PractitionersRoutes,
     ubicaciones: LocationsRoutes,
@@ -71,12 +77,14 @@ export const RoutesByRole: Record<
   },
   [validRoles.auditor]: {
     fondos: IncomesRoutes,
+    turnos: ShiftsRoutes,
     servicios: HealthcaresRoutes,
     empleados: PractitionersRoutes,
     eventos: EventsRoutes,
   },
   [validRoles.cashier]: {
     fondos: IncomesRoutes,
+    turnos: ShiftsRoutes,
     servicios: HealthcaresRoutes,
     pacientes: PatientsRoutes,
   },

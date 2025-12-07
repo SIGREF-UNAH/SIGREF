@@ -1079,7 +1079,7 @@
     {
       "clientId": "sigref-admin-api",
       "name": "SIGREF Admin",
-      "description": "",
+      "description": "Administrador Interno de creacion de usuarios de keycloak para SIGREF",
       "rootUrl": "",
       "adminUrl": "",
       "baseUrl": "",
@@ -1110,9 +1110,16 @@
         "client.secret.creation.time": "1764670378",
         "backchannel.logout.session.required": "true",
         "standard.token.exchange.enabled": "false",
+        "post.logout.redirect.uris": "+",
         "oauth2.device.authorization.grant.enabled": "false",
         "backchannel.logout.revoke.offline.tokens": "false",
-        "dpop.bound.access.tokens": "false"
+        "dpop.bound.access.tokens": "false",
+        "pkce.code.challenge.method": "",
+        "login_theme": "",
+        "display.on.consent.screen": "false",
+        "consent.screen.text": "",
+        "frontchannel.logout.url": "",
+        "frontchannel.logout.session.required": "true"
       },
       "authenticationFlowBindingOverrides": {},
       "fullScopeAllowed": true,

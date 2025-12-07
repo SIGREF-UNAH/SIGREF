@@ -1,4 +1,7 @@
-﻿namespace SIGREF.API.Dtos.Auth;
+﻿using System.ComponentModel.DataAnnotations;
+using SIGREF.API.Dtos.Common;
+
+namespace SIGREF.API.Dtos.Auth;
 
 public class KeycloakUserDto
 {
@@ -9,4 +12,25 @@ public class KeycloakUserDto
 
     // Atributo crítico de negocio
     public string PractitionerId { get; set; } = default!;
+    public bool? Enabled { get; set; }
+
+    
+    public List<string>? Roles { get; set; }
+}
+
+
+public class KeycloakUsernameDto
+{
+    public bool ExistName { get; set; }                 // Hay coincidencias?
+    public int? NumberList { get; set; }                // Cantidad de coincidencias
+    public List<string>? Usernames { get; set; }        // Lista de usernames similares
+}
+
+
+
+
+
+public class KeycloakFilter : PagedFilterBase
+{
+    public string? UserName { get; set; }
 }

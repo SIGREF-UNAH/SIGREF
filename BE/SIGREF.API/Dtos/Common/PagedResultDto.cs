@@ -6,8 +6,10 @@ public class PaginationDto
 {
     public int CurrentPage { get; set; }
     public int PageSize { get; set; }
-    public int TotalItems { get; set; }
-    public int TotalPages { get; set; }
+    // tipo ? para Keycloak
+    public int? TotalItems { get; set; }
+    // tipo ? para keycloak
+    public int? TotalPages { get; set; }
     public bool HasPrevious { get; set; }
     public bool HasNext { get; set; }
 }

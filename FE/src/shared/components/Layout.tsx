@@ -178,24 +178,26 @@ const hospitalData = hospitalResponseData?.data;
             const userMenu = [
               ...(ability.can("read", "users") ? [{
                 key: "0",
-                label: <Link to="/users">Crear Usuarios</Link>,
+                label: <Link to="/users">Usuarios</Link>,
                 icon: <UserAddOutlined />,
               }] : []),
+              ...(ability.can("read", "hospital") ? [
               {
                 key: "1",
                 label: <Link to="/hospital">Hospital</Link>,
                 icon: <BankOutlined />,
-              },
+              }] : []),
               {
                 key: "2",
                 label: <Link to="/documentation">Documentación</Link>,
                 icon: <BookOutlined />,
               },
+              ...(ability.can("read", "support") ? [
               {
                 key: "3",
                 label: <Link to="/support">Soporte</Link>,
                 icon: <PhoneOutlined />,
-              },
+              }] : []),
               {
                 key: "4",
                 label: "Cerrar Sesión",

@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Headers;
 using System.Text.Json;
+using SIGREF.API.Dtos.Auth;
 
 namespace SIGREF.API.Services.Auth.Keycloak;
 
@@ -111,15 +112,35 @@ public class KeycloakClient : IKeycloakClient
         return list ?? new List<JsonElement>();
     }
 
-    public async Task<JsonElement?> SearchUserByUsernameAsync(string username, CancellationToken ct)
+    public async Task<List<string>> SearchUsernamesAsync(string username, CancellationToken ct)
     {
         await SetAuth(ct);
 
-        var url = $"{_baseUrl}/admin/realms/{_realm}/users?username={Uri.EscapeDataString(username)}";
-        var list = await _http.GetFromJsonAsync<List<JsonElement>>(url, ct);
+        // Keycloak buscará en username, email, firstName, lastName… 
+        // pero vamos a filtrar SOLO username en el backend.
+        var url =
+            $"{_baseUrl}/admin/realms/{_realm}/users?" +
+            $"search={Uri.EscapeDataString(username)}&first=0&max=20";
 
-        return list?.FirstOrDefault();
+        var list = await _http.GetFromJsonAsync<List<JsonElement>>(url, ct)
+                   ?? new List<JsonElement>();
+
+        // Convertir solo a lista de usernames
+        var usernames = list
+            .Select(u =>
+            {
+                if (u.TryGetProperty("username", out var un))
+                    return un.GetString();
+                return null;
+            })
+            .Where(u => !string.IsNullOrWhiteSpace(u))
+            .Select(u => u!)
+            .ToList();
+
+        return usernames;
     }
+
+
 
     public async Task<JsonElement?> SearchUserByEmailAsync(string email, CancellationToken ct)
     {
@@ -130,16 +151,7 @@ public class KeycloakClient : IKeycloakClient
 
         return list?.FirstOrDefault();
     }
-
-    public async Task<List<JsonElement>> GetUsersPaginatedAsync(int first, int max, CancellationToken ct)
-    {
-        await SetAuth(ct);
-
-        var url = $"{_baseUrl}/admin/realms/{_realm}/users?first={first}&max={max}";
-        var list = await _http.GetFromJsonAsync<List<JsonElement>>(url, ct);
-
-        return list ?? new List<JsonElement>();
-    }
+    
 
     public async Task<JsonElement?> GetUserByIdAsync(string userId, CancellationToken ct)
     {
@@ -156,6 +168,7 @@ public class KeycloakClient : IKeycloakClient
             return null;
         }
     }
+    
 
     public async Task<string?> CreateUserAsync(object kcUser, CancellationToken ct)
     {
@@ -185,4 +198,34 @@ public class KeycloakClient : IKeycloakClient
 
         return res.IsSuccessStatusCode;
     }
+    
+    public async Task<List<KeycloakUserDto>> GetUsersFilteredAsync(
+        int first,
+        int max,
+        string? usernameFilter,
+        CancellationToken ct)
+    {
+        await SetAuth(ct);
+
+        var query = new List<string>
+        {
+            $"first={first}",
+            $"max={max}"
+        };
+
+        if (!string.IsNullOrWhiteSpace(usernameFilter))
+            query.Add($"search={Uri.EscapeDataString(usernameFilter)}");
+
+        var url = $"{_baseUrl}/admin/realms/{_realm}/users?{string.Join("&", query)}";
+
+        var rawUsers = await _http.GetFromJsonAsync<List<JsonElement>>(url, ct)
+                       ?? new List<JsonElement>();
+
+        return rawUsers
+            .Select(KeycloakUserMapper.ToDto)
+            .Where(dto => dto != null)
+            .ToList()!;
+    }
+
+    
 }
