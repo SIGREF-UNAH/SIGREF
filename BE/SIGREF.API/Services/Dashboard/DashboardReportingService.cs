@@ -128,7 +128,7 @@ public class DashboardReportingService : IDashboardReportingService
         };
 
         // ===============================
-        // VALIDACIÓN BÁSICA
+        // VALIDACIÓN
         // ===============================
         if (filter.StartDate > filter.EndDate)
         {
@@ -138,132 +138,91 @@ public class DashboardReportingService : IDashboardReportingService
         }
 
         // ===============================
-        // BASE QUERY: Materialized View
+        // CONSULTA SQL OPTIMIZADA
         // ===============================
-        var facts = _dbContext.Set<DashboardFact>()
-            .AsNoTracking()
-            .Where(f =>
-                f.CreatedDate >= filter.StartDate &&
-                f.CreatedDate <= filter.EndDate &&
-                f.ServiceId != null
-            );
+        var sql = @"
+        WITH svc AS (
+            SELECT
+                service_id AS ""ServiceId"",
+                package_id AS ""FhirServiceId"",
+                COUNT(*) AS ""Count"",
+                SUM(real_income) AS ""TotalGenerated"",
+                ROW_NUMBER() OVER (ORDER BY COUNT(*) DESC) AS rn_desc,
+                ROW_NUMBER() OVER (ORDER BY COUNT(*) ASC)  AS rn_asc
+            FROM mv_dashboard_facts
+            WHERE created_date BETWEEN {0} AND {1}
+              AND service_id IS NOT NULL
+              AND ({2} IS NULL OR location_id = ANY({2}))
+            GROUP BY service_id, package_id
+        )
+        SELECT ""ServiceId"", ""FhirServiceId"", ""Count"", ""TotalGenerated""
+        FROM svc
+        WHERE rn_desc <= 5 OR rn_asc <= 5;
+        ";
 
-        // Filtro por location
-        if (filter.LocationIds?.Count > 0)
-        {
-            facts = facts.Where(f =>
-                f.LocationId != null &&
-                filter.LocationIds.Contains(f.LocationId)
-            );
-        }
-
-        // ===============================
-        // TOP 5 SERVICIOS MÁS UTILIZADOS
-        // ===============================
-        var top5 = await facts
-            .GroupBy(f => new { f.ServiceId, f.FhirServiceId })
-            .Select(g => new
-            {
-                ServiceId = g.Key.ServiceId.Value,
-                FhirServiceId = g.Key.FhirServiceId,
-                Count = g.Count(),
-                TotalGenerated = g.Sum(x => x.RealIncome)
-            })
-            .OrderByDescending(x => x.Count)
-            .Take(5)
+        var rows = await _dbContext
+            .Set<ServiceUsageRow>()
+            .FromSqlRaw(sql, filter.StartDate, filter.EndDate, filter.LocationIds)
             .ToListAsync();
 
-        // ===============================
-        // BOTTOM 5 SERVICIOS MENOS UTILIZADOS
-        // ===============================
-        var bottom5 = await facts
-            .GroupBy(f => new { f.ServiceId, f.FhirServiceId })
-            .Select(g => new
-            {
-                ServiceId = g.Key.ServiceId.Value,
-                FhirServiceId = g.Key.FhirServiceId,
-                Count = g.Count(),
-                TotalGenerated = g.Sum(x => x.RealIncome)
-            })
-            .OrderBy(x => x.Count)
-            .Take(5)
-            .ToListAsync();
-
-        // ===============================
-        // COMPROBAR SI HAY RESULTADOS
-        // ===============================
-        if (top5.Count == 0 && bottom5.Count == 0)
+        if (rows.Count == 0)
         {
             response.Message = "No hay datos disponibles para este rango.";
             return response;
         }
 
         // ===============================
-        // ELIMINAR DUPLICADOS (Top tiene prioridad)
+        // SEPARAR TOP Y BOTTOM (máx. 10)
         // ===============================
-        // -- Si se da la casualidad que tengamos 10 o menos servicios
-        // -- Entonces estos tendran automaticamente al TOP 
-        var topIds = top5.Select(x => x.ServiceId).ToHashSet();
-
-        bottom5 = bottom5
-            .Where(x => !topIds.Contains(x.ServiceId))
-            .ToList();
+        var top5 = rows.OrderByDescending(x => x.Count).Take(5).ToList();
+        var bottom5 = rows.OrderBy(x => x.Count).Take(5).ToList();
 
         // ===============================
-        // PREPARAR LISTA DE IDS FHIR (solo 10)
+        // FHIR LOOKUP (cacheado)
         // ===============================
-        var fhirIds = top5
+        var fhirIds = rows
             .Select(x => x.FhirServiceId)
-            .Concat(bottom5.Select(x => x.FhirServiceId))
-            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Where(x => !string.IsNullOrWhiteSpace(x))
             .Distinct()
             .ToList();
 
-        // ===============================
-        // LOOKUP DE NOMBRES DESDE FHIR (solo 10)
-        // ===============================
         var nameLookup = await _fhirLookupService.GetServiceNamesAsync(fhirIds);
-        
 
         // ===============================
-        // MAPEO A DTO (TOP 5)
+        // MAPEO A DTOs
         // ===============================
         response.Data.TopUsed = top5.Select(s => new ServiceUsageDto
         {
             ServiceId = s.ServiceId,
-            FhirServiceId = s.FhirServiceId,
+            FhirServiceId = s.FhirServiceId ?? "",
+            ServiceName = ResolveName(s.FhirServiceId, nameLookup),
+            Count = s.Count,
+            TotalGenerated = s.TotalGenerated
+        }).ToList();
+
+        response.Data.BottomUsed = bottom5.Select(s => new ServiceUsageDto
+        {
+            ServiceId = s.ServiceId,
+            FhirServiceId = s.FhirServiceId ?? "",
             ServiceName = ResolveName(s.FhirServiceId, nameLookup),
             Count = s.Count,
             TotalGenerated = s.TotalGenerated
         }).ToList();
 
         // ===============================
-        // MAPEO A DTO (BOTTOM 5)
+        // PORCENTAJES
         // ===============================
-        response.Data.BottomUsed = bottom5.Select(s => new ServiceUsageDto
-        {
-            ServiceId = s.ServiceId,
-            FhirServiceId = s.FhirServiceId,
-            ServiceName =  ResolveName(s.FhirServiceId, nameLookup),
-            Count = s.Count,
-            TotalGenerated = s.TotalGenerated
-        }).ToList();
+        var totalCount =
+            response.Data.TopUsed.Sum(x => x.Count) +
+            response.Data.BottomUsed.Sum(x => x.Count);
 
-        // ===============================
-        // CALCULAR PORCENTAJES 
-        // ===============================
-        decimal totalCount = response.Data.TopUsed.Sum(x => x.Count)
-                             + response.Data.BottomUsed.Sum(x => x.Count);
-        // ========================
-        //  Calculo de Percentajes
-        // ========================
         if (totalCount > 0)
         {
             foreach (var s in response.Data.TopUsed)
-                s.Percentage = Math.Round((s.Count / totalCount) * 100m, 2);
+                s.Percentage = Math.Round(((decimal)s.Count / totalCount) * 100m, 2);
 
             foreach (var s in response.Data.BottomUsed)
-                s.Percentage = Math.Round((s.Count / totalCount) * 100m, 2);
+                s.Percentage = Math.Round(((decimal)s.Count / totalCount) * 100m, 2);
         }
 
         response.Message = "Uso de servicios obtenido correctamente.";
@@ -355,7 +314,7 @@ public class DashboardReportingService : IDashboardReportingService
 
         // ===============================
         // OBTENER NOMBRES DESDE FHIR
-        // TOP 5 + 1 "Otros" = máx 6 IDs
+        // TOP 5 + 1 "Otros" = máx. 6 ID
         // ===============================
         var fhirIds = top5
             .Select(x => x.PackageId)
@@ -363,14 +322,14 @@ public class DashboardReportingService : IDashboardReportingService
             .ToList();
 
         var nameLookup = await _fhirLookupService.GetPackageNamesAsync(fhirIds);
-        
+
         // ===============================
         // MAPEAR TOP 5
         // ===============================
         response.Data.Top5 = top5.Select(p => new PackageUsageDto
         {
             FhirPackageId = p.PackageId,
-            PackageName =  ResolveName(p.PackageId, nameLookup),
+            PackageName = ResolveName(p.PackageId, nameLookup),
             Count = p.Count,
             TotalGenerated = p.TotalGenerated
         }).ToList();
