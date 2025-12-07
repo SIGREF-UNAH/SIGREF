@@ -70,7 +70,7 @@ public class SerieService : ISerieService
             EndNumber = dto.EndNumber,
             CurrentNumber = dto.StartNumber, // arranca en el inicio del rango
             CreatedById = user,
-            CreatedDate = DateTime.Now,
+            CreatedDate = DateTime.UtcNow,
         };
 
         _context.InvoiceSeries.Add(entity);
@@ -173,7 +173,7 @@ public class SerieService : ISerieService
             entity.IsActive = dto.IsActive.Value;
 
         entity.UpdatedById = user;
-        entity.UpdatedDate = DateTime.Now;
+        entity.UpdatedDate = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
         await tx.CommitAsync();
@@ -344,7 +344,7 @@ public class SerieService : ISerieService
         // Desactivar
         entity.IsActive = false;
         entity.UpdatedById = userId;
-        entity.UpdatedDate = DateTime.Now;
+        entity.UpdatedDate = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
 

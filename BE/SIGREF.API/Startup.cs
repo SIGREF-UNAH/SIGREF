@@ -43,6 +43,10 @@ public class Startup
     {
         // Configurar las opciones de variables de entorno
         services.Configure<Env>(_configuration);
+        
+        // Cache global para el FHIR Lookup
+        services.AddMemoryCache();
+
 
         // Registrar FhirClient directamente
         services.AddScoped<FhirService>();
@@ -68,8 +72,8 @@ public class Startup
         
         // ============= RECUPERADORES FHIR ==========
         services.AddScoped<IFhirLookupService, FhirLookupService>();
+        // Registrar dashboard que usa el lookup
         services.AddScoped<IDashboardReportingService, DashboardReportingService>();
-        
 
         services.AddScoped<IUserContextService, UserContextService>();
         // ================ SIGREF SERVICES =======================
@@ -84,11 +88,19 @@ public class Startup
         // ==============================================================
         //  KEYCLOAK CLIENT + ADMIN SERVICE 
         // ==============================================================
+        // Resolucion a la cache de keycloak
+        //  Registro del client primero
+        services.AddHttpClient<KeycloakClient>(); // HttpClient factory
+        // levantamiento de la interfaz utilizando el client resuelto 
+        services.AddSingleton<IKeycloakClient>(sp =>
+        {
+            var factory = sp.GetRequiredService<IHttpClientFactory>();
+            var http = factory.CreateClient(nameof(KeycloakClient));
 
-        // Cliente HTTP para Keycloak
-        services.AddHttpClient<IKeycloakClient, KeycloakClient>();
-
-        // Servicio administrador de Keycloak
+            var config = sp.GetRequiredService<IConfiguration>();
+            return new KeycloakClient(http, config);
+        });
+        // SERVICIO ADMINISTRADOR DE KEYCLOAK 
         services.AddScoped<IKeycloakAdminService, KeycloakAdminService>();
 
 
