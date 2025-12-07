@@ -1,5 +1,5 @@
 import { Modal, Descriptions, Tag, Empty } from "antd";
-import type { HealthcareDto } from "../../../../api/models";
+import type { HealthcareDto } from "../../../api/models";
 
 interface HealthcareDetailModalProps {
   open: boolean;

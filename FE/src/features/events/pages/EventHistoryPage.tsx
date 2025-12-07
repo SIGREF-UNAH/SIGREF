@@ -19,9 +19,9 @@ import { SearchOutlined, EyeOutlined, UserOutlined } from "@ant-design/icons";
 import dayjs, { Dayjs } from "dayjs";
 import { useState, useMemo } from "react";
 import { useUrlFilters } from "../../../shared/hooks";
-import { EventHistoryModal } from "../components/modals";
 import type { AuditLogDto } from "../../../api/models";
 import { useGetApiAudit } from "../../../api/audit/audit";
+import { EventHistoryModal } from "../components";
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;

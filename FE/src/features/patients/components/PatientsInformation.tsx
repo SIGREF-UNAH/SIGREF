@@ -26,6 +26,8 @@ import { BiTrash } from "react-icons/bi";
 import { useRef, useEffect } from "react";
 import { usePatientsInformation } from "../hooks";
 import dayjs from "dayjs";
+import { Can } from "@casl/react";
+import { useAbility } from "../../../config";
 
 interface PatientData {
   id: string;
@@ -46,6 +48,7 @@ interface PatientData {
 export default function PatientsInformation() {
   const patientInfoRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<FormInstance>(null);
+  const ability = useAbility();
 
   const {
     selectedPatientId,
@@ -221,44 +224,48 @@ export default function PatientsInformation() {
                 >
                   Copiar Datos
                 </Button>
-                <Link to={`/patients/update/${selectedPatientId}`}>
-                  <Button
-                    type="primary"
-                    icon={<EditOutlined />}
-                    className="bg-green-600 hover:bg-green-700"
+                <Can I="update" a="patients" ability={ability}>
+                  <Link to={`/patients/update/${selectedPatientId}`}>
+                    <Button
+                      type="primary"
+                      icon={<EditOutlined />}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      Editar
+                    </Button>
+                  </Link>
+                </Can>
+                <Can I="delete" a="patients" ability={ability}>
+                  <Popconfirm
+                    title="Eliminar Paciente"
+                    description={
+                      <div className="max-w-xs">
+                        <p className="mb-2">
+                          ¿Está seguro de que desea eliminar este paciente?
+                        </p>
+                        <p className="text-gray-500 text-sm">
+                          Esta acción no se puede deshacer.
+                        </p>
+                      </div>
+                    }
+                    onConfirm={handleDeleteConfirm}
+                    okText="Sí, eliminar"
+                    cancelText="Cancelar"
+                    okButtonProps={{
+                      danger: true,
+                    }}
+                    icon={<ExclamationCircleOutlined style={{ color: "red" }} />}
                   >
-                    Editar
-                  </Button>
-                </Link>
-                <Popconfirm
-                  title="Eliminar Paciente"
-                  description={
-                    <div className="max-w-xs">
-                      <p className="mb-2">
-                        ¿Está seguro de que desea eliminar este paciente?
-                      </p>
-                      <p className="text-gray-500 text-sm">
-                        Esta acción no se puede deshacer.
-                      </p>
-                    </div>
-                  }
-                  onConfirm={handleDeleteConfirm}
-                  okText="Sí, eliminar"
-                  cancelText="Cancelar"
-                  okButtonProps={{
-                    danger: true,
-                  }}
-                  icon={<ExclamationCircleOutlined style={{ color: "red" }} />}
-                >
-                  <Button
-                    type="primary"
-                    icon={<BiTrash />}
-                    className="bg-red-600! hover:bg-red-700!"
-                    danger
-                  >
-                    Eliminar
-                  </Button>
-                </Popconfirm>
+                    <Button
+                      type="primary"
+                      icon={<BiTrash />}
+                      className="bg-red-600! hover:bg-red-700!"
+                      danger
+                    >
+                      Eliminar
+                    </Button>
+                  </Popconfirm>
+                </Can>
               </div>
             </div>
 

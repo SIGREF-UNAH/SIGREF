@@ -1,1 +1,1 @@
-export { ServiceGroupsRouter } from "./ServiceGroupsRouter";
+export * from './ServiceGroupsRouter';

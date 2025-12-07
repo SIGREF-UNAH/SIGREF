@@ -10,7 +10,6 @@ import {
   Spin,
 } from "antd";
 import { useHealthcaresList } from "../hooks";
-import { HealthcareDetailsModal } from "../components/modals";
 import {
   EditOutlined,
   DeleteOutlined,
@@ -20,6 +19,9 @@ import {
 import { PageHeaderTabs } from "../../../shared/components/ui";
 import type { ColumnsType } from "antd/es/table";
 import type { HealthcareDto } from "../../../api/models";
+import { HealthcareDetailsModal } from "../components";
+import { Can } from "@casl/react";
+import { useAbility } from "../../../config";
 
 const { Search } = Input;
 
@@ -44,6 +46,8 @@ export const HealthcaresPage = () => {
     handleSearch,
     handleClearSearch,
   } = useHealthcaresList();
+
+  const ability = useAbility();
 
   // Columnas de la tabla
   const columns: ColumnsType<HealthcareDto> = [
@@ -93,27 +97,33 @@ export const HealthcaresPage = () => {
       width: 120,
       render: (_, record) => (
         <Space size="small">
-          <Button
-            type="text"
-            icon={<EyeOutlined />}
-            onClick={() => handleViewDetails(record)}
-            title="Ver detalles"
-          />
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record.id || "")}
-          />
-          <Popconfirm
-            title="Eliminar servicio"
-            description="¿Desea eliminar este servicio médico?"
-            onConfirm={() => handleDelete(record.id || "")}
-            okText="Sí, eliminar"
-            cancelText="Cancelar"
-            okButtonProps={{ danger: true }}
-          >
-            <Button type="text" danger icon={<DeleteOutlined />} />
-          </Popconfirm>
+          <Can I="read" a="healthcares" ability={ability}>
+            <Button
+              type="text"
+              icon={<EyeOutlined />}
+              onClick={() => handleViewDetails(record)}
+              title="Ver detalles"
+            />
+          </Can>
+          <Can I="update" a="healthcares" ability={ability}>
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record.id || "")}
+            />
+          </Can>
+          <Can I="delete" a="healthcares" ability={ability}>
+            <Popconfirm
+              title="Eliminar servicio"
+              description="¿Desea eliminar este servicio médico?"
+              onConfirm={() => handleDelete(record.id || "")}
+              okText="Sí, eliminar"
+              cancelText="Cancelar"
+              okButtonProps={{ danger: true }}
+            >
+              <Button type="text" danger icon={<DeleteOutlined />} />
+            </Popconfirm>
+          </Can>
         </Space>
       ),
     },
@@ -147,26 +157,26 @@ export const HealthcaresPage = () => {
       <PageHeaderTabs
         title="Gestión de Servicios"
         tabs={[
-          {
+          ...(ability.can("read", "healthcares") ? [{
             key: "listar1",
             label: "Lista de Servicios",
             path: "/healthcares/list",
-          },
-          {
+          }] : []),
+          ...(ability.can("create", "healthcares") ? [{
             key: "crear1",
             label: "Crear Servicio",
             path: "/healthcares/create",
-          },
-          {
+          }] : []),
+          ...(ability.can("read", "service-groups") ? [{
             key: "listar2",
             label: "Lista de Paquetes",
             path: "/service-groups/list",
-          },
-          {
+          }] : []),
+          ...(ability.can("create", "service-groups") ? [{
             key: "crear2",
             label: "Crear Paquete",
             path: "/service-groups/create",
-          },
+          }] : []),
         ]}
         defaultActive="listar1"
       />

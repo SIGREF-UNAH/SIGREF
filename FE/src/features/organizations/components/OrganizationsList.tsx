@@ -5,9 +5,11 @@ import {
   FilterOutlined,
 } from "@ant-design/icons";
 import { Table, Button, Input, Space, Popconfirm, Tag, Select } from "antd";
-import { useOrganizationsList } from "../../hooks";
-import { OrganizationDetailsModal } from "../modals/OrganizationsDetailsModal";
-import type { OrganizationDto } from "../../../../api/models";
+import { useOrganizationsList } from "../hooks";
+import type { OrganizationDto } from "../../../api/models";
+import { OrganizationDetailsModal } from "./OrganizationsDetailsModal";
+import { useAbility } from "../../../config";
+import { Can } from "@casl/react";
 
 const { Search } = Input;
 
@@ -29,6 +31,8 @@ export default function OrganizationsList() {
     handleTypeChange,
     handleStatusChange,
   } = useOrganizationsList();
+
+  const ability = useAbility();
 
   const columns = [
     {
@@ -82,29 +86,33 @@ export default function OrganizationsList() {
       width: 190,
       render: (record : OrganizationDto) => (
         <Space size="small">
-          {/* ver detalles de organizacion */}
-          <Button
-            onClick={() => handleViewDetails(record)}
-            type="text"
-            icon={<EyeOutlined />}
-            title="Ver detalles"
-          ></Button>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record.id || "")}
-          ></Button>
-          {/* eliminar organizacion */}
-          <Popconfirm
-            title="¿Eliminar organización?"
-            description="Esta acción no se puede deshacer"
-            onConfirm={() => handleDelete(record?.id || "")}
-            okText="Sí, eliminar"
-            cancelText="Cancelar"
-            okButtonProps={{ danger: true }}
-          >
-            <Button type="link" danger icon={<DeleteOutlined />}></Button>
-          </Popconfirm>
+          <Can I="read" a="organizations" ability={ability}>
+            <Button
+              onClick={() => handleViewDetails(record)}
+              type="text"
+              icon={<EyeOutlined />}
+              title="Ver detalles"
+            ></Button>
+          </Can>
+          <Can I="update" a="organizations" ability={ability}>
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record.id || "")}
+            ></Button>
+          </Can>
+          <Can I="delete" a="organizations" ability={ability}>
+            <Popconfirm
+              title="¿Eliminar organización?"
+              description="Esta acción no se puede deshacer"
+              onConfirm={() => handleDelete(record?.id || "")}
+              okText="Sí, eliminar"
+              cancelText="Cancelar"
+              okButtonProps={{ danger: true }}
+            >
+              <Button type="link" danger icon={<DeleteOutlined />}></Button>
+            </Popconfirm>
+          </Can>
         </Space>
       ),
     },

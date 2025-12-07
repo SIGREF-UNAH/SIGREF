@@ -10,9 +10,6 @@ import {
   Tag,
 } from "antd";
 import { useShiftsList } from "../hooks/useShiftsList";
-import { CreateShiftModal } from "../components/modals/CreateShiftModal";
-import { EditShiftModal } from "../components/modals/EditShiftModal";
-import { ShiftDetailsModal } from "../components/modals/ShiftDetailsModal";
 import { useShiftFormData } from "../hooks/useShiftFormData";
 import {
   EditOutlined,
@@ -24,13 +21,15 @@ import {
 import { PageHeaderTabs } from "../../../shared/components/ui";
 import type { ColumnsType } from "antd/es/table";
 import type { ShiftDto } from "../../../api/models";
+import { CreateShiftModal, EditShiftModal, ShiftDetailsModal } from "../components";
+import { useAbility } from "../../../config";
+import { Can } from "@casl/react";
 
 const { Search } = Input;
 
 export const ShiftsPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-
-  // Estados compartidos para detalles y edición
+  const ability = useAbility();
   const [selectedShift, setSelectedShift] = useState<ShiftDto | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -110,44 +109,47 @@ export const ShiftsPage = () => {
       fixed: "right" as const,
       render: (_, record) => (
         <Space size="small">
-          {/* Ver Detalles */}
-          <Button
-            type="text"
-            size="small"
-            icon={<EyeOutlined className="text-blue-600" />}
-            onClick={() => {
-              setSelectedShift(record);
-              setIsDetailsModalOpen(true);
-            }}
-            title="Ver detalles"
-          />
-
-          {/* Editar */}
-          <Button
-            type="text"
-            size="small"
-            icon={<EditOutlined className="text-green-600" />}
-            onClick={() => handleOpenEdit(record)}
-            title="Editar turno"
-          />
-
-          {/* Eliminar */}
-          <Popconfirm
-            title="Desactivar turno"
-            description="¿Estás seguro de desactivar este turno?"
-            onConfirm={() => record.id && handleDelete(record.id)}
-            okText="Sí"
-            cancelText="No"
-            okButtonProps={{ danger: true }}
-          >
+          <Can I="read" a="shifts" ability={ability}>
             <Button
               type="text"
               size="small"
-              danger
-              icon={<StopOutlined />}
-              title="Desactivar turno"
+              icon={<EyeOutlined className="text-blue-600" />}
+              onClick={() => {
+                setSelectedShift(record);
+                setIsDetailsModalOpen(true);
+              }}
+              title="Ver detalles"
             />
-          </Popconfirm>
+          </Can>
+
+          <Can I="update" a="shifts" ability={ability}>
+            <Button
+              type="text"
+              size="small"
+              icon={<EditOutlined className="text-green-600" />}
+              onClick={() => handleOpenEdit(record)}
+              title="Editar turno"
+            />
+          </Can>
+
+          <Can I="delete" a="shifts" ability={ability}>
+            <Popconfirm
+              title="Desactivar turno"
+              description="¿Estás seguro de desactivar este turno?"
+              onConfirm={() => record.id && handleDelete(record.id)}
+              okText="Sí"
+              cancelText="No"
+              okButtonProps={{ danger: true }}
+            >
+              <Button
+                type="text"
+                size="small"
+                danger
+                icon={<StopOutlined />}
+                title="Desactivar turno"
+              />
+            </Popconfirm>
+          </Can>
         </Space>
       ),
     },
@@ -170,16 +172,18 @@ export const ShiftsPage = () => {
 
       <div className="primary-card">
         <div className="flex justify-between items-center mb-6">
-          <Button
-            className="ml-auto"
-            type="primary"
-            size="large"
-            icon={<PlusOutlined />}
-            onClick={() => setIsCreateModalOpen(true)}
-            loading={isLoadingLocations}
-          >
-            Crear Turno
-          </Button>
+          <Can I="create" a="shifts" ability={ability}>
+            <Button
+              className="ml-auto"
+              type="primary"
+              size="large"
+              icon={<PlusOutlined />}
+              onClick={() => setIsCreateModalOpen(true)}
+              loading={isLoadingLocations}
+            >
+              Crear Turno
+            </Button>
+          </Can>
         </div>
 
         {/* Filtros */}

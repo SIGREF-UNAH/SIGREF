@@ -55,10 +55,9 @@ export const RoutesByRole: Record<
     fondos?: any[];
     servicios?: any[];
     ubicaciones?: any[];
-    paquetes?: any[];
-    turnos?: any[];
     pacientes?: any[];
     empleados?: any[];
+    turnos?: any[];
     organizaciones?: any[];
     reportes?: any[];
     eventos?: any[];
@@ -67,19 +66,23 @@ export const RoutesByRole: Record<
   [validRoles.admin]: {
     fondos: IncomesRoutes,
     servicios: HealthcaresRoutes,
-    turnos: ShiftsRoutes,
+    ubicaciones: LocationsRoutes,
     pacientes: PatientsRoutes,
     empleados: PractitionersRoutes,
-    ubicaciones: LocationsRoutes,
+    turnos: ShiftsRoutes,
     organizaciones: OrganizationsRoutes,
     reportes: ReportsRoutes,
     eventos: EventsRoutes,
   },
   [validRoles.auditor]: {
     fondos: IncomesRoutes,
-    turnos: ShiftsRoutes,
     servicios: HealthcaresRoutes,
+    ubicaciones: LocationsRoutes, 
+    pacientes: PatientsRoutes,
     empleados: PractitionersRoutes,
+    turnos: ShiftsRoutes,
+    organizaciones: OrganizationsRoutes,
+    reportes: ReportsRoutes,
     eventos: EventsRoutes,
   },
   [validRoles.cashier]: {
@@ -89,8 +92,8 @@ export const RoutesByRole: Record<
     pacientes: PatientsRoutes,
   },
   [validRoles.ti]: {
+    servicios: HealthcaresRoutes,
     empleados: PractitionersRoutes,
-    ubicaciones: LocationsRoutes,
     organizaciones: OrganizationsRoutes,
     eventos: EventsRoutes,
   },

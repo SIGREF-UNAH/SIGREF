@@ -9,8 +9,8 @@ import { FaUserEdit, FaCheck } from "react-icons/fa";
 import { BsPersonVcardFill } from "react-icons/bs";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useGetApiPractitionerId, usePutApiPractitionerId } from "../../../../api/practitioner/practitioner";
 import { message } from "antd";
+import { useGetApiPractitionerId, usePutApiPractitionerId } from "../../../api/practitioner/practitioner";
 
 
 type EmployeeDetail = {
