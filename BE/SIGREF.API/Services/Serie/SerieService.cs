@@ -83,11 +83,13 @@ public class SerieService : ISerieService
             Message = "Serie creada correctamente.",
             Data = new SerieDto
             {
+                Id  = entity.Id,
                 Name = entity.Name,
                 Prefix = entity.Prefix,
                 StartNumber = entity.StartNumber,
                 EndNumber = entity.EndNumber,
-                CurrentNumber = entity.CurrentNumber
+                CurrentNumber = entity.CurrentNumber,
+                CreatedDate = entity.CreatedDate,
             }
         };
     }
@@ -189,7 +191,9 @@ public class SerieService : ISerieService
                 Prefix = entity.Prefix,
                 StartNumber = entity.StartNumber,
                 EndNumber = entity.EndNumber,
-                CurrentNumber = entity.CurrentNumber
+                CurrentNumber = entity.CurrentNumber,
+                CreatedDate = entity.CreatedDate,
+                ModifiedDate = entity.UpdatedDate,
             }
         };
     }
@@ -245,7 +249,9 @@ public class SerieService : ISerieService
                 Prefix = x.Prefix,
                 StartNumber = x.StartNumber,
                 EndNumber = x.EndNumber,
-                CurrentNumber = x.CurrentNumber
+                CurrentNumber = x.CurrentNumber,
+                CreatedDate = x.CreatedDate,
+                ModifiedDate = x.UpdatedDate
             })
             .ToListAsync();
 
@@ -282,7 +288,9 @@ public class SerieService : ISerieService
                 Prefix = x.Prefix,
                 StartNumber = x.StartNumber,
                 EndNumber = x.EndNumber,
-                CurrentNumber = x.CurrentNumber
+                CurrentNumber = x.CurrentNumber,
+                CreatedDate = x.CreatedDate,
+                ModifiedDate = x.UpdatedDate
             })
             .FirstOrDefaultAsync();
 
@@ -336,7 +344,9 @@ public class SerieService : ISerieService
                     Prefix = entity.Prefix,
                     StartNumber = entity.StartNumber,
                     EndNumber = entity.EndNumber,
-                    CurrentNumber = entity.CurrentNumber
+                    CurrentNumber = entity.CurrentNumber,
+                    CreatedDate = entity.CreatedDate,
+                    ModifiedDate = entity.UpdatedDate
                 }
             };
         }
@@ -359,7 +369,9 @@ public class SerieService : ISerieService
                 Prefix = entity.Prefix,
                 StartNumber = entity.StartNumber,
                 EndNumber = entity.EndNumber,
-                CurrentNumber = entity.CurrentNumber
+                CurrentNumber = entity.CurrentNumber,
+                CreatedDate = entity.CreatedDate,
+                ModifiedDate = entity.UpdatedDate
             }
         };
     }

@@ -5,6 +5,7 @@ namespace SIGREF.API.Dtos.Series;
 
 public class SerieDto
 {
+        public Guid Id { get; set; }
         public string Name { get; set; }
         public string Prefix { get; set; }
 
@@ -40,16 +41,6 @@ public class UpdateSeriesDto : CreateSeriesDto
         public bool? IsActive { get; set; }
 }
 
-public class GetSeriesDto
-{
-        public Guid Id { get; set; }
-        public string Name { get; set; }
-        public string Prefix { get; set; }
-        public long StartNumber { get; set; }
-        public long EndNumber { get; set; }
-        public long CurrentNumber { get; set; }
-        public bool IsActive { get; set; }
-}
 
 public class FilterSerieDto : PagedFilterBase
 {

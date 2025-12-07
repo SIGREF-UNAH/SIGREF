@@ -112,25 +112,26 @@ public class KeycloakSeederController : ControllerBase
     // usaername : admin   -   Name = Erick
     // si el serach era Eric entonces devolvera ["admin"]  dado a que es el usuername del que encontro
     [HttpGet("exists/username")]
-   // [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}, {RolesConstants.admin}")]
+    [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}, {RolesConstants.admin}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces(typeof(ResponseDto<KeycloakUsernameDto>))]
-   public async Task<IActionResult> ExistUsername(
-       [FromQuery, Required] string username)
-   {
-       if (!ModelState.IsValid)
-       {
-           return BadRequest(new 
-           {
-               status = false,
-               message = "El parámetro 'username' es obligatorio.",
-               errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)
-           });
-       }
+    public async Task<IActionResult> ExistUsername(
+        [FromQuery, Required] string username)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(new
+            {
+                status = false,
+                message = "El parámetro 'username' es obligatorio.",
+                errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)
+            });
+        }
+
         var response = await _kcAdmin.ExistUserNameAsync(username);
 
         return StatusCode(response.StatusCode, new
@@ -145,7 +146,7 @@ public class KeycloakSeederController : ControllerBase
     // PAGINATED USER LIST (Keycloak pagination)
     // ============================================================
     [HttpGet("list")]
-    //[Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}, {RolesConstants.auditor}")]
+    [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}, {RolesConstants.auditor}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
