@@ -1,14 +1,16 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Constants;
 using SIGREF.API.Services.Auth;
 using SIGREF.API.Dtos.Auth;
+using SIGREF.API.Dtos.Common;
 
 namespace SIGREF.API.Controllers.Auth;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(AuthenticationSchemes = "Bearer")]
+//[Authorize(AuthenticationSchemes = "Bearer")]
 public class KeycloakSeederController : ControllerBase
 {
     private readonly IKeycloakAdminService _kcAdmin;
@@ -17,10 +19,12 @@ public class KeycloakSeederController : ControllerBase
     {
         _kcAdmin = kcAdmin;
     }
+
     [HttpGet("debug/roles")]
     public IActionResult DebugRoles([FromServices] IUserContextService ctx)
     {
-        return Ok(new {
+        return Ok(new
+        {
             Roles = ctx.GetUserRoles()
         });
     }
@@ -91,6 +95,68 @@ public class KeycloakSeederController : ControllerBase
     public async Task<IActionResult> PractitionerHasUser(string practitionerId)
     {
         var response = await _kcAdmin.PractitionerHasUserAsync(practitionerId);
+
+        return StatusCode(response.StatusCode, new
+        {
+            status = response.Status,
+            message = response.Message,
+            data = response.Data
+        });
+    }
+
+    // ============================================================
+    // CHECK SIMILAR USERNAMES (max 20)
+    // ============================================================
+    // TODO : Verificar username en backend antes de retornar:
+    // el Search interno tambien lo aplica a los nombres, emails etc etc, asi qeu por el momento devuelve ejemplo
+    // usaername : admin   -   Name = Erick
+    // si el serach era Eric entonces devolvera ["admin"]  dado a que es el usuername del que encontro
+    [HttpGet("exists/username")]
+   // [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}, {RolesConstants.admin}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Produces(typeof(ResponseDto<KeycloakUsernameDto>))]
+   public async Task<IActionResult> ExistUsername(
+       [FromQuery, Required] string username)
+   {
+       if (!ModelState.IsValid)
+       {
+           return BadRequest(new 
+           {
+               status = false,
+               message = "El parámetro 'username' es obligatorio.",
+               errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)
+           });
+       }
+        var response = await _kcAdmin.ExistUserNameAsync(username);
+
+        return StatusCode(response.StatusCode, new
+        {
+            status = response.Status,
+            message = response.Message,
+            data = response.Data
+        });
+    }
+
+    // ============================================================
+    // PAGINATED USER LIST (Keycloak pagination)
+    // ============================================================
+    [HttpGet("list")]
+    //[Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}, {RolesConstants.auditor}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Produces(typeof(ResponseDto<PagedResult<KeycloakUserDto>>))]
+    public async Task<IActionResult> GetUsersList(
+        [FromQuery] KeycloakFilter filter)
+    {
+        var response = await _kcAdmin.GetUsersListAsync(filter
+        );
 
         return StatusCode(response.StatusCode, new
         {

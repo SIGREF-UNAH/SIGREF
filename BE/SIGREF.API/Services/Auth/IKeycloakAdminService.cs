@@ -42,4 +42,11 @@ public interface IKeycloakAdminService
     Task<ResponseDto<bool>> PractitionerHasUserAsync(
         string practitionerId,
         CancellationToken cancellationToken = default);
+    Task<ResponseDto<KeycloakUsernameDto>> ExistUserNameAsync(
+        string username,
+        CancellationToken cancellationToken = default);
+    
+    Task<ResponseDto<PagedResult<KeycloakUserDto>>> GetUsersListAsync(KeycloakFilter filter);
+
+    
 }
