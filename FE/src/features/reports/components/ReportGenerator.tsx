@@ -20,12 +20,7 @@ import {
   CheckOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
-import {
-  healthcares,
-  locations,
-  reportData,
-  users,
-} from "../../store";
+import { healthcares, locations, reportData, users } from "../store";
 
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;

@@ -1,3 +1,3 @@
-export { ServiceGroupsPage } from "./ServiceGroupsPage";
-export { CreateServiceGroupPage } from "./CreateServiceGroupPage";
-export { UpdateServiceGroupPage } from "./UpdateServiceGroupPage";
+export * from './CreateServiceGroupPage';
+export * from './ServiceGroupsPage';
+export * from './UpdateServiceGroupPage';

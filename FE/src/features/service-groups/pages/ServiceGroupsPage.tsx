@@ -14,17 +14,21 @@ import {
   EditOutlined,
   DeleteOutlined,
   FilterOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import { PageHeaderTabs } from "../../../shared/components/ui";
 import type { ColumnsType } from "antd/es/table";
 import type { ServiceGroupDto } from "../../../api/models";
 import { useLocationSearch } from "../../../shared/hooks/useLocationSearch";
 import { getListStatusLabel, getListStatusColor, getListStatusOptions } from "../../../shared/utils";
+import { useAbility } from "../../../config";
+import { Can } from "@casl/react";
 
 const { Search } = Input;
 
 export const ServiceGroupsPage = () => {
   const { options: locationOptions, loading: searchingLocations, searchLocations } = useLocationSearch();
+  const ability = useAbility();
   
   const {
     filters,
@@ -93,21 +97,33 @@ export const ServiceGroupsPage = () => {
       width: 120,
       render: (_, record) => (
         <Space size="small">
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record.id || "")}
-          />
-          <Popconfirm
-            title="Eliminar paquete"
-            description="¿Desea eliminar este paquete?"
-            onConfirm={() => handleDelete(record.id || "")}
-            okText="Sí, eliminar"
-            cancelText="Cancelar"
-            okButtonProps={{ danger: true }}
-          >
-            <Button type="text" danger icon={<DeleteOutlined />} />
-          </Popconfirm>
+          <Can I="read" a="service-groups" ability={ability}>
+            <Button
+              type="text"
+              icon={<EyeOutlined />}
+              onClick={() => console.log("Ver detalles")} // TODO: Implementar
+              title="Ver detalles"
+            />
+          </Can>
+          <Can I="update" a="service-groups" ability={ability}>            
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record.id || "")}
+            />
+          </Can>
+          <Can I="delete" a="service-groups" ability={ability}>
+            <Popconfirm
+              title="Eliminar paquete"
+              description="¿Desea eliminar este paquete?"
+              onConfirm={() => handleDelete(record.id || "")}
+              okText="Sí, eliminar"
+              cancelText="Cancelar"
+              okButtonProps={{ danger: true }}
+            >
+              <Button type="text" danger icon={<DeleteOutlined />} />
+            </Popconfirm>
+          </Can>
         </Space>
       ),
     },
@@ -139,26 +155,26 @@ export const ServiceGroupsPage = () => {
       <PageHeaderTabs
         title="Gestión de Paquetes"
         tabs={[
-          {
+          ...(ability.can("read", "healthcares") ? [{
             key: "listar1",
             label: "Lista de Servicios",
             path: "/healthcares/list",
-          },
-          {
+          }] : []),
+          ...(ability.can("create", "healthcares") ? [{
             key: "crear1",
             label: "Crear Servicio",
             path: "/healthcares/create",
-          },
-          {
+          }] : []),
+          ...(ability.can("read", "service-groups") ? [{
             key: "listar2",
             label: "Lista de Paquetes",
             path: "/service-groups/list",
-          },
-          {
+          }] : []),
+          ...(ability.can("create", "service-groups") ? [{
             key: "crear2",
             label: "Crear Paquete",
             path: "/service-groups/create",
-          },
+          }] : []),
         ]}
         defaultActive="listar2"
       />

@@ -10,11 +10,7 @@ import { BsPersonVcardFill } from "react-icons/bs";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Form, message } from "antd";
-import {
-  useGetApiPractitionerId,
-  usePostApiPractitioner,
-  usePutApiPractitionerId,
-} from "../../../../api/practitioner/practitioner";
+import { useGetApiPractitionerId, usePostApiPractitioner, usePutApiPractitionerId } from "../../../api/practitioner/practitioner";
 
 type EmployeeDetail = {
   id: { value: string };

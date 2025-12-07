@@ -1,31 +1,30 @@
 import React, { useState, useEffect } from "react";
 import { Table, Space, Tag, message, Button, Input, Select, Alert } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import { Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  type LocationDto,
+  LocationMode,
+  LocationStatus,
+} from "../../../api/models";
+import { getGetApiLocationsQueryKey, useDeleteApiLocationsId, useGetApiLocations } from "../../../api/locations/locations";
+import DeleteLocationModal from "./DeleteLocationModal";
 import {
   FilterOutlined,
   EyeOutlined,
   EditOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
-import {
-  useGetApiLocations,
-  useDeleteApiLocationsId,
-  getGetApiLocationsQueryKey,
-} from "../../../../api/locations/locations";
-import {
-  type LocationDto,
-  LocationMode,
-  LocationStatus,
-} from "../../../../api/models";
-import { Link } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import DeleteLocationModal from "../modals/DeleteLocationModal";
+import { Can } from "@casl/react";
+import { useAbility } from "../../../config";
 
 const { Search } = Input;
 const { Option } = Select;
 
 const LocationList: React.FC = () => {
   const queryClient = useQueryClient();
+  const ability = useAbility();
   const [searchInputValue, setSearchInputValue] = useState<string>("");
   const [appliedSearchName, setAppliedSearchName] = useState<string>("");
   const [searchMode, setSearchMode] = useState<LocationMode | undefined>(undefined);
@@ -134,22 +133,28 @@ const LocationList: React.FC = () => {
       width: 150,
       render: (_, record) => (
         <Space size="small">
-          <Link to={`/locations/details/${record.id}`}>
+          <Can I="read" a="locations" ability={ability}>  
+            <Link to={`/locations/details/${record.id}`}>
+              <Button
+                type="text"
+                icon={<EyeOutlined />}
+                title="Ver detalles"
+              ></Button>
+            </Link>
+          </Can>
+          <Can I="update" a="locations" ability={ability}> 
+            <Link to={`/locations/update/${record.id}`}>
+              <Button type="text" icon={<EditOutlined />}></Button>
+            </Link>
+          </Can>
+          <Can I="delete" a="locations" ability={ability}> 
             <Button
               type="text"
-              icon={<EyeOutlined />}
-              title="Ver detalles"
-            ></Button>
-          </Link>
-          <Link to={`/locations/update/${record.id}`}>
-            <Button type="text" icon={<EditOutlined />}></Button>
-          </Link>
-          <Button
-            type="text"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDeleteClick(Number(record.id!), record.name)}
-          />
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => handleDeleteClick(Number(record.id!), record.name)}
+            />
+          </Can>
         </Space>
       ),
     },

@@ -8,12 +8,11 @@ import {
   message,
   Space,
 } from "antd";
-import type { LocationDto, ShiftDto } from "../../../../api/models";
-import { usePutApiShiftsId } from "../../../../api/shifts/shifts";
 import { useQueryClient } from "@tanstack/react-query";
-import { getGetApiShiftsQueryKey } from "../../../../api/shifts/shifts";
 import dayjs from "dayjs";
 import React from "react";
+import type { LocationDto, ShiftDto } from "../../../api/models";
+import { getGetApiShiftsQueryKey, usePutApiShiftsId } from "../../../api/shifts/shifts";
 
 interface EditShiftModalProps {
   open: boolean;

@@ -1,24 +1,26 @@
+import { useAbility } from "../../../config";
 import { PageHeaderTabs } from "../../../shared/components";
-// import EditPractitionerForm from "../components/ui/EditPractitionerForm";
-import PractitionerForm from "../components/ui/PractitionerForm";
+import PractitionerForm from "../components/PractitionerForm";
 
 export const EditPractitionerPage = () => {
+  const ability = useAbility();
+
   return (
     <div>
       {/* Header */}
       <PageHeaderTabs
         title="Gestión de Empleados"
         tabs={[
-          {
+          ...(ability.can("read", "practitioners") ? [{
             key: "listar",
             label: "Lista de Empleados",
             path: "/practitioners/list",
-          },
-          {
+          }] : []),
+          ...(ability.can("create", "practitioners") ? [{
             key: "crear",
             label: "Crear Empleado",
             path: "/practitioners/create",
-          },
+          }] : []),
         ]}
         defaultActive="null"
       />

@@ -20,8 +20,10 @@ import {
 } from "../../../api/practitioner-role/practitioner-role";
 import { IdentifierUse } from "../../../api/models";
 import { PageHeaderTabs } from "../../../shared/components";
-import PractitionerRoleModal from "../components/modals/PractitionerRoleModal";
+import PractitionerRoleModal from "../components/PractitionerRoleModal";
 import { ROLE_OPTIONS } from "../../../shared/constants/RolesConstants";
+import { useAbility } from "../../../config";
+import { Can } from "@casl/react";
 
 type EmployeeDetail = {
   id: string;
@@ -51,7 +53,7 @@ export default function PractitionerDetailsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [contextHolder] = Modal.useModal();
-
+  const ability = useAbility();
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<PractitionerRoleDto | null>(null);
   const formRef = useRef<ProFormInstance>(null);
@@ -215,8 +217,16 @@ export default function PractitionerDetailsPage() {
       <PageHeaderTabs
         title="Gestión de Empleados"
         tabs={[
-          { key: "listar", label: "Lista de Empleados", path: "/practitioners/list" },
-          { key: "crear", label: "Crear Empleado", path: "/practitioners/create" },
+          ...(ability.can("read", "practitioners") ? [{
+            key: "listar",
+            label: "Lista de Empleados",
+            path: "/practitioners/list",
+          }] : []),
+          ...(ability.can("create", "practitioners") ? [{
+            key: "crear",
+            label: "Crear Empleado",
+            path: "/practitioners/create",
+          }] : []),
         ]}
         defaultActive="null"
       />
@@ -230,48 +240,56 @@ export default function PractitionerDetailsPage() {
           </div>
 
           <Space>
-            <Button
-              onClick={() => {
-                setEditingRole(practitionerRole?.[0] ?? null);
-                setRoleModalOpen(true);
-              }}
-            >
-              {practitionerRole?.[0] ? "Editar Cargo" : "Asignar Cargo"}
-            </Button>
+            <Can I="create" a="practitioner-roles" ability={ability}>
+              <Button
+                onClick={() => {
+                  setEditingRole(practitionerRole?.[0] ?? null);
+                  setRoleModalOpen(true);
+                }}
+              >
+                {practitionerRole?.[0] ? "Editar Cargo" : "Asignar Cargo"}
+              </Button>
+            </Can>
             {practitionerRole?.[0] && (
+              <Can I="delete" a="practitioner-roles" ability={ability}>
+                <Popconfirm
+                  title="¿Deseas eliminar el cargo asignado?"
+                  okText="Eliminar"
+                  okType="danger"
+                  cancelText="Cancelar"
+                  onConfirm={async () => {
+                    try {
+                      await deleteRoleMutation.mutateAsync({ id: practitionerRole[0].id });
+                      window.location.reload();
+                    } catch (err) {
+                      message.error("Error al eliminar el cargo");
+                    }
+                  }}
+                >
+                  <Button danger icon={<DeleteOutlined />}>Eliminar Cargo</Button>
+                </Popconfirm>
+              </Can>
+            )}
+            <Can I="update" a="practitioners" ability={ability}>
+              <Button type="primary" icon={<EditOutlined />} onClick={handleEdit}>Editar</Button>
+            </Can>
+            <Can I="delete" a="practitioners" ability={ability}>
               <Popconfirm
-                title="¿Deseas eliminar el cargo asignado?"
+                title={`¿Estás seguro de que deseas eliminar a ${name?.text}? Esta acción no se puede deshacer.`}
+                onConfirm={async () => {
+                  try {
+                    await deleteMutation.mutateAsync({ id: id?? "" });
+                  } catch (error) {
+                    message.error("No se pudo eliminar el empleado");
+                  }
+                }}
                 okText="Eliminar"
                 okType="danger"
                 cancelText="Cancelar"
-                onConfirm={async () => {
-                  try {
-                    await deleteRoleMutation.mutateAsync({ id: practitionerRole[0].id });
-                    window.location.reload();
-                  } catch (err) {
-                    message.error("Error al eliminar el cargo");
-                  }
-                }}
               >
-                <Button danger icon={<DeleteOutlined />}>Eliminar Cargo</Button>
+                <Button type="text" danger icon={<DeleteOutlined />} >Eliminar</Button>
               </Popconfirm>
-            )}
-            <Button type="primary" icon={<EditOutlined />} onClick={handleEdit}>Editar</Button>
-            <Popconfirm
-              title={`¿Estás seguro de que deseas eliminar a ${name?.text}? Esta acción no se puede deshacer.`}
-              onConfirm={async () => {
-                try {
-                  await deleteMutation.mutateAsync({ id: id?? "" });
-                } catch (error) {
-                  message.error("No se pudo eliminar el empleado");
-                }
-              }}
-              okText="Eliminar"
-              okType="danger"
-              cancelText="Cancelar"
-            >
-              <Button type="text" danger icon={<DeleteOutlined />} >Eliminar</Button>
-            </Popconfirm>
+            </Can>
           </Space>
         </div>
 

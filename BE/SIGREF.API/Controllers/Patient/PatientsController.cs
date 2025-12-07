@@ -59,7 +59,7 @@ public class PatientsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Produces("application/json")]
     [Produces<IEnumerable<PatientDto>>()]
-    [Authorize(Roles = $" {RolesConstants.admin} , {RolesConstants.auditor}")]
+    [Authorize(Roles = $"{RolesConstants.cashier}, {RolesConstants.admin} , {RolesConstants.auditor}")]
     public async Task<IActionResult> GetById(string id)
     {
         var patient = await _patientService.GetPatientByIdAsync(id);

@@ -9,7 +9,7 @@ import {
 } from "@ant-design/icons";
 import { ProDescriptions } from "@ant-design/pro-components";
 import { Button, Divider, Modal, Space, Tag, Alert } from "antd";
-import type { AuditLogDto } from "../../../../api/models";
+import type { AuditLogDto } from "../../../api/models";
 
 interface Props {
   modalOpen: boolean;

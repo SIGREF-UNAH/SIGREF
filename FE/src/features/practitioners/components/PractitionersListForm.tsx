@@ -1,7 +1,7 @@
 import {
   DeleteOutlined,
   EditOutlined,
-  // ExclamationCircleOutlined,
+  EyeOutlined,
   FilterOutlined,
   UserOutlined,
 } from "@ant-design/icons";
@@ -12,14 +12,16 @@ import {
 } from "@ant-design/pro-components";
 import { Button, message, Popconfirm, Space, Table, Tag } from "antd";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
 import {
   useDeleteApiPractitionerId,
   useGetApiPractitioner,
-} from "../../../../api/practitioner/practitioner";
-import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router";
-import { useGetApiLocations } from "../../../../api/locations/locations";
-import { ROLE_OPTIONS } from "../../../../shared/constants/RolesConstants";
+} from "../../../api/practitioner/practitioner";
+import { useGetApiLocations } from "../../../api/locations/locations";
+import { ROLE_OPTIONS } from "../../../shared/constants/RolesConstants";
+import { useAbility } from "../../../config";
+import { Can } from "@casl/react";
 
 interface Practitioner {
   id: string;
@@ -33,10 +35,13 @@ interface Practitioner {
 
 export const PractitionersListForm = () => {
   const navigate = useNavigate();
+  const ability = useAbility();
   const [searchName, setSearchName] = useState("");
   const [searchRole, setSearchRole] = useState<string | undefined>(undefined);
   const [searchArea, setSearchArea] = useState<string | undefined>(undefined);
-  const [searchStatus, setSearchStatus] = useState<string | undefined>(undefined);
+  const [searchStatus, setSearchStatus] = useState<string | undefined>(
+    undefined
+  );
   const handleNavigate = (id: string) => {
     navigate(`/practitioners/details/${id}`);
   };
@@ -54,7 +59,7 @@ export const PractitionersListForm = () => {
   }>();
 
   const queryClient = useQueryClient();
-  
+
   const deleteMutation = useDeleteApiPractitionerId({
     mutation: {
       onSuccess: () => {
@@ -99,7 +104,6 @@ export const PractitionersListForm = () => {
     return nameMatch && roleMatch && areaMatch && statusMatch;
   });
 
-
   const handleEdit = (practitioner: Practitioner) => {
     navigate(`/practitioners/update/${practitioner.id}`);
   };
@@ -109,14 +113,6 @@ export const PractitionersListForm = () => {
       title: "Nombre",
       dataIndex: "name",
       key: "name",
-      render: (text: string, record: Practitioner) => (
-        <span
-          className="text-blue-600 hover:underline cursor-pointer"
-          onClick={() => handleNavigate(record.id)}
-        >
-          {text}
-        </span>
-      ),
     },
     {
       title: "Correo",
@@ -138,51 +134,64 @@ export const PractitionersListForm = () => {
       dataIndex: "status",
       key: "status",
       render: (status: string) => (
-        <Tag color={status === "Activo" ? "green" : "red"}>{status === "Activo" ? "✓ Activo" : "✗ Inactivo"}</Tag>
+        <Tag color={status === "Activo" ? "green" : "red"}>
+          {status === "Activo" ? "✓ Activo" : "✗ Inactivo"}
+        </Tag>
       ),
     },
     {
-  title: "Acciones",
-  key: "actions",
-  render: (_: any, record: Practitioner) => (
-    <Space>
-      {/* Botón de editar */}
-      <Button
-        type="text"
-        icon={<EditOutlined />}
-        onClick={() => handleEdit(record)}
-      />
+      title: "Acciones",
+      key: "actions",
+      render: (_: any, record: Practitioner) => (
+        <Space>
+          <Can I="read" a="practitioners" ability={ability}>
+            <Button
+              type="text"
+              icon={<EyeOutlined />}
+              onClick={() => handleNavigate(record.id)}
+              title="Ver detalles"
+            />
+          </Can>
+          
+          <Can I="update" a="practitioners" ability={ability}>
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+            />
+          </Can>
 
-      {/* Botón de eliminar con Popconfirm */}
-      <Popconfirm
-        title={`¿Estás seguro de que deseas eliminar a ${record.name}? Esta acción no se puede deshacer.`}
-        onConfirm={async () => {
-          try {
-            await deleteMutation.mutateAsync({ id: record.id });
-          } catch (error) {
-            message.error("No se pudo eliminar el empleado");
-          }
-        }}
-        okText="Eliminar"
-        okType="danger"
-        cancelText="Cancelar"
-      >
-        <Button type="text" danger icon={<DeleteOutlined />} />
-      </Popconfirm>
-    </Space>
-  ),
-}
-
+          <Can I="delete" a="practitioners" ability={ability}>
+            <Popconfirm
+              title={`¿Estás seguro de que deseas eliminar a ${record.name}? Esta acción no se puede deshacer.`}
+              onConfirm={async () => {
+                try {
+                  await deleteMutation.mutateAsync({ id: record.id });
+                } catch (error) {
+                  message.error("No se pudo eliminar el empleado");
+                }
+              }}
+              okText="Eliminar"
+              okType="danger"
+              cancelText="Cancelar"
+            >
+              <Button type="text" danger icon={<DeleteOutlined />} />
+            </Popconfirm>
+          </Can>
+        </Space>
+      ),
+    },
   ];
 
-  
+  const { data: locations } = useGetApiLocations<{
+    items: { name: string }[];
+  }>();
 
-  const { data: locations } = useGetApiLocations<{ items: { name: string }[] }>();
-
-  const locationOptions = locations?.items?.map((loc) => ({
-    label: loc.name,
-    value: loc.name,
-  })) ?? [];
+  const locationOptions =
+    locations?.items?.map((loc) => ({
+      label: loc.name,
+      value: loc.name,
+    })) ?? [];
 
   return (
     <div className="primary-card">
@@ -192,20 +201,14 @@ export const PractitionersListForm = () => {
       <div>
         <div className="flex items-center gap-3 mb-4">
           <FilterOutlined className="text-primary! text-xl" />
-          <span className="text-lg text-primary">
-            Filtros de Búsqueda
-          </span>
+          <span className="text-lg text-primary">Filtros de Búsqueda</span>
         </div>
 
         <ProForm submitter={false}>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <ProFormText
               name="name"
-              label={
-                <span className="text-general font-medium">
-                  Nombre
-                </span>
-              }
+              label={<span className="text-general font-medium">Nombre</span>}
               placeholder="Buscar por nombre"
               fieldProps={{
                 value: searchName,
@@ -216,7 +219,10 @@ export const PractitionersListForm = () => {
               name="position"
               placeholder="Seleccionar"
               label={<span className="text-general font-medium">Cargo</span>}
-              options={ROLE_OPTIONS.map((r) => ({ label: r.label, value: r.value }))}
+              options={ROLE_OPTIONS.map((r) => ({
+                label: r.label,
+                value: r.value,
+              }))}
               fieldProps={{
                 value: searchRole,
                 onChange: (value) => setSearchRole(value),
@@ -225,7 +231,9 @@ export const PractitionersListForm = () => {
             <ProFormSelect
               name="area"
               placeholder="Seleccionar"
-              label={<span className="text-general font-medium">Ubicación</span>}
+              label={
+                <span className="text-general font-medium">Ubicación</span>
+              }
               options={locationOptions}
               fieldProps={{
                 value: searchArea,
@@ -235,11 +243,7 @@ export const PractitionersListForm = () => {
             <ProFormSelect
               name="status"
               placeholder="Seleccionar"
-              label={
-                <span className="text-general font-medium">
-                  Estado
-                </span>
-              }
+              label={<span className="text-general font-medium">Estado</span>}
               options={[
                 { label: "Activo", value: "Activo" },
                 { label: "Inactivo", value: "Inactivo" },
@@ -257,9 +261,7 @@ export const PractitionersListForm = () => {
       <div>
         <div className="flex items-center gap-3 mb-4 mt-2">
           <UserOutlined className="text-primary! text-xl" />
-          <span className="text-lg text-primary">
-            Lista de Empleados
-          </span>
+          <span className="text-lg text-primary">Lista de Empleados</span>
         </div>
         <Table
           columns={columns as any}

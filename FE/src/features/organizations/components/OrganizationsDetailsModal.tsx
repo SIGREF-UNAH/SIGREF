@@ -1,5 +1,5 @@
 import { Modal, Descriptions, Tag, Empty } from "antd";
-import type { OrganizationDto } from "../../../../api/models";
+import type { OrganizationDto } from "../../../api/models";
 
 interface OrganizationDetailsModalProps {
   open: boolean;
@@ -118,23 +118,6 @@ export const OrganizationDetailsModal = ({
             </Descriptions.Item>
           )}
         </Descriptions>
-
-        {/* Alias 
-        {organization.alias && organization.alias.length > 0 && (
-          <div className="mt-6">
-            <div className="mb-3 text-base font-semibold text-general">
-              Alias o nombres alternativos:
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {organization.alias.map((alias, index) => (
-                <Tag key={index} color="geekblue" className="text-sm px-3 py-1">
-                  {alias}
-                </Tag>
-              ))}
-            </div>
-          </div>
-        )}
-        */}
 
         {/* Información adicional */}
         {organization.id && (

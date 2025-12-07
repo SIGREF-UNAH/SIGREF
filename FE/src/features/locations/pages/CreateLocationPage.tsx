@@ -1,7 +1,10 @@
+import { useAbility } from "../../../config";
 import { PageHeaderTabs } from "../../../shared/components/ui";
-import LocationForm from "../components/ui/LocationForm";
+import LocationForm from "../components/LocationForm";
 
 export default function CreateLocationPage() {
+  const ability = useAbility();
+
   return (
     <div>
       <main>
@@ -9,8 +12,12 @@ export default function CreateLocationPage() {
         <PageHeaderTabs
           title="Gestión de Ubicaciones"
           tabs={[
-            { key: "listar", label: "Lista de Ubicaciones", path: "/locations/list" },
-            { key: "crear", label: "Crear Ubicación", path: "/locations/create" },
+            ...(ability.can("read", "locations") ? [{
+              key: "listar", label: "Lista de Ubicaciones", path: "/locations/list",
+            }] : []),
+            ...(ability.can("create", "locations") ? [{
+              key: "crear", label: "Crear Ubicación", path: "/locations/create",
+            }] : []),
           ]}
           defaultActive="crear"
         />

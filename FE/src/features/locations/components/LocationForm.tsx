@@ -7,13 +7,13 @@ import {
 import { BiChevronDown } from "react-icons/bi";
 import { MdOutlineAddLocationAlt } from "react-icons/md";
 import { FaCheck } from "react-icons/fa";
-import { LocationStatus, LocationMode } from "../../../../api/models";
 import { BsBookmarkCheckFill, BsBuilding, BsGeoAltFill, BsPersonFill } from "react-icons/bs";
 import { Button, Spin, Form } from "antd";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
-import useLocationForm from "../../hooks/useLocationForm";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+import useLocationForm from "../hooks/useLocationForm";
+import { LocationMode, LocationStatus } from "../../../api/models";
 
 interface Contact {
   id: string;

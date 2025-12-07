@@ -1,8 +1,9 @@
 
 import { Card, Col, Row, Spin, Statistic } from "antd";
-import { PractitionersListForm } from "../components/ui";
 import { useGetApiPractitioner } from "../../../api/practitioner/practitioner";
 import { PageHeaderTabs } from "../../../shared/components";
+import { PractitionersListForm } from "../components";
+import { useAbility } from "../../../config";
 
 type Practitioner = {
   id: { value: string };
@@ -23,6 +24,7 @@ export const PractitionersListPage = () => {
   const totalPractitioners = practitioners.length;
   const activePractitioners = practitioners.filter((emp) => emp.active)?.length || 0;
   const inactivePractitioners = totalPractitioners - activePractitioners;
+  const ability = useAbility();
 
   if (isLoading) {
     return (
@@ -38,16 +40,16 @@ export const PractitionersListPage = () => {
       <PageHeaderTabs
         title="Gestión de Empleados"
         tabs={[
-          {
+          ...(ability.can("read", "practitioners") ? [{
             key: "listar",
             label: "Lista de Empleados",
             path: "/practitioners/list",
-          },
-          {
+          }] : []),
+          ...(ability.can("create", "practitioners") ? [{
             key: "crear",
             label: "Crear Empleado",
             path: "/practitioners/create",
-          },
+          }] : []),
         ]}
         defaultActive="crear"
       />

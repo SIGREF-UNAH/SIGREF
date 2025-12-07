@@ -13,7 +13,7 @@ import {
   TeamOutlined,
   UserOutlined,
   BarChartOutlined,
-  UserSwitchOutlined,
+  RetweetOutlined,
 } from "@ant-design/icons";
 
 interface ModuleCardProps {
@@ -132,7 +132,7 @@ export const HomePage: React.FC = () => {
           <ModuleCard
             title="Gestión de Turnos"
             description={"Administre los turnos de trabajo del hospital por su ubicación"}
-            icon={<UserSwitchOutlined />}
+            icon={<RetweetOutlined />}
             shortcut="Ctrl + T"
             path="/shifts/list"
           />
