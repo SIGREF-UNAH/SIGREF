@@ -105,7 +105,7 @@ export const HomePage: React.FC = () => {
           />
         </Can>
 
-        {/* Gestión de Servicios Médicos */}
+        {/* Gestión de Servicios */}
         <Can I="read" a="healthcares" ability={ability}>
           <ModuleCard
             title="Gestión de Servicios"
@@ -113,28 +113,6 @@ export const HomePage: React.FC = () => {
             icon={<MedicineBoxOutlined />}
             shortcut="Ctrl + S"
             path="/healthcares/list"
-          />
-        </Can>
-        
-        {/* Gestión de Ubicaciones */}
-        <Can I="read" a="locations" ability={ability}>
-          <ModuleCard
-            title="Gestión de Ubicaciones"
-            description={"Administre las áreas donde se ofrecen los servicios médicos"}
-            icon={<EnvironmentOutlined />}
-            shortcut="Ctrl + U"
-            path="/locations/list"
-          />
-        </Can>
-        
-        {/* Gestión de Turnos */}
-        <Can I="read" a="shifts" ability={ability}>
-          <ModuleCard
-            title="Gestión de Turnos"
-            description={"Administre los turnos de trabajo del hospital por su ubicación"}
-            icon={<RetweetOutlined />}
-            shortcut="Ctrl + T"
-            path="/shifts/list"
           />
         </Can>
         
@@ -157,6 +135,28 @@ export const HomePage: React.FC = () => {
             icon={<TeamOutlined />}
             shortcut="Ctrl + E"
             path="/practitioners/list"
+          />
+        </Can>
+        
+        {/* Gestión de Turnos */}
+        <Can I="read" a="shifts" ability={ability}>
+          <ModuleCard
+            title="Gestión de Turnos"
+            description={"Administre los turnos de trabajo del hospital por su ubicación"}
+            icon={<RetweetOutlined />}
+            shortcut="Ctrl + T"
+            path="/shifts/list"
+          />
+        </Can>
+        
+        {/* Gestión de Ubicaciones */}
+        <Can I="read" a="locations" ability={ability}>
+          <ModuleCard
+            title="Gestión de Ubicaciones"
+            description={"Administre las áreas donde se ofrecen los servicios médicos"}
+            icon={<EnvironmentOutlined />}
+            shortcut="Ctrl + U"
+            path="/locations/list"
           />
         </Can>
         

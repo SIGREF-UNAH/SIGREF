@@ -80,7 +80,6 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can(["read"], "locations");
     can(["read", "create", "update"], "patients");
     can(["read"], "shifts");
-    can(["read"], "service-groups");
 
     // TODO: Falta definir reports / incomes
     can(["read", "create", "update", "delete"], "incomes");
