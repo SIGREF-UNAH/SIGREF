@@ -19,7 +19,7 @@ export default defineConfig({
     }
   },
   server: {
-    host: true,
+    host: '0.0.0.0',
     port: parseInt(process.env.PORT ?? "5173"),
     proxy: {
       '/api': {
@@ -27,6 +27,13 @@ export default defineConfig({
         changeOrigin: true,
         secure: false
       }
+    },
+    watch: {
+      usePolling: true,
+      interval: 1000
+    },
+    hmr: {
+      clientPort: 5173
     }
   }
 })
