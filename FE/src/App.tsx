@@ -1,10 +1,10 @@
 import { BrowserRouter } from "react-router";
 import { AppRouter } from "./routers";
 import { useKeycloak } from "@react-keycloak/web";
-import { getRolesFromToken } from "./auth/roles";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AbilityProvider, AntdProvider, ShortcutsProvider } from "./config/providers";
 import { Spin } from "antd";
+import { getRolesFromToken } from "./auth";
 
 const queryClient = new QueryClient();
 

@@ -19,7 +19,7 @@ export default defineConfig({
     }
   },
   server: {
-    host: '0.0.0.0',
+    host: true,
     port: parseInt(process.env.PORT ?? "5173"),
     proxy: {
       '/api': {

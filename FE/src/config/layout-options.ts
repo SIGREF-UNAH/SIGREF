@@ -1,5 +1,5 @@
-// layout-options.ts
-import { validRoles, type Subjects } from "../auth";
+import { type Subjects } from "../auth";
+import { USER_ROLE_OPTIONS } from "../shared/constants";
 
 // Definir las rutas con información de permisos
 export interface RouteItem {
@@ -175,6 +175,8 @@ export const EventsRoutes: RouteItem[] = [
   },
 ];
 
+// ================================================================
+
 // Rutas por rol
 export const RoutesByRole: Record<
   string,
@@ -190,7 +192,7 @@ export const RoutesByRole: Record<
     eventos?: RouteItem[];
   }
 > = {
-  [validRoles.admin]: {
+  [USER_ROLE_OPTIONS[0].label]: { // Administrador
     fondos: IncomesRoutes,
     servicios: [...HealthcaresRoutes, ...ServiceGroupsRoutes],
     pacientes: PatientsRoutes,
@@ -201,8 +203,8 @@ export const RoutesByRole: Record<
     reportes: ReportsRoutes,
     eventos: EventsRoutes,
   },
-  [validRoles.auditor]: {
-    fondos: IncomesRoutes.filter(route => route.action === "read"), // Solo lectura
+  [USER_ROLE_OPTIONS[1].label]: { // Auditoria
+    fondos: IncomesRoutes.filter(route => route.action === "read"),
     servicios: [...HealthcaresRoutes, ...ServiceGroupsRoutes].filter(route => route.action === "read"),
     pacientes: PatientsRoutes.filter(route => route.action === "read"),
     empleados: PractitionersRoutes.filter(route => route.action === "read"),
@@ -212,44 +214,18 @@ export const RoutesByRole: Record<
     reportes: ReportsRoutes.filter(route => route.action === "read"),
     eventos: EventsRoutes,
   },
-  [validRoles.cashier]: {
+  [USER_ROLE_OPTIONS[2].label]: { // Auxiliar de Caja
     fondos: IncomesRoutes,
     pacientes: PatientsRoutes,
     turnos: ShiftsRoutes,
     ubicaciones: LocationsRoutes.filter(route => route.action === "read"),
     reportes: ReportsRoutes,
   },
-  [validRoles.ti]: {
+  [USER_ROLE_OPTIONS[3].label]: { // Técnico de Informática
     servicios: HealthcaresRoutes.filter(route => route.action === "read"),
     empleados: PractitionersRoutes,
     organizaciones: OrganizationsRoutes,
     reportes: ReportsRoutes,
     eventos: EventsRoutes,
   },
-};
-
-/*
-* ==========================================================================
-* HELPERS METHODS
-* ==========================================================================
-*/
-
-// Función para filtrar rutas según abilities
-export const filterRoutesByAbility = (routes: RouteItem[], ability: any): RouteItem[] => {
-  return routes.filter(route => ability.can(route.action, route.subject));
-};
-
-// Función para obtener rutas filtradas por rol y ability
-export const getFilteredRoutesByRole = (role: string, ability: any) => {
-  const baseRoutes = RoutesByRole[role] || {};
-  const filteredRoutes: any = {};
-
-  // Filtrar cada categoría de rutas según las abilities
-  Object.entries(baseRoutes).forEach(([key, routes]) => {
-    if (Array.isArray(routes)) {
-      filteredRoutes[key] = filterRoutesByAbility(routes as RouteItem[], ability);
-    }
-  });
-
-  return filteredRoutes;
 };

@@ -1,7 +1,6 @@
 import { Card, Button, Tooltip } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useKeycloak } from "@react-keycloak/web";
-import { validRoles } from "../../auth";
 import { useAbility } from "../../config";
 import { Can } from "@casl/react"
 import {
@@ -15,6 +14,7 @@ import {
   BarChartOutlined,
   RetweetOutlined,
 } from "@ant-design/icons";
+import { USER_ROLE_OPTIONS } from "../constants";
 
 interface ModuleCardProps {
   title: string;
@@ -72,9 +72,9 @@ export const HomePage: React.FC = () => {
     keycloak?.tokenParsed?.family_name || "Usuario";
 
   // Obtener el rol del usuario
-  const userRole =
-    keycloak?.realmAccess?.roles?.find((r) =>
-    validRoles[r as keyof typeof validRoles]) || "SIN ROL";
+  const userRole = keycloak?.realmAccess?.roles?.find((r) => 
+      USER_ROLE_OPTIONS.some(option => option.value === r)
+    ) || "SIN ROL";
 
   return (
     <div>
