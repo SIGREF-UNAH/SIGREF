@@ -1,6 +1,7 @@
 import {
   DeleteOutlined,
   EditOutlined,
+  ExclamationCircleOutlined,
   EyeOutlined,
   FilterOutlined,
   UserOutlined,
@@ -152,7 +153,7 @@ export const PractitionersListForm = () => {
               title="Ver detalles"
             />
           </Can>
-          
+
           <Can I="update" a="practitioners" ability={ability}>
             <Button
               type="text"
@@ -163,7 +164,17 @@ export const PractitionersListForm = () => {
 
           <Can I="delete" a="practitioners" ability={ability}>
             <Popconfirm
-              title={`¿Estás seguro de que deseas eliminar a ${record.name}? Esta acción no se puede deshacer.`}
+              title={`Eliminar a ${record.name}`}
+              description={
+                <div className="max-w-xs">
+                  <p className="mb-2">
+                    ¿Está seguro de que desea eliminar a este empleado?
+                  </p>
+                  <p className="text-gray-500 text-sm">
+                    Esta acción no se puede deshacer.
+                  </p>
+                </div>
+              }
               onConfirm={async () => {
                 try {
                   await deleteMutation.mutateAsync({ id: record.id });
@@ -171,9 +182,12 @@ export const PractitionersListForm = () => {
                   message.error("No se pudo eliminar el empleado");
                 }
               }}
-              okText="Eliminar"
-              okType="danger"
+              okText="Sí, eliminar"
               cancelText="Cancelar"
+              okButtonProps={{
+                danger: true,
+              }}
+              icon={<ExclamationCircleOutlined style={{ color: "red" }} />}
             >
               <Button type="text" danger icon={<DeleteOutlined />} />
             </Popconfirm>

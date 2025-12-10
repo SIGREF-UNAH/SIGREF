@@ -1,3 +1,10 @@
+import { FaUserPlus, FaUserEdit, FaCheck } from "react-icons/fa";
+import { BsPersonVcardFill } from "react-icons/bs";
+import { MdCancel } from "react-icons/md";
+import { Form } from "antd";
+import PhoneInput from "react-phone-number-input";
+import 'react-phone-number-input/style.css';
+import { usePractitionerForm } from "../hooks";
 import {
   ProForm,
   ProFormText,
@@ -5,184 +12,243 @@ import {
   ProFormDatePicker,
   ProFormSwitch,
 } from "@ant-design/pro-components";
-import { FaUserPlus, FaUserEdit, FaCheck } from "react-icons/fa";
-import { BsPersonVcardFill } from "react-icons/bs";
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { Form, message } from "antd";
-import { useGetApiPractitionerId, usePostApiPractitioner, usePutApiPractitionerId } from "../../../api/practitioner/practitioner";
-
-type EmployeeDetail = {
-  id: { value: string };
-  meta: { lastUpdated: { value: string }; versionId: { value: string } };
-  identifier: { use: { value: string }; type: { text: { value: string } }; system: { value: string }; value: { value: string } }[];
-  active: { value: boolean };
-  name: { use: { value: string }; text: { value: string }; family: { value: string }; given: { value: string }[] }[];
-  telecom: { system: string; value: { value: string }; use: { value: string }; rank: { value: number } }[];
-  gender: number;
-  birthDate: string;
-};
 
 export default function PractitionerForm() {
-  const { id } = useParams(); // Si existe, es edición
-  const navigate = useNavigate();
-  const [form] = Form.useForm();
-  const [loading, setLoading] = useState(!!id);
+  const {
+    form,
+    formRef,
+    isEditMode,
+    isFetching,
+    isCreating,
+    isUpdating,
+    isError,
+    onFinish,
+    handleCancel,
+  } =usePractitionerForm();
 
-  // Hooks API
-  const { data } = useGetApiPractitionerId<EmployeeDetail>(id!);
-  const { mutateAsync: createPractitioner, isPending: creating } = usePostApiPractitioner({
-    mutation: {
-      onSuccess: () => {
-        form.resetFields();
-        message.success("Empleado creado correctamente");
-        navigate("/practitioners/list");
-      },
-      onError: (error) => {
-        console.error("Error al crear empleado:", error);
-        message.error("No se pudo crear el empleado");
-      },
-    },
-  });
-  const { mutateAsync: updatePractitioner, isPending: updating } = usePutApiPractitionerId({
-    mutation: {
-      onSuccess: () => {
-        message.success("Empleado actualizado correctamente");
-        navigate("/practitioners/list");
-      },
-      onError: (error) => {
-        console.error("Error al actualizar empleado:", error);
-        message.error("No se pudo actualizar el empleado");
-      },
-    },
-  });
+  // Pantalla de carga
+  if (isEditMode && isFetching) {
+    return (
+      <div className="primary-card">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Cargando datos del empleado...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  // Cargar datos si es edición
-  useEffect(() => {
-    if (!data) return;
+  // Pantalla de error
+  if (isEditMode && isError) {
+    return (
+      <div className="primary-card">
+        <div className="text-center py-12">
+          <p className="text-red-600 mb-4">
+            Error al cargar los datos del empleado
+          </p>
+          <button
+            onClick={handleCancel}
+            className="px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-md transition-colors"
+          >
+            Volver a la lista
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-    const values = {
-      firstName: data.name?.[0]?.given?.[0] ?? "",
-      middleName: data.name?.[0]?.given?.[1] ?? "",
-      lastName: data.name?.[0]?.family ?? "",
-      dni: data.identifier?.[0]?.value ?? "",
-      idType: data.identifier?.[0]?.type?.text ?? "",
-      phone: data.telecom?.find((t) => t.system.toLowerCase() === "phone")?.value ?? "",
-      email: data.telecom?.find((t) => t.system.toLowerCase() === "email")?.value ?? "",
-      gender: data.gender ?? 0,
-      birthDate: data.birthDate ? new Date(data.birthDate) : null,
-      active: data.active?.value ?? true,
-    };
-
-    form.setFieldsValue(values);
-    setLoading(false);
-  }, [data, form]);
-
-  const onFinish = async (values: any) => {
-    const telecom: any[] = [];
-    if (values.phone) telecom.push({ system: "Phone", value: values.phone, use: "Home", rank: 1 });
-    if (values.email) telecom.push({ system: "Email", value: values.email, use: "Home", rank: telecom.length + 1 });
-
-    const payload = {
-      identifier: [{ use: "Usual", type: { text: values.idType }, system: "https://localhost:7107", value: values.dni }],
-      active: values.active,
-      name: [
-        {
-          use: "Usual",
-          text: `${values.firstName} ${values.middleName ?? ""} ${values.lastName}`,
-          family: values.lastName,
-          given: [values.firstName, values.middleName].filter(Boolean),
-        },
-      ],
-      telecom,
-      gender: values.gender,
-      birthDate: values.birthDate ? values.birthDate.toISOString() : null,
-    };
-
-    try {
-      if (id) {
-        await updatePractitioner({ id, data: payload });
-      } else {
-        await createPractitioner({ data: payload });
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  if (loading) return <div className="text-gray-500">Cargando datos...</div>;
+  const isPending = isCreating || isUpdating;
 
   return (
     <div className="primary-card">
-      <div className="flex items-center gap-3 mb-8">
-        {id ? <FaUserEdit className="w-10 h-10 text-blue-500" /> : <FaUserPlus className="w-10 h-10 text-blue-500" />}
-        <span className="text-xl font-semibold text-general">{id ? "Editar Empleado" : "Crear Empleado"}</span>
+      {/* Encabezado */}
+      <div className="flex items-center gap-3 mb-8 pb-4 border-b border-gray-200">
+        {isEditMode ? (
+          <FaUserEdit className="w-10 h-10 text-blue-600" />
+        ) : (
+          <FaUserPlus className="w-10 h-10 text-green-600" />
+        )}
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">
+            {isEditMode ? "Editar Empleado" : "Crear Empleado"}
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {isEditMode
+              ? "Modifica los datos del empleado"
+              : "Completa el formulario para registrar un nuevo empleado"}
+          </p>
+        </div>
       </div>
 
-      <ProForm form={form} onFinish={onFinish} submitter={{
-        searchConfig: { submitText: id ? "Guardar Cambios" : "Crear Empleado" },
-        resetButtonProps: false,
-        submitButtonProps: {
-          loading: id ? updating : creating,
-          icon: <FaCheck className="w-4 h-4" />,
-          className: `px-6 py-2 ${id ? "!bg-blue-500 hover:!bg-blue-600" : "!bg-green-500 hover:!bg-green-600"} text-white font-medium rounded-md transition-colors duration-200 flex items-center gap-2`,
-        },
-        render: (_, dom) => (
-          <div className="flex justify-end pt-4 pb-2 gap-2">
-            <button
-              type="button"
-              onClick={() => navigate("/practitioners/list")}
-              className="px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-md transition-colors duration-200"
-            >
-              Cancelar
-            </button>
-            {dom[0]}
-          </div>
-        ),
-      }}>
+      {/* Formulario */}
+      <ProForm
+        form={form}
+        onFinish={onFinish}
+        submitter={{
+          searchConfig: {
+            submitText: isEditMode ? "Guardar Cambios" : "Crear Empleado",
+          },
+          resetButtonProps: false,
+          submitButtonProps: {
+            loading: isPending,
+            icon: <FaCheck className="w-4 h-4" />,
+            className: `px-6 py-2.5 ${
+              isEditMode
+                ? "!bg-blue-600 hover:!bg-blue-700"
+                : "!bg-green-600 hover:!bg-green-700"
+            } text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2`,
+          },
+          render: (_, dom) => (
+            <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={handleCancel}
+                disabled={isPending}
+                className="px-6 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <MdCancel className="w-4 h-4" />
+                Cancelar
+              </button>
+              {dom[0]}
+            </div>
+          ),
+        }}
+      >
         <section className="mb-8">
-          <div className="flex items-center gap-3 mb-6">
-            <BsPersonVcardFill className="w-8 h-8 text-blue-500" />
-            <span className="text-lg font-semibold text-general">Datos Personales</span>
+          <div className="flex items-center gap-3 mb-6 pb-3 border-b border-gray-200">
+            <BsPersonVcardFill className="w-7 h-7 text-blue-600" />
+            <h2 className="text-lg font-semibold text-gray-800">
+              Datos Personales
+            </h2>
           </div>
 
+          {/* Nombres */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <ProFormText name="firstName" label="Primer Nombre" rules={[{ required: true }]} />
-            <ProFormText name="middleName" label="Segundo Nombre" />
-            <ProFormText name="lastName" label="Apellidos" rules={[{ required: true }]} />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <ProFormText name="dni" label="Identificador" rules={[{ required: true }]} />
-            <ProFormSelect
-              name="idType"
-              label="Tipo de Identificador"
-              options={[
-                { label: "DNI", value: "DNI" },
-                { label: "Pasaporte", value: "Pasaporte" },
-                { label: "RTN", value: "RTN" },
+            <ProFormText
+              name="firstName"
+              label="Primer Nombre"
+              placeholder="Ej. Maria"
+              rules={[
+                { required: true, message: "El primer nombre es obligatorio" },
+                { min: 2, message: "Mínimo 2 caracteres" },
               ]}
             />
-            <ProFormText name="phone" label="Número de Teléfono" />
+            <ProFormText
+              name="middleName"
+              label="Segundo Nombre"
+              placeholder="Ej. Vanessa"
+            />
+            <ProFormText
+              name="lastName"
+              label="Apellidos"
+              placeholder="Ej. Lopez Perez"
+              rules={[
+                { required: true, message: "Los apellidos son obligatorios" },
+                { min: 2, message: "Mínimo 2 caracteres" },
+              ]}
+            />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-            <ProFormText name="email" label="Correo Electrónico" rules={[{ type: "email" }]} />
+          {/* Identificacion */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <ProFormText
+              name="dni"
+              label="Número de Identificación"
+              placeholder="Ej. 0401200098371"
+              rules={[
+                { required: true, message: "El identificador es obligatorio" },
+              ]}
+            />
+            <ProFormSelect
+              name="idType"
+              label="Tipo de Identificación"
+              placeholder="Seleccionar"
+              options={[
+                { label: "DNI", value: "DNI" },
+                { label: "Pasaporte", value: "PPN" },
+                { label: "Otro", value: "NI" },
+              ]}
+              rules={[{ required: true, message: "Seleccione un tipo" }]}
+            />
+            <Form.Item
+              name="phone"
+              label="Número de Teléfono"
+              rules={[
+                {
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    // Validación básica
+                    if (value && value.length < 5) {
+                      return Promise.reject(new Error('Número de teléfono muy corto'));
+                    }
+                    return Promise.resolve();
+                  },
+                },
+              ]}
+            >
+              <PhoneInput
+                international
+                countryCallingCodeEditable={false}
+                defaultCountry="HN"
+                value={formRef.current?.getFieldValue("phone")}
+                onChange={(value) => {
+                  formRef.current?.setFieldValue("phone", value || "");
+                }}
+                className="ant-input bg-white rounded px-3 py-2 border border-gray-300 hover:border-blue-400 focus:border-blue-400 focus:shadow-outline"
+                style={{
+                  width: '100%',
+                  padding: '4px 11px',
+                }}
+              />
+            </Form.Item>
+          </div>
+
+          {/* Contacto */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <ProFormText
+              name="email"
+              label="Correo Electrónico"
+              placeholder="Ej. maria@example.com"
+              rules={[
+                { required: true, message: "El correo es obligatorio" },
+                { type: "email", message: "Correo inválido" },
+              ]}
+            />
             <ProFormSelect
               name="gender"
               label="Género"
+              placeholder="Seleccionar"
               options={[
-                { label: "Desconocido", value: 0 },
                 { label: "Masculino", value: 1 },
                 { label: "Femenino", value: 2 },
                 { label: "Otro", value: 3 },
+                { label: "Desconocido", value: 0 },
               ]}
             />
-            <ProFormDatePicker name="birthDate" label="Fecha de Nacimiento" />
+            <ProFormDatePicker
+              name="birthDate"
+              label="Fecha de Nacimiento"
+              placeholder="Ej. 31/12/1999"
+              fieldProps={{
+                format: "DD/MM/YYYY",
+                className: "w-full",
+              }}
+            />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-            <ProFormSwitch name="active" label="Activo" />
+          {/* Estado */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <ProFormSwitch
+              name="active"
+              label="Estado"
+              fieldProps={{
+                checkedChildren: "Activo",
+                unCheckedChildren: "Inactivo",
+              }}
+              initialValue={true}
+            />
           </div>
         </section>
       </ProForm>
