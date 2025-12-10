@@ -153,14 +153,6 @@ export default function PractitionerForm() {
 
           {/* Identificacion */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <ProFormText
-              name="dni"
-              label="Número de Identificación"
-              placeholder="Ej. 0401200098371"
-              rules={[
-                { required: true, message: "El identificador es obligatorio" },
-              ]}
-            />
             <ProFormSelect
               name="idType"
               label="Tipo de Identificación"
@@ -172,6 +164,27 @@ export default function PractitionerForm() {
               ]}
               rules={[{ required: true, message: "Seleccione un tipo" }]}
             />
+            <ProFormText
+              name="dni"
+              label="Número de Identificación"
+              placeholder="Ej. 0401200098371"
+              rules={[
+                { required: true, message: "El identificador es obligatorio" },
+              ]}
+            />
+            <ProFormDatePicker
+              name="birthDate"
+              label="Fecha de Nacimiento"
+              placeholder="Ej. 31/12/1999"
+              fieldProps={{
+                format: "DD/MM/YYYY",
+                className: "w-full",
+              }}
+            />
+          </div>
+
+          {/* Contacto */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <Form.Item
               name="phone"
               label="Número de Teléfono"
@@ -203,10 +216,6 @@ export default function PractitionerForm() {
                 }}
               />
             </Form.Item>
-          </div>
-
-          {/* Contacto */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <ProFormText
               name="email"
               label="Correo Electrónico"
@@ -226,15 +235,6 @@ export default function PractitionerForm() {
                 { label: "Otro", value: 3 },
                 { label: "Desconocido", value: 0 },
               ]}
-            />
-            <ProFormDatePicker
-              name="birthDate"
-              label="Fecha de Nacimiento"
-              placeholder="Ej. 31/12/1999"
-              fieldProps={{
-                format: "DD/MM/YYYY",
-                className: "w-full",
-              }}
             />
           </div>
 

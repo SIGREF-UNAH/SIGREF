@@ -1,28 +1,41 @@
 import React, { useState, useEffect } from "react";
-import { Table, Space, Tag, message, Button, Input, Select, Alert } from "antd";
-import type { ColumnsType } from "antd/es/table";
-import { Link } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
+import {
+  Table,
+  Space,
+  Tag,
+  message,
+  Button,
+  Input,
+  Select,
+  Alert,
+  Popconfirm,
+} from "antd";
 import {
   type LocationDto,
   LocationMode,
   LocationStatus,
 } from "../../../api/models";
-import { getGetApiLocationsQueryKey, useDeleteApiLocationsId, useGetApiLocations } from "../../../api/locations/locations";
-import DeleteLocationModal from "./DeleteLocationModal";
+import {
+  getGetApiLocationsQueryKey,
+  useDeleteApiLocationsId,
+  useGetApiLocations,
+} from "../../../api/locations/locations";
 import {
   FilterOutlined,
   EyeOutlined,
   EditOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
+import type { ColumnsType } from "antd/es/table";
+import { Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Can } from "@casl/react";
 import { useAbility } from "../../../config";
 
 const { Search } = Input;
 const { Option } = Select;
 
-const LocationList: React.FC = () => {
+export const LocationList: React.FC = () => {
   const queryClient = useQueryClient();
   const ability = useAbility();
   const [searchInputValue, setSearchInputValue] = useState<string>("");
@@ -31,8 +44,6 @@ const LocationList: React.FC = () => {
   const [searchStatus, setSearchStatus] = useState<LocationStatus | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<{id: number;name: string;} | null>(null);
 
   // Parametros de la consulta
   const params = {
@@ -51,7 +62,7 @@ const LocationList: React.FC = () => {
         queryClient.invalidateQueries({
           queryKey: getGetApiLocationsQueryKey(params),
         });
-        message.success("Ubicación eliminada exitosamente");
+        message.success("Ubicación eliminada correctamente");
       },
       onError: () => message.error("Error al eliminar la ubicación"),
     },
@@ -62,14 +73,7 @@ const LocationList: React.FC = () => {
     setCurrentPage(1);
   }, [appliedSearchName, searchMode, searchStatus]);
 
-  
-  // Abrir modal de eliminación
-  const handleDeleteClick = (id: number, name: string) => {
-    setSelectedLocation({ id, name });
-    setDeleteModalVisible(true);
-  };
-  
-  // Eliminar
+  // Eliminar ubicación
   const handleDelete = async (id: number) => {
     try {
       await deleteLocation({ id });
@@ -78,7 +82,7 @@ const LocationList: React.FC = () => {
       return false;
     }
   };
-  
+
   // Columnas de la tabla
   const columns: ColumnsType<LocationDto> = [
     {
@@ -122,8 +126,9 @@ const LocationList: React.FC = () => {
       render: (status) => {
         const normalized = status.toLowerCase();
         if (normalized === "active") return <Tag color="green">✓ Activo</Tag>;
-        if (normalized === "suspended") return <Tag color="orange">⚠︎ Suspendido</Tag>;
-        if (normalized === "inactive") return <Tag color="red">✗ Inactivo</Tag>; 
+        if (normalized === "suspended")
+          return <Tag color="orange">⚠︎ Suspendido</Tag>;
+        if (normalized === "inactive") return <Tag color="red">✗ Inactivo</Tag>;
         return "-";
       },
     },
@@ -133,7 +138,7 @@ const LocationList: React.FC = () => {
       width: 150,
       render: (_, record) => (
         <Space size="small">
-          <Can I="read" a="locations" ability={ability}>  
+          <Can I="read" a="locations" ability={ability}>
             <Link to={`/locations/details/${record.id}`}>
               <Button
                 type="text"
@@ -142,18 +147,22 @@ const LocationList: React.FC = () => {
               ></Button>
             </Link>
           </Can>
-          <Can I="update" a="locations" ability={ability}> 
+          <Can I="update" a="locations" ability={ability}>
             <Link to={`/locations/update/${record.id}`}>
               <Button type="text" icon={<EditOutlined />}></Button>
             </Link>
           </Can>
-          <Can I="delete" a="locations" ability={ability}> 
-            <Button
-              type="text"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => handleDeleteClick(Number(record.id!), record.name)}
-            />
+          <Can I="delete" a="locations" ability={ability}>
+            <Popconfirm
+              title="¿Eliminar ubicación?"
+              description="Esta acción no se puede deshacer"
+              onConfirm={() => handleDelete(Number(record.id!))}
+              okText="Sí, eliminar"
+              cancelText="Cancelar"
+              okButtonProps={{ danger: true }}
+            >
+              <Button type="link" danger icon={<DeleteOutlined />}></Button>
+            </Popconfirm>
           </Can>
         </Space>
       ),
@@ -236,15 +245,6 @@ const LocationList: React.FC = () => {
           bordered
         />
       </div>
-
-      {/* Modal de Eliminación */}
-      <DeleteLocationModal
-        visible={deleteModalVisible}
-        onVisibleChange={setDeleteModalVisible}
-        locationId={selectedLocation?.id || null}
-        locationName={selectedLocation?.name}
-        onDelete={handleDelete}
-      />
     </div>
   );
 };
