@@ -2,7 +2,7 @@ import PractitionerRoleModal from "../components/PractitionerRoleModal";
 import { ProDescriptions } from "@ant-design/pro-components";
 import { FaUser, FaBriefcase } from "react-icons/fa";
 import { BsPersonVcardFill } from "react-icons/bs";
-import { Button, Spin, Space, Popconfirm, Empty, Alert } from "antd";
+import { Button, Spin, Space, Popconfirm, Empty, Alert, Tag } from "antd";
 import { ROLE_OPTIONS } from "../../../shared/constants/RolesConstants";
 import { PageHeaderTabs } from "../../../shared/components";
 import { Can } from "@casl/react";
@@ -175,7 +175,11 @@ export default function PractitionerDetailsPage() {
             <ProDescriptions.Item label="Correo Electrónico" dataIndex="email" />
             <ProDescriptions.Item label="Género" dataIndex="gender" />
             <ProDescriptions.Item label="Fecha de Nacimiento" dataIndex="birthDate" />
-            <ProDescriptions.Item label="Estado" dataIndex="active" />
+            <ProDescriptions.Item label="Estado" dataIndex="active" 
+              render={
+                (active) => active !== "No" ? <Tag color="green">✓ Activo</Tag> : <Tag color="red">✗ Inactivo</Tag>
+              }
+            />
           </ProDescriptions>
         </section>
 
@@ -224,7 +228,6 @@ export default function PractitionerDetailsPage() {
           {rolesLoading ? (
             <div className="text-center py-8">
               <Spin />
-              <p className="mt-2 text-gray-500">Cargando información del cargo...</p>
             </div>
           ) : activeRole ? (
             <ProDescriptions
@@ -240,12 +243,12 @@ export default function PractitionerDetailsPage() {
                 active: activeRole.active ? "Sí" : "No",
               }}
             >
-              <ProDescriptions.Item label="Nombre del Rol" dataIndex="role" />
-              <ProDescriptions.Item label="Código del Rol" dataIndex="roleCode" />
-              <ProDescriptions.Item label="Organización" dataIndex="organization" />
+              <ProDescriptions.Item label="Titulo" dataIndex="role" />
+              <ProDescriptions.Item label="Tipo de Cargo" dataIndex="roleCode" />
               <ProDescriptions.Item label="Ubicación" dataIndex="location" />
               <ProDescriptions.Item label="Fecha de Inicio" dataIndex="start" />
               <ProDescriptions.Item label="Fecha de Fin" dataIndex="end" />
+              <ProDescriptions.Item label="Organización" dataIndex="organization" />
             </ProDescriptions>
           ) : (
             <Empty
