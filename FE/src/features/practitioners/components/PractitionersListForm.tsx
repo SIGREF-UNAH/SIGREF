@@ -11,7 +11,7 @@ import {
   ProFormSelect,
   ProFormText,
 } from "@ant-design/pro-components";
-import { Button, message, Popconfirm, Space, Table, Tag } from "antd";
+import { Alert, Button, message, Popconfirm, Space, Spin, Table, Tag } from "antd";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
@@ -77,9 +77,9 @@ export const PractitionersListForm = () => {
   const practitioners: Practitioner[] =
     data?.items?.map((p: any, index: number) => {
       const role = p.roles?.[0]; // Tomar el primer rol asignado
-      const positionCode = role?.code?.[0]?.coding?.[0]?.code ?? "sin-codigo";
-      const positionText = role?.code?.[0]?.text ?? "Sin puesto";
-      const area = role?.location?.[0]?.display ?? "Sin área";
+      const positionCode = role?.code?.[0]?.coding?.[0]?.code ?? "Desconocido";
+      const positionText = role?.code?.[0]?.text ?? "Desconocido";
+      const area = role?.location?.[0]?.display ?? "Desconocido";
 
       return {
         id: p.id ?? String(index + 1),
@@ -94,8 +94,8 @@ export const PractitionersListForm = () => {
       };
     }) ?? [];
 
-  if (isLoading) return <p>Cargando empleados...</p>;
-  if (isError) return <p>Error al cargar empleados.</p>;
+  if (isLoading) return <div className="flex items-center justify-center h-screen"><Spin size="large" /></div>;
+  if (isError) return <div className="flex items-center justify-center h-screen"><Alert message="Error al cargar empleados" type="error" showIcon /></div>;
 
   const filteredEmployees = practitioners.filter((e) => {
     const nameMatch = e.name.toLowerCase().includes(searchName.toLowerCase());

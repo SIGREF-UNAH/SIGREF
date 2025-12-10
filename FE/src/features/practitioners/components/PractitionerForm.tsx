@@ -1,7 +1,7 @@
 import { FaUserPlus, FaUserEdit, FaCheck } from "react-icons/fa";
 import { BsPersonVcardFill } from "react-icons/bs";
 import { MdCancel } from "react-icons/md";
-import { Form } from "antd";
+import { Alert, Form, Spin } from "antd";
 import PhoneInput from "react-phone-number-input";
 import 'react-phone-number-input/style.css';
 import { usePractitionerForm } from "../hooks";
@@ -24,18 +24,13 @@ export default function PractitionerForm() {
     isError,
     onFinish,
     handleCancel,
-  } =usePractitionerForm();
+  } = usePractitionerForm();
 
   // Pantalla de carga
   if (isEditMode && isFetching) {
     return (
-      <div className="primary-card">
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">Cargando datos del empleado...</p>
-          </div>
-        </div>
+      <div className="flex items-center justify-center h-screen">
+        <Spin size="large" />
       </div>
     );
   }
@@ -43,18 +38,13 @@ export default function PractitionerForm() {
   // Pantalla de error
   if (isEditMode && isError) {
     return (
-      <div className="primary-card">
-        <div className="text-center py-12">
-          <p className="text-red-600 mb-4">
-            Error al cargar los datos del empleado
-          </p>
-          <button
-            onClick={handleCancel}
-            className="px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-md transition-colors"
-          >
-            Volver a la lista
-          </button>
-        </div>
+      <div>
+        <Alert
+          message="Error al cargar los datos del empleado"
+          description="No se pudieron cargar la información. Por favor, intente nuevamente."
+          type="error"
+          showIcon
+        />
       </div>
     );
   }
@@ -106,7 +96,7 @@ export default function PractitionerForm() {
                 type="button"
                 onClick={handleCancel}
                 disabled={isPending}
-                className="px-6 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 bg-gray-200 cursor-pointer hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <MdCancel className="w-4 h-4" />
                 Cancelar

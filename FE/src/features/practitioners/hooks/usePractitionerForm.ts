@@ -78,14 +78,8 @@ export function usePractitionerForm() {
     const lastName = practitionerData.name?.[0]?.family || "";
     const dni = practitionerData.identifier?.[0]?.value || "";
     const idType = practitionerData.identifier?.[0]?.type?.text || "DNI";
-    const phone =
-      practitionerData.telecom?.find(
-        (t) => String(t.system)?.toLowerCase() === "phone"
-      )?.value || "";
-    const email =
-      practitionerData.telecom?.find(
-        (t) => String(t.system)?.toLowerCase() === "email"
-      )?.value || "";
+    const phone = practitionerData.telecom?.find((t) => String(t.system)?.toLowerCase() === "phone")?.value || "";
+    const email = practitionerData.telecom?.find((t) => String(t.system)?.toLowerCase() === "email")?.value || "";
     const gender = practitionerData.gender ?? 0;
     const birthDate = practitionerData.birthDate
       ? dayjs(practitionerData.birthDate)
@@ -175,7 +169,7 @@ export function usePractitionerForm() {
 
   // Cancelar
   const handleCancel = () => {
-    navigate("/practitioners/list");
+    navigate(-1);
   };
 
   return {
