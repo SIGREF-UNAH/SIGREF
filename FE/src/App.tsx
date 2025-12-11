@@ -2,9 +2,9 @@ import { BrowserRouter } from "react-router";
 import { AppRouter } from "./routers";
 import { useKeycloak } from "@react-keycloak/web";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AbilityProvider, AntdProvider, ShortcutsProvider } from "./config/providers";
 import { Spin } from "antd";
 import { getRolesFromToken } from "./auth";
+import { AbilityProvider, AntDesignProvider, ShortcutsProvider } from "./config";
 
 const queryClient = new QueryClient();
 
@@ -32,7 +32,7 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AntdProvider>
+      <AntDesignProvider>
         <BrowserRouter>
           <ShortcutsProvider>
             <AbilityProvider roles={roles}>
@@ -44,7 +44,7 @@ export default function App() {
             </AbilityProvider>
           </ShortcutsProvider>
         </BrowserRouter>
-      </AntdProvider>
+      </AntDesignProvider>
     </QueryClientProvider>
   );
 }

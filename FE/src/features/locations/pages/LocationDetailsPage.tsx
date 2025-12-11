@@ -1,14 +1,13 @@
-import React, { useState } from "react";
+import React from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { ProDescriptions } from "@ant-design/pro-components";
-import { Card, Spin, Typography, Space, Button, message, Tag } from "antd";
+import { Card, Spin, Typography, Space, Button, message, Tag, Popconfirm } from "antd";
 import {
   EditOutlined,
   DeleteOutlined,
   ArrowLeftOutlined,
 } from "@ant-design/icons";
 import { useGetApiLocationsId } from "../../../api/locations/locations";
-import DeleteLocationModal from "../components/DeleteLocationModal";
 import {
   useDeleteApiLocationsId,
   getGetApiLocationsQueryKey,
@@ -73,10 +72,6 @@ const LocationDetailsPage: React.FC = () => {
       onError: () => message.error("Error al eliminar la ubicación"),
     },
   });
-
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-
-  const handleDeleteClick = () => setDeleteModalVisible(true);
 
   const handleDelete = async (locationId: number) => {
     try {
@@ -362,7 +357,15 @@ const LocationDetailsPage: React.FC = () => {
                 </Link>
               </Can>
               <Can I="delete" a="locations" ability={ability}>
-                <Button
+                <Popconfirm
+                  title="¿Eliminar ubicación?"
+                  description="Esta acción no se puede deshacer"
+                  onConfirm={() => handleDelete(Number(location.id!))}
+                  okText="Sí, eliminar"
+                  cancelText="Cancelar"
+                  okButtonProps={{ danger: true }}
+                >
+                  <Button
                   type="primary"
                   size="large"
                   icon={<DeleteOutlined />}
@@ -371,22 +374,14 @@ const LocationDetailsPage: React.FC = () => {
                     borderRadius: 6,
                     boxShadow: "0 2px 8px rgba(245, 34, 45, 0.3)",
                   }}
-                  onClick={handleDeleteClick}
                 >
                   Eliminar
                 </Button>
+                </Popconfirm>
               </Can>
             </Space>
           </div>
         </div>
-
-        <DeleteLocationModal
-          visible={deleteModalVisible}
-          onVisibleChange={setDeleteModalVisible}
-          locationId={location.id ? Number(location.id) : null}
-          locationName={location.name}
-          onDelete={handleDelete}
-        />
       </main>
     </div>
   );

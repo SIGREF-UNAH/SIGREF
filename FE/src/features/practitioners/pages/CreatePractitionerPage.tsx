@@ -7,7 +7,7 @@ export const CreatePractitionerPage = () => {
 
   return (
     <div>
-      {/* Header */}
+      {/* Encabezado */}
       <PageHeaderTabs
         title="Gestión de Empleados"
         tabs={[
@@ -25,7 +25,7 @@ export const CreatePractitionerPage = () => {
         defaultActive="listar"
       />
 
-      {/* Create Practitioner Form */}
+      {/* Formulario */}
       <PractitionerForm />
     </div>
   );

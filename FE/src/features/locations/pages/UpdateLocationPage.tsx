@@ -2,7 +2,7 @@ import { useAbility } from "../../../config";
 import { PageHeaderTabs } from "../../../shared/components/ui";
 import LocationForm from "../components/LocationForm";
 
-export default function EditLocationPage() {
+export default function UpdateLocationPage() {
   const ability = useAbility();
 
   return (

@@ -4,11 +4,11 @@
  * SIGREF.API
  * OpenAPI spec version: 1.0
  */
-import type { ShiftDto } from "./shiftDto";
+import type { PractitionerDto } from "./practitionerDto";
 import type { PaginationDto } from "./paginationDto";
 
-export interface ShiftDtoPagedResultDto {
+export interface PractitionerDtoPagedResultDto {
   /** @nullable */
-  items?: ShiftDto[] | null;
+  items?: PractitionerDto[] | null;
   pagination?: PaginationDto;
 }

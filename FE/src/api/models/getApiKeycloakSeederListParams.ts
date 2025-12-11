@@ -5,11 +5,8 @@
  * OpenAPI spec version: 1.0
  */
 
-export type GetApiShiftsParams = {
-  Name?: string;
-  IsActive?: boolean;
-  LocationId?: string;
-  LocationName?: string;
+export type GetApiKeycloakSeederListParams = {
+  UserName?: string;
   PageNumber?: number;
   PageSize?: number;
 };

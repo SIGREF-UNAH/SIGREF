@@ -23,6 +23,8 @@ import type {
 import type {
   CreatePractitionerDto,
   GetApiPractitionerParams,
+  PractitionerDto,
+  PractitionerDtoPagedResultDto,
   ProblemDetails,
   UpdatePractitionerDto,
 } from ".././models";
@@ -33,7 +35,7 @@ export const getApiPractitioner = (
   params?: GetApiPractitionerParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<void>({
+  return customInstance<PractitionerDtoPagedResultDto>({
     url: `/api/Practitioner`,
     method: "GET",
     params,
@@ -188,7 +190,7 @@ export const postApiPractitioner = (
   createPractitionerDto: CreatePractitionerDto,
   signal?: AbortSignal,
 ) => {
-  return customInstance<void>({
+  return customInstance<PractitionerDto | void>({
     url: `/api/Practitioner`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -264,7 +266,7 @@ export const usePostApiPractitioner = <
   return useMutation(mutationOptions, queryClient);
 };
 export const getApiPractitionerId = (id: string, signal?: AbortSignal) => {
-  return customInstance<void>({
+  return customInstance<PractitionerDto>({
     url: `/api/Practitioner/${id}`,
     method: "GET",
     signal,
@@ -421,7 +423,7 @@ export const putApiPractitionerId = (
   id: string,
   updatePractitionerDto: UpdatePractitionerDto,
 ) => {
-  return customInstance<void>({
+  return customInstance<PractitionerDto>({
     url: `/api/Practitioner/${id}`,
     method: "PUT",
     headers: { "Content-Type": "application/json" },
