@@ -10,8 +10,8 @@ import {
   getGetApiLocationsQueryKey,
 } from "../../../api/locations/locations";
 import { useGetApiOrganizations } from "../../../api/organizations/organizations";
-import { message } from "antd";
 import ccsj from "countrycitystatejson";
+import { useMessage } from "../../../shared/hooks";
 
 type Mode = "create" | "edit";
 
@@ -26,6 +26,7 @@ export default function useLocationForm({ mode }: UseLocationFormProps) {
   const isEdit = mode === "edit" && numericId !== null;
   const queryClient = useQueryClient();
   const formRef = useRef<ProFormInstance>(null);
+  const message = useMessage();
 
   const [contacts, setContacts] = useState<
     { id: string; system?: number; value?: string }[]
@@ -75,7 +76,7 @@ export default function useLocationForm({ mode }: UseLocationFormProps) {
           queryClient.invalidateQueries({
             queryKey: getGetApiLocationsQueryKey(),
           });
-          message.success("Ubicación creada");
+          message.success("Ubicación creada correctamente");
           navigate("/locations/list");
         },
         onError: () => message.error("Error al crear"),
@@ -89,7 +90,7 @@ export default function useLocationForm({ mode }: UseLocationFormProps) {
           queryClient.invalidateQueries({
             queryKey: getGetApiLocationsQueryKey(),
           });
-          message.success("Ubicación actualizada");
+          message.success("Ubicación actualizada correctamente");
           navigate("/locations/list");
         },
         onError: () => message.error("Error al actualizar"),

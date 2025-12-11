@@ -1,4 +1,4 @@
-export * from './PractitionersListPage';
 export * from './CreatePractitionerPage';
-export * from './EditPractitionerPage';
 export * from './PractitionerDetailsPage';
+export * from './PractitionersListPage';
+export * from './UpdatePractitionerPage';

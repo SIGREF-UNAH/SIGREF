@@ -8,8 +8,10 @@
 export interface PaginationDto {
   currentPage?: number;
   pageSize?: number;
-  totalItems?: number;
-  totalPages?: number;
+  /** @nullable */
+  totalItems?: number | null;
+  /** @nullable */
+  totalPages?: number | null;
   hasPrevious?: boolean;
   hasNext?: boolean;
 }

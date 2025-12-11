@@ -1,13 +1,13 @@
 import { ProConfigProvider } from "@ant-design/pro-components";
 import { App as AntApp, ConfigProvider } from "antd";
-import esES from "antd/es/locale/es_ES"; // idioma español
+import esES from "antd/es/locale/es_ES";
 import type { ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
 }
 
-export const AntdProvider = ({ children }: Props) => {
+export const AntDesignProvider = ({ children }: Props) => {
   return (
     <ConfigProvider
       locale={esES}

@@ -1,6 +1,7 @@
 import {
   DeleteOutlined,
   EditOutlined,
+  ExclamationCircleOutlined,
   EyeOutlined,
   FilterOutlined,
   UserOutlined,
@@ -10,7 +11,7 @@ import {
   ProFormSelect,
   ProFormText,
 } from "@ant-design/pro-components";
-import { Button, message, Popconfirm, Space, Table, Tag } from "antd";
+import { Alert, Button, message, Popconfirm, Space, Spin, Table, Tag } from "antd";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
@@ -36,15 +37,12 @@ interface Practitioner {
 export const PractitionersListForm = () => {
   const navigate = useNavigate();
   const ability = useAbility();
+  const queryClient = useQueryClient();
   const [searchName, setSearchName] = useState("");
   const [searchRole, setSearchRole] = useState<string | undefined>(undefined);
   const [searchArea, setSearchArea] = useState<string | undefined>(undefined);
-  const [searchStatus, setSearchStatus] = useState<string | undefined>(
-    undefined
-  );
-  const handleNavigate = (id: string) => {
-    navigate(`/practitioners/details/${id}`);
-  };
+  const [searchStatus, setSearchStatus] = useState<string | undefined>(undefined);
+  const handleNavigate = (id: string) => {navigate(`/practitioners/details/${id}`);};
 
   const { data, isLoading, isError } = useGetApiPractitioner<{
     items: Practitioner[];
@@ -57,8 +55,6 @@ export const PractitionersListForm = () => {
       totalPages: number;
     };
   }>();
-
-  const queryClient = useQueryClient();
 
   const deleteMutation = useDeleteApiPractitionerId({
     mutation: {
@@ -76,16 +72,16 @@ export const PractitionersListForm = () => {
   const practitioners: Practitioner[] =
     data?.items?.map((p: any, index: number) => {
       const role = p.roles?.[0]; // Tomar el primer rol asignado
-      const positionCode = role?.code?.[0]?.coding?.[0]?.code ?? "sin-codigo";
-      const positionText = role?.code?.[0]?.text ?? "Sin puesto";
-      const area = role?.location?.[0]?.display ?? "Sin área";
+      const positionCode = role?.code?.[0]?.coding?.[0]?.code ?? "-";
+      const positionText = role?.code?.[0]?.text ?? "-";
+      const area = role?.location?.[0]?.display ?? "-";
 
       return {
         id: p.id ?? String(index + 1),
-        name: p.name?.[0]?.text ?? "Sin nombre",
+        name: p.name?.[0]?.text ?? "-",
         email:
           p.telecom?.find((t: any) => t.system?.toLowerCase() === "email")
-            ?.value ?? "Sin correo",
+            ?.value ?? "-",
         positionText,
         positionCode,
         area,
@@ -93,8 +89,8 @@ export const PractitionersListForm = () => {
       };
     }) ?? [];
 
-  if (isLoading) return <p>Cargando empleados...</p>;
-  if (isError) return <p>Error al cargar empleados.</p>;
+  if (isLoading) return <div className="flex items-center justify-center h-screen"><Spin size="large" /></div>;
+  if (isError) return <div className="flex items-center justify-center h-screen"><Alert message="Error al cargar empleados" type="error" showIcon /></div>;
 
   const filteredEmployees = practitioners.filter((e) => {
     const nameMatch = e.name.toLowerCase().includes(searchName.toLowerCase());
@@ -152,7 +148,7 @@ export const PractitionersListForm = () => {
               title="Ver detalles"
             />
           </Can>
-          
+
           <Can I="update" a="practitioners" ability={ability}>
             <Button
               type="text"
@@ -163,7 +159,17 @@ export const PractitionersListForm = () => {
 
           <Can I="delete" a="practitioners" ability={ability}>
             <Popconfirm
-              title={`¿Estás seguro de que deseas eliminar a ${record.name}? Esta acción no se puede deshacer.`}
+              title={`Eliminar a ${record.name}`}
+              description={
+                <div className="max-w-xs">
+                  <p className="mb-2">
+                    ¿Está seguro de que desea eliminar a este empleado?
+                  </p>
+                  <p className="text-gray-500 text-sm">
+                    Esta acción no se puede deshacer.
+                  </p>
+                </div>
+              }
               onConfirm={async () => {
                 try {
                   await deleteMutation.mutateAsync({ id: record.id });
@@ -171,9 +177,12 @@ export const PractitionersListForm = () => {
                   message.error("No se pudo eliminar el empleado");
                 }
               }}
-              okText="Eliminar"
-              okType="danger"
+              okText="Sí, eliminar"
               cancelText="Cancelar"
+              okButtonProps={{
+                danger: true,
+              }}
+              icon={<ExclamationCircleOutlined style={{ color: "red" }} />}
             >
               <Button type="text" danger icon={<DeleteOutlined />} />
             </Popconfirm>

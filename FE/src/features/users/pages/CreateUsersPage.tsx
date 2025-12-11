@@ -1,9 +1,3 @@
-import {
-  ProForm,
-  ProFormText,
-  ProFormSelect,
-  type ProFormInstance,
-} from "@ant-design/pro-components";
 import { Card, List, Tag, Space, message } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { PageHeaderTabs } from "../../../shared/components";
@@ -15,6 +9,12 @@ import { FaCheck } from "react-icons/fa";
 import { usePostApiKeycloakSeederCreateUser } from "../../../api/keycloak-seeder/keycloak-seeder";
 import { useAbility } from "../../../config";
 import { useKeycloak } from "@react-keycloak/web";
+import {
+  ProForm,
+  ProFormText,
+  ProFormSelect,
+  type ProFormInstance,
+} from "@ant-design/pro-components";
 
 type Practitioner = {
   id: number;
@@ -30,7 +30,7 @@ function generarBaseUsername(nombreCompleto: string) {
   const partes = nombreCompleto.trim().split(/\s+/);
 
   const primerNombre = partes[0] ?? "";
-   const segundoNombre = (partes.length >= 3 ? partes[1][0] : "");
+  const segundoNombre = partes.length >= 3 ? partes[1][0] : "";
   const apellido = partes[partes.length - 1][0] ?? "";
 
   return `${primerNombre}${segundoNombre}${apellido}`;
@@ -46,14 +46,15 @@ function generarUsernameUnico(base: string, existentes: string[]) {
   return `${base}${numero}`;
 }
 
-
 export default function CreateUsersPage() {
   const [selected, setSelected] = useState<Practitioner | null>(null);
   const formRef = useRef<ProFormInstance | null>(null);
   const [searchName, setSearchName] = useState("");
   const [searchRole, setSearchRole] = useState<string | undefined>(undefined);
   const [searchArea, setSearchArea] = useState<string | undefined>(undefined);
-  const [searchStatus, setSearchStatus] = useState<string | undefined>(undefined);
+  const [searchStatus, setSearchStatus] = useState<string | undefined>(
+    undefined
+  );
   const { keycloak } = useKeycloak();
   const ability = useAbility();
 
@@ -62,92 +63,98 @@ export default function CreateUsersPage() {
   const currentUserRole = keycloak.tokenParsed?.realm_access?.roles || [];
 
   const { data } = useGetApiPractitioner<{
-      items: Practitioner[];
-      pagination: {
-        currentPage: number;
-        hasNext: boolean;
-        hasPrevious: boolean;
-        pageSize: number;
-        totalItems: number;
-        totalPages: number;
-      };
-    }>();
-
-    const practitioners: Practitioner[] =
-  data?.items?.map((p: any, index: number) => {
-    const role = p.roles?.[0];
-    const positionCode = role?.code?.[0]?.coding?.[0]?.code ?? "sin-código";
-    const positionText = role?.code?.[0]?.text ?? "Sin puesto";
-    const area = role?.location?.[0]?.display ?? "Sin área";
-
-    return {
-      id: p.id ?? index + 1,
-      name: p.name?.[0]?.text ?? "",
-      dni: p.identifier?.[0]?.value ?? "",
-      role: positionText,
-      status: p.active ? "Activo" : "Inactivo",
-      positionCode,
-      area,
-      raw: p,
+    items: Practitioner[];
+    pagination: {
+      currentPage: number;
+      hasNext: boolean;
+      hasPrevious: boolean;
+      pageSize: number;
+      totalItems: number;
+      totalPages: number;
     };
-  }) ?? [];
+  }>();
 
-  const filtered = practitioners.filter((e) => e.status === "Activo").filter((e) => {
-    const nameMatch = e.name.toLowerCase().includes(searchName.toLowerCase());
-    const roleMatch = searchRole ? e.positionCode === searchRole : true;
-    const areaMatch = searchArea ? e.area === searchArea : true;
-    const statusMatch = searchStatus ? e.status === searchStatus : true;
-    return nameMatch && roleMatch && areaMatch && statusMatch;
-  }
-  );
+  const practitioners: Practitioner[] =
+    data?.items?.map((p: any, index: number) => {
+      const role = p.roles?.[0];
+      const positionCode = role?.code?.[0]?.coding?.[0]?.code ?? "sin-código";
+      const positionText = role?.code?.[0]?.text ?? "Sin puesto";
+      const area = role?.location?.[0]?.display ?? "Sin área";
+
+      return {
+        id: p.id ?? index + 1,
+        name: p.name?.[0]?.text ?? "",
+        dni: p.identifier?.[0]?.value ?? "",
+        role: positionText,
+        status: p.active ? "Activo" : "Inactivo",
+        positionCode,
+        area,
+        raw: p,
+      };
+    }) ?? [];
+
+  const filtered = practitioners
+    .filter((e) => e.status === "Activo")
+    .filter((e) => {
+      const nameMatch = e.name.toLowerCase().includes(searchName.toLowerCase());
+      const roleMatch = searchRole ? e.positionCode === searchRole : true;
+      const areaMatch = searchArea ? e.area === searchArea : true;
+      const statusMatch = searchStatus ? e.status === searchStatus : true;
+      return nameMatch && roleMatch && areaMatch && statusMatch;
+    });
 
   const existingUsernames = ["juanclopez1", "juanclopez2", "anamtorres1"];
   // const existingUsernames = ["isaacv1", "milcajr1", "annerjh1"];
 
-  const { data: locations } = useGetApiLocations<{ items: { name: string }[] }>();
+  const { data: locations } = useGetApiLocations<{
+    items: { name: string }[];
+  }>();
 
-  const locationOptions = locations?.items?.map((loc) => ({
-    label: loc.name,
-    value: loc.name,
-  })) ?? [];
+  const locationOptions =
+    locations?.items?.map((loc) => ({
+      label: loc.name,
+      value: loc.name,
+    })) ?? [];
 
   useEffect(() => {
-  if (!selected) return;
+    if (!selected) return;
 
-  // Obtener valores de telecom del practitioner original
-  const phone = selected.raw?.telecom?.find(t => t.system === "Phone")?.value;
-  const email = selected.raw?.telecom?.find(t => t.system === "Email")?.value;
+    // Obtener valores de telecom del practitioner original
+    const phone = selected.raw?.telecom?.find(
+      (t) => t.system === "Phone"
+    )?.value;
+    const email = selected.raw?.telecom?.find(
+      (t) => t.system === "Email"
+    )?.value;
 
-  const base = generarBaseUsername(selected.name);
-  const usernameFinal = generarUsernameUnico(base, existingUsernames);
+    const base = generarBaseUsername(selected.name);
+    const usernameFinal = generarUsernameUnico(base, existingUsernames);
 
-  formRef.current?.setFieldsValue({
-    practitionerName: selected.name,
-    dni: selected.dni,
-    phone: phone ?? "",
-    email: email ?? "",
-    username: usernameFinal,
-    role: undefined,
+    formRef.current?.setFieldsValue({
+      practitionerName: selected.name,
+      dni: selected.dni,
+      phone: phone ?? "",
+      email: email ?? "",
+      username: usernameFinal,
+      role: undefined,
+    });
+  }, [selected]);
+
+  const allRoles = ["admin", "ti", "cashier", "auditor"];
+
+  // Filtra los roles que puede crear el usuario actual
+  const allowedRoles = allRoles.filter((r) => {
+    // Admin no puede crear admin ni ti
+    if (ability.can("create", "users")) {
+      if (currentUserRole.includes("admin")) {
+        return r === "cashier" || r === "auditor";
+      }
+      if (currentUserRole.includes("ti")) {
+        return true; // TI puede crear todos
+      }
+    }
+    return false;
   });
-}, [selected]);
-
-    const allRoles = ["admin", "ti", "cashier", "auditor"];
-
-// Filtra los roles que puede crear el usuario actual
-const allowedRoles = allRoles.filter((r) => {
-  // Admin no puede crear admin ni ti
-  if (ability.can("create", "users")) {
-    if (currentUserRole.includes("admin")) {
-      return r === "cashier" || r === "auditor";
-    }
-    if (currentUserRole.includes("ti")) {
-      return true; // TI puede crear todos
-    }
-  }
-  return false;
-})
-
-
 
   return (
     <div>
@@ -160,17 +167,20 @@ const allowedRoles = allRoles.filter((r) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* ===================== PANEL IZQUIERDO ===================== */}
-        <Card title="Elija un Empleado" className="primary-card!">
+        <div className="primary-card">
+          <h3 className="text-lg text-center font-semibold text-gray-700 mb-2">
+            Lista de Empleados
+          </h3>
           <Space direction="vertical" style={{ width: "100%" }}>
             <ProForm submitter={false}>
               <ProFormText
                 name="name"
                 label={<span className="text-general font-medium">Nombre</span>}
                 placeholder="Buscar por nombre"
-                  fieldProps={{
-                    value: searchName,
-                    onChange: (e) => setSearchName(e.target.value),
-                  }}
+                fieldProps={{
+                  value: searchName,
+                  onChange: (e) => setSearchName(e.target.value),
+                }}
               />
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <ProFormSelect
@@ -179,11 +189,14 @@ const allowedRoles = allRoles.filter((r) => {
                   label={
                     <span className="text-general font-medium">Cargo</span>
                   }
-                    options={ROLE_OPTIONS.map((r) => ({ label: r.label, value: r.value }))}
-                    fieldProps={{
-                      value: searchRole,
-                      onChange: (value) => setSearchRole(value),
-                    }}
+                  options={ROLE_OPTIONS.map((r) => ({
+                    label: r.label,
+                    value: r.value,
+                  }))}
+                  fieldProps={{
+                    value: searchRole,
+                    onChange: (value) => setSearchRole(value),
+                  }}
                 />
                 <ProFormSelect
                   name="area"
@@ -191,11 +204,11 @@ const allowedRoles = allRoles.filter((r) => {
                   label={
                     <span className="text-general font-medium">Ubicación</span>
                   }
-                    options={locationOptions}
-                    fieldProps={{
-                      value: searchArea,
-                      onChange: (value) => setSearchArea(value),
-                    }}
+                  options={locationOptions}
+                  fieldProps={{
+                    value: searchArea,
+                    onChange: (value) => setSearchArea(value),
+                  }}
                 />
                 <ProFormSelect
                   name="status"
@@ -207,10 +220,10 @@ const allowedRoles = allRoles.filter((r) => {
                     { label: "Activo", value: "Activo" },
                     { label: "Inactivo", value: "Inactivo" },
                   ]}
-                    fieldProps={{
-                      value: searchStatus,
-                      onChange: (value) => setSearchStatus(value),
-                    }}
+                  fieldProps={{
+                    value: searchStatus,
+                    onChange: (value) => setSearchStatus(value),
+                  }}
                 />
               </div>
             </ProForm>
@@ -242,15 +255,17 @@ const allowedRoles = allRoles.filter((r) => {
                       </>
                     }
                   />
-                  <Tag color={item.status === "Activo" ? "green" : "red"}>{item.status === "Activo" ? "✓ Activo" : "✗ Inactivo"}</Tag>
+                  <Tag color={item.status === "Activo" ? "green" : "red"}>
+                    {item.status === "Activo" ? "✓ Activo" : "✗ Inactivo"}
+                  </Tag>
                 </List.Item>
               )}
             />
           </Space>
-        </Card>
+        </div>
 
         {/* ===================== PANEL DERECHO ===================== */}
-        <Card title="Crear Usuario" className="primary-card!">
+        <div className="primary-card">
           <ProForm
             formRef={formRef}
             submitter={{
@@ -264,8 +279,9 @@ const allowedRoles = allRoles.filter((r) => {
                 className: `px-6 py-2 text-white font-medium rounded-md transition-colors duration-200 flex items-center gap-2`,
                 loading: createUserMutation.isPending,
               },
-              resetButtonProps: { 
-                className: "px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-md transition-colors duration-200" 
+              resetButtonProps: {
+                className:
+                  "px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-md transition-colors duration-200",
               },
               render: (_, dom) => {
                 return (
@@ -291,11 +307,10 @@ const allowedRoles = allRoles.filter((r) => {
                 practitionerId: String(selected.id),
                 email: values.email,
                 password: values.password,
-                roles: [values.role], 
+                roles: [values.role],
               };
 
               console.log("payload:", payload);
-              
 
               try {
                 await createUserMutation.mutateAsync({ data: payload });
@@ -315,9 +330,9 @@ const allowedRoles = allRoles.filter((r) => {
             }}
           >
             {/* ===================== DATOS DEL EMPLEADO ===================== */}
-            <div className="primary-card mb-6">
+            <div className="secondary-card mb-4">
               <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                Datos del Empleado
+                Datos de Empleado
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -326,31 +341,19 @@ const allowedRoles = allRoles.filter((r) => {
                   label="Nombre Completo"
                   disabled
                 />
-                <ProFormText
-                  name="dni"
-                  label="DNI"
-                  disabled
-                />
+                <ProFormText name="dni" label="DNI" disabled />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <ProFormText
-                  name="phone"
-                  label="Número de Teléfono"
-                  disabled
-                />
-                <ProFormText
-                  name="email"
-                  label="Correo Electrónico"
-                  disabled
-                />
+                <ProFormText name="phone" label="Número de Teléfono" disabled />
+                <ProFormText name="email" label="Correo Electrónico" disabled />
               </div>
             </div>
 
             {/* ===================== DATOS DEL USUARIO ===================== */}
-            <div className="primary-card mb-10">
+            <div className="secondary-card mb-2">
               <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                Datos del Usuario
+                Datos de Usuario
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -364,7 +367,9 @@ const allowedRoles = allRoles.filter((r) => {
                   name="role"
                   label="Rol del Usuario"
                   placeholder="Seleccione un rol"
-                  options={USER_ROLE_OPTIONS.filter(r => allowedRoles.includes(r.value))}
+                  options={USER_ROLE_OPTIONS.filter((r) =>
+                    allowedRoles.includes(r.value)
+                  )}
                 />
               </div>
 
@@ -383,7 +388,7 @@ const allowedRoles = allRoles.filter((r) => {
               </div>
             </div>
           </ProForm>
-        </Card>
+        </div>
       </div>
     </div>
   );

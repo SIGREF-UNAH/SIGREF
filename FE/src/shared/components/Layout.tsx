@@ -3,7 +3,6 @@ import { Link, Outlet, useNavigate } from "react-router";
 import { Button, Dropdown } from "antd";
 import { useKeycloak } from "@react-keycloak/web";
 import { RoutesByRole, useAbility } from "../../config";
-import { validRoles } from "../../auth";
 import { ShortcutsGuideModal } from "./modals";
 import { useState } from "react";
 import { useGetApiHospitalPropertiesDetails } from "../../api/hospital-properties/hospital-properties";
@@ -15,6 +14,7 @@ import {
   QuestionCircleOutlined,
   UserAddOutlined,
 } from "@ant-design/icons";
+import { USER_ROLE_OPTIONS } from "../constants";
 
 // Función helper para construir URLs de media
 const getMediaUrl = (relativePath?: string | null): string => {
@@ -63,7 +63,10 @@ const hospitalData = hospitalResponseData?.data;
 
   // Filtrar roles para mostrar solo los que nos interesan
   const rolesValidos = roles
-    .map((rol) => validRoles[rol])
+    .map((rol) => {
+      const roleOption = USER_ROLE_OPTIONS.find(option => option.value === rol);
+      return roleOption ? roleOption.label : undefined;
+    })
     .filter((rolMapeado) => rolMapeado !== undefined);
 
   // Obtener el nombre del usuario

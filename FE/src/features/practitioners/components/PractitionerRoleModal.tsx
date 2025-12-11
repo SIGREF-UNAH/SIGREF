@@ -2,29 +2,29 @@ import { ModalForm, ProFormText, ProFormSelect, type ProFormInstance, ProFormDat
 import { useEffect } from "react";
 
 type PractitionerRoleModalProps = {
+  title?: string;
   open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSubmit: (values: any) => Promise<boolean>;
   roleOptions: { label: string; value: string }[];
   orgOptions: { label: string; value: string }[];
   locationOptions: { label: string; value: string }[];
   initialValues?: any;
   formRef?: React.RefObject<ProFormInstance | null>;
-  title?: string;
+  onOpenChange: (open: boolean) => void;
+  onSubmit: (values: any) => Promise<boolean>;
 };
 
 export default function PractitionerRoleModal({
+  title,
   open,
-  onOpenChange,
-  onSubmit,
   roleOptions,
   orgOptions,
   locationOptions,
   initialValues,
   formRef,
-  title,
+  onOpenChange,
+  onSubmit,
 }: PractitionerRoleModalProps) {
-  // Cuando cambian los initialValues, actualizar el formulario
+  
   useEffect(() => {
     if (formRef?.current && initialValues) {
       formRef.current.setFieldsValue(initialValues);
@@ -43,21 +43,23 @@ export default function PractitionerRoleModal({
     >
       <ProFormText
         name="roleName"
-        label="Nombre del Rol"
-        placeholder="Ej: Médico General"
+        label="Titulo"
+        placeholder="Ej. Médico General"
         rules={[{ required: true, message: "Este campo es obligatorio" }]}
       />
 
       <ProFormSelect
         name="role"
-        label="Rol"
+        label="Tipo"
+        placeholder="Seleccionar"
         options={roleOptions}
-        rules={[{ required: true, message: "Seleccione un rol" }]}
+        rules={[{ required: true, message: "Seleccione el tipo de cargo" }]}
       />
 
       <ProFormSelect
         name="organizationId"
         label="Organización"
+        placeholder="Seleccionar"
         allowClear
         options={orgOptions}
       />
@@ -65,6 +67,7 @@ export default function PractitionerRoleModal({
       <ProFormSelect
         name="locationId"
         label="Ubicación"
+        placeholder="Seleccionar"
         allowClear
         options={locationOptions}
       />
@@ -72,7 +75,9 @@ export default function PractitionerRoleModal({
       <ProFormDateRangePicker
         name="period"
         label="Periodo (Inicio - Fin)"
-        rules={[{ required: true, message: "Seleccione un rango de fechas" }]}
+        placeholder="Ej. 1999-12-31"
+        allowClear
+        rules={[{ required: false, message: "Seleccione un rango de fechas" }]}
       />
     </ModalForm>
   );
