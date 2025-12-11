@@ -37,15 +37,12 @@ interface Practitioner {
 export const PractitionersListForm = () => {
   const navigate = useNavigate();
   const ability = useAbility();
+  const queryClient = useQueryClient();
   const [searchName, setSearchName] = useState("");
   const [searchRole, setSearchRole] = useState<string | undefined>(undefined);
   const [searchArea, setSearchArea] = useState<string | undefined>(undefined);
-  const [searchStatus, setSearchStatus] = useState<string | undefined>(
-    undefined
-  );
-  const handleNavigate = (id: string) => {
-    navigate(`/practitioners/details/${id}`);
-  };
+  const [searchStatus, setSearchStatus] = useState<string | undefined>(undefined);
+  const handleNavigate = (id: string) => {navigate(`/practitioners/details/${id}`);};
 
   const { data, isLoading, isError } = useGetApiPractitioner<{
     items: Practitioner[];
@@ -58,8 +55,6 @@ export const PractitionersListForm = () => {
       totalPages: number;
     };
   }>();
-
-  const queryClient = useQueryClient();
 
   const deleteMutation = useDeleteApiPractitionerId({
     mutation: {
@@ -77,16 +72,16 @@ export const PractitionersListForm = () => {
   const practitioners: Practitioner[] =
     data?.items?.map((p: any, index: number) => {
       const role = p.roles?.[0]; // Tomar el primer rol asignado
-      const positionCode = role?.code?.[0]?.coding?.[0]?.code ?? "Desconocido";
-      const positionText = role?.code?.[0]?.text ?? "Desconocido";
-      const area = role?.location?.[0]?.display ?? "Desconocido";
+      const positionCode = role?.code?.[0]?.coding?.[0]?.code ?? "-";
+      const positionText = role?.code?.[0]?.text ?? "-";
+      const area = role?.location?.[0]?.display ?? "-";
 
       return {
         id: p.id ?? String(index + 1),
-        name: p.name?.[0]?.text ?? "Sin nombre",
+        name: p.name?.[0]?.text ?? "-",
         email:
           p.telecom?.find((t: any) => t.system?.toLowerCase() === "email")
-            ?.value ?? "Sin correo",
+            ?.value ?? "-",
         positionText,
         positionCode,
         area,
