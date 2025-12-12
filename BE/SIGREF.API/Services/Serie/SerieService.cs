@@ -245,6 +245,7 @@ public class SerieService : ISerieService
             .Take(size)
             .Select(x => new SerieDto
             {
+                Id = x.Id,
                 Name = x.Name,
                 Prefix = x.Prefix,
                 StartNumber = x.StartNumber,
