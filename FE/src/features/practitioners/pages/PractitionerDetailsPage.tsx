@@ -111,7 +111,7 @@ export default function PractitionerDetailsPage() {
           <Space>
             <Can I="update" a="practitioners" ability={ability}>
               <Button type="primary" icon={<EditOutlined />} onClick={handleEdit}>
-                Editar Información
+                Editar información
               </Button>
             </Can>
             <Can I="delete" a="practitioners" ability={ability}>

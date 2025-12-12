@@ -45,6 +45,7 @@ export const defineAbilitiesFor = (roles: string[]) => {
   if (roles.includes("ti")) {
     can(["read", "create", "update", "delete"], "organizations");
     can(["read", "create", "update", "delete"], "practitioners");
+    can(["read", "create", "update", "delete"], "practitioner-roles");
     can(["read"], "healthcares");
     can(["read"], "events");
 
