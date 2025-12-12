@@ -128,6 +128,33 @@ export function usePractitionerForm() {
         values.lastName
       }`.trim();
 
+      let formattedBirthDate = null;
+    
+      if (values.birthDate) {
+        try {
+          let dateObj;
+          
+          // Si ya es un objeto dayjs (del formulario)
+          if (values.birthDate && typeof values.birthDate.format === 'function') {
+            dateObj = values.birthDate;
+          } else if (typeof values.birthDate === 'string') {
+            // Si es un string, parsearlo con el formato correcto
+            dateObj = dayjs(values.birthDate, 'DD/MM/YYYY');
+          } else {
+            // Para otros casos
+            dateObj = dayjs(values.birthDate);
+          }
+          
+          if (dateObj && dateObj.isValid()) {
+            formattedBirthDate = dateObj.toISOString();
+          } else {
+            console.warn('Fecha inválida:', values.birthDate);
+          }
+        } catch (error) {
+          console.error('Error al procesar fecha:', error);
+        }
+      }
+
       const payload: CreatePractitionerDto | UpdatePractitionerDto = {
         identifier: [
           {
@@ -152,16 +179,15 @@ export function usePractitionerForm() {
         ],
         telecom,
         gender: values.gender ?? 0,
-        birthDate: values.birthDate
-          ? dayjs(values.birthDate).format("YYYY-MM-DD")
-          : null,
+        birthDate: formattedBirthDate,
       };
-
+      
       if (isEditMode) {
         await updatePractitioner({ id: id!, data: payload });
       } else {
         await createPractitioner({ data: payload });
       }
+
     } catch (error) {
       console.error("Error en el formulario:", error);
     }
