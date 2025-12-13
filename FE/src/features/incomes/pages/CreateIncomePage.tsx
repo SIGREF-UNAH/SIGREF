@@ -28,9 +28,7 @@ const { TextArea } = Input;
 const { Text } = Typography;
 
 export const CreateIncomePage = () => {
-  const [messageApi, contextHolder] = message.useMessage();
-  
-  // Hook para crear ingresos
+  // Hook para crear ingresos 
   const { 
     createIncome, 
     isLoading: isCreatingIncome,
@@ -87,7 +85,6 @@ export const CreateIncomePage = () => {
   const handleSetPacienteFilter = (key: string, value: any) => {
     setPacienteFilter(key, value);
     
-    // Mapear filtros locales a los filtros del hook
     const filterMap: Record<string, string> = {
       searchPaciente: "nombreCompleto",
       genero: "genero",
@@ -104,7 +101,6 @@ export const CreateIncomePage = () => {
   const handleSetPacienteFilters = (newFilters: any) => {
     setPacienteFilters(newFilters);
     
-    // Sincronizar paginación con el hook de pacientes
     if (newFilters.pagePaciente || newFilters.pageSizePaciente) {
       setPatientsHookFilters({
         pageNumber: newFilters.pagePaciente || patientsHookFilters.pageNumber,
@@ -115,8 +111,8 @@ export const CreateIncomePage = () => {
 
   const [selectedServicio, setSelectedServicio] = useState<any>(null);
   const [selectedPaciente, setSelectedPaciente] = useState<any>(null);
-  const [serie, setSerie] = useState("A");
-  const [serieId, setSerieId] = useState(""); // ID de la serie para la API
+  const [serie, setSerie] = useState("");
+  const [serieId, setSerieId] = useState("");
   const [numeroRecibo, setNumeroRecibo] = useState("");
   const [aPagarEfectivo, setAPagarEfectivo] = useState(0);
   const [exonerado, setExonerado] = useState(false);
@@ -131,7 +127,6 @@ export const CreateIncomePage = () => {
     } else {
       setSelectedServicio(servicio);
       if (!exonerado && !tramiteEmergencia) {
-        // Usar el campo 'cost' que viene del hook procesado
         setAPagarEfectivo(servicio.cost || 0);
       }
     }
@@ -161,24 +156,27 @@ export const CreateIncomePage = () => {
   // Guardar y crear el ingreso
   const handleGuardar = () => {
     if (!selectedPaciente) {
-      messageApi.warning("Por favor selecciona un paciente");
+      message.warning("Por favor selecciona un paciente");
       return;
     }
     if (!selectedServicio) {
-      messageApi.warning("Por favor selecciona un servicio");
+      message.warning("Por favor selecciona un servicio");
       return;
     }
     if (!numeroRecibo.trim()) {
-      messageApi.warning("Por favor ingresa un número de recibo");
+      message.warning("Por favor ingresa un número de recibo");
+      return;
+    }
+    if (!serieId || serieId === "") {
+      message.error("Por favor selecciona una serie válida");
       return;
     }
 
-    // Preparar datos para el hook useCreateIncome
     const servicioData = {
       id: selectedServicio.id,
       nombre: selectedServicio.name || "Servicio sin nombre",
       precio: selectedServicio.cost || 0,
-      tipo: "servicio", // Puedes ajustar esto según tu lógica
+      tipo: "servicio",
     };
 
     const pacienteData = {
@@ -187,7 +185,6 @@ export const CreateIncomePage = () => {
       identificador: selectedPaciente.identificador,
     };
 
-    // Llamar al hook para crear el ingreso
     createIncome({
       selectedPaciente: pacienteData,
       selectedServicio: servicioData,
@@ -195,7 +192,7 @@ export const CreateIncomePage = () => {
       aPagarEfectivo,
       exonerado,
       tramiteEmergencia,
-      serieId: serieId || "default-serie-id", // Debes obtener el ID real de la serie
+      serieId: serieId,
     });
   };
 
@@ -203,7 +200,7 @@ export const CreateIncomePage = () => {
   const handleResetear = () => {
     setSelectedServicio(null);
     setSelectedPaciente(null);
-    setSerie("A");
+    setSerie("");
     setSerieId("");
     setNumeroRecibo("");
     setAPagarEfectivo(0);
@@ -212,7 +209,6 @@ export const CreateIncomePage = () => {
     setObservaciones("");
     resetServicioFilters();
     
-    // Resetear filtros de pacientes
     setPacienteFilters({
       searchPaciente: "",
       tipoIdentificador: "DNI",
@@ -223,7 +219,6 @@ export const CreateIncomePage = () => {
       pageSizePaciente: 5,
     });
     
-    // Resetear filtros del hook de pacientes
     setPatientsHookFilters({
       search: "",
       pageNumber: 1,
@@ -236,12 +231,14 @@ export const CreateIncomePage = () => {
       fechaNacimiento: null,
     });
     
-    messageApi.info("Formulario reseteado");
+    message.info("Formulario reseteado");
   };
+  console.log("=== SERVICIOS DESDE useHealthcaresList ===");
+console.log(JSON.stringify(healthcares, null, 2));
+
 
   return (
     <>
-      {contextHolder}
       {incomeContextHolder}
       <PageContainer
         title="Registro de Ingresos por Servicios"
@@ -259,7 +256,6 @@ export const CreateIncomePage = () => {
               }
               bordered
             >
-              {/* Servicios */}
               <ServiceIncome
                 serviciosData={healthcares}
                 servicioFilters={servicioFilters}
@@ -270,7 +266,6 @@ export const CreateIncomePage = () => {
                 isLoading={isLoadingHealthcares}
               />
 
-              {/* Serie y Número de Recibo */}
               <Divider />
 
               <IncomeSummary
@@ -297,7 +292,6 @@ export const CreateIncomePage = () => {
               }
               bordered
             >
-              {/* Paciente */}
               <ListPatient
                 pacientesData={patients}
                 setSelectedPaciente={setSelectedPaciente}
@@ -308,7 +302,6 @@ export const CreateIncomePage = () => {
                 isLoading={isLoadingPatients}
               />
 
-              {/* Pago */}
               <Divider />
               <Row gutter={16} style={{ marginBottom: 16 }}>
                 <Col span={8}>
@@ -345,7 +338,6 @@ export const CreateIncomePage = () => {
                 </Col>
               </Row>
 
-              {/* Observaciones */}
               <div style={{ marginBottom: 24 }}>
                 <Text strong>Observaciones</Text>
                 <TextArea
@@ -357,7 +349,6 @@ export const CreateIncomePage = () => {
                 />
               </div>
 
-              {/* Botones de acción */}
               <Space>
                 <Button
                   type="primary"

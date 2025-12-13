@@ -5,8 +5,8 @@
  * OpenAPI spec version: 1.0
  */
 
-export type GetApiInvoicesIdParams = {
-  includeNotes?: boolean;
-  notesPage?: number;
-  notesPageSize?: number;
+export type GetApiKeycloakSeederListParams = {
+  UserName?: string;
+  PageNumber?: number;
+  PageSize?: number;
 };

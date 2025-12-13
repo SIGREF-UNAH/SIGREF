@@ -5,7 +5,6 @@
  * OpenAPI spec version: 1.0
  */
 
-/**
- * @nullable
- */
-export type AuditLogDtoDataAfter = unknown | null;
+export type GetApiKeycloakSeederExistsUsernameParams = {
+  username: string;
+};

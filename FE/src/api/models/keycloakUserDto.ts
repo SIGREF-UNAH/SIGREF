@@ -16,4 +16,8 @@ export interface KeycloakUserDto {
   displayName?: string | null;
   /** @nullable */
   practitionerId?: string | null;
+  /** @nullable */
+  enabled?: boolean | null;
+  /** @nullable */
+  roles?: string[] | null;
 }

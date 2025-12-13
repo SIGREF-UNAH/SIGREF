@@ -1,5 +1,7 @@
 import { ProList } from "@ant-design/pro-components";
-import { Space, Tabs, Tag, Typography, Spin } from "antd";
+import { Space, Tag, Typography, Spin, Input } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
+import { useState } from "react";
 
 export const ServiceIncome = ({
   serviciosData,
@@ -10,88 +12,111 @@ export const ServiceIncome = ({
   selectedServicio,
   isLoading,
 }: any) => {
-  // Filtrar servicios basados en los filtros actuales
+  const [searchText, setSearchText] = useState(
+    servicioFilters.searchServicios || ""
+  );
+
+  // Filtrado inteligente: busca en AMBOS campos (nombre Y código)
   const serviciosFiltrados = (serviciosData ?? []).filter((servicio: any) => {
-    const searchTerm = servicioFilters.searchServicios?.toLowerCase() || "";
-    
-    // Búsqueda por nombre o abreviatura
-    const matchSearch =
-      servicio.name?.toLowerCase().includes(searchTerm) ||
-      servicio.abbreviation?.toLowerCase().includes(searchTerm);
+    const term = searchText.toLowerCase().trim();
+    if (!term) return true;
 
-    // Filtro por tipo (si existe en specialty o alguna otra propiedad)
-    // Por ahora solo filtramos por búsqueda ya que no hay un campo "tipo" explícito
-    const matchTipo = servicioFilters.tipoServicio === "todos";
+    const name = servicio.name?.toLowerCase() || "";
+    const abbr = servicio.abbreviation?.toLowerCase() || "";
 
-    return matchSearch && matchTipo;
+    // Busca en nombre O código
+    return name.includes(term) || abbr.includes(term);
   });
 
   return (
     <>
-      {/* Filtros de Servicios */}
-      <Tabs
-        activeKey={servicioFilters.tipoServicio}
-        onChange={(key) => setServicioFilter("tipoServicio", key)}
-        items={[
-          { label: "Todos", key: "todos" },
-        ]}
-        style={{ marginBottom: 16 }}
-      />
+      {/* Barra de búsqueda única */}
+      <div style={{ marginBottom: 16 }}>
+        <Input
+          placeholder="Buscar por nombre o código del servicio..."
+          prefix={<SearchOutlined style={{ color: "#aaa" }} />}
+          size="large"
+          allowClear
+          value={searchText}
+          onChange={(e) => {
+            const value = e.target.value;
+            setSearchText(value);
+            setServicioFilter("searchServicios", value);
+          }}
+          style={{ borderRadius: 8 }}
+        />
+      </div>
 
       {/* Lista de Servicios */}
       {isLoading ? (
-        <div style={{ textAlign: "center", padding: "40px 0" }}>
-          <Spin size="large" />
+        <div style={{ textAlign: "center", padding: "60px 0" }}>
+          <Spin size="large" tip="Cargando servicios..." />
+        </div>
+      ) : serviciosFiltrados.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "60px 0", color: "#999" }}>
+          <Typography.Text type="secondary">
+            {searchText
+              ? `No se encontraron servicios con "${searchText}"`
+              : "No hay servicios disponibles"}
+          </Typography.Text>
         </div>
       ) : (
         <ProList<any>
           rowKey="id"
           dataSource={serviciosFiltrados}
           pagination={{
-            current: servicioFilters.pageServicio,
-            pageSize: servicioFilters.pageSizeServicio,
+            current: servicioFilters.pageServicio || 1,
+            pageSize: servicioFilters.pageSizeServicio || 10,
+            total: serviciosFiltrados.length,
             onChange: (page, pageSize) =>
               setServicioFilters({
                 pageServicio: page,
-                pageSizeServicio: pageSize,
+                pageSizeServicio: pageSize || 10,
               }),
             showSizeChanger: true,
-            pageSizeOptions: ["5", "10", "20"],
-          }}
-          search={{
-            filterType: "light",
+            pageSizeOptions: ["10", "20", "50"],
+            showTotal: (total) => `Total: ${total} servicios`,
           }}
           metas={{
             title: {
-              dataIndex: "name",
-              search: true,
               render: (_, record) => (
                 <Space>
-                  <Tag color="blue">
-                    {record.abbreviation || "N/A"}
+                  <Tag color="blue" style={{ fontWeight: "bold" }}>
+                    {record.abbreviation || "S/A"}
                   </Tag>
-                  <Typography.Text strong>{record.name || "Sin nombre"}</Typography.Text>
+
+                  <Typography.Text strong>
+                    {record.name || "Servicio sin nombre"}
+                  </Typography.Text>
                 </Space>
               ),
             },
+
             description: {
               render: (_, record) => {
-                // Mostrar specialty si existe
-                const specialty = record.specialty?.[0]?.coding?.[0]?.display || 
-                                record.specialty?.[0]?.text || 
-                                "Sin especialidad";
+                const specialty =
+                  record.specialty?.[0]?.coding?.[0]?.display ||
+                  record.specialty?.[0]?.text ||
+                  "Sin especialidad";
                 return (
-                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                  <Typography.Text type="secondary" style={{ fontSize: 13 }}>
                     {specialty}
                   </Typography.Text>
                 );
               },
             },
+
             subTitle: {
               render: (_, record) => (
-                <Typography.Text strong style={{ fontSize: 16, color: '#1890ff' }}>
-                  L.{(record.cost || 0).toFixed(2)}
-                </Typography.Text>
+                <div style={{ textAlign: "right" }}>
+                  <Typography.Text
+                    strong
+                    type="success"
+                    style={{ fontSize: 18 }}
+                  >
+                    L. {(record.cost || 0).toFixed(2)}
+                  </Typography.Text>
+                </div>
               ),
             },
           }}
@@ -103,13 +128,17 @@ export const ServiceIncome = ({
                 selectedServicio?.id === record.id
                   ? "2px solid #1890ff"
                   : "1px solid #f0f0f0",
-              borderRadius: 4,
-              marginBottom: 8,
+              borderRadius: 8,
+              marginBottom: 12,
+              padding: "12px 16px",
               transition: "all 0.3s",
               backgroundColor:
+                selectedServicio?.id === record.id ? "#e6f7ff" : "white",
+
+              boxShadow:
                 selectedServicio?.id === record.id
-                  ? "#e6f7ff"
-                  : "white",
+                  ? "0 4px 12px rgba(24, 144, 255, 0.15)"
+                  : "none",
             },
           })}
         />
