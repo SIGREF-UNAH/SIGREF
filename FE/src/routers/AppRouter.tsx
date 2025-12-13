@@ -13,12 +13,24 @@ import { ServiceGroupsRouter } from "../features/service-groups/routers";
 import { ShiftsRouter } from "../features/shifts/routers/ShiftsRouter";
 import { HospitalRouter } from "../features/hospital/routers";
 import { UsersRouter } from "../features/users/routers";
+import { CashierRouteGuard } from "../features/cashier-sessions/components";
+import OpenCashierSessionPage from "../features/cashier-sessions/pages/OpenCashierSessionPage";
 
  export const AppRouter = () => {
   return (
     <Routes>
       {/* Redirección a "/" si la ruta no existe */}
       <Route path="*" element={<Navigate to="/" replace />} />
+
+      {/* Ruta para abrir sesión de cajero */}
+      <Route element={<CashierRouteGuard requiresActiveSession={false} requiresCashierRole={true} />}>
+        <Route path="/cashier/open-session" element={<OpenCashierSessionPage />} />
+      </Route>
+
+      {/* Rutas que requieren sesión activa de cajero */}
+      <Route element={<CashierRouteGuard requiresActiveSession={true} requiresCashierRole={true} />}>
+        {/* TODO: AGREGAR RUTA PARA CERRAR SESIÓN DE CAJERO */}
+      </Route>
 
       {/* Layout principal */}
       <Route element={<Layout />}>

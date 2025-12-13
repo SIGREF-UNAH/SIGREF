@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Spin } from "antd";
 import { getRolesFromToken } from "./auth";
 import { AbilityProvider, AntDesignProvider, ShortcutsProvider } from "./config";
+import { CashierSessionChecker } from "./features/cashier-sessions/components";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ export default function App() {
         <BrowserRouter>
           <ShortcutsProvider>
             <AbilityProvider roles={roles}>
+              <CashierSessionChecker />
               <div className="min-h-screen flex flex-col">
                 <main className="flex-1">
                   <AppRouter />
