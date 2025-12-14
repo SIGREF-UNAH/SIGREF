@@ -22,22 +22,22 @@ import OpenCashierSessionPage from "../features/cashier-sessions/pages/OpenCashi
       {/* Redirección a "/" si la ruta no existe */}
       <Route path="*" element={<Navigate to="/" replace />} />
 
-      {/* Ruta para abrir sesión de cajero */}
-      <Route element={<CashierRouteGuard requiresActiveSession={false} requiresCashierRole={true} />}>
-        <Route path="/cashier/open-session" element={<OpenCashierSessionPage />} />
-      </Route>
-
-      {/* Rutas que requieren sesión activa de cajero */}
-      <Route element={<CashierRouteGuard requiresActiveSession={true} requiresCashierRole={true} />}>
-        {/* TODO: AGREGAR RUTA PARA CERRAR SESIÓN DE CAJERO */}
-      </Route>
-
       {/* Layout principal */}
       <Route element={<Layout />}>
+
+        {/* Abrir sesión de caja */}
+        <Route element={<CashierRouteGuard requiresActiveSession={false} requiresCashierRole={true} />}>
+          <Route path="/cashier/open-session" element={<OpenCashierSessionPage />} />
+        </Route>
 
         {/* Público */}
         <Route path="/" element={<HomePage />} />
         <Route path="/documentation" element={<DocumentationPage />} />
+        
+        {/* Fondos */}
+        <Route path="/incomes/*" element={<IncomesRouter />} />
+
+        // TODO: Proteger rutas desde cada router
 
         {/* Ubicaciones */}
         <Route
@@ -65,16 +65,6 @@ import OpenCashierSessionPage from "../features/cashier-sessions/pages/OpenCashi
           element={
             <ProtectedRoute action="read" subject="healthcares">
               <ServiceGroupsRouter />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Fondos / Incomes */}
-        <Route
-          path="/incomes/*"
-          element={
-            <ProtectedRoute action="read" subject="incomes">
-              <IncomesRouter />
             </ProtectedRoute>
           }
         />

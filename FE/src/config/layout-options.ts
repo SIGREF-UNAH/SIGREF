@@ -93,6 +93,12 @@ export const ShiftsRoutes: RouteItem[] = [
     subject: "shifts" as Subjects,
     action: "read"
   },
+  { 
+    path: "/cashier/open-session",
+    name: "Iniciar Turno",
+    subject: "cashier-sessions" as Subjects,
+    action: "create"
+  },
 ];
 
 // Gestión de Pacientes
@@ -193,7 +199,7 @@ export const RoutesByRole: Record<
   }
 > = {
   [USER_ROLE_OPTIONS[0].label]: { // Administrador
-    fondos: IncomesRoutes,
+    fondos: IncomesRoutes.filter(route => route.action === "read"),
     servicios: [...HealthcaresRoutes, ...ServiceGroupsRoutes],
     pacientes: PatientsRoutes,
     empleados: PractitionersRoutes,
@@ -215,7 +221,7 @@ export const RoutesByRole: Record<
     eventos: EventsRoutes,
   },
   [USER_ROLE_OPTIONS[2].label]: { // Auxiliar de Caja
-    fondos: IncomesRoutes,
+    fondos: IncomesRoutes.filter(route => route.action === "create" || route.action === "update"),
     pacientes: PatientsRoutes,
     turnos: ShiftsRoutes,
     ubicaciones: LocationsRoutes.filter(route => route.action === "read"),

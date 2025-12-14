@@ -150,6 +150,15 @@ export const appShortcuts: ShortcutConfig[] = [
     requiredAction: "read",
     requiredSubject: "shifts",
   },
+  {
+    keys: "alt+t",
+    description: "Iniciar Turno",
+    action: (navigate) => navigate("/cashier/open-session"),
+    title: "Gestión de Turnos",
+    category: "shifts",
+    requiredAction: "create",
+    requiredSubject: "cashier-sessions",
+  },
 
   // Gestión de Ubicaciones
   {

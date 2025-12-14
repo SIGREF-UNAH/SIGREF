@@ -6,7 +6,6 @@ import {
   FilePdfOutlined,
   FileImageOutlined,
 } from "@ant-design/icons";
-import { PageContainer, ProCard } from "@ant-design/pro-components";
 import {
   Alert,
   Button,
@@ -15,29 +14,132 @@ import {
   Dropdown,
   InputNumber,
   Row,
-  Select,
   Space,
   Typography,
+  message,
+  Spin,
 } from "antd";
 import { useRef, useState } from "react";
+import { useNavigate } from "react-router";
+import { useKeycloak } from "@react-keycloak/web";
 import { useExport } from "../../../shared/utils";
+import { PageHeaderTabs } from "../../../shared/components";
+import { useGetApiHospitalPropertiesDetails } from "../../../api/hospital-properties/hospital-properties";
+import { USER_ROLE_OPTIONS } from "../../../shared/constants";
+import dayjs from "dayjs";
+import { useCashierSessionStore } from "../../cashier-sessions/store";
+import { usePostApiCashierSessionsSessionIdClose } from "../../../api/cashier-sessions/cashier-sessions";
+
+// Función helper para construir URLs de media
+const getMediaUrl = (relativePath?: string | null): string => {
+  if (!relativePath) return '';
+  
+  const API_BASE_URL = import.meta.env.VITE_API_URL || window.location.origin;
+  const baseUrl = API_BASE_URL.endsWith('/') 
+    ? API_BASE_URL.slice(0, -1) 
+    : API_BASE_URL;
+  
+  if (relativePath.startsWith('http://') || relativePath.startsWith('https://')) {
+    return relativePath;
+  }
+  
+  if (relativePath.startsWith('/files/') || relativePath.startsWith('/media/')) {
+    return `${baseUrl}${relativePath}`;
+  }
+  
+  return `${baseUrl}${relativePath.startsWith('/') ? '' : '/'}${relativePath}`;
+};
 
 export const CashClosingPage = () => {
+  const navigate = useNavigate();
+  const { keycloak } = useKeycloak();
   const [amount, setAmount] = useState<number | null>(null);
-  const [shift, setShift] = useState<string>();
   const [isLocked, setIsLocked] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [systemAmount] = useState(3800);
   const [showResult, setShowResult] = useState(false);
+  const [closedSessionId, setClosedSessionId] = useState<string>("");
+  
+  const [systemAmount] = useState(0); //! Este valor debería venir del backend
+  
+  // Store
+  const { session, clearSession } = useCashierSessionStore();
+  
+  // Queries
+  const { data: hospitalResponse, isLoading: isLoadingHospital } = useGetApiHospitalPropertiesDetails();
+  
+  // Mutation para cerrar sesión
+  const { mutate: closeSession, isPending: isClosingSession } = usePostApiCashierSessionsSessionIdClose({
+    mutation: {
+      onSuccess: (response: any) => {
+        setClosedSessionId(response?.data?.id || session?.id || "");
+        message.success(response?.message || 'Sesión cerrada exitosamente');
+        setShowConfirmation(false);
+        setShowResult(true);
+        // Limpiar la sesión del store DESPUÉS de mostrar el resultado
+        // No limpiamos inmediatamente para que se pueda ver el ID en el resumen
+      },
+      onError: (error: any) => {
+        message.error(
+          error?.response?.data?.message || 'Error al cerrar la sesión'
+        );
+        setIsLocked(false);
+      },
+    },
+  });
+
+  // Datos del hospital
+  const hospitalResponseData = hospitalResponse as any;
+  const hospitalData = hospitalResponseData?.data;
+
+  const logoHealthUrl = hospitalData?.urlLogoHealth 
+    ? getMediaUrl(hospitalData.urlLogoHealth) 
+    : "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Logo_de_SESAL.svg/1200px-Logo_de_SESAL.svg.png";
+  
+  const logoHospitalUrl = hospitalData?.urlLogo 
+    ? getMediaUrl(hospitalData.urlLogo) 
+    : "https://krti.cl/wp-content/uploads/2021/04/Logo-Hospital-Final.png";
+
+  const hospitalName = hospitalData?.name || "Hospital";
+  const hospitalAddress = hospitalData?.ubication || "";
+  const hospitalCurrency = hospitalData?.currency || "LPS";
+
+  // Datos del usuario
+  const roles = keycloak.tokenParsed?.realm_access?.roles || [];
+  const rolesValidos = roles
+    .map((rol) => {
+      const roleOption = USER_ROLE_OPTIONS.find(option => option.value === rol);
+      return roleOption ? roleOption.label : undefined;
+    })
+    .filter((rolMapeado) => rolMapeado !== undefined);
+
+  const userName = keycloak.tokenParsed?.name || "Usuario";
+
+  // Fecha y hora actual
+  const currentDateTime = dayjs().format('DD [de] MMMM [de] YYYY hh:mm:ss A');
+  const currentDate = dayjs().format('DD [de] MMMM [de] YYYY');
+  const currentTime = dayjs().format('hh:mm:ss A');
 
   const handleSave = () => {
+    if (!session?.id) {
+      message.error('No hay sesión activa para cerrar');
+      return;
+    }
     setShowConfirmation(true);
     setIsLocked(true);
   };
 
   const handleConfirm = () => {
-    setShowConfirmation(false);
-    setShowResult(true);
+    if (!session?.id || amount === null) {
+      message.error('Datos incompletos para cerrar la sesión');
+      return;
+    }
+
+    closeSession({
+      sessionId: session.id,
+      data: {
+        declaredAmount: amount,
+      },
+    });
   };
 
   const handleCancel = () => {
@@ -45,18 +147,26 @@ export const CashClosingPage = () => {
     setIsLocked(false);
   };
 
+  const handleFinish = () => {
+    // Limpiar la sesión del store al finalizar
+    clearSession();
+    // Redirigir al home
+    navigate('/');
+  };
+
+  const handleGoToCorrection = () => {
+    // NO limpiar la sesión aquí porque la corrección aún la necesita
+    navigate('/cashier/correction');
+  };
+
   const difference = amount !== null ? amount - systemAmount : 0;
   const isMatch = difference === 0;
 
-  const shiftLabel =
-    shift === "Día" ? "C: 9:00 AM - 9:00 PM" : "B: 9:00 PM - 9:00 AM";
-
   // Ref para exportación
   const printRef = useRef<HTMLDivElement>(null);
-
   const { exportData } = useExport();
 
-  // Menú de opciones
+  // Opciones de exportación
   const printMenuItems = [
     {
       key: "pdf",
@@ -74,12 +184,36 @@ export const CashClosingPage = () => {
     },
   ];
 
+  if (isLoadingHospital) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  if (!session?.id && !showResult) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Alert
+          message="No hay sesión activa"
+          description="Debe abrir una sesión de caja antes de poder cerrarla"
+          type="warning"
+          showIcon
+          action={
+            <Button type="primary" onClick={() => navigate('/cashier/open-session')}>
+              Abrir Sesión
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
   return (
-    <PageContainer
-      title={<Typography.Title level={3}>Cierre de Caja</Typography.Title>}
-      subTitle={<Typography.Text>Cerrar Turno</Typography.Text>}
-    >
-      <ProCard bordered>
+    <div>
+      <PageHeaderTabs title="Cierre de Caja" tabs={[]} />
+      <div className="primary-card">
         {/* ÁREA COMPLETA PARA EXPORTACIÓN */}
         <div
           ref={printRef}
@@ -95,15 +229,21 @@ export const CashClosingPage = () => {
           {/* Header con logos */}
           <div className="flex justify-between items-center w-full mb-6">
             <img
-              src="/src/public/Logo_de_Salud.svg.png"
+              src={logoHealthUrl}
               alt="Logo Salud"
               style={{ height: "48px", objectFit: "contain" }}
+              onError={(e) => {
+                e.currentTarget.src = "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Logo_de_SESAL.svg/1200px-Logo_de_SESAL.svg.png";
+              }}
             />
             <div className="flex-1"></div>
             <img
-              src="/src/public/Logo-Hospital-Occiedente.png"
-              alt="Logo Hospital de Occidente"
+              src={logoHospitalUrl}
+              alt={hospitalName}
               style={{ height: "48px", objectFit: "contain" }}
+              onError={(e) => {
+                e.currentTarget.src = "https://krti.cl/wp-content/uploads/2021/04/Logo-Hospital-Final.png";
+              }}
             />
           </div>
 
@@ -123,7 +263,7 @@ export const CashClosingPage = () => {
                 padding: "8px 0",
               }}
             >
-              Hospital de Occidente
+              {hospitalName}
             </div>
             <div
               style={{
@@ -133,17 +273,7 @@ export const CashClosingPage = () => {
                 padding: "8px 0",
               }}
             >
-              El Calvario, Santa Rosa de Copán, 41101 CA
-            </div>
-            <div
-              style={{
-                fontSize: "16px",
-                fontWeight: "500",
-                color: "#4b5563",
-                padding: "8px 0",
-              }}
-            >
-              Copán, Honduras
+              {hospitalAddress}
             </div>
             {!showResult && (
               <div
@@ -168,18 +298,18 @@ export const CashClosingPage = () => {
                   <Typography.Text strong style={{ color: "#7BA2D4" }}>
                     Auxiliar de Caja:
                   </Typography.Text>{" "}
-                  <Typography.Text>Sebas Contreras</Typography.Text>
+                  <Typography.Text>{userName}</Typography.Text>
                 </Col>
                 <Col span={12}>
                   <Typography.Text strong style={{ color: "#7BA2D4" }}>
-                    Módulo:
+                    Rol:
                   </Typography.Text>{" "}
                   <Typography.Text style={{ color: "#7BA2D4" }}>
-                    Emergencia
+                    {rolesValidos[0] || "Cajero"}
                   </Typography.Text>
                 </Col>
 
-                <Col span={12}>
+                <Col span={24}>
                   <Typography.Text strong>
                     Ingrese el Monto Registrado en Caja
                   </Typography.Text>
@@ -188,43 +318,27 @@ export const CashClosingPage = () => {
                     value={amount ?? undefined}
                     disabled={isLocked}
                     onChange={(value) => setAmount(value ?? 0)}
-                    style={{ width: "100%", marginTop: 0 }}
+                    style={{ width: "100%", marginTop: 8 }}
                     placeholder="0.00"
                     size="large"
-                  />
-                </Col>
-
-                <Col span={12}>
-                  <Typography.Text strong style={{ color: "#7BA2D4" }}>
-                    Turno Actual
-                  </Typography.Text>
-                  <Select
-                    placeholder="Seleccione un turno"
-                    value={shift}
-                    disabled={isLocked}
-                    onChange={(value) => setShift(value)}
-                    options={[
-                      { label: "C: 9:00 am - 9:00 pm", value: "Día" },
-                      { label: "B: 9:00 pm - 9:00 am", value: "Noche" },
-                    ]}
-                    className="w-full"
-                    size="large"
+                    prefix={hospitalCurrency}
                   />
                 </Col>
               </Row>
 
               <div className="flex justify-between mt-6">
                 <div className="font-bold text-general-secondary">
-                  27 de Septiembre de 2025
+                  {currentDate}
                 </div>
-                <div className="text-secondary font-bold">04:36:12 pm</div>
+                <div className="text-secondary font-bold">{currentTime}</div>
               </div>
 
               <div className="text-center mt-6">
                 <Button
                   type="primary"
                   onClick={handleSave}
-                  disabled={!amount || !shift}
+                  // disabled={!amount || isClosingSession}
+                  loading={isClosingSession}
                   size="large"
                   variant="solid"
                   color="green"
@@ -242,18 +356,15 @@ export const CashClosingPage = () => {
                   <Typography.Text strong style={{ color: "#7BA2D4" }}>
                     Auxiliar de Caja:
                   </Typography.Text>{" "}
-                  <Typography.Text strong>Sebas Contreras</Typography.Text>
+                  <Typography.Text strong>{userName}</Typography.Text>
                 </Col>
                 <Col span={12}>
                   <Typography.Text strong style={{ color: "#7BA2D4" }}>
-                    Módulo:
+                    Rol:
                   </Typography.Text>{" "}
                   <Typography.Text style={{ color: "#7BA2D4" }}>
-                    Emergencia
+                    {rolesValidos[0] || "Cajero"}
                   </Typography.Text>
-                  <div>
-                    <Typography.Text>{shiftLabel}</Typography.Text>
-                  </div>
                 </Col>
 
                 <Col span={12}>
@@ -262,19 +373,19 @@ export const CashClosingPage = () => {
                     style={{ color: "#EF5350" }}
                     className="text-lg font-bold"
                   >
-                    Lp {amount?.toFixed(2)}
+                    {hospitalCurrency} {amount?.toFixed(2)}
                   </Typography.Text>
                 </Col>
               </Row>
               <div className="mt-4 text-general-secondary text-md py-2">
-                27 de Septiembre de 2025 04:36:12 pm
+                {currentDateTime}
               </div>
               <div className="justify-center text-center">
                 <div className="text-lg font-medium text-general-secondary py-2">
-                  Sistema de Gestion de Receptoria de Fondos
+                  Sistema de Gestión de Receptoría de Fondos
                 </div>
                 <div className="text-xl font-bold text-general py-2">
-                  ¿Estas Seguro de Cerrar Caja?
+                  ¿Estás Seguro de Cerrar Caja?
                 </div>
               </div>
 
@@ -293,6 +404,7 @@ export const CashClosingPage = () => {
                     variant="solid"
                     color="danger"
                     icon={<CloseOutlined />}
+                    disabled={isClosingSession}
                   >
                     Cancelar
                   </Button>
@@ -303,6 +415,8 @@ export const CashClosingPage = () => {
                     variant="solid"
                     color="green"
                     icon={<CheckOutlined />}
+                    loading={isClosingSession}
+                    disabled={isClosingSession}
                   >
                     Confirmar
                   </Button>
@@ -331,16 +445,13 @@ export const CashClosingPage = () => {
                   <Typography.Text strong style={{ color: "#7BA2D4" }}>
                     Auxiliar de Caja:
                   </Typography.Text>{" "}
-                  <Typography.Text strong>Sebas Contreras</Typography.Text>
+                  <Typography.Text strong>{userName}</Typography.Text>
                 </Col>
                 <Col span={12}>
                   <Typography.Text strong style={{ color: "#7BA2D4" }}>
-                    Módulo:
+                    Rol:
                   </Typography.Text>{" "}
-                  <Typography.Text>Emergencia</Typography.Text>
-                  <div>
-                    <Typography.Text>{shiftLabel}</Typography.Text>
-                  </div>
+                  <Typography.Text>{rolesValidos[0] || "Cajero"}</Typography.Text>
                 </Col>
               </Row>
 
@@ -354,7 +465,7 @@ export const CashClosingPage = () => {
                       fontWeight: "bold",
                     }}
                   >
-                    Lp {amount?.toFixed(2)}
+                    {hospitalCurrency} {amount?.toFixed(2)}
                   </Typography.Text>
                 </Col>
                 <Col span={12}>
@@ -366,7 +477,7 @@ export const CashClosingPage = () => {
                       fontSize: "18px",
                     }}
                   >
-                    Lp {systemAmount.toFixed(2)}
+                    {hospitalCurrency} {systemAmount.toFixed(2)}
                   </Typography.Text>
                 </Col>
               </Row>
@@ -378,14 +489,14 @@ export const CashClosingPage = () => {
                   fontSize: "12px",
                 }}
               >
-                27 de Septiembre de 2025 &nbsp;&nbsp; 04:36:12 pm
+                {currentDateTime}
               </div>
 
               {isMatch ? (
                 <>
                   <Alert
                     message="¡Cierre Correcto!"
-                    description={`El monto ingresado coincide con el sistema: Lp ${amount?.toFixed(2)}`}
+                    description={`El monto ingresado coincide con el sistema: ${hospitalCurrency} ${amount?.toFixed(2)}`}
                     type="success"
                     showIcon
                     style={{ marginBottom: "16px" }}
@@ -407,7 +518,7 @@ export const CashClosingPage = () => {
                       color: "#4b5563",
                     }}
                   >
-                    ID:GJD8792JKDL303LD
+                    ID: {closedSessionId}
                   </div>
                 </>
               ) : (
@@ -425,7 +536,7 @@ export const CashClosingPage = () => {
                               fontWeight: "bold",
                             }}
                           >
-                            Lp {Math.abs(difference).toFixed(2)}
+                            {hospitalCurrency} {Math.abs(difference).toFixed(2)}
                           </span>
                         </p>
                         <p style={{ marginBottom: 0 }}>
@@ -469,8 +580,9 @@ export const CashClosingPage = () => {
                   color="green"
                   variant="solid"
                   icon={<CheckOutlined />}
+                  onClick={handleFinish}
                 >
-                  Siguiente
+                  Finalizar
                 </Button>
               </Space>
             ) : (
@@ -480,16 +592,14 @@ export const CashClosingPage = () => {
                 color="orange"
                 variant="solid"
                 icon={<WarningOutlined />}
-                onClick={() => {
-                  console.log("Redirigir a página de corrección");
-                }}
+                onClick={handleGoToCorrection}
               >
                 Ir a Corrección
               </Button>
             )}
           </div>
         )}
-      </ProCard>
-    </PageContainer>
+      </div>
+    </div>
   );
 };

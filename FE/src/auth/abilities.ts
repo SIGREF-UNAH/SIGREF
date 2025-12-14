@@ -4,6 +4,7 @@ export type Actions = "manage" | "read" | "create" | "update" | "delete";
 export type Subjects =
   | "incomes"             // Fondos
   | "shifts"              // Turnos
+  | "cashier-sessions"    // Sesiones de caja
   | "healthcares"         // Servicios
   | "service-groups"      // Paquetes de Servicios
   | "patients"            // Pacientes
@@ -32,9 +33,8 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can(["read", "create", "update", "delete"], "healthcares");
     can(["read", "create", "update", "delete"], "service-groups");
 
-    // TODO: Falta definir reports / incomes
-    can(["read", "create", "update", "delete"], "incomes");
-    can(["read", "create", "update", "delete"], "reports");
+    can(["read"], "incomes");
+    can(["read", "create"], "reports");
     
     // Menu desplegable
     can(["read", "create", "update", "delete"], "users");
@@ -49,8 +49,7 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can(["read"], "healthcares");
     can(["read"], "events");
 
-    // TODO: Falta definir reports / incomes
-    can(["read", "create", "update", "delete"], "reports");
+    can(["read", "create"], "reports");
 
     // Menu desplegable
     can(["read", "create", "update", "delete"], "users");
@@ -81,10 +80,10 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can(["read"], "locations");
     can(["read", "create", "update"], "patients");
     can(["read"], "shifts");
+    can(["read", "create"], "cashier-sessions");
 
-    // TODO: Falta definir reports / incomes
-    can(["read", "create", "update", "delete"], "incomes");
-    can(["read", "create", "update", "delete"], "reports");
+    can(["create", "update"], "incomes");
+    can(["read", "create"], "reports");
     
     // Menu desplegable
     can(["read"], "hospital");
