@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Constants;
+using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Series;
 using SIGREF.API.Services.Serie;
 
@@ -8,8 +9,6 @@ namespace SIGREF.API.Controllers.Serie;
 
 [Route("api/[controller]")]
 [ApiController]
-// TODO :
-// Agregar Autorizaciones a los Endpoints
 [Authorize(AuthenticationSchemes = "Bearer")]
 public class SeriesController : ControllerBase
 {
@@ -27,6 +26,10 @@ public class SeriesController : ControllerBase
     [Authorize(Roles = $"{RolesConstants.admin}")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Produces(typeof(ResponseDto<SerieDto>))]
     public async Task<IActionResult> Create([FromBody] CreateSeriesDto dto)
     {
         var result = await _serieService.CreateSerieAsync(dto);
@@ -37,10 +40,14 @@ public class SeriesController : ControllerBase
     //                     ACTUALIZAR SERIE
     // ============================================================
     [HttpPut("{id:guid}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [Authorize(Roles = $"{RolesConstants.admin}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Produces(typeof(ResponseDto<SerieDto>))]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateSeriesDto dto)
     {
         var result = await _serieService.UpdateSerieAsync(dto, id);
@@ -51,8 +58,13 @@ public class SeriesController : ControllerBase
     //      LISTAR SERIES (FILTRADO + PAGINACION)
     // ============================================================
     [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor} ")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Produces(typeof(ResponseDto<PagedResultDto<SerieDto>>))]
     public async Task<IActionResult> GetSeries([FromQuery] FilterSerieDto filter)
     {
         var result = await _serieService.GetSeriesAsync(filter);
@@ -66,6 +78,10 @@ public class SeriesController : ControllerBase
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Produces(typeof(ResponseDto<SerieDto>))]
     public async Task<IActionResult> GetById(Guid id)
     {
         var result = await _serieService.GetSerieById(id);
@@ -76,9 +92,14 @@ public class SeriesController : ControllerBase
     //                     DESACTIVAR (SOFT DELETE)
     // ============================================================
     [HttpDelete("{id:guid}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.admin}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Produces(typeof(ResponseDto<SerieDto>))]
     public async Task<IActionResult> SoftDelete(Guid id)
     {
         var result = await _serieService.SoftDeleteSerieAsync(id);

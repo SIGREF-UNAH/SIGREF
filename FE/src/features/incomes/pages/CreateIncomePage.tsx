@@ -20,133 +20,39 @@ import {
 } from "@ant-design/icons";
 import { useUrlFilters } from "../../../shared/hooks";
 import { IncomeSummary, ListPatient, ServiceIncome } from "../components";
+import { useHealthcaresList } from "../../healthcares/hooks";
+import { usePatientsInformation } from "../../patients/hooks";
+import { useCreateIncome } from "../hooks/useCreateIncome";
 
 const { TextArea } = Input;
 const { Text } = Typography;
 
-// Datos de ejemplo
-const serviciosData = [
-  {
-    id: 1,
-    nombre: "Consulta General",
-    abreviatura: "CG",
-    area: "Consulta",
-    precio: 60.0,
-    tipo: "servicio",
-  },
-  {
-    id: 2,
-    nombre: "Paquete de Exámenes Básicos",
-    abreviatura: "PEB",
-    area: "Laboratorio",
-    precio: 260.0,
-    tipo: "paquete",
-    servicios: ["Hemograma", "Glucosa", "Urea"],
-  },
-  {
-    id: 3,
-    nombre: "Examen de la Bacteria",
-    abreviatura: "EB",
-    area: "Laboratorio",
-    precio: 120.0,
-    tipo: "servicio",
-  },
-  {
-    id: 4,
-    nombre: "Radiografía de Tórax",
-    abreviatura: "RT",
-    area: "Radiología",
-    precio: 150.0,
-    tipo: "servicio",
-  },
-  {
-    id: 5,
-    nombre: "Electrocardiograma",
-    abreviatura: "ECG",
-    area: "Cardiología",
-    precio: 80.0,
-    tipo: "servicio",
-  },
-  {
-    id: 6,
-    nombre: "Paquete de Imágenes Completo",
-    abreviatura: "PIC",
-    area: "Radiología",
-    precio: 400.0,
-    tipo: "paquete",
-    servicios: ["Radiografía de Tórax", "Ultrasonido Abdominal", "ECG"],
-  },
-  {
-    id: 7,
-    nombre: "Ultrasonido Abdominal",
-    abreviatura: "UA",
-    area: "Radiología",
-    precio: 200.0,
-    tipo: "servicio",
-  },
-  {
-    id: 8,
-    nombre: "Consulta de Especialidad",
-    abreviatura: "CE",
-    area: "Consulta",
-    precio: 100.0,
-    tipo: "servicio",
-  },
-];
-
-const pacientesData = [
-  {
-    id: 1,
-    nombre: "David Enrique Lopez Garcia Prado",
-    identificador: "DNI: 0232-2034-12923",
-    genero: "M",
-    nacionalidad: "HN",
-    nacimiento: "26/07/1989",
-  },
-  {
-    id: 2,
-    nombre: "Andrea Valencia Josefina Prado",
-    identificador: "DNI: 0232-2034-12923",
-    genero: "F",
-    nacionalidad: "HN",
-    nacimiento: "26/07/1989",
-  },
-  {
-    id: 3,
-    nombre: "David Gavier Alexander Prado",
-    identificador: "DNI: 0232-2034-12923",
-    genero: "M",
-    nacionalidad: "HN",
-    nacimiento: "26/07/1989",
-  },
-  {
-    id: 4,
-    nombre: "María Fernanda Castillo",
-    identificador: "DNI: 0801-1990-12345",
-    genero: "F",
-    nacionalidad: "HN",
-    nacimiento: "15/03/1992",
-  },
-  {
-    id: 5,
-    nombre: "Carlos Eduardo Méndez",
-    identificador: "DNI: 0801-1985-67890",
-    genero: "M",
-    nacionalidad: "GT",
-    nacimiento: "22/11/1985",
-  },
-  {
-    id: 6,
-    nombre: "Lucía Rodríguez",
-    identificador: "DNI: 0801-1995-54321",
-    genero: "F",
-    nacionalidad: "SV",
-    nacimiento: "30/06/1995",
-  },
-];
-
 export const CreateIncomePage = () => {
   const [messageApi, contextHolder] = message.useMessage();
+  
+  // Hook para crear ingresos
+  const { 
+    createIncome, 
+    isLoading: isCreatingIncome,
+    contextHolder: incomeContextHolder 
+  } = useCreateIncome({
+    onSuccess: () => {
+      handleResetear();
+    },
+  });
+  
+  // Hook para obtener los servicios del backend
+  const { healthcares, isLoading: isLoadingHealthcares } = useHealthcaresList();
+
+  // Hook para obtener los pacientes del backend
+  const { 
+    patients, 
+    isLoading: isLoadingPatients,
+    filters: patientsHookFilters,
+    setFilter: setPatientsHookFilter,
+    setFilters: setPatientsHookFilters,
+  } = usePatientsInformation();
+
   const {
     filters: servicioFilters,
     setFilter: setServicioFilter,
@@ -164,7 +70,6 @@ export const CreateIncomePage = () => {
   const {
     filters: pacienteFilters,
     setFilter: setPacienteFilter,
-    resetFilters: resetPacienteFilters,
     setFilters: setPacienteFilters,
   } = useUrlFilters({
     defaultValues: {
@@ -178,9 +83,40 @@ export const CreateIncomePage = () => {
     },
   });
 
+  // Sincronizar filtros locales con el hook de pacientes
+  const handleSetPacienteFilter = (key: string, value: any) => {
+    setPacienteFilter(key, value);
+    
+    // Mapear filtros locales a los filtros del hook
+    const filterMap: Record<string, string> = {
+      searchPaciente: "nombreCompleto",
+      genero: "genero",
+      nacionalidad: "nacionalidad",
+      tipoIdentificador: "tipoIdentificador",
+      identificador: "identificador",
+    };
+    
+    if (filterMap[key]) {
+      setPatientsHookFilter(filterMap[key], value);
+    }
+  };
+
+  const handleSetPacienteFilters = (newFilters: any) => {
+    setPacienteFilters(newFilters);
+    
+    // Sincronizar paginación con el hook de pacientes
+    if (newFilters.pagePaciente || newFilters.pageSizePaciente) {
+      setPatientsHookFilters({
+        pageNumber: newFilters.pagePaciente || patientsHookFilters.pageNumber,
+        pageSize: newFilters.pageSizePaciente || patientsHookFilters.pageSize,
+      });
+    }
+  };
+
   const [selectedServicio, setSelectedServicio] = useState<any>(null);
   const [selectedPaciente, setSelectedPaciente] = useState<any>(null);
   const [serie, setSerie] = useState("A");
+  const [serieId, setSerieId] = useState(""); // ID de la serie para la API
   const [numeroRecibo, setNumeroRecibo] = useState("");
   const [aPagarEfectivo, setAPagarEfectivo] = useState(0);
   const [exonerado, setExonerado] = useState(false);
@@ -195,7 +131,8 @@ export const CreateIncomePage = () => {
     } else {
       setSelectedServicio(servicio);
       if (!exonerado && !tramiteEmergencia) {
-        setAPagarEfectivo(servicio.precio);
+        // Usar el campo 'cost' que viene del hook procesado
+        setAPagarEfectivo(servicio.cost || 0);
       }
     }
   };
@@ -207,7 +144,7 @@ export const CreateIncomePage = () => {
       setAPagarEfectivo(0);
       setTramiteEmergencia(false);
     } else if (selectedServicio) {
-      setAPagarEfectivo(selectedServicio.precio);
+      setAPagarEfectivo(selectedServicio.cost || 0);
     }
   };
 
@@ -217,11 +154,11 @@ export const CreateIncomePage = () => {
       setAPagarEfectivo(0);
       setExonerado(false);
     } else if (selectedServicio) {
-      setAPagarEfectivo(selectedServicio.precio);
+      setAPagarEfectivo(selectedServicio.cost || 0);
     }
   };
 
-  // Guardar y mostrar en consola
+  // Guardar y crear el ingreso
   const handleGuardar = () => {
     if (!selectedPaciente) {
       messageApi.warning("Por favor selecciona un paciente");
@@ -231,24 +168,35 @@ export const CreateIncomePage = () => {
       messageApi.warning("Por favor selecciona un servicio");
       return;
     }
+    if (!numeroRecibo.trim()) {
+      messageApi.warning("Por favor ingresa un número de recibo");
+      return;
+    }
 
-    const datos = {
-      paciente: selectedPaciente,
-      servicio: selectedServicio,
-      serie,
+    // Preparar datos para el hook useCreateIncome
+    const servicioData = {
+      id: selectedServicio.id,
+      nombre: selectedServicio.name || "Servicio sin nombre",
+      precio: selectedServicio.cost || 0,
+      tipo: "servicio", // Puedes ajustar esto según tu lógica
+    };
+
+    const pacienteData = {
+      id: selectedPaciente.id,
+      nombre: selectedPaciente.nombre,
+      identificador: selectedPaciente.identificador,
+    };
+
+    // Llamar al hook para crear el ingreso
+    createIncome({
+      selectedPaciente: pacienteData,
+      selectedServicio: servicioData,
       numeroRecibo,
       aPagarEfectivo,
       exonerado,
       tramiteEmergencia,
-      observaciones,
-      fecha: new Date().toISOString(),
-    };
-
-    console.log("=== DATOS DEL INGRESO ===");
-    console.log(datos);
-    console.log("========================");
-
-    messageApi.success("Datos guardados. Revisa la consola.");
+      serieId: serieId || "default-serie-id", // Debes obtener el ID real de la serie
+    });
   };
 
   // Resetear todo
@@ -256,19 +204,45 @@ export const CreateIncomePage = () => {
     setSelectedServicio(null);
     setSelectedPaciente(null);
     setSerie("A");
+    setSerieId("");
     setNumeroRecibo("");
     setAPagarEfectivo(0);
     setExonerado(false);
     setTramiteEmergencia(false);
     setObservaciones("");
     resetServicioFilters();
-    resetPacienteFilters();
+    
+    // Resetear filtros de pacientes
+    setPacienteFilters({
+      searchPaciente: "",
+      tipoIdentificador: "DNI",
+      genero: "todos",
+      nacionalidad: "todos",
+      identificador: "",
+      pagePaciente: 1,
+      pageSizePaciente: 5,
+    });
+    
+    // Resetear filtros del hook de pacientes
+    setPatientsHookFilters({
+      search: "",
+      pageNumber: 1,
+      pageSize: 10,
+      nombreCompleto: null,
+      genero: null,
+      estadoVital: null,
+      tipoIdentificador: null,
+      identificador: null,
+      fechaNacimiento: null,
+    });
+    
     messageApi.info("Formulario reseteado");
   };
 
   return (
     <>
       {contextHolder}
+      {incomeContextHolder}
       <PageContainer
         title="Registro de Ingresos por Servicios"
         subTitle="Genere ingresos de los servicios del paciente"
@@ -285,14 +259,15 @@ export const CreateIncomePage = () => {
               }
               bordered
             >
-              {/*Servicios */}
+              {/* Servicios */}
               <ServiceIncome
-                serviciosData={serviciosData}
+                serviciosData={healthcares}
                 servicioFilters={servicioFilters}
                 setServicioFilter={setServicioFilter}
                 setServicioFilters={setServicioFilters}
                 handleSelectServicio={handleSelectServicio}
                 selectedServicio={selectedServicio}
+                isLoading={isLoadingHealthcares}
               />
 
               {/* Serie y Número de Recibo */}
@@ -301,6 +276,8 @@ export const CreateIncomePage = () => {
               <IncomeSummary
                 serie={serie}
                 setSerie={setSerie}
+                serieId={serieId}
+                setSerieId={setSerieId}
                 numeroRecibo={numeroRecibo}
                 setNumeroRecibo={setNumeroRecibo}
                 selectedPaciente={selectedPaciente}
@@ -322,12 +299,13 @@ export const CreateIncomePage = () => {
             >
               {/* Paciente */}
               <ListPatient
-                pacientesData={pacientesData}
+                pacientesData={patients}
                 setSelectedPaciente={setSelectedPaciente}
                 selectedPaciente={selectedPaciente}
                 pacienteFilters={pacienteFilters}
-                setPacienteFilter={setPacienteFilter}
-                setPacienteFilters={setPacienteFilters}
+                setPacienteFilter={handleSetPacienteFilter}
+                setPacienteFilters={handleSetPacienteFilters}
+                isLoading={isLoadingPatients}
               />
 
               {/* Pago */}
@@ -386,6 +364,8 @@ export const CreateIncomePage = () => {
                   icon={<SaveOutlined />}
                   size="large"
                   onClick={handleGuardar}
+                  loading={isCreatingIncome}
+                  disabled={!selectedPaciente || !selectedServicio}
                 >
                   Guardar
                 </Button>
@@ -393,6 +373,7 @@ export const CreateIncomePage = () => {
                   icon={<ReloadOutlined />}
                   size="large"
                   onClick={handleResetear}
+                  disabled={isCreatingIncome}
                 >
                   Resetear
                 </Button>
