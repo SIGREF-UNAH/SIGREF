@@ -263,7 +263,7 @@ public class MediaFileService : IMediaFileService
                 if (changed)
                 {
                     hospital.UpdatedById = _userContextService.GetUserId();
-                    hospital.UpdatedDate = DateTime.Now;
+                    hospital.UpdatedDate = DateTime.UtcNow;
                     await _context.SaveChangesAsync();
                 }
             }

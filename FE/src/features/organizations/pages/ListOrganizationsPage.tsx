@@ -1,7 +1,10 @@
+import { useAbility } from "../../../config";
 import { PageHeaderTabs } from "../../../shared/components/ui";
-import OrganizationsList from "../components/ui/OrganizationsList";
+import OrganizationsList from "../components/OrganizationsList";
 
 export default function OrganizationsListPage() {
+  const ability = useAbility();
+
   return (
     <div>
       <main>
@@ -9,12 +12,16 @@ export default function OrganizationsListPage() {
         <PageHeaderTabs
           title="Gestión de Organizaciones"
           tabs={[
-            { key: "list", 
+            ...(ability.can("read", "organizations") ? [{
+              key: "list", 
               label: "Lista de Organizaciones", 
-              path: "/organizations/list" },
-            { key: "create", 
+              path: "/organizations/list",
+            }] : []),
+            ...(ability.can("create", "organizations") ? [{
+              key: "create", 
               label: "Crear Organización", 
-              path: "/organizations/create" },
+              path: "/organizations/create",
+            }] : []),
           ]}
           defaultActive="list"
         />

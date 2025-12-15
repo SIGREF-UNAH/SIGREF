@@ -27,6 +27,13 @@ export default defineConfig({
         changeOrigin: true,
         secure: false
       }
+    },
+    watch: {
+      usePolling: true,
+      interval: 1000
+    },
+    hmr: {
+      clientPort: 5173
     }
   }
 })

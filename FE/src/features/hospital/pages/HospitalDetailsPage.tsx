@@ -18,12 +18,15 @@ import { Button, Descriptions, Space, Spin, Result, Typography, Image, Card } fr
 import useHospitalDetails from "../hooks/useHospitalDetails";
 import { LogoSelectorModal } from "../../media-files/components";
 import { getMediaUrl } from "../../media-files/utils";
+import { Can } from "@casl/react";
+import { useAbility } from "../../../config";
 
 const { Title, Text } = Typography;
 
 export const HospitalDetailsPage: React.FC = () => {
   const { hospital, isLoading, isError, error, navigate } = useHospitalDetails();
   const [logoModalOpen, setLogoModalOpen] = useState(false);
+  const ability = useAbility();
 
   if (isLoading) {
     return (
@@ -48,14 +51,16 @@ export const HospitalDetailsPage: React.FC = () => {
           </div>
 
           <div className="text-center">
-            <Button
-              type="primary"
-              icon={<BankOutlined />}
-              size="large"
-              onClick={() => navigate("/hospital/create")}
-            >
-              Registrar Información
-            </Button>
+            <Can I="create" a="hospital" ability={ability}>
+              <Button
+                type="primary"
+                icon={<BankOutlined />}
+                size="large"
+                onClick={() => navigate("/hospital/create")}
+              >
+                Registrar Información
+              </Button>
+            </Can>
           </div>
         </div>
       );
@@ -88,23 +93,25 @@ export const HospitalDetailsPage: React.FC = () => {
             Información del Hospital
           </Title>
 
-          <Space>
-            <Button
-              type="default"
-              icon={<PictureOutlined />}
-              onClick={() => setLogoModalOpen(true)}
-            >
-              Logotipos
-            </Button>
+          <Can I="update" a="hospital" ability={ability}>
+            <Space>
+              <Button
+                type="default"
+                icon={<PictureOutlined />}
+                onClick={() => setLogoModalOpen(true)}
+              >
+                Logotipos
+              </Button>
 
-            <Button
-              type="primary"
-              icon={<EditOutlined />}
-              onClick={() => navigate("/hospital/update")}
-            >
-              Editar
-            </Button>
-          </Space>
+              <Button
+                type="primary"
+                icon={<EditOutlined />}
+                onClick={() => navigate("/hospital/update")}
+              >
+                Editar
+              </Button>
+            </Space>
+          </Can>
         </div>
 
         {/* Logos */}

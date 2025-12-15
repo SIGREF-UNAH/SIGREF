@@ -1,7 +1,6 @@
 import { Card, Button, Tooltip } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useKeycloak } from "@react-keycloak/web";
-import { validRoles } from "../../auth";
 import { useAbility } from "../../config";
 import { Can } from "@casl/react"
 import {
@@ -13,8 +12,9 @@ import {
   TeamOutlined,
   UserOutlined,
   BarChartOutlined,
-  UserSwitchOutlined,
+  RetweetOutlined,
 } from "@ant-design/icons";
+import { USER_ROLE_OPTIONS } from "../constants";
 
 interface ModuleCardProps {
   title: string;
@@ -72,9 +72,9 @@ export const HomePage: React.FC = () => {
     keycloak?.tokenParsed?.family_name || "Usuario";
 
   // Obtener el rol del usuario
-  const userRole =
-    keycloak?.realmAccess?.roles?.find((r) =>
-    validRoles[r as keyof typeof validRoles]) || "SIN ROL";
+  const userRole = keycloak?.realmAccess?.roles?.find((r) => 
+      USER_ROLE_OPTIONS.some(option => option.value === r)
+    ) || "SIN ROL";
 
   return (
     <div>
@@ -105,7 +105,7 @@ export const HomePage: React.FC = () => {
           />
         </Can>
 
-        {/* Gestión de Servicios Médicos */}
+        {/* Gestión de Servicios */}
         <Can I="read" a="healthcares" ability={ability}>
           <ModuleCard
             title="Gestión de Servicios"
@@ -113,28 +113,6 @@ export const HomePage: React.FC = () => {
             icon={<MedicineBoxOutlined />}
             shortcut="Ctrl + S"
             path="/healthcares/list"
-          />
-        </Can>
-        
-        {/* Gestión de Ubicaciones */}
-        <Can I="read" a="locations" ability={ability}>
-          <ModuleCard
-            title="Gestión de Ubicaciones"
-            description={"Administre las áreas donde se ofrecen los servicios médicos"}
-            icon={<EnvironmentOutlined />}
-            shortcut="Ctrl + U"
-            path="/locations/list"
-          />
-        </Can>
-        
-        {/* Gestión de Turnos */}
-        <Can I="read" a="shifts" ability={ability}>
-          <ModuleCard
-            title="Gestión de Turnos"
-            description={"Administre los turnos de trabajo del hospital por su ubicación"}
-            icon={<UserSwitchOutlined />}
-            shortcut="Ctrl + T"
-            path="/shifts/list"
           />
         </Can>
         
@@ -157,6 +135,28 @@ export const HomePage: React.FC = () => {
             icon={<TeamOutlined />}
             shortcut="Ctrl + E"
             path="/practitioners/list"
+          />
+        </Can>
+        
+        {/* Gestión de Turnos */}
+        <Can I="read" a="shifts" ability={ability}>
+          <ModuleCard
+            title="Gestión de Turnos"
+            description={"Administre los turnos de trabajo del hospital por su ubicación"}
+            icon={<RetweetOutlined />}
+            shortcut="Ctrl + T"
+            path="/shifts/list"
+          />
+        </Can>
+        
+        {/* Gestión de Ubicaciones */}
+        <Can I="read" a="locations" ability={ability}>
+          <ModuleCard
+            title="Gestión de Ubicaciones"
+            description={"Administre las áreas donde se ofrecen los servicios médicos"}
+            icon={<EnvironmentOutlined />}
+            shortcut="Ctrl + U"
+            path="/locations/list"
           />
         </Can>
         

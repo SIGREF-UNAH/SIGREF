@@ -136,6 +136,13 @@ export function usePatientsInformation() {
 
   const patient: PatientDto | undefined = Array.isArray(data) ? data[0] : data;
 
+  function formatAddress(a : any) {
+    return [a.line?.join(", "), a.city, a.state, a.country]
+      .filter(Boolean)
+      .join(", ");
+  }
+
+
   // Datos del paciente seleccionado
   const selectedPatient = useMemo(() => {
     return {
@@ -242,9 +249,7 @@ export function usePatientsInformation() {
                     ? "Antiguo"
                     : a.use
             : a.use || "Desconocido",
-        valor: `${a.line?.join(", ") || ""}, ${a.city || ""}, ${
-          a.country || ""
-        }`,
+        valor: formatAddress(a),
       })) || [],
     };
   }, [data]);

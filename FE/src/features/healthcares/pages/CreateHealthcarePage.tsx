@@ -1,12 +1,13 @@
 import { HealthcareForm } from "../components/HealthcareForm";
-import { FormTitle } from "../components/ui/FormTitle";
+import { FormTitle } from "../components/FormTitle";
 import { useCreateHealthcare, useHealthcareForm } from "../hooks";
 import { PageHeaderTabs } from "../../../shared/components/ui";
 import { Spin } from "antd";
+import { useAbility } from "../../../config";
 
 export const CreateHealthcarePage = () => {
   const { isPending, handleFinish } = useCreateHealthcare();
-
+  const ability = useAbility();
   const { organizations, locations, isLoading, handleCancel } = useHealthcareForm();
 
   if (isLoading) {
@@ -23,26 +24,26 @@ export const CreateHealthcarePage = () => {
       <PageHeaderTabs
         title="Gestión de Servicios"
         tabs={[
-          {
+          ...(ability.can("read", "healthcares") ? [{
             key: "listar1",
             label: "Lista de Servicios",
             path: "/healthcares/list",
-          },
-          {
+          }] : []),
+          ...(ability.can("create", "healthcares") ? [{
             key: "crear1",
             label: "Crear Servicio",
             path: "/healthcares/create",
-          },
-          {
+          }] : []),
+          ...(ability.can("read", "service-groups") ? [{
             key: "listar2",
             label: "Lista de Paquetes",
             path: "/service-groups/list",
-          },
-          {
+          }] : []),
+          ...(ability.can("create", "service-groups") ? [{
             key: "crear2",
             label: "Crear Paquete",
             path: "/service-groups/create",
-          },
+          }] : []),
         ]}
         defaultActive="crear1"
       />

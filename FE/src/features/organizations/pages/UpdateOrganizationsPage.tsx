@@ -3,6 +3,7 @@ import type { OrganizationDto } from "../../../api/models";
 import { PageHeaderTabs } from "../../../shared/components";
 import OrganizationsForm from "../components/OrganizationsForm";
 import { useUpdateOrganization } from "../hooks/useUpdateOrganizations";
+import { useAbility } from "../../../config";
 
 export const UpdateOrganizationPage = () => {
   const {
@@ -11,6 +12,7 @@ export const UpdateOrganizationPage = () => {
     isLoading, 
     handleFinish, 
   } = useUpdateOrganization();
+  const ability = useAbility();
 
   return (
     <div>
@@ -18,12 +20,16 @@ export const UpdateOrganizationPage = () => {
       <PageHeaderTabs
         title="Gestión de Organizaciones"
         tabs={[
-          { key: "listar", 
+          ...(ability.can("read", "organizations") ? [{
+            key: "list", 
             label: "Lista de Organizaciones", 
-            path: "/organizations/list" },
-          { key: "crear", 
+            path: "/organizations/list",
+          }] : []),
+          ...(ability.can("create", "organizations") ? [{
+            key: "create", 
             label: "Crear Organización", 
-            path: "/organizations/create" },
+            path: "/organizations/create",
+          }] : []),
         ]}
         defaultActive="null"
       />

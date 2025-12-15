@@ -1,14 +1,13 @@
-import React, { useState } from "react";
+import React from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { ProDescriptions } from "@ant-design/pro-components";
-import { Card, Spin, Typography, Space, Button, message, Tag } from "antd";
+import { Card, Spin, Typography, Space, Button, message, Tag, Popconfirm } from "antd";
 import {
   EditOutlined,
   DeleteOutlined,
   ArrowLeftOutlined,
 } from "@ant-design/icons";
 import { useGetApiLocationsId } from "../../../api/locations/locations";
-import DeleteLocationModal from "../components/modals/DeleteLocationModal";
 import {
   useDeleteApiLocationsId,
   getGetApiLocationsQueryKey,
@@ -22,6 +21,8 @@ import {
 } from "react-icons/bs";
 import { ContactPointSystem } from "../../../api/models";
 import { PageHeaderTabs } from "../../../shared/components/ui";
+import { useAbility } from "../../../config";
+import { Can } from "@casl/react";
 
 // Mapeo de ContactPointSystem a etiquetas legibles
 const TelecomLabels: Record<number, string> = {
@@ -50,6 +51,7 @@ const ALIAS_COLORS = [
 
 const LocationDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const ability = useAbility();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const {
@@ -70,10 +72,6 @@ const LocationDetailsPage: React.FC = () => {
       onError: () => message.error("Error al eliminar la ubicación"),
     },
   });
-
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-
-  const handleDeleteClick = () => setDeleteModalVisible(true);
 
   const handleDelete = async (locationId: number) => {
     try {
@@ -138,16 +136,12 @@ const LocationDetailsPage: React.FC = () => {
         <PageHeaderTabs
           title="Gestión de Ubicaciones"
           tabs={[
-            {
-              key: "listar",
-              label: "Lista de Ubicaciones",
-              path: "/locations/list",
-            },
-            {
-              key: "crear",
-              label: "Crear Ubicación",
-              path: "/locations/create",
-            },
+            ...(ability.can("read", "locations") ? [{
+              key: "listar", label: "Lista de Ubicaciones", path: "/locations/list",
+            }] : []),
+            ...(ability.can("create", "locations") ? [{
+              key: "crear", label: "Crear Ubicación", path: "/locations/create",
+            }] : []),
           ]}
           defaultActive="null"
         />
@@ -156,7 +150,7 @@ const LocationDetailsPage: React.FC = () => {
           {/* Header */}
           <div className="flex items-center gap-3 mb-8">
             <BsPinMapFill className="text-blue-500 text-2xl" />
-            <h1 className="text-2xl font-bold text-[#333333]">
+            <h1 className="text-2xl font-bold text-general">
               {location.name || "Ubicación"}
             </h1>
           </div>
@@ -217,7 +211,7 @@ const LocationDetailsPage: React.FC = () => {
             </ProDescriptions.Item>
           </ProDescriptions>
 
-          <hr className="border-[#000] my-8" />
+          <hr className="border-black my-8" />
 
           {/* Dirección física */}
           <ProDescriptions
@@ -262,7 +256,7 @@ const LocationDetailsPage: React.FC = () => {
             </ProDescriptions.Item>
           </ProDescriptions>
 
-          <hr className="border-[#000] my-8" />
+          <hr className="border-black my-8" />
 
           {/* Información de contacto */}
           <div className="mb-8">
@@ -298,7 +292,7 @@ const LocationDetailsPage: React.FC = () => {
             )}
           </div>
 
-          <hr className="border-[#000] my-8" />
+          <hr className="border-black my-8" />
 
           {/* Organización y jerarquía */}
           <ProDescriptions
@@ -330,58 +324,64 @@ const LocationDetailsPage: React.FC = () => {
           {/* Botones de acciones */}
           <div className="flex justify-end pt-10">
             <Space size="middle">
-              <Link to="/locations/list">
-                <Button
-                  size="large"
-                  style={{
-                    borderRadius: 6,
-                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-                    color: "#163C65",
-                    borderColor: "#163C65",
-                  }}
+              <Can I="read" a="locations" ability={ability}>
+                <Link to="/locations/list">
+                  <Button
+                    size="large"
+                    style={{
+                      borderRadius: 6,
+                      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+                      color: "#163C65",
+                      borderColor: "#163C65",
+                    }}
+                  >
+                    <ArrowLeftOutlined /> Volver
+                  </Button>
+                </Link>
+              </Can>
+              <Can I="update" a="locations" ability={ability}>
+                <Link to={`/locations/update/${location.id}`}>
+                  <Button
+                    type="primary"
+                    size="large"
+                    icon={<EditOutlined />}
+                    style={{
+                      backgroundColor: "#52c41a",
+                      borderColor: "#52c41a",
+                      borderRadius: 6,
+                      boxShadow: "0 2px 8px rgba(82, 196, 26, 0.3)",
+                    }}
+                  >
+                    Editar
+                  </Button>
+                </Link>
+              </Can>
+              <Can I="delete" a="locations" ability={ability}>
+                <Popconfirm
+                  title="¿Eliminar ubicación?"
+                  description="Esta acción no se puede deshacer"
+                  onConfirm={() => handleDelete(Number(location.id!))}
+                  okText="Sí, eliminar"
+                  cancelText="Cancelar"
+                  okButtonProps={{ danger: true }}
                 >
-                  <ArrowLeftOutlined /> Volver
-                </Button>
-              </Link>
-              <Link to={`/locations/update/${location.id}`}>
-                <Button
+                  <Button
                   type="primary"
                   size="large"
-                  icon={<EditOutlined />}
+                  icon={<DeleteOutlined />}
+                  danger
                   style={{
-                    backgroundColor: "#52c41a",
-                    borderColor: "#52c41a",
                     borderRadius: 6,
-                    boxShadow: "0 2px 8px rgba(82, 196, 26, 0.3)",
+                    boxShadow: "0 2px 8px rgba(245, 34, 45, 0.3)",
                   }}
                 >
-                  Editar
+                  Eliminar
                 </Button>
-              </Link>
-              <Button
-                type="primary"
-                size="large"
-                icon={<DeleteOutlined />}
-                danger
-                style={{
-                  borderRadius: 6,
-                  boxShadow: "0 2px 8px rgba(245, 34, 45, 0.3)",
-                }}
-                onClick={handleDeleteClick}
-              >
-                Eliminar
-              </Button>
+                </Popconfirm>
+              </Can>
             </Space>
           </div>
         </div>
-
-        <DeleteLocationModal
-          visible={deleteModalVisible}
-          onVisibleChange={setDeleteModalVisible}
-          locationId={location.id ? Number(location.id) : null}
-          locationName={location.name}
-          onDelete={handleDelete}
-        />
       </main>
     </div>
   );

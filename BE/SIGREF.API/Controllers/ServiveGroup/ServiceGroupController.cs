@@ -88,7 +88,7 @@ public class ServiceGroupController(ServiceGroupService serviceGroupService) : C
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
+    [Authorize(Roles = $"{RolesConstants.admin}")]
     public async Task<IActionResult> Delete(string id)
     {
         var existingList = await serviceGroupService.GetFhirListByIdAsync(id);
