@@ -1,13 +1,24 @@
 ﻿namespace SIGREF.API.Constants;
+
 public static class TerminologyConstants
 {
+    // =========================
     // CodeSystems
-    public const string RolesAdminCodeSystemUrl = "https://hospitalpublico.hn/fhir/CodeSystem/roles-admin";
-    public const string TiposUbicacionCodeSystemUrl = "https://hospitalpublico.hn/fhir/CodeSystem/tipos-ubicacion";
+    // =========================
+    public const string RolesAdminCodeSystemUrl =
+        FhirNamespaces.RolesAdminCodeSystem;
 
+    public const string TiposUbicacionCodeSystemUrl =
+        FhirNamespaces.TiposUbicacionCodeSystem;
+
+    // =========================
     // ValueSets
-    public const string RolesAdminValueSetUrl = "https://hospitalpublico.hn/fhir/ValueSet/roles-admin";
-    public const string TiposUbicacionValueSetUrl = "https://hospitalpublico.hn/fhir/ValueSet/tipos-ubicacion";
+    // =========================
+    public const string RolesAdminValueSetUrl =
+        FhirNamespaces.RolesAdminValueSet;
+
+    public const string TiposUbicacionValueSetUrl =
+        FhirNamespaces.TiposUbicacionValueSet;
 
     // Conceptos: Roles
     public static readonly Dictionary<string, string> RolesAdminConcepts = new()
@@ -48,4 +59,3 @@ public static class TerminologyConstants
         ["odontologia"] = "Odontología"
     };
 }
-
