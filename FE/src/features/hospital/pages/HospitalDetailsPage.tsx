@@ -51,14 +51,16 @@ export const HospitalDetailsPage: React.FC = () => {
           </div>
 
           <div className="text-center">
-            <Button
-              type="primary"
-              icon={<BankOutlined />}
-              size="large"
-              onClick={() => navigate("/hospital/create")}
-            >
-              Registrar Información
-            </Button>
+            <Can I="create" a="hospital" ability={ability}>
+              <Button
+                type="primary"
+                icon={<BankOutlined />}
+                size="large"
+                onClick={() => navigate("/hospital/create")}
+              >
+                Registrar Información
+              </Button>
+            </Can>
           </div>
         </div>
       );

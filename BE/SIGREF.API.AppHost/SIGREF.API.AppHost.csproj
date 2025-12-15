@@ -24,6 +24,5 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="config\themes\sigref\account\" />
-    <Folder Include="config\themes\sigref\login\resources\img\" />
   </ItemGroup>
 </Project>

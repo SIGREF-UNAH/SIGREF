@@ -1,20 +1,22 @@
 import type { NavigateFunction } from "react-router";
+import type { Subjects } from "../auth";
 
 export interface ShortcutConfig {
   keys: string;
   title: string;
   description: string;
-  roles: string[];
   action: (
     navigate: NavigateFunction,
     setShowHelp?: (show: boolean) => void
   ) => void;
-  category: string;
+  category: Subjects; // Cambia a Subjects para que coincida con abilities
+  requiredAction: "read" | "create" | "update" | "delete"; // Acción requerida
+  requiredSubject: Subjects; // Sujeto/recurso requerido
 }
 
 export interface ShortcutSection {
   title: string;
-  category: string;
+  category: Subjects;
   shortcuts: {
     keys: string;
     description: string;
@@ -29,7 +31,8 @@ export const appShortcuts: ShortcutConfig[] = [
     action: (navigate) => navigate("/incomes/list"),
     title: "Gestión de Fondos",
     category: "incomes",
-    roles: ["admin", "cashier", "auditor"],
+    requiredAction: "read",
+    requiredSubject: "incomes",
   },
   {
     keys: "ctrl+shift+f",
@@ -37,7 +40,8 @@ export const appShortcuts: ShortcutConfig[] = [
     action: (navigate) => navigate("/incomes/create"),
     title: "Gestión de Fondos",
     category: "incomes",
-    roles: ["admin", "cashier", "auditor"],
+    requiredAction: "create",
+    requiredSubject: "incomes",
   },
   {
     keys: "ctrl+f+c",
@@ -45,7 +49,8 @@ export const appShortcuts: ShortcutConfig[] = [
     action: (navigate) => navigate("/incomes/close"),
     title: "Gestión de Fondos",
     category: "incomes",
-    roles: ["admin", "cashier", "auditor"],
+    requiredAction: "update",
+    requiredSubject: "incomes",
   },
   {
     keys: "ctrl+f+h",
@@ -53,17 +58,8 @@ export const appShortcuts: ShortcutConfig[] = [
     action: (navigate) => navigate("/incomes/history"),
     title: "Gestión de Fondos",
     category: "incomes",
-    roles: ["admin", "cashier", "auditor"],
-  },
-
-  // Gestión de Turnos
-  {
-    keys: "ctrl+t",
-    description: "Listar Turnos",
-    action: (navigate) => navigate("/shifts/list"),
-    title: "Gestión de Turnos",
-    category: "shifts",
-    roles: ["admin", "cashier", "auditor"],
+    requiredAction: "read",
+    requiredSubject: "incomes",
   },
 
   // Gestión de Servicios
@@ -73,7 +69,8 @@ export const appShortcuts: ShortcutConfig[] = [
     action: (navigate) => navigate("/healthcares/list"),
     title: "Gestión de Servicios",
     category: "healthcares",
-    roles: ["admin", "cashier", "auditor"],
+    requiredAction: "read",
+    requiredSubject: "healthcares",
   },
   {
     keys: "ctrl+shift+s",
@@ -81,7 +78,8 @@ export const appShortcuts: ShortcutConfig[] = [
     action: (navigate) => navigate("/healthcares/create"),
     title: "Gestión de Servicios",
     category: "healthcares",
-    roles: ["admin", "cashier", "auditor"],
+    requiredAction: "create",
+    requiredSubject: "healthcares",
   },
   {
     keys: "alt+s",
@@ -89,7 +87,8 @@ export const appShortcuts: ShortcutConfig[] = [
     action: (navigate) => navigate("/service-groups/list"),
     title: "Gestión de Servicios",
     category: "healthcares",
-    roles: ["admin", "cashier", "auditor"],
+    requiredAction: "read",
+    requiredSubject: "service-groups",
   },
   {
     keys: "alt+shift+s",
@@ -97,87 +96,8 @@ export const appShortcuts: ShortcutConfig[] = [
     action: (navigate) => navigate("/service-groups/create"),
     title: "Gestión de Servicios",
     category: "healthcares",
-    roles: ["admin", "cashier", "auditor"],
-  },
-
-  // Gestión de Organizaciones
-  {
-    keys: "ctrl+o",
-    description: "Listar organizaciones",
-    action: (navigate) => navigate("/organizations/list"),
-    title: "Gestión de Organizaciones",
-    category: "organizations",
-    roles: ["admin", "ti"],
-  },
-  {
-    keys: "ctrl+shift+o",
-    description: "Crear organización",
-    action: (navigate) => navigate("/organizations/create"),
-    title: "Gestión de Organizaciones",
-    category: "organizations",
-    roles: ["admin", "ti"],
-  },
-
-  // Gestión de Ubicaciones
-  {
-    keys: "ctrl+u",
-    description: "Listar ubicaciones",
-    action: (navigate) => navigate("/locations/list"),
-    title: "Gestión de Ubicaciones",
-    category: "locations",
-    roles: ["admin", "ti"],
-  },
-  {
-    keys: "ctrl+shift+u",
-    description: "Crear ubicación",
-    action: (navigate) => navigate("/locations/create"),
-    title: "Gestión de Ubicaciones",
-    category: "locations",
-    roles: ["admin", "ti"],
-  },
-
-  // Gestión de Reportes
-  {
-    keys: "ctrl+r",
-    description: "Control de reportes",
-    action: (navigate) => navigate("/reports/list"),
-    title: "Gestión de Reportes",
-    category: "reports",
-    roles: ["admin"],
-  },
-  {
-    keys: "ctrl+shift+r",
-    description: "Generar reporte",
-    action: (navigate) => navigate("/reports/create"),
-    title: "Gestión de Reportes",
-    category: "reports",
-    roles: ["admin"],
-  },
-  {
-    keys: "ctrl+r+h",
-    description: "Historial de reportes",
-    action: (navigate) => navigate("/reports/history"),
-    title: "Gestión de Reportes",
-    category: "reports",
-    roles: ["admin"],
-  },
-
-  // Gestión de Empleados
-  {
-    keys: "ctrl+e",
-    description: "Listar empleados",
-    action: (navigate) => navigate("/practitioners/list"),
-    title: "Gestión de Empleados",
-    category: "practitioners",
-    roles: ["admin", "ti", "auditor"],
-  },
-  {
-    keys: "ctrl+shift+e",
-    description: "Crear empleado",
-    action: (navigate) => navigate("/practitioners/create"),
-    title: "Gestión de Empleados",
-    category: "practitioners",
-    roles: ["admin", "ti", "auditor"],
+    requiredAction: "create",
+    requiredSubject: "service-groups",
   },
 
   // Gestión de Pacientes
@@ -187,7 +107,8 @@ export const appShortcuts: ShortcutConfig[] = [
     action: (navigate) => navigate("/patients/list"),
     title: "Gestión de Pacientes",
     category: "patients",
-    roles: ["admin", "cashier"],
+    requiredAction: "read",
+    requiredSubject: "patients",
   },
   {
     keys: "ctrl+shift+p",
@@ -195,7 +116,108 @@ export const appShortcuts: ShortcutConfig[] = [
     action: (navigate) => navigate("/patients/create"),
     title: "Gestión de Pacientes",
     category: "patients",
-    roles: ["admin", "cashier"],
+    requiredAction: "create",
+    requiredSubject: "patients",
+  },
+
+  // Gestión de Empleados
+  {
+    keys: "ctrl+e",
+    description: "Listar empleados",
+    action: (navigate) => navigate("/practitioners/list"),
+    title: "Gestión de Empleados",
+    category: "practitioners",
+    requiredAction: "read",
+    requiredSubject: "practitioners",
+  },
+  {
+    keys: "ctrl+shift+e",
+    description: "Crear empleado",
+    action: (navigate) => navigate("/practitioners/create"),
+    title: "Gestión de Empleados",
+    category: "practitioners",
+    requiredAction: "create",
+    requiredSubject: "practitioners",
+  },
+
+  // Gestión de Turnos
+  {
+    keys: "ctrl+t",
+    description: "Listar Turnos",
+    action: (navigate) => navigate("/shifts/list"),
+    title: "Gestión de Turnos",
+    category: "shifts",
+    requiredAction: "read",
+    requiredSubject: "shifts",
+  },
+
+  // Gestión de Ubicaciones
+  {
+    keys: "ctrl+u",
+    description: "Listar ubicaciones",
+    action: (navigate) => navigate("/locations/list"),
+    title: "Gestión de Ubicaciones",
+    category: "locations",
+    requiredAction: "read",
+    requiredSubject: "locations",
+  },
+  {
+    keys: "ctrl+shift+u",
+    description: "Crear ubicación",
+    action: (navigate) => navigate("/locations/create"),
+    title: "Gestión de Ubicaciones",
+    category: "locations",
+    requiredAction: "create",
+    requiredSubject: "locations",
+  },
+
+  // Gestión de Organizaciones
+  {
+    keys: "ctrl+o",
+    description: "Listar organizaciones",
+    action: (navigate) => navigate("/organizations/list"),
+    title: "Gestión de Organizaciones",
+    category: "organizations",
+    requiredAction: "read",
+    requiredSubject: "organizations",
+  },
+  {
+    keys: "ctrl+shift+o",
+    description: "Crear organización",
+    action: (navigate) => navigate("/organizations/create"),
+    title: "Gestión de Organizaciones",
+    category: "organizations",
+    requiredAction: "create",
+    requiredSubject: "organizations",
+  },
+
+  // Gestión de Reportes
+  {
+    keys: "ctrl+r",
+    description: "Control de reportes",
+    action: (navigate) => navigate("/reports/list"),
+    title: "Gestión de Reportes",
+    category: "reports",
+    requiredAction: "read",
+    requiredSubject: "reports",
+  },
+  {
+    keys: "ctrl+shift+r",
+    description: "Generar reporte",
+    action: (navigate) => navigate("/reports/create"),
+    title: "Gestión de Reportes",
+    category: "reports",
+    requiredAction: "create",
+    requiredSubject: "reports",
+  },
+  {
+    keys: "ctrl+r+h",
+    description: "Historial de reportes",
+    action: (navigate) => navigate("/reports/history"),
+    title: "Gestión de Reportes",
+    category: "reports",
+    requiredAction: "read",
+    requiredSubject: "reports",
   },
 
   // Gestión de Eventos/Logs
@@ -205,6 +227,41 @@ export const appShortcuts: ShortcutConfig[] = [
     action: (navigate) => navigate("/events/list"),
     title: "Gestión de Eventos/Logs",
     category: "events",
-     roles: ["admin", "ti", "auditor"],
+    requiredAction: "read",
+    requiredSubject: "events",
   },
 ];
+
+// Función para filtrar shortcuts según abilities
+export const filterShortcutsByAbility = (shortcuts: ShortcutConfig[], ability: any): ShortcutConfig[] => {
+  return shortcuts.filter(shortcut => 
+    ability.can(shortcut.requiredAction, shortcut.requiredSubject)
+  );
+};
+
+// Función para crear secciones filtradas
+export const getFilteredShortcutSections = (ability: any): ShortcutSection[] => {
+  const filteredShortcuts = filterShortcutsByAbility(appShortcuts, ability);
+  
+  const sectionsMap = new Map<string, ShortcutSection>();
+  
+  filteredShortcuts.forEach(shortcut => {
+    const key = `${shortcut.title}|${shortcut.category}`;
+    
+    if (!sectionsMap.has(key)) {
+      sectionsMap.set(key, {
+        title: shortcut.title,
+        category: shortcut.category,
+        shortcuts: []
+      });
+    }
+    
+    const section = sectionsMap.get(key)!;
+    section.shortcuts.push({
+      keys: shortcut.keys,
+      description: shortcut.description
+    });
+  });
+  
+  return Array.from(sectionsMap.values());
+};

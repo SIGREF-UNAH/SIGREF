@@ -45,6 +45,7 @@ export const defineAbilitiesFor = (roles: string[]) => {
   if (roles.includes("ti")) {
     can(["read", "create", "update", "delete"], "organizations");
     can(["read", "create", "update", "delete"], "practitioners");
+    can(["read", "create", "update", "delete"], "practitioner-roles");
     can(["read"], "healthcares");
     can(["read"], "events");
 
@@ -80,7 +81,6 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can(["read"], "locations");
     can(["read", "create", "update"], "patients");
     can(["read"], "shifts");
-    can(["read"], "service-groups");
 
     // TODO: Falta definir reports / incomes
     can(["read", "create", "update", "delete"], "incomes");

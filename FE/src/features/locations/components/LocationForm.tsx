@@ -319,7 +319,7 @@ export default function LocationForm({ mode }: LocationFormProps) {
             />
             <ProFormSelect
               name={["address", "state"]}
-              label="Estado"
+              label="Departamento"
               options={stateOptions}
               showSearch
               allowClear
@@ -346,7 +346,7 @@ export default function LocationForm({ mode }: LocationFormProps) {
           </div>
           <ProFormText
             name={["address", "line", 0]}
-            label="Dirección"
+            label="Detalles"
             rules={[{ required: true }]}
           />
         </section>

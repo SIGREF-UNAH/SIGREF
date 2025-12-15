@@ -1,7 +1,7 @@
 import { Navigate } from "react-router";
 import type { JSX } from "react";
-import { useAbility } from "../../config/providers";
 import type { Actions, Subjects } from "../../auth/abilities";
+import { useAbility } from "../../config";
 
 export const ProtectedRoute = ({
   action,
