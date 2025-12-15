@@ -105,6 +105,17 @@ export const HomePage: React.FC = () => {
           />
         </Can>
 
+        {/* Gestión de Fondos (cashier) */}
+        <Can I="create" a="incomes" ability={ability}>
+          <ModuleCard
+            title="Gestión de Fondos"
+            description={"Recepción y gestión de fondos e ingresos monetarios"}
+            icon={<DollarOutlined />}
+            shortcut="Ctrl + F"
+            path="/incomes/create"
+          />
+        </Can>
+
         {/* Gestión de Servicios */}
         <Can I="read" a="healthcares" ability={ability}>
           <ModuleCard

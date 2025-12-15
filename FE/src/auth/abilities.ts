@@ -32,9 +32,8 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can(["read", "create", "update", "delete"], "shifts");
     can(["read", "create", "update", "delete"], "healthcares");
     can(["read", "create", "update", "delete"], "service-groups");
-
-    can(["read"], "incomes");
     can(["read", "create"], "reports");
+    can(["read"], "incomes");
     
     // Menu desplegable
     can(["read", "create", "update", "delete"], "users");
@@ -46,10 +45,9 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can(["read", "create", "update", "delete"], "organizations");
     can(["read", "create", "update", "delete"], "practitioners");
     can(["read", "create", "update", "delete"], "practitioner-roles");
+    can(["read", "create"], "reports");
     can(["read"], "healthcares");
     can(["read"], "events");
-
-    can(["read", "create"], "reports");
 
     // Menu desplegable
     can(["read", "create", "update", "delete"], "users");
@@ -77,13 +75,12 @@ export const defineAbilitiesFor = (roles: string[]) => {
 
   // Auxiliar de caja
   if (roles.includes("cashier")) {
-    can(["read"], "locations");
     can(["read", "create", "update"], "patients");
-    can(["read"], "shifts");
     can(["read", "create"], "cashier-sessions");
-
     can(["create", "update"], "incomes");
     can(["read", "create"], "reports");
+    can(["read"], "locations");
+    can(["read"], "shifts");
     
     // Menu desplegable
     can(["read"], "hospital");
