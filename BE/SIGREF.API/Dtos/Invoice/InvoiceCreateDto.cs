@@ -21,7 +21,7 @@ public class InvoiceCreateDto
 
     // ======== SERVICIO O GRUPO ========
     public string? ServiceGroupFhirId { get; set; }
-    public Guid? SingleServiceId { get; set; }
+    public string? SingleServiceFhirId { get; set; }
 
     // ======== ÍTEMS ========
     [Required]

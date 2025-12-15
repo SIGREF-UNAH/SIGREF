@@ -2,7 +2,7 @@
 
 public class InvoiceItemCreateDto
 {
-    public Guid ServiceId { get; set; }
+    public string ServiceId { get; set; }
 
     // el nombre del Servicio Ofrecido
     public string NameService { get; set; } = string.Empty;
