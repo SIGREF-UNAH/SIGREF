@@ -8,7 +8,28 @@ using SIGREF.API.Helpers;
 
 namespace SIGREF.API.Services.Healthcare
 {
-    public class HealthcareService(FhirClient fhirService)
+    /// <summary>
+    /// Servicio de infraestructura encargado EXCLUSIVAMENTE de la comunicación
+    /// con el servidor FHIR (Happy).
+    ///
+    /// Responsabilidades:
+    /// - Crear, consultar, actualizar y eliminar recursos HealthcareService en FHIR.
+    /// - Construir y ejecutar búsquedas FHIR (SearchParams).
+    ///
+    /// NO responsabilidades:
+    /// - NO contiene lógica de negocio.
+    /// - NO interactúa con la base de datos SIGREF.
+    /// - NO maneja DTOs de respuesta ni ResponseDto.
+    ///
+    /// La lógica de negocio y orquestación entre FHIR y SIGREF
+    /// debe realizarse en el Application Service correspondiente
+    /// (ej. HealthcareApplicationService).
+    /// </summary
+    ///
+    /// ⚠ IMPORTANTE:
+    // Este servicio NO debe ser inyectado directamente en Controllers.
+    // Utilizar siempre el Application Service para exponer funcionalidad al API.
+    public class HealthcareFHIRService(FhirClient fhirService)
     {
         // Obtener un servicio médico por id
         public Task<FhirHealthcare> GetHealthcareByIdAsync(string id)
@@ -16,7 +37,15 @@ namespace SIGREF.API.Services.Healthcare
             return fhirService.ReadAsync<FhirHealthcare>($"HealthcareService/{id}");
         }
 
-        // Crear un servicio médico
+        /// <summary>
+        /// Crea un recurso HealthcareService en el servidor FHIR.
+        ///
+        /// Nota:
+        /// - Este método SOLO persiste en FHIR.
+        /// - No guarda información en SIGREF.
+        /// </summary>
+        /// <param name="healthcare">Recurso HealthcareService a crear.</param>
+        /// <returns>Recurso HealthcareService creado en FHIR.</returns>
         public async Task<FhirHealthcare> CreateHealthcareAsync(FhirHealthcare healthcare)
         {
             // Establecer metadatos
@@ -60,19 +89,25 @@ namespace SIGREF.API.Services.Healthcare
         }
 
         // Filtrar
-        public async Task<PagedResult<FhirHealthcare>> GetFilteredHealthcaresAsync(HealthcareFilterDto filter)
+        public async Task<PagedResultDto<FhirHealthcare>> GetFilteredHealthcaresAsync(
+            HealthcareFilterDto filter)
         {
-      
-            var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
+            var (pageNumber, pageSize, offset) =
+                FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
 
             var searchParams = new SearchParams();
 
-            // Filtros
+            // =========================
+            //   FILTROS ESTANDAR FHIR
+            // =========================
+
             if (!string.IsNullOrWhiteSpace(filter.Name))
                 searchParams.Add("name", filter.Name);
 
             if (filter.Active.HasValue)
-                searchParams.Add("active", filter.Active.Value.ToString().ToLowerInvariant());
+                searchParams.Add(
+                    "active",
+                    filter.Active.Value.ToString().ToLowerInvariant());
 
             if (!string.IsNullOrWhiteSpace(filter.Specialty))
                 searchParams.Add("specialty", filter.Specialty);
@@ -82,16 +117,37 @@ namespace SIGREF.API.Services.Healthcare
 
             if (!string.IsNullOrWhiteSpace(filter.Location))
                 searchParams.Add("location", filter.Location);
-           
-            // Paginación FHIR
+
+            // =========================
+            //   FILTROS CUSTOM (EXTENSION)
+            // =========================
+
+            // Abreviacion (SearchParameter custom)
+            if (!string.IsNullOrWhiteSpace(filter.Abbreviation))
+                searchParams.Add("abbreviation", filter.Abbreviation);
+
+            // Servicios internos:
+            // null  => no filtrar
+            // true  => solo internos
+            // false => solo no internos
+            // Scope (SearchParameter custom)
+            if (filter.Scope.HasValue)
+            {
+                searchParams.Add(
+                    "scope",
+                    filter.Scope.Value.ToString().ToLowerInvariant()
+                );
+            }
+
             searchParams.Count = pageSize;
             searchParams.Add("_offset", offset.ToString());
             searchParams.Add("_total", "accurate");
 
-            // Buscar en FHIR
-            var bundle = await fhirService.SearchAsync<FhirHealthcare>(searchParams);
+            // =========================
+            //   EJECUTAR BUSQUEDA
+            // =========================
 
-            // Convertir a PagedResult usando el helper
+            var bundle = await fhirService.SearchAsync<FhirHealthcare>(searchParams);
             return FhirPaginationHelper.ToPagedResult<FhirHealthcare>(bundle, pageNumber, pageSize);
         }
     }
