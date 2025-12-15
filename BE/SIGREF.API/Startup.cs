@@ -26,6 +26,7 @@ using SIGREF.API.Services.FhirUtils;
 using SIGREF.API.Services.Files;
 using SIGREF.API.Services.Serie;
 using SIGREF.API.Audit.Extensions;
+using SIGREF.API.Helpers;
 
 
 namespace SIGREF.API;
@@ -63,7 +64,7 @@ public class Startup
 
         // ================= HEALTH SERVICES ===============
         services.AddScoped<LocationService>();
-        services.AddScoped<HealthcareService>();
+        services.AddScoped<HealthcareFHIRService>();
         services.AddScoped<IPatientService, PatientService>();
         services.AddScoped<IPractitionerRoleService, PractitionerRoleService>();
         services.AddScoped<IPractitionerService, PractitionerService>();
@@ -83,6 +84,7 @@ public class Startup
         services.AddScoped<IMediaFileService, MediaFileService>();
         services.AddScoped<ISerieService, SerieService>();
         services.AddScoped<IInvoiceService, InvoiceService>();
+        services.AddScoped<IHealthcareService, HealthcareApplicationService>();
 
 
         // ==============================================================
@@ -103,12 +105,7 @@ public class Startup
         // SERVICIO ADMINISTRADOR DE KEYCLOAK 
         services.AddScoped<IKeycloakAdminService, KeycloakAdminService>();
 
-
-        services.AddControllers();
-        services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
-        services.AddHttpContextAccessor();
-
+        
         // Configuración de PostgreSQL con Aspire
         // ========================================================
         // NOTA: AddNpgsql ahora está en Program.cs donde debe estar en Aspire 9
@@ -122,7 +119,10 @@ public class Startup
         // ================= MVC / Swagger ===================
         services.AddControllers();
         services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
+        services.AddSwaggerGen(c =>
+        {
+            c.SchemaFilter<EnumSchemaFilter>();
+        });
         services.AddHttpContextAccessor();
 
 
@@ -137,6 +137,11 @@ public class Startup
 
         // ================== AUDIT SERVICES ==================
         services.AddAuditServices();
+        // ================= HAPI READINESS ==================
+        services.AddHttpClient();
+        services.AddHostedService<HapiReadinessWaiter>();
+        services.AddScoped<HealthcareServiceSearchParameterInitializer>();
+
 
         services.AddHttpContextAccessor();
 
