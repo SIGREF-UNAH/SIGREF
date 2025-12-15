@@ -203,7 +203,7 @@ export const RoutesByRole: Record<
     servicios: [...HealthcaresRoutes, ...ServiceGroupsRoutes],
     pacientes: PatientsRoutes,
     empleados: PractitionersRoutes,
-    turnos: ShiftsRoutes,
+    turnos: ShiftsRoutes.filter(route => route.action === "read"),
     ubicaciones: LocationsRoutes,
     organizaciones: OrganizationsRoutes,
     reportes: ReportsRoutes,

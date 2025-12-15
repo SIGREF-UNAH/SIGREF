@@ -4,6 +4,10 @@ import { persist } from "zustand/middleware";
 interface CashierSession {
   id: string;
   openAt: string;
+  shiftName?: string;
+  locationName?: string;
+  shiftId?: string;
+  locationId?: string;
 }
 
 interface CashierSessionState {
@@ -23,6 +27,7 @@ export const useCashierSessionStore = create<CashierSessionState>()(
     }),
     {
       name: "cashier-session-storage",
+      version: 1,
     }
   )
 );
