@@ -9,6 +9,6 @@ namespace SIGREF.API.Services.Organization
         Task<bool> DeleteOrganizationAsync(string id);
         Task<OrganizationDto> GetOrganizationByIdAsync(string id);
         Task<OrganizationDto> UpdateOrganizationAsync(string id, UpdateOrganizationDto dto);
-        Task<PagedResult<OrganizationDto>> GetFilteredOrganizationsAsync(OrganizationFilterDto filter);
+        Task<PagedResultDto<OrganizationDto>> GetFilteredOrganizationsAsync(OrganizationFilterDto filter);
     }
 }

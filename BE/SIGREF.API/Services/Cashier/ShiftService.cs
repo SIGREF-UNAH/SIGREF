@@ -308,7 +308,7 @@ public class ShiftService : IShiftService
     }
 
 
-    public async Task<ResponseDto<PagedResult<ShiftDto>>> GetFilteredShiftsAsync(ShiftFilterDto filter)
+    public async Task<ResponseDto<PagedResultDto<ShiftDto>>> GetFilteredShiftsAsync(ShiftFilterDto filter)
     {
         try
         {
@@ -357,7 +357,7 @@ public class ShiftService : IShiftService
 
                 if (fhirLocationIds.Count == 0)
                 {
-                    return ResponseHelper.Success(200, "No hay resultados.", new PagedResult<ShiftDto>
+                    return ResponseHelper.Success(200, "No hay resultados.", new PagedResultDto<ShiftDto>
                     {
                         Items = new List<ShiftDto>(),
                         Pagination = new PaginationDto
@@ -438,7 +438,7 @@ public class ShiftService : IShiftService
                 return dto;
             }).ToList();
 
-            var paged = new PagedResult<ShiftDto>
+            var paged = new PagedResultDto<ShiftDto>
             {
                 Items = dtoList,
                 Pagination = new PaginationDto
@@ -454,7 +454,7 @@ public class ShiftService : IShiftService
         }
         catch (Exception ex)
         {
-            return ResponseHelper.Fail<PagedResult<ShiftDto>>(500,
+            return ResponseHelper.Fail<PagedResultDto<ShiftDto>>(500,
                 $"Error interno al obtener los turnos: {ex.Message}");
         }
     }

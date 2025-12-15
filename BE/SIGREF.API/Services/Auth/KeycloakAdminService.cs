@@ -300,7 +300,7 @@ public class KeycloakAdminService : IKeycloakAdminService
         };
     }
     
-    public async Task<ResponseDto<PagedResult<KeycloakUserDto>>> GetUsersListAsync( KeycloakFilter  filter)
+    public async Task<ResponseDto<PagedResultDto<KeycloakUserDto>>> GetUsersListAsync( KeycloakFilter  filter)
     {
         // ============================
         // VALIDACIONES
@@ -350,13 +350,13 @@ public class KeycloakAdminService : IKeycloakAdminService
             HasNext = hasNext
         };
 
-        var paged = new PagedResult<KeycloakUserDto>
+        var paged = new PagedResultDto<KeycloakUserDto>
         {
             Items = users,
             Pagination = pagination
         };
 
-        return new ResponseDto<PagedResult<KeycloakUserDto>>
+        return new ResponseDto<PagedResultDto<KeycloakUserDto>>
         {
             Status = true,
             StatusCode = 200,

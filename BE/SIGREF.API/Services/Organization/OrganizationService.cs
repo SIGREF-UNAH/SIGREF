@@ -102,7 +102,7 @@ namespace SIGREF.API.Services.Organizations
         }
 
         // Filtros
-        public async Task<PagedResult<OrganizationDto>> GetFilteredOrganizationsAsync(OrganizationFilterDto filter)
+        public async Task<PagedResultDto<OrganizationDto>> GetFilteredOrganizationsAsync(OrganizationFilterDto filter)
         {
             // Normalizar paginación usando el helper
             var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
@@ -140,7 +140,7 @@ namespace SIGREF.API.Services.Organizations
             var pagedResult = FhirPaginationHelper.ToPagedResult<Hl7.Fhir.Model.Organization>(bundle, pageNumber, pageSize);
 
             // Convertir Items a DTO
-            var resultDto = new PagedResult<OrganizationDto>
+            var resultDto = new PagedResultDto<OrganizationDto>
             {
                 Items = pagedResult.Items.Select(o => o.ToDto()).ToList(),
                 Pagination = pagedResult.Pagination

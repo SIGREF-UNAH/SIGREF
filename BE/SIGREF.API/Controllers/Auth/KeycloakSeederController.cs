@@ -152,7 +152,7 @@ public class KeycloakSeederController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    [Produces(typeof(ResponseDto<PagedResult<KeycloakUserDto>>))]
+    [Produces(typeof(ResponseDto<PagedResultDto<KeycloakUserDto>>))]
     public async Task<IActionResult> GetUsersList(
         [FromQuery] KeycloakFilter filter)
     {

@@ -42,7 +42,7 @@ namespace SIGREF.API.Helpers
         /// <summary>
         /// Extrae los recursos de tipo <typeparamref name="T"/> de un <see cref="Bundle"/> y devuelve un PagedResult.
         /// </summary>
-        public static PagedResult<T> ToPagedResult<T>(Bundle bundle, int pageNumber, int pageSize) where T : Resource
+        public static PagedResultDto<T> ToPagedResult<T>(Bundle bundle, int pageNumber, int pageSize) where T : Resource
         {
             var items = bundle.Entry?
                 .Where(e => e.Resource is T)
@@ -58,7 +58,7 @@ namespace SIGREF.API.Helpers
                 hasNextLink: bundle.NextLink != null
             );
 
-            return new PagedResult<T>
+            return new PagedResultDto<T>
             {
                 Items = items,
                 Pagination = pagination
