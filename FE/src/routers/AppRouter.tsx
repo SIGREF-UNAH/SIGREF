@@ -13,148 +13,70 @@ import { ServiceGroupsRouter } from "../features/service-groups/routers";
 import { ShiftsRouter } from "../features/shifts/routers/ShiftsRouter";
 import { HospitalRouter } from "../features/hospital/routers";
 import { UsersRouter } from "../features/users/routers";
+import { CashierSessionsRouter } from "../features/cashier-sessions/routers";
 
  export const AppRouter = () => {
   return (
     <Routes>
-      {/* Redirección a "/" si la ruta no existe */}
+      {/* Redireccionar al inicio si la ruta no existe */}
       <Route path="*" element={<Navigate to="/" replace />} />
 
       {/* Layout principal */}
       <Route element={<Layout />}>
 
-        {/* Público */}
+        {/* Página de Inicio */}
         <Route path="/" element={<HomePage />} />
-        <Route path="/documentation" element={<DocumentationPage />} />
+        
+        {/* Fondos */}
+        <Route path="/incomes/*" element={<IncomesRouter />} />
+        
+        {/* Sesiones de caja */}
+        <Route path="/cashier/*" element={<CashierSessionsRouter />} />
 
-        {/* Ubicaciones */}
-        <Route
-          path="/locations/*"
-          element={
-            <ProtectedRoute action="read" subject="locations">
-              <LocationsRouter />
-            </ProtectedRoute>
-          }
-        />
+        {/* Ubicaciones / Areas */}
+        <Route path="/locations/*" element={<LocationsRouter />} />
 
         {/* Servicios Médicos */}
-        <Route
-          path="/healthcares/*"
-          element={
-            <ProtectedRoute action="read" subject="healthcares">
-              <HealthcaresRouter />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/healthcares/*" element={<HealthcaresRouter />} />
 
-        {/* Grupos de Servicios */}
-        <Route
-          path="/service-groups/*"
-          element={
-            <ProtectedRoute action="read" subject="healthcares">
-              <ServiceGroupsRouter />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Fondos / Incomes */}
-        <Route
-          path="/incomes/*"
-          element={
-            <ProtectedRoute action="read" subject="incomes">
-              <IncomesRouter />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Empleados */}
-        <Route
-          path="/practitioners/*"
-          element={
-            <ProtectedRoute action="read" subject="practitioners">
-              <PractitionersRouter />
-            </ProtectedRoute>
-          }
-        />
+        {/* Paquetes de Servicios Médicos */}
+        <Route path="/service-groups/*" element={<ServiceGroupsRouter />} />
 
         {/* Pacientes */}
-        <Route
-          path="/patients/*"
-          element={
-            <ProtectedRoute action="read" subject="patients">
-              <PatientsRouter />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/patients/*" element={<PatientsRouter />} />
 
-        {/* Organizaciones */}
-        <Route
-          path="/organizations/*"
-          element={
-            <ProtectedRoute action="read" subject="organizations">
-              <OrganizationsRouter />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Reportes */}
-        <Route
-          path="/reports/*"
-          element={
-            <ProtectedRoute action="read" subject="reports">
-              <ReportsRouter />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Logs / Eventos */}
-        <Route
-          path="/events/*"
-          element={
-            <ProtectedRoute action="read" subject="events">
-              <EventsRouter />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Información del Hospital */}
-        <Route
-          path="/hospital/*"
-          element={
-            <ProtectedRoute action="read" subject="hospital">
-              <HospitalRouter />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Usuarios */}
-        <Route
-          path="/users/*"
-          element={
-            <ProtectedRoute action="read" subject="users">
-              <UsersRouter />
-            </ProtectedRoute>
-          }
-        />
+        {/* Empleados */}
+        <Route path="/practitioners/*" element={<PractitionersRouter />} />
 
         {/* Turnos */}
-        <Route
-          path="/shifts/*"
-          element={
-            <ProtectedRoute action="read" subject="shifts">
-              <ShiftsRouter />
-            </ProtectedRoute>
-          }
-        />
-        {/* Soporte */}
-        <Route 
-          path="/support" 
+        <Route path="/shifts/*" element={<ShiftsRouter />} />
+
+        {/* Organizaciones */}
+        <Route path="/organizations/*" element={<OrganizationsRouter />} />
+
+        {/* Reportes */}
+        <Route path="/reports/*" element={<ReportsRouter />} />
+
+        {/* Logs / Eventos */}
+        <Route path="/events/*" element={<EventsRouter />} />
+
+        {/* Información del Hospital */}
+        <Route path="/hospital/*" element={<HospitalRouter />} />
+
+        {/* Usuarios */}
+        <Route path="/users/*" element={<UsersRouter />} />
+
+        {/* Página de Documentación */}
+        <Route path="/documentation" element={<DocumentationPage />} />
+
+        {/* Página de Soporte */}
+        <Route path="/support" 
           element={
             <ProtectedRoute action="read" subject="support">
               <SupportPage />
             </ProtectedRoute>
-          } />
-
+          } 
+        />
       </Route>
     </Routes>
   );

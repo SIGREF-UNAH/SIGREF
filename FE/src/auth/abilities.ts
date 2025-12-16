@@ -4,6 +4,7 @@ export type Actions = "manage" | "read" | "create" | "update" | "delete";
 export type Subjects =
   | "incomes"             // Fondos
   | "shifts"              // Turnos
+  | "cashier-sessions"    // Sesiones de caja
   | "healthcares"         // Servicios
   | "service-groups"      // Paquetes de Servicios
   | "patients"            // Pacientes
@@ -31,10 +32,8 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can(["read", "create", "update", "delete"], "shifts");
     can(["read", "create", "update", "delete"], "healthcares");
     can(["read", "create", "update", "delete"], "service-groups");
-
-    // TODO: Falta definir reports / incomes
-    can(["read", "create", "update", "delete"], "incomes");
-    can(["read", "create", "update", "delete"], "reports");
+    can(["read", "create"], "reports");
+    can(["read"], "incomes");
     
     // Menu desplegable
     can(["read", "create", "update", "delete"], "users");
@@ -46,11 +45,9 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can(["read", "create", "update", "delete"], "organizations");
     can(["read", "create", "update", "delete"], "practitioners");
     can(["read", "create", "update", "delete"], "practitioner-roles");
+    can(["read", "create"], "reports");
     can(["read"], "healthcares");
     can(["read"], "events");
-
-    // TODO: Falta definir reports / incomes
-    can(["read", "create", "update", "delete"], "reports");
 
     // Menu desplegable
     can(["read", "create", "update", "delete"], "users");
@@ -78,13 +75,12 @@ export const defineAbilitiesFor = (roles: string[]) => {
 
   // Auxiliar de caja
   if (roles.includes("cashier")) {
-    can(["read"], "locations");
     can(["read", "create", "update"], "patients");
+    can(["read", "create"], "cashier-sessions");
+    can(["create", "update"], "incomes");
+    can(["read", "create"], "reports");
+    can(["read"], "locations");
     can(["read"], "shifts");
-
-    // TODO: Falta definir reports / incomes
-    can(["read", "create", "update", "delete"], "incomes");
-    can(["read", "create", "update", "delete"], "reports");
     
     // Menu desplegable
     can(["read"], "hospital");

@@ -168,8 +168,25 @@ export const ShiftsPage = () => {
 
   return (
     <div>
-      <PageHeaderTabs title="Gestión de Turnos" tabs={[]} />
+      {/* Encabezado */}
+      <PageHeaderTabs 
+        title="Gestión de Turnos" 
+        tabs={[
+          ...(ability.can("read", "shifts") ? [{
+            key: "listar",
+            label: "Lista de Turnos",
+            path: "/shifts/list",
+          }] : []),
+          ...(ability.can("create", "cashier-sessions") ? [{
+            key: "inciar",
+            label: "Iniciar Turno",
+            path: "/cashier/open-session",
+          }] : []),
+        ]} 
+        defaultActive="listar"
+      />
 
+      {/* Contenido */}
       <div className="primary-card">
         <div className="flex justify-between items-center mb-6">
           <Can I="create" a="shifts" ability={ability}>
