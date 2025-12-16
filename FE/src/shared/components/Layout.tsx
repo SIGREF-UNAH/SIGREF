@@ -6,6 +6,8 @@ import { RoutesByRole, useAbility } from "../../config";
 import { ShortcutsGuideModal } from "./modals";
 import { useState } from "react";
 import { useGetApiHospitalPropertiesDetails } from "../../api/hospital-properties/hospital-properties";
+import { USER_ROLE_OPTIONS } from "../constants";
+import useMediaFiles from "../../features/media-files/hooks/useMediaFiles";
 import {
   BankOutlined,
   BookOutlined,
@@ -14,38 +16,18 @@ import {
   QuestionCircleOutlined,
   UserAddOutlined,
 } from "@ant-design/icons";
-import { USER_ROLE_OPTIONS } from "../constants";
-
-// Función helper para construir URLs de media
-const getMediaUrl = (relativePath?: string | null): string => {
-  if (!relativePath) return '';
-  
-  const API_BASE_URL = import.meta.env.VITE_API_URL || window.location.origin;
-  const baseUrl = API_BASE_URL.endsWith('/') 
-    ? API_BASE_URL.slice(0, -1) 
-    : API_BASE_URL;
-  
-  if (relativePath.startsWith('http://') || relativePath.startsWith('https://')) {
-    return relativePath;
-  }
-  
-  if (relativePath.startsWith('/files/') || relativePath.startsWith('/media/')) {
-    return `${baseUrl}${relativePath}`;
-  }
-  
-  return `${baseUrl}${relativePath.startsWith('/') ? '' : '/'}${relativePath}`;
-};
 
 export const Layout = () => {
   const navigate = useNavigate();
   const { keycloak } = useKeycloak();
+  const { getMediaUrl } = useMediaFiles();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const ability = useAbility();
 
   // Obtener información del hospital con los logos
   const { data: hospitalResponse } = useGetApiHospitalPropertiesDetails();
   const hospitalResponseData = hospitalResponse as any;
-const hospitalData = hospitalResponseData?.data;
+  const hospitalData = hospitalResponseData?.data;
 
   // Construir URLs de los logos
   const logoHealthUrl = hospitalData?.urlLogoHealth 

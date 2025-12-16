@@ -116,6 +116,26 @@ export default function useMediaFiles(logoType: MediaFileType = 0) {
     if (size) setPageSize(size);
   };
 
+  // Función helper para construir URLs de media
+  const getMediaUrl = (relativePath?: string | null): string => {
+    if (!relativePath) return '';
+    
+    const API_BASE_URL = import.meta.env.VITE_API_URL || window.location.origin;
+    const baseUrl = API_BASE_URL.endsWith('/') 
+      ? API_BASE_URL.slice(0, -1) 
+      : API_BASE_URL;
+    
+    if (relativePath.startsWith('http://') || relativePath.startsWith('https://')) {
+      return relativePath;
+    }
+    
+    if (relativePath.startsWith('/files/') || relativePath.startsWith('/media/')) {
+      return `${baseUrl}${relativePath}`;
+    }
+    
+    return `${baseUrl}${relativePath.startsWith('/') ? '' : '/'}${relativePath}`;
+  };
+
   return {
     mediaFiles,
     pagination,
@@ -131,5 +151,6 @@ export default function useMediaFiles(logoType: MediaFileType = 0) {
     handleAssign,
     handleSearch,
     handlePageChange,
+    getMediaUrl,
   };
 }
