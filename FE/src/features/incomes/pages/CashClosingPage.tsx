@@ -8,11 +8,9 @@ import {
 import {
   Alert,
   Button,
-  Col,
   Divider,
   Dropdown,
   InputNumber,
-  Row,
   Space,
   Typography,
   message,
@@ -40,7 +38,7 @@ export const CashClosingPage = () => {
   const [closedSessionId, setClosedSessionId] = useState<string>("");
   
   //* systemAmount es el monto del sistema que se debe comparar con el monto declarado por el cashier
-  const [systemAmount] = useState(0); //! Este valor debe venir del backend
+  const [systemAmount] = useState(1000); //! Este valor debe venir del backend
   
   // Store
   const { session, clearSession } = useCashierSessionStore();
@@ -248,16 +246,27 @@ export const CashClosingPage = () => {
             {/* Formulario de cierre */}
             {!showResult && !showConfirmation && (
               <div>
-                <Row gutter={[16, 16]}>
-                  <Col span={12}>
+                <div className="flex flex-col text-left pb-6 gap-y-2">
+                  <div>
                     <Typography.Text strong>
                         Auxiliar de Caja:
                     </Typography.Text>{" "}
                     <Typography.Text strong className="text-secondary!">{userName}</Typography.Text>
-                  </Col>
-
-                  <Col span={24}>
+                  </div>
+                  <div>
                     <Typography.Text strong>
+                        Turno:
+                    </Typography.Text>{" "}
+                    <Typography.Text strong className="text-secondary!">{session?.shiftName}</Typography.Text>
+                  </div>
+                  <div>
+                    <Typography.Text strong>
+                        Ubicación:
+                    </Typography.Text>{" "}
+                    <Typography.Text strong className="text-secondary!">{session?.locationName}</Typography.Text>
+                  </div>
+                  <div>
+                    <Typography.Text>
                       Ingrese el monto registrado en caja:
                     </Typography.Text>
                     <InputNumber
@@ -270,10 +279,10 @@ export const CashClosingPage = () => {
                       size="large"
                       prefix={hospitalCurrency}
                     />
-                  </Col>
-                </Row>
+                  </div>
+                </div>
 
-                <div className="flex justify-between mt-6">
+                <div className="flex justify-between">
                   <div className="font-bold text-general-secondary">
                     {currentDate}
                   </div>
@@ -298,14 +307,26 @@ export const CashClosingPage = () => {
 
             {/* Confirmación de cierre */}
             {showConfirmation && (
-              <div className="pb-6 text-center">
-                <div className="mb-4">
+              <div className="flex flex-col text-center pb-6 gap-y-3">
+                <div>
                   <Typography.Text strong>
                       Auxiliar de Caja:
                   </Typography.Text>{" "}
                   <Typography.Text strong className="text-secondary!">{userName}</Typography.Text>
                 </div>
-                <div className="mb-4">
+                <div>
+                  <Typography.Text strong>
+                      Ubicación:
+                  </Typography.Text>{" "}
+                  <Typography.Text strong className="text-secondary!">{session?.locationName}</Typography.Text>
+                </div>
+                <div>
+                  <Typography.Text strong>
+                      Turno:
+                  </Typography.Text>{" "}
+                  <Typography.Text strong className="text-secondary!">{session?.shiftName}</Typography.Text>
+                </div>
+                <div>
                   <Typography.Text strong>Monto Registrado:</Typography.Text>{" "}
                   <Typography.Text
                     style={{ color: "#EF5350" }}
@@ -314,15 +335,15 @@ export const CashClosingPage = () => {
                     {hospitalCurrency} {amount?.toFixed(2)}
                   </Typography.Text>
                 </div>
-                <div className="mt-4 text-general-secondary text-md py-2">
+                <div className="text-general-secondary text-md">
                   {currentDateTime}
                 </div>
-                <div className="justify-center text-center mt-6">
-                  <div className="text-xl font-bold text-general py-2">
+                <div className="my-4">
+                  <div className="text-xl font-bold text-general">
                     ¿Está seguro de realizar el cierre de caja?
                   </div>
                 </div>
-                <div className="mt-4 flex items-center justify-center">
+                <div className="flex items-center justify-center">
                   <Alert
                     style={{width: "50%"}}
                     showIcon
@@ -330,8 +351,7 @@ export const CashClosingPage = () => {
                     description="Una vez confirmado, no podrá modificar los datos del cierre actual."
                   />
                 </div>
-                <Divider className="my-4" />
-                <div className="text-center mt-6">
+                <div className="mt-4">
                   <Space size="middle">
                     <Button
                       onClick={handleCancel}
@@ -376,14 +396,26 @@ export const CashClosingPage = () => {
 
                 <Divider className="my-4" />
 
-                <div className="text-center pb-6">
-                  <div className="mb-4">
+                <div className="flex flex-col text-center pb-6 gap-y-3">
+                  <div>
                     <Typography.Text strong>
                         Auxiliar de Caja:
                     </Typography.Text>{" "}
                     <Typography.Text strong className="text-secondary!">{userName}</Typography.Text>
                   </div>
-                  <div className="mb-4">
+                  <div>
+                    <Typography.Text strong>
+                        Ubicación:
+                    </Typography.Text>{" "}
+                    <Typography.Text strong className="text-secondary!">{session?.locationName}</Typography.Text>
+                  </div>
+                  <div>
+                    <Typography.Text strong>
+                        Turno:
+                    </Typography.Text>{" "}
+                    <Typography.Text strong className="text-secondary!">{session?.shiftName}</Typography.Text>
+                  </div>
+                  <div>
                     <Typography.Text strong>Monto Registrado:</Typography.Text>{" "}
                     <Typography.Text
                       style={{
@@ -394,7 +426,7 @@ export const CashClosingPage = () => {
                       {hospitalCurrency} {amount?.toFixed(2)}
                     </Typography.Text>
                   </div>
-                  <div className="mb-4">
+                  <div>
                     <Typography.Text strong>Monto del Sistema:</Typography.Text>{" "}
                     <Typography.Text
                       style={{
@@ -405,7 +437,7 @@ export const CashClosingPage = () => {
                       {hospitalCurrency} {systemAmount.toFixed(2)}
                     </Typography.Text>
                   </div>
-                  <div className="mt-4 text-general-secondary text-md py-2">
+                  <div className="text-general-secondary text-md py-2">
                     {currentDateTime}
                   </div>
                 </div>
