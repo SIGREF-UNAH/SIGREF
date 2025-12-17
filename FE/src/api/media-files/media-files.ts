@@ -36,7 +36,7 @@ export const postApiMediaFilesUpload = (
 ) => {
   const formData = new FormData();
   formData.append(`File`, postApiMediaFilesUploadBody.File);
-  formData.append(`Type`, postApiMediaFilesUploadBody.Type.toString());
+  formData.append(`Type`, postApiMediaFilesUploadBody.Type);
   if (postApiMediaFilesUploadBody.Description !== undefined) {
     formData.append(`Description`, postApiMediaFilesUploadBody.Description);
   }

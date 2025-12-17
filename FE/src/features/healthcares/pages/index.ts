@@ -1,3 +1,3 @@
 export * from './CreateHealthcarePage';
-export * from './HealthcaresPage';
+export * from './HealthcaresListPage';
 export * from './UpdateHealthcarePage';

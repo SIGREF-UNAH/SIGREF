@@ -20,7 +20,7 @@ export interface InvoiceCreateDto {
   /** @nullable */
   serviceGroupFhirId?: string | null;
   /** @nullable */
-  singleServiceId?: string | null;
+  singleServiceFhirId?: string | null;
   items: InvoiceItemCreateDto[];
   invoice_type: InvoiceType;
   payment_type: PaymentMethodType;

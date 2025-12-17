@@ -2,7 +2,7 @@ import { Navigate, Route, Routes } from "react-router";
 import { ProtectedRoute } from "../../../shared/components";
 import {
   CreateHealthcarePage,
-  HealthcaresPage,
+  HealthcaresListPage,
   UpdateHealthcarePage,
 } from "../pages";
 
@@ -13,7 +13,7 @@ export const HealthcaresRouter = () => {
 
       <Route path="/list" element={
         <ProtectedRoute action="read" subject="healthcares">
-          <HealthcaresPage />
+          <HealthcaresListPage />
         </ProtectedRoute>
         } 
       />

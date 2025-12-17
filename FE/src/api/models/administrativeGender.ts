@@ -10,8 +10,8 @@ export type AdministrativeGender =
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const AdministrativeGender = {
-  NUMBER_0: 0,
-  NUMBER_1: 1,
-  NUMBER_2: 2,
-  NUMBER_3: 3,
+  male: "male",
+  female: "female",
+  other: "other",
+  unknown: "unknown",
 } as const;

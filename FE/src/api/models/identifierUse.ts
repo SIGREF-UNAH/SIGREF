@@ -9,9 +9,9 @@ export type IdentifierUse = (typeof IdentifierUse)[keyof typeof IdentifierUse];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const IdentifierUse = {
-  NUMBER_0: 0,
-  NUMBER_1: 1,
-  NUMBER_2: 2,
-  NUMBER_3: 3,
-  NUMBER_4: 4,
+  usual: "usual",
+  official: "official",
+  temp: "temp",
+  secondary: "secondary",
+  old: "old",
 } as const;

@@ -9,8 +9,8 @@ export type InvoiceStatus = (typeof InvoiceStatus)[keyof typeof InvoiceStatus];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const InvoiceStatus = {
-  NUMBER_0: 0,
-  NUMBER_1: 1,
-  NUMBER_2: 2,
-  NUMBER_3: 3,
+  created: "created",
+  paid: "paid",
+  cancelled: "cancelled",
+  refunded: "refunded",
 } as const;

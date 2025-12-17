@@ -9,6 +9,6 @@ export type MediaFileType = (typeof MediaFileType)[keyof typeof MediaFileType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const MediaFileType = {
-  NUMBER_0: 0,
-  NUMBER_1: 1,
+  appHospital: "appHospital",
+  healthGuilt: "healthGuilt",
 } as const;

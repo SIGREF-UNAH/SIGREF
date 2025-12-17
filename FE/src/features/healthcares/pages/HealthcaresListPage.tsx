@@ -8,24 +8,25 @@ import {
   Alert,
   Tag,
   Spin,
+  Switch,
 } from "antd";
-import { useHealthcaresList } from "../hooks";
 import {
   EditOutlined,
   DeleteOutlined,
   FilterOutlined,
   EyeOutlined,
 } from "@ant-design/icons";
-import { PageHeaderTabs } from "../../../shared/components/ui";
 import type { ColumnsType } from "antd/es/table";
 import type { HealthcareDto } from "../../../api/models";
+import { useHealthcaresList } from "../hooks";
+import { PageHeaderTabs } from "../../../shared/components/ui";
 import { HealthcareDetailsModal } from "../components";
 import { Can } from "@casl/react";
-import { useAbility } from "../../../config";
 
 const { Search } = Input;
+const { Option } = Select;
 
-export const HealthcaresPage = () => {
+export const HealthcaresListPage = () => {
   const {
     filters,
     locations,
@@ -37,6 +38,7 @@ export const HealthcaresPage = () => {
     selectedHealthcare,
     isModalOpen,
     searchInput,
+    ability,
     handleEdit,
     handleDelete,
     handleViewDetails,
@@ -46,8 +48,6 @@ export const HealthcaresPage = () => {
     handleSearch,
     handleClearSearch,
   } = useHealthcaresList();
-
-  const ability = useAbility();
 
   // Columnas de la tabla
   const columns: ColumnsType<HealthcareDto> = [
@@ -64,6 +64,19 @@ export const HealthcaresPage = () => {
       width: 200,
     },
     {
+      title: "Tipo",
+      dataIndex: "scope",
+      key: "scope",
+      width: 120,
+      render: (scope: number) => {
+        if (scope === undefined || scope === null) return "-";
+        
+        const color = scope === 0 ? "blue" : "orange";
+        const text = scope === 0 ? "Interno" : "Externo";
+        return <Tag color={color}>{text}</Tag>;
+      },
+    },
+    {
       title: "Ubicación(es)",
       key: "area",
       width: 200,
@@ -73,13 +86,17 @@ export const HealthcaresPage = () => {
           .filter(Boolean)
           .join(", ") || "-",
     },
-    {
-      title: "Costo",
-      dataIndex: "cost",
-      key: "cost",
-      width: 120,
-      render: (cost: number) => `L. ${cost?.toFixed(2) || "0.00"}`,
-    },
+    ...(filters.includeCost
+      ? [
+          {
+            title: "Costo",
+            dataIndex: "cost",
+            key: "cost",
+            width: 120,
+            render: (cost: number) => `L. ${cost?.toFixed(2) || "0.00"}`,
+          },
+        ]
+      : []),
     {
       title: "Estado",
       dataIndex: "active",
@@ -129,7 +146,7 @@ export const HealthcaresPage = () => {
     },
   ];
 
-  // Manejo de error
+  // Pantalla de error
   if (isError) {
     return (
       <div>
@@ -143,6 +160,7 @@ export const HealthcaresPage = () => {
     );
   }
 
+  // Pantalla de carga
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-100">
@@ -157,26 +175,42 @@ export const HealthcaresPage = () => {
       <PageHeaderTabs
         title="Gestión de Servicios"
         tabs={[
-          ...(ability.can("read", "healthcares") ? [{
-            key: "listar1",
-            label: "Lista de Servicios",
-            path: "/healthcares/list",
-          }] : []),
-          ...(ability.can("create", "healthcares") ? [{
-            key: "crear1",
-            label: "Crear Servicio",
-            path: "/healthcares/create",
-          }] : []),
-          ...(ability.can("read", "service-groups") ? [{
-            key: "listar2",
-            label: "Lista de Paquetes",
-            path: "/service-groups/list",
-          }] : []),
-          ...(ability.can("create", "service-groups") ? [{
-            key: "crear2",
-            label: "Crear Paquete",
-            path: "/service-groups/create",
-          }] : []),
+          ...(ability.can("read", "healthcares")
+            ? [
+                {
+                  key: "listar1",
+                  label: "Lista de Servicios",
+                  path: "/healthcares/list",
+                },
+              ]
+            : []),
+          ...(ability.can("create", "healthcares")
+            ? [
+                {
+                  key: "crear1",
+                  label: "Crear Servicio",
+                  path: "/healthcares/create",
+                },
+              ]
+            : []),
+          ...(ability.can("read", "service-groups")
+            ? [
+                {
+                  key: "listar2",
+                  label: "Lista de Paquetes",
+                  path: "/service-groups/list",
+                },
+              ]
+            : []),
+          ...(ability.can("create", "service-groups")
+            ? [
+                {
+                  key: "crear2",
+                  label: "Crear Paquete",
+                  path: "/service-groups/create",
+                },
+              ]
+            : []),
         ]}
         defaultActive="listar1"
       />
@@ -196,21 +230,46 @@ export const HealthcaresPage = () => {
           />
           <Select
             placeholder="Por Ubicación"
+            showSearch
             allowClear
             suffixIcon={<FilterOutlined />}
-            style={{ width: 200, height: 36 }}
+            style={{ width: 225 }}
             value={filters.location}
             onChange={(value) => setFilter("location", value)}
-            options={locations.map((loc) => ({
-              label: loc.display,
-              value: loc.reference,
-            }))}
+            optionFilterProp="children"
+          >
+            {locations.map((location: any) => (
+              <Option key={location.id} value={location.id}>
+                <div className="flex items-center py-1">
+                  <div>
+                    <div className="font-medium">{location.name}</div>
+                    {location.description && (
+                      <div className="text-xs text-gray-500">
+                        {location.description}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Option>
+            ))}
+          </Select>
+          <Select
+            placeholder="Por Tipo"
+            allowClear
+            suffixIcon={<FilterOutlined />}
+            style={{ width: 150 }}
+            value={filters.scope}
+            onChange={(value) => setFilter("scope", value)}
+            options={[
+              { label: "Interno", value: "internal" },
+              { label: "Externo", value: "external" },
+            ]}
           />
           <Select
             placeholder="Por Estado"
             allowClear
             suffixIcon={<FilterOutlined />}
-            style={{ width: 150, height: 36 }}
+            style={{ width: 150 }}
             value={filters.status}
             onChange={(value) => setFilter("status", value)}
             options={[
@@ -218,6 +277,14 @@ export const HealthcaresPage = () => {
               { label: "Inactivo", value: "inactive" },
             ]}
           />
+          <div className="flex items-center gap-2 px-3 border border-gray-300 bg-white text-[#c9c9c9] rounded">
+            <span className="text-sm">Mostrar Costo</span>
+            <Switch
+              checked={filters.includeCost}
+              onChange={(checked) => setFilter("includeCost", checked)}
+              size="small"
+            />
+          </div>
         </div>
         {/* Lista de servicios */}
         <Table

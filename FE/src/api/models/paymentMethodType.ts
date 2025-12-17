@@ -10,8 +10,8 @@ export type PaymentMethodType =
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PaymentMethodType = {
-  NUMBER_0: 0,
-  NUMBER_1: 1,
-  NUMBER_2: 2,
-  NUMBER_3: 3,
+  cash: "cash",
+  card: "card",
+  transfer: "transfer",
+  mixed: "mixed",
 } as const;

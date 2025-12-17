@@ -4,6 +4,7 @@
  * SIGREF.API
  * OpenAPI spec version: 1.0
  */
+import type { HealthcareScope } from "./healthcareScope";
 
 export type GetApiHealthcaresParams = {
   Name?: string;
@@ -11,6 +12,9 @@ export type GetApiHealthcaresParams = {
   Specialty?: string;
   ProvidedBy?: string;
   Location?: string;
+  Abbreviation?: string;
+  Scope?: HealthcareScope;
+  IncludeCost?: boolean;
   PageNumber?: number;
   PageSize?: number;
 };

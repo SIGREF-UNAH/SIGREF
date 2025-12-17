@@ -9,11 +9,11 @@ export type NameUse = (typeof NameUse)[keyof typeof NameUse];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const NameUse = {
-  NUMBER_0: 0,
-  NUMBER_1: 1,
-  NUMBER_2: 2,
-  NUMBER_3: 3,
-  NUMBER_4: 4,
-  NUMBER_5: 5,
-  NUMBER_6: 6,
+  usual: "usual",
+  official: "official",
+  temp: "temp",
+  nickname: "nickname",
+  anonymous: "anonymous",
+  old: "old",
+  maiden: "maiden",
 } as const;
