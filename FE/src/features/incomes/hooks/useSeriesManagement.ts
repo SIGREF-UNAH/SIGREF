@@ -1,16 +1,19 @@
+// hooks/useSeriesManagement.ts
 import { Form, message, type FormInstance } from "antd";
 import type { SerieDto } from "../../../api/models";
 import { useState } from "react";
-import { useDeleteApiSeriesId, usePostApiSeries, usePutApiSeriesId } from "../../../api/series/series";
-
+import {
+  useDeleteApiSeriesId,
+  usePostApiSeries,
+  usePutApiSeriesId,
+} from "../../../api/series/series";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface UseSeriesManagementResult {
   form: FormInstance;
   editingId: string | null;
   isCreating: boolean;
   isUpdating: boolean;
-
-  // Handlers
   handleSubmit: (values: any) => void;
   handleEdit: (record: SerieDto) => void;
   handleDelete: (id: string) => void;
@@ -22,23 +25,28 @@ export const useSeriesManagement = (
 ): UseSeriesManagementResult => {
   const [form] = Form.useForm();
   const [editingId, setEditingId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  // Mutations
+  const invalidateSeriesCache = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/Series"] });
+    setTimeout(() => refetch(), 100);
+  };
+
   const { mutate: createSerie, isPending: isCreating } = usePostApiSeries({
     mutation: {
       onSuccess: () => {
         message.success("Serie creada exitosamente");
         form.resetFields();
         setEditingId(null);
-        refetch();
+        invalidateSeriesCache();
       },
       onError: (error: any) => {
-        const errorMsg =
+        const msg =
           error?.response?.data?.message ||
           error?.response?.data?.title ||
           error?.message ||
           "Error al crear la serie";
-        message.error(errorMsg, 5);
+        message.error(msg, 5);
       },
     },
   });
@@ -49,7 +57,7 @@ export const useSeriesManagement = (
         message.success("Serie actualizada exitosamente");
         setEditingId(null);
         form.resetFields();
-        refetch();
+        invalidateSeriesCache();
       },
       onError: (error: any) => {
         message.error(
@@ -63,7 +71,7 @@ export const useSeriesManagement = (
     mutation: {
       onSuccess: () => {
         message.success("Serie eliminada exitosamente");
-        refetch();
+        invalidateSeriesCache();
       },
       onError: (error: any) => {
         message.error(
@@ -82,6 +90,7 @@ export const useSeriesManagement = (
     };
 
     if (editingId) {
+      // Forma correcta: pasar un objeto con id y data
       updateSerie({ id: editingId, data: serieData });
     } else {
       createSerie({ data: serieData });
@@ -91,7 +100,7 @@ export const useSeriesManagement = (
   const handleEdit = (record: SerieDto) => {
     const id = (record as any).id;
     if (!id) {
-      message.error("No se puede editar: ID no encontrado");
+      message.error("No se puede editar: falta el ID");
       return;
     }
 
@@ -105,11 +114,8 @@ export const useSeriesManagement = (
   };
 
   const handleDelete = (id: string) => {
-    if (!id) {
-      message.error("ID no válido para eliminar");
-      return;
-    }
-    deleteSerie({ id });
+    // Ahora solo pasamos el string
+    deleteSerie(id);
   };
 
   const handleCancelEdit = () => {

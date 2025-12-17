@@ -1,5 +1,6 @@
 ﻿#nullable enable
 using Hl7.Fhir.Model;
+using SIGREF.API.Constants;
 using SIGREF.API.Dtos.Healthcare;
 using SIGREF.API.Extensions.Common;
 
@@ -7,46 +8,46 @@ namespace SIGREF.API.Extensions;
 
 public static class HealthcareExtensions
 {
-    private const string DefaultAbbreviationExtensionUrl = "http://hl7.org/fhir/StructureDefinition/artifact-title";
-    private const string DefaultCostExtensionUrl = "http://hl7.org/fhir/StructureDefinition/cqf-artifactComment";
+    private const string AbbreviationExtensionUrl =
+        FhirNamespaces.HealthcareServiceAbbreviation;
 
-    // Convertir FHIR HealthcareService a HealthcareDto
+    private const string ScopeExtensionUrl =
+        FhirNamespaces.HealthcareServiceScope;
+
+
+    // ============================================================
+    //   FHIR  DTO
+    // ============================================================
     public static HealthcareDto ToDto(this HealthcareService? healthcare)
     {
         if (healthcare is null)
-            return new HealthcareDto
-            {
-                Id = string.Empty,
-                Identifier = [],
-                Active = true,
-                Name = string.Empty,
-                Comment = string.Empty,
-                Specialty = [],
-                ProvidedBy = null,
-                Location = [],
-                Extension = [],
-                LastUpdated = null
-            };
+            return new HealthcareDto();
 
-        // Extraer abbreviation y cost de las extensiones
         string abbreviation = string.Empty;
-        decimal? cost = null;
+        HealthcareScope scope = HealthcareScope.EXTERNAL; // default seguro
 
         if (healthcare.Extension != null)
         {
+            // Abbreviation
             var abbreviationExtension = healthcare.Extension
-                .FirstOrDefault(e => e.Url.Equals(DefaultAbbreviationExtensionUrl, StringComparison.OrdinalIgnoreCase));
-            if (abbreviationExtension?.Value is FhirString abbreviationValue)
+                .FirstOrDefault(e => e.Url == AbbreviationExtensionUrl);
+
+            if (abbreviationExtension?.Value is Code abbr)
+                abbreviation = abbr.Value ?? string.Empty;
+
+            // Scope
+            var scopeExtension = healthcare.Extension
+                .FirstOrDefault(e => e.Url == ScopeExtensionUrl);
+
+            if (scopeExtension?.Value is Code scopeCode &&
+                Enum.TryParse<HealthcareScope>(
+                    scopeCode.Value,
+                    ignoreCase: true,
+                    out var parsedScope))
             {
-                abbreviation = abbreviationValue.Value ?? string.Empty;
+                scope = parsedScope;
             }
 
-            var costExtension = healthcare.Extension
-                .FirstOrDefault(e => e.Url.Equals(DefaultCostExtensionUrl, StringComparison.OrdinalIgnoreCase));
-            if (costExtension?.Value is FhirDecimal costValue)
-            {
-                cost = costValue.Value;
-            }
         }
 
         return new HealthcareDto
@@ -59,12 +60,15 @@ public static class HealthcareExtensions
             Specialty = healthcare.Specialty?.Select(s => s.ToCodeableConceptDto()).ToList() ?? [],
             ProvidedBy = healthcare.ProvidedBy?.ToReferenceDto(),
             Location = healthcare.Location?.Select(l => l.ToReferenceDto()).ToList() ?? [],
-            Extension = healthcare.Extension?.Select(e => e.ToDto()).ToList() ?? [],
+            Abbreviation = abbreviation,
+            Scope = scope,
             LastUpdated = healthcare.Meta?.LastUpdated?.DateTime
         };
     }
 
-    // Convertir CreateHealthcareDto a FHIR HealthcareService
+    // ============================================================
+    //   CREATE DTO to FHIR
+    // ============================================================
     public static HealthcareService ToFhirHealthcare(this CreateHealthcareDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
@@ -73,115 +77,104 @@ public static class HealthcareExtensions
         {
             Active = dto.Active,
             Identifier = dto.Identifier?.Select(i => i.ToFhirIdentifier()).ToList() ?? [],
-            Name = dto.Name ?? string.Empty,
-            Comment = dto.Comment ?? string.Empty,
+            Name = dto.Name,
+            Comment = dto.Comment,
             Specialty = dto.Specialty?.Select(s => s.ToFhirCodeableConcept()).ToList() ?? [],
             ProvidedBy = dto.ProvidedBy?.ToFhirReference(),
             Location = dto.Location?.Select(l => l.ToFhirReference()).ToList() ?? [],
-            Meta = new Meta
-            {
-                LastUpdated = DateTimeOffset.Now,
-                VersionId = "1"
-            },
-            Extension = new List<Hl7.Fhir.Model.Extension>()
+            Extension = new List<Extension>()
         };
 
-        // Validar y agregar extensión de abreviatura
-        if (string.IsNullOrEmpty(dto.Abbreviation))
-        {
-            throw new ArgumentException("El servicio debe tener una extensión de abreviatura");
-        }
+        // Abbreviation (obligatoria)
+        if (string.IsNullOrWhiteSpace(dto.Abbreviation))
+            throw new ArgumentException("El servicio debe tener una abreviación");
 
-        // Agregar extensión de abreviatura
-        healthcare.Extension.Add(new Hl7.Fhir.Model.Extension
+        healthcare.Extension.Add(new Extension
         {
-            Url = DefaultAbbreviationExtensionUrl,
-            Value = new FhirString(dto.Abbreviation)
+            Url = AbbreviationExtensionUrl,
+            Value = new Code(dto.Abbreviation)
         });
 
-        // Agregar extensión de costo si se proporciona
-        if (dto.Cost.HasValue)
+        // Scope (internal | external)
+        healthcare.Extension.Add(new Extension
         {
-            healthcare.Extension.Add(new Hl7.Fhir.Model.Extension
-            {
-                Url = DefaultCostExtensionUrl,
-                Value = new FhirDecimal(dto.Cost.Value)
-            });
-        }
+            Url = ScopeExtensionUrl,
+            Value = new Code(dto.Scope.ToString().ToLowerInvariant())
+        });
+
 
         return healthcare;
     }
 
-    // Aplicar UpdateHealthcareDto a un HealthcareService existente
-    public static HealthcareService ApplyUpdate(this HealthcareService existing, UpdateHealthcareDto update)
+    // ============================================================
+    //   UPDATE DTO to FHIR
+    // ============================================================
+    public static HealthcareService ApplyUpdate(
+        this HealthcareService existing,
+        UpdateHealthcareDto update)
     {
         ArgumentNullException.ThrowIfNull(existing);
 
-        if (update.Identifier != null) existing.Identifier = update.Identifier.Select(i => i.ToFhirIdentifier()).ToList();
-        if (update.Active == true || update.Active == false) existing.Active = update.Active;
+        if (update.Identifier != null)
+            existing.Identifier = update.Identifier.Select(i => i.ToFhirIdentifier()).ToList();
+
+        existing.Active = update.Active;
         if (!string.IsNullOrEmpty(update.Name)) existing.Name = update.Name;
         if (!string.IsNullOrEmpty(update.Comment)) existing.Comment = update.Comment;
-        if (update.Specialty != null) existing.Specialty = update.Specialty.Select(s => s.ToFhirCodeableConcept()).ToList();
-        if (update.ProvidedBy != null) existing.ProvidedBy = update.ProvidedBy.ToFhirReference();
-        if (update.Location != null) existing.Location = update.Location.Select(l => l.ToFhirReference()).ToList();
 
-        // Inicializar extensiones si no existen
-        existing.Extension ??= new List<Hl7.Fhir.Model.Extension>();
+        if (update.Specialty != null)
+            existing.Specialty = update.Specialty.Select(s => s.ToFhirCodeableConcept()).ToList();
 
-        // Actualizar abreviatura
+        if (update.ProvidedBy != null)
+            existing.ProvidedBy = update.ProvidedBy.ToFhirReference();
+
+        if (update.Location != null)
+            existing.Location = update.Location.Select(l => l.ToFhirReference()).ToList();
+
+        // Inicializar extensiones
+        existing.Extension ??= new List<Extension>();
+
+        // Abbreviation
         if (!string.IsNullOrEmpty(update.Abbreviation))
         {
             var abbreviationExtension = existing.Extension
-                .FirstOrDefault(e => e.Url.Equals(DefaultAbbreviationExtensionUrl, StringComparison.OrdinalIgnoreCase));
+                .FirstOrDefault(e => e.Url == AbbreviationExtensionUrl);
 
             if (abbreviationExtension != null)
-            {
-                abbreviationExtension.Value = new FhirString(update.Abbreviation);
-            }
+                abbreviationExtension.Value = new Code(update.Abbreviation);
             else
-            {
-                existing.Extension.Add(new Hl7.Fhir.Model.Extension
+                existing.Extension.Add(new Extension
                 {
-                    Url = DefaultAbbreviationExtensionUrl,
-                    Value = new FhirString(update.Abbreviation)
+                    Url = AbbreviationExtensionUrl,
+                    Value = new Code(update.Abbreviation)
                 });
-            }
         }
 
-        // Actualizar costo
-        if (update.Cost.HasValue)
-        {
-            var costExtension = existing.Extension
-                .FirstOrDefault(e => e.Url.Equals(DefaultCostExtensionUrl, StringComparison.OrdinalIgnoreCase));
+        // Scope (siempre se guarda)
+        var scopeValue = update.Scope.ToString().ToLowerInvariant();
 
-            if (costExtension != null)
-            {
-                costExtension.Value = new FhirDecimal(update.Cost.Value);
-            }
-            else
-            {
-                existing.Extension.Add(new Hl7.Fhir.Model.Extension
-                {
-                    Url = DefaultCostExtensionUrl,
-                    Value = new FhirDecimal(update.Cost.Value)
-                });
-            }
+        var scopeExtension = existing.Extension
+            .FirstOrDefault(e => e.Url == ScopeExtensionUrl);
+
+        if (scopeExtension != null)
+        {
+            scopeExtension.Value = new Code(scopeValue);
+
         }
         else
         {
-            // Remover extensión de costo si no se proporciona
-            var costExtension = existing.Extension
-                .FirstOrDefault(e => e.Url.Equals(DefaultCostExtensionUrl, StringComparison.OrdinalIgnoreCase));
-            if (costExtension != null)
+            existing.Extension.Add(new Extension
             {
-                existing.Extension.Remove(costExtension);
-            }
+                Url = ScopeExtensionUrl,
+                Value = new Code(scopeValue)
+            });
         }
 
         // Metadatos
         existing.Meta ??= new Meta();
         existing.Meta.LastUpdated = DateTimeOffset.Now;
-        existing.Meta.VersionId = FhirInfrastructureExtensions.IncrementVersion(existing.Meta.VersionId);
+        existing.Meta.VersionId =
+            FhirInfrastructureExtensions.IncrementVersion(existing.Meta.VersionId);
 
         return existing;
     }

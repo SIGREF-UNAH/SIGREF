@@ -21,6 +21,9 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  CashierSessionDtoPagedResultDtoResponseDto,
+  CashierSessionDtoResponseDto,
+  CashierSessionMinimalDtoResponseDto,
   CloseCashierSessionDto,
   CreateCashierSessionDto,
   GetApiCashierSessionsParams,
@@ -35,7 +38,7 @@ export const postApiCashierSessionsOpen = (
   createCashierSessionDto: CreateCashierSessionDto,
   signal?: AbortSignal,
 ) => {
-  return customInstance<void>({
+  return customInstance<CashierSessionMinimalDtoResponseDto | void>({
     url: `/api/CashierSessions/open`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -45,7 +48,7 @@ export const postApiCashierSessionsOpen = (
 };
 
 export const getPostApiCashierSessionsOpenMutationOptions = <
-  TError = ProblemDetails,
+  TError = ProblemDetails | void,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -85,10 +88,10 @@ export type PostApiCashierSessionsOpenMutationResult = NonNullable<
   Awaited<ReturnType<typeof postApiCashierSessionsOpen>>
 >;
 export type PostApiCashierSessionsOpenMutationBody = CreateCashierSessionDto;
-export type PostApiCashierSessionsOpenMutationError = ProblemDetails;
+export type PostApiCashierSessionsOpenMutationError = ProblemDetails | void;
 
 export const usePostApiCashierSessionsOpen = <
-  TError = ProblemDetails,
+  TError = ProblemDetails | void,
   TContext = unknown,
 >(
   options?: {
@@ -115,7 +118,7 @@ export const postApiCashierSessionsSessionIdClose = (
   closeCashierSessionDto: CloseCashierSessionDto,
   signal?: AbortSignal,
 ) => {
-  return customInstance<void>({
+  return customInstance<CashierSessionDtoResponseDto>({
     url: `/api/CashierSessions/${sessionId}/close`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -125,7 +128,7 @@ export const postApiCashierSessionsSessionIdClose = (
 };
 
 export const getPostApiCashierSessionsSessionIdCloseMutationOptions = <
-  TError = ProblemDetails,
+  TError = ProblemDetails | void,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -166,10 +169,11 @@ export type PostApiCashierSessionsSessionIdCloseMutationResult = NonNullable<
 >;
 export type PostApiCashierSessionsSessionIdCloseMutationBody =
   CloseCashierSessionDto;
-export type PostApiCashierSessionsSessionIdCloseMutationError = ProblemDetails;
+export type PostApiCashierSessionsSessionIdCloseMutationError =
+  ProblemDetails | void;
 
 export const usePostApiCashierSessionsSessionIdClose = <
-  TError = ProblemDetails,
+  TError = ProblemDetails | void,
   TContext = unknown,
 >(
   options?: {
@@ -197,7 +201,7 @@ export const postApiCashierSessionsSessionIdRequestCorrection = (
   requestCorrectionDto: RequestCorrectionDto,
   signal?: AbortSignal,
 ) => {
-  return customInstance<void>({
+  return customInstance<CashierSessionDtoResponseDto>({
     url: `/api/CashierSessions/${sessionId}/request-correction`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -207,7 +211,7 @@ export const postApiCashierSessionsSessionIdRequestCorrection = (
 };
 
 export const getPostApiCashierSessionsSessionIdRequestCorrectionMutationOptions =
-  <TError = ProblemDetails, TContext = unknown>(options?: {
+  <TError = ProblemDetails | void, TContext = unknown>(options?: {
     mutation?: UseMutationOptions<
       Awaited<
         ReturnType<typeof postApiCashierSessionsSessionIdRequestCorrection>
@@ -254,10 +258,10 @@ export type PostApiCashierSessionsSessionIdRequestCorrectionMutationResult =
 export type PostApiCashierSessionsSessionIdRequestCorrectionMutationBody =
   RequestCorrectionDto;
 export type PostApiCashierSessionsSessionIdRequestCorrectionMutationError =
-  ProblemDetails;
+  ProblemDetails | void;
 
 export const usePostApiCashierSessionsSessionIdRequestCorrection = <
-  TError = ProblemDetails,
+  TError = ProblemDetails | void,
   TContext = unknown,
 >(
   options?: {
@@ -287,7 +291,7 @@ export const postApiCashierSessionsSessionIdResolveCorrection = (
   resolveCorrectionDto: ResolveCorrectionDto,
   signal?: AbortSignal,
 ) => {
-  return customInstance<void>({
+  return customInstance<CashierSessionDtoResponseDto>({
     url: `/api/CashierSessions/${sessionId}/resolve-correction`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -297,7 +301,7 @@ export const postApiCashierSessionsSessionIdResolveCorrection = (
 };
 
 export const getPostApiCashierSessionsSessionIdResolveCorrectionMutationOptions =
-  <TError = ProblemDetails, TContext = unknown>(options?: {
+  <TError = ProblemDetails | void, TContext = unknown>(options?: {
     mutation?: UseMutationOptions<
       Awaited<
         ReturnType<typeof postApiCashierSessionsSessionIdResolveCorrection>
@@ -344,10 +348,10 @@ export type PostApiCashierSessionsSessionIdResolveCorrectionMutationResult =
 export type PostApiCashierSessionsSessionIdResolveCorrectionMutationBody =
   ResolveCorrectionDto;
 export type PostApiCashierSessionsSessionIdResolveCorrectionMutationError =
-  ProblemDetails;
+  ProblemDetails | void;
 
 export const usePostApiCashierSessionsSessionIdResolveCorrection = <
-  TError = ProblemDetails,
+  TError = ProblemDetails | void,
   TContext = unknown,
 >(
   options?: {
@@ -376,7 +380,7 @@ export const getApiCashierSessions = (
   params?: GetApiCashierSessionsParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<void>({
+  return customInstance<CashierSessionDtoPagedResultDtoResponseDto>({
     url: `/api/CashierSessions`,
     method: "GET",
     params,
@@ -392,7 +396,7 @@ export const getGetApiCashierSessionsQueryKey = (
 
 export const getGetApiCashierSessionsQueryOptions = <
   TData = Awaited<ReturnType<typeof getApiCashierSessions>>,
-  TError = unknown,
+  TError = ProblemDetails | void,
 >(
   params?: GetApiCashierSessionsParams,
   options?: {
@@ -424,11 +428,11 @@ export const getGetApiCashierSessionsQueryOptions = <
 export type GetApiCashierSessionsQueryResult = NonNullable<
   Awaited<ReturnType<typeof getApiCashierSessions>>
 >;
-export type GetApiCashierSessionsQueryError = unknown;
+export type GetApiCashierSessionsQueryError = ProblemDetails | void;
 
 export function useGetApiCashierSessions<
   TData = Awaited<ReturnType<typeof getApiCashierSessions>>,
-  TError = unknown,
+  TError = ProblemDetails | void,
 >(
   params: undefined | GetApiCashierSessionsParams,
   options: {
@@ -454,7 +458,7 @@ export function useGetApiCashierSessions<
 };
 export function useGetApiCashierSessions<
   TData = Awaited<ReturnType<typeof getApiCashierSessions>>,
-  TError = unknown,
+  TError = ProblemDetails | void,
 >(
   params?: GetApiCashierSessionsParams,
   options?: {
@@ -480,7 +484,7 @@ export function useGetApiCashierSessions<
 };
 export function useGetApiCashierSessions<
   TData = Awaited<ReturnType<typeof getApiCashierSessions>>,
-  TError = unknown,
+  TError = ProblemDetails | void,
 >(
   params?: GetApiCashierSessionsParams,
   options?: {
@@ -499,7 +503,7 @@ export function useGetApiCashierSessions<
 
 export function useGetApiCashierSessions<
   TData = Awaited<ReturnType<typeof getApiCashierSessions>>,
-  TError = unknown,
+  TError = ProblemDetails | void,
 >(
   params?: GetApiCashierSessionsParams,
   options?: {
@@ -531,7 +535,7 @@ export const getApiCashierSessionsSessionId = (
   sessionId: string,
   signal?: AbortSignal,
 ) => {
-  return customInstance<void>({
+  return customInstance<CashierSessionDtoResponseDto>({
     url: `/api/CashierSessions/${sessionId}`,
     method: "GET",
     signal,
@@ -546,7 +550,7 @@ export const getGetApiCashierSessionsSessionIdQueryKey = (
 
 export const getGetApiCashierSessionsSessionIdQueryOptions = <
   TData = Awaited<ReturnType<typeof getApiCashierSessionsSessionId>>,
-  TError = ProblemDetails,
+  TError = ProblemDetails | void,
 >(
   sessionId: string,
   options?: {
@@ -584,11 +588,11 @@ export const getGetApiCashierSessionsSessionIdQueryOptions = <
 export type GetApiCashierSessionsSessionIdQueryResult = NonNullable<
   Awaited<ReturnType<typeof getApiCashierSessionsSessionId>>
 >;
-export type GetApiCashierSessionsSessionIdQueryError = ProblemDetails;
+export type GetApiCashierSessionsSessionIdQueryError = ProblemDetails | void;
 
 export function useGetApiCashierSessionsSessionId<
   TData = Awaited<ReturnType<typeof getApiCashierSessionsSessionId>>,
-  TError = ProblemDetails,
+  TError = ProblemDetails | void,
 >(
   sessionId: string,
   options: {
@@ -614,7 +618,7 @@ export function useGetApiCashierSessionsSessionId<
 };
 export function useGetApiCashierSessionsSessionId<
   TData = Awaited<ReturnType<typeof getApiCashierSessionsSessionId>>,
-  TError = ProblemDetails,
+  TError = ProblemDetails | void,
 >(
   sessionId: string,
   options?: {
@@ -640,7 +644,7 @@ export function useGetApiCashierSessionsSessionId<
 };
 export function useGetApiCashierSessionsSessionId<
   TData = Awaited<ReturnType<typeof getApiCashierSessionsSessionId>>,
-  TError = ProblemDetails,
+  TError = ProblemDetails | void,
 >(
   sessionId: string,
   options?: {
@@ -659,7 +663,7 @@ export function useGetApiCashierSessionsSessionId<
 
 export function useGetApiCashierSessionsSessionId<
   TData = Awaited<ReturnType<typeof getApiCashierSessionsSessionId>>,
-  TError = ProblemDetails,
+  TError = ProblemDetails | void,
 >(
   sessionId: string,
   options?: {

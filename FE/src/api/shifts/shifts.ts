@@ -21,11 +21,12 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  BooleanResponseDto,
   CreateShiftDto,
   GetApiShiftsParams,
   ProblemDetails,
-  ShiftDto,
-  ShiftDtoPagedResultDto,
+  ShiftDtoPagedResultDtoResponseDto,
+  ShiftDtoResponseDto,
   UpdateShiftDto,
 } from ".././models";
 
@@ -35,7 +36,7 @@ export const getApiShifts = (
   params?: GetApiShiftsParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<ShiftDtoPagedResultDto>({
+  return customInstance<ShiftDtoPagedResultDtoResponseDto>({
     url: `/api/Shifts`,
     method: "GET",
     params,
@@ -49,7 +50,7 @@ export const getGetApiShiftsQueryKey = (params?: GetApiShiftsParams) => {
 
 export const getGetApiShiftsQueryOptions = <
   TData = Awaited<ReturnType<typeof getApiShifts>>,
-  TError = void,
+  TError = ProblemDetails | void,
 >(
   params?: GetApiShiftsParams,
   options?: {
@@ -76,11 +77,11 @@ export const getGetApiShiftsQueryOptions = <
 export type GetApiShiftsQueryResult = NonNullable<
   Awaited<ReturnType<typeof getApiShifts>>
 >;
-export type GetApiShiftsQueryError = void;
+export type GetApiShiftsQueryError = ProblemDetails | void;
 
 export function useGetApiShifts<
   TData = Awaited<ReturnType<typeof getApiShifts>>,
-  TError = void,
+  TError = ProblemDetails | void,
 >(
   params: undefined | GetApiShiftsParams,
   options: {
@@ -102,7 +103,7 @@ export function useGetApiShifts<
 };
 export function useGetApiShifts<
   TData = Awaited<ReturnType<typeof getApiShifts>>,
-  TError = void,
+  TError = ProblemDetails | void,
 >(
   params?: GetApiShiftsParams,
   options?: {
@@ -124,7 +125,7 @@ export function useGetApiShifts<
 };
 export function useGetApiShifts<
   TData = Awaited<ReturnType<typeof getApiShifts>>,
-  TError = void,
+  TError = ProblemDetails | void,
 >(
   params?: GetApiShiftsParams,
   options?: {
@@ -139,7 +140,7 @@ export function useGetApiShifts<
 
 export function useGetApiShifts<
   TData = Awaited<ReturnType<typeof getApiShifts>>,
-  TError = void,
+  TError = ProblemDetails | void,
 >(
   params?: GetApiShiftsParams,
   options?: {
@@ -167,7 +168,7 @@ export const postApiShifts = (
   createShiftDto: CreateShiftDto,
   signal?: AbortSignal,
 ) => {
-  return customInstance<ShiftDto | void>({
+  return customInstance<ShiftDtoResponseDto | void>({
     url: `/api/Shifts`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -177,7 +178,7 @@ export const postApiShifts = (
 };
 
 export const getPostApiShiftsMutationOptions = <
-  TError = ProblemDetails,
+  TError = ProblemDetails | void,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -217,9 +218,12 @@ export type PostApiShiftsMutationResult = NonNullable<
   Awaited<ReturnType<typeof postApiShifts>>
 >;
 export type PostApiShiftsMutationBody = CreateShiftDto;
-export type PostApiShiftsMutationError = ProblemDetails;
+export type PostApiShiftsMutationError = ProblemDetails | void;
 
-export const usePostApiShifts = <TError = ProblemDetails, TContext = unknown>(
+export const usePostApiShifts = <
+  TError = ProblemDetails | void,
+  TContext = unknown,
+>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof postApiShifts>>,
@@ -240,7 +244,7 @@ export const usePostApiShifts = <TError = ProblemDetails, TContext = unknown>(
   return useMutation(mutationOptions, queryClient);
 };
 export const getApiShiftsId = (id: string, signal?: AbortSignal) => {
-  return customInstance<ShiftDto>({
+  return customInstance<ShiftDtoResponseDto>({
     url: `/api/Shifts/${id}`,
     method: "GET",
     signal,
@@ -253,7 +257,7 @@ export const getGetApiShiftsIdQueryKey = (id?: string) => {
 
 export const getGetApiShiftsIdQueryOptions = <
   TData = Awaited<ReturnType<typeof getApiShiftsId>>,
-  TError = ProblemDetails,
+  TError = ProblemDetails | void,
 >(
   id: string,
   options?: {
@@ -285,11 +289,11 @@ export const getGetApiShiftsIdQueryOptions = <
 export type GetApiShiftsIdQueryResult = NonNullable<
   Awaited<ReturnType<typeof getApiShiftsId>>
 >;
-export type GetApiShiftsIdQueryError = ProblemDetails;
+export type GetApiShiftsIdQueryError = ProblemDetails | void;
 
 export function useGetApiShiftsId<
   TData = Awaited<ReturnType<typeof getApiShiftsId>>,
-  TError = ProblemDetails,
+  TError = ProblemDetails | void,
 >(
   id: string,
   options: {
@@ -311,7 +315,7 @@ export function useGetApiShiftsId<
 };
 export function useGetApiShiftsId<
   TData = Awaited<ReturnType<typeof getApiShiftsId>>,
-  TError = ProblemDetails,
+  TError = ProblemDetails | void,
 >(
   id: string,
   options?: {
@@ -333,7 +337,7 @@ export function useGetApiShiftsId<
 };
 export function useGetApiShiftsId<
   TData = Awaited<ReturnType<typeof getApiShiftsId>>,
-  TError = ProblemDetails,
+  TError = ProblemDetails | void,
 >(
   id: string,
   options?: {
@@ -348,7 +352,7 @@ export function useGetApiShiftsId<
 
 export function useGetApiShiftsId<
   TData = Awaited<ReturnType<typeof getApiShiftsId>>,
-  TError = ProblemDetails,
+  TError = ProblemDetails | void,
 >(
   id: string,
   options?: {
@@ -373,7 +377,7 @@ export function useGetApiShiftsId<
 }
 
 export const putApiShiftsId = (id: string, updateShiftDto: UpdateShiftDto) => {
-  return customInstance<ShiftDto>({
+  return customInstance<ShiftDtoResponseDto>({
     url: `/api/Shifts/${id}`,
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -382,7 +386,7 @@ export const putApiShiftsId = (id: string, updateShiftDto: UpdateShiftDto) => {
 };
 
 export const getPutApiShiftsIdMutationOptions = <
-  TError = ProblemDetails,
+  TError = ProblemDetails | void,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -422,9 +426,12 @@ export type PutApiShiftsIdMutationResult = NonNullable<
   Awaited<ReturnType<typeof putApiShiftsId>>
 >;
 export type PutApiShiftsIdMutationBody = UpdateShiftDto;
-export type PutApiShiftsIdMutationError = ProblemDetails;
+export type PutApiShiftsIdMutationError = ProblemDetails | void;
 
-export const usePutApiShiftsId = <TError = ProblemDetails, TContext = unknown>(
+export const usePutApiShiftsId = <
+  TError = ProblemDetails | void,
+  TContext = unknown,
+>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof putApiShiftsId>>,
@@ -445,11 +452,14 @@ export const usePutApiShiftsId = <TError = ProblemDetails, TContext = unknown>(
   return useMutation(mutationOptions, queryClient);
 };
 export const deleteApiShiftsId = (id: string) => {
-  return customInstance<void>({ url: `/api/Shifts/${id}`, method: "DELETE" });
+  return customInstance<BooleanResponseDto>({
+    url: `/api/Shifts/${id}`,
+    method: "DELETE",
+  });
 };
 
 export const getDeleteApiShiftsIdMutationOptions = <
-  TError = ProblemDetails,
+  TError = ProblemDetails | void,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -489,10 +499,10 @@ export type DeleteApiShiftsIdMutationResult = NonNullable<
   Awaited<ReturnType<typeof deleteApiShiftsId>>
 >;
 
-export type DeleteApiShiftsIdMutationError = ProblemDetails;
+export type DeleteApiShiftsIdMutationError = ProblemDetails | void;
 
 export const useDeleteApiShiftsId = <
-  TError = ProblemDetails,
+  TError = ProblemDetails | void,
   TContext = unknown,
 >(
   options?: {

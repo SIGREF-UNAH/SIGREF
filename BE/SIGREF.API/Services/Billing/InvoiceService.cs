@@ -103,6 +103,32 @@ public class InvoiceService : IInvoiceService
         // TODO : EN UN FUTURO VERIFICAR EL SERIE NUMBER QUE NOS DAN
         // = APLICAR SERIE NUMBER AUTOMATICO EN FACTURAS
 
+        var serviceFhirIds = new HashSet<string>();
+
+        if (!string.IsNullOrEmpty(dto.SingleServiceFhirId))
+            serviceFhirIds.Add(dto.SingleServiceFhirId);
+
+        foreach (var item in dto.Items)
+        {
+            serviceFhirIds.Add(item.ServiceId);
+        }
+        
+        var services = await _dbContext.HealthServices
+            .AsNoTracking()
+            .Where(s => serviceFhirIds.Contains(s.HealthServiceFhirId))
+            .ToListAsync();
+        
+        if (services.Count != serviceFhirIds.Count)
+        {
+            return ResponseHelper.Fail<InvoiceDetailDto>(
+                400, "Uno o más servicios no existen en SIGREF.");
+        }
+        var serviceMap = services.ToDictionary(
+            x => x.HealthServiceFhirId,
+            x => x
+        );
+
+
         var invoice = new InvoiceEntity
         {
             PatientIdFhir = dto.PatientIdFhir,
@@ -111,7 +137,9 @@ public class InvoiceService : IInvoiceService
             PatientValue = dto.PatientValue,
 
             ServiceGroupFhirId = dto.ServiceGroupFhirId,
-            SingleServiceId = dto.SingleServiceId,
+            SingleServiceId = !string.IsNullOrEmpty(dto.SingleServiceFhirId)
+                ? serviceMap[dto.SingleServiceFhirId].Id
+                : null,
 
             InvoiceType = dto.InvoiceType,
             PaymentMethod = dto.PaymentMethod,
@@ -127,9 +155,10 @@ public class InvoiceService : IInvoiceService
         // ============================
         foreach (var item in dto.Items)
         {
+            var service = serviceMap[item.ServiceId];
             invoice.Items.Add(new InvoiceItemEntity
             {
-                ServiceId = item.ServiceId,
+                ServiceId = service.Id,
                 Description = item.NameService,
                 Quantity = item.Quantity,
                 UnitPrice = item.UnitPrice,
@@ -746,7 +775,28 @@ public class InvoiceService : IInvoiceService
             if (item.TotalAmount <= 0)
                 return ResponseHelper.Fail<InvoiceDetailDto>(400, "El total debe ser mayor que 0.");
         }
+        // ============================
+        // RESOLVER SERVICIOS (FHIR → SIGREF)
+        // ============================
 
+        var serviceFhirIds = dto.Items
+            .Select(i => i.ServiceId)
+            .Distinct()
+            .ToList();
+
+        var services = await _dbContext.HealthServices
+            .AsNoTracking()
+            .Where(s => serviceFhirIds.Contains(s.HealthServiceFhirId))
+            .ToListAsync();
+
+        if (services.Count != serviceFhirIds.Count)
+            return ResponseHelper.Fail<InvoiceDetailDto>(
+                400, "Uno o más servicios no existen en SIGREF.");
+
+        var serviceMap = services.ToDictionary(
+            s => s.HealthServiceFhirId,
+            s => s
+        );
         // ============================
         // CREAR NOTA (factura hija)
         // ============================
@@ -765,16 +815,21 @@ public class InvoiceService : IInvoiceService
         };
 
         // Items
-        note.Items = dto.Items.Select(i => new InvoiceItemEntity
+        note.Items = dto.Items.Select(i =>
         {
-            ServiceId = i.ServiceId,
-            Description = i.NameService,
-            Quantity = i.Quantity,
-            UnitPrice = i.UnitPrice,
-            Discount = i.Discount,
-            TotalAmount = i.TotalAmount,
-            CreatedById = note.CreatedById,
-            CreatedDate = DateTime.UtcNow
+            var service = serviceMap[i.ServiceId];
+
+            return new InvoiceItemEntity
+            {
+                ServiceId = service.Id, // ID INTERNO SIGREF
+                Description = i.NameService,
+                Quantity = i.Quantity,
+                UnitPrice = i.UnitPrice,
+                Discount = i.Discount,
+                TotalAmount = i.TotalAmount,
+                CreatedById = note.CreatedById,
+                CreatedDate = DateTime.UtcNow
+            };
         }).ToList();
 
         // Totales de la nota

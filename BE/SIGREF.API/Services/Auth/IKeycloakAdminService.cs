@@ -46,7 +46,7 @@ public interface IKeycloakAdminService
         string username,
         CancellationToken cancellationToken = default);
     
-    Task<ResponseDto<PagedResult<KeycloakUserDto>>> GetUsersListAsync(KeycloakFilter filter);
+    Task<ResponseDto<PagedResultDto<KeycloakUserDto>>> GetUsersListAsync(KeycloakFilter filter);
 
     
 }

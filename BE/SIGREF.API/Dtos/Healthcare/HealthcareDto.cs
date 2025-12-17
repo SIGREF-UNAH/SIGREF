@@ -1,6 +1,5 @@
 ﻿#nullable enable
 using SIGREF.API.Dtos.Common;
-using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace SIGREF.API.Dtos.Healthcare
@@ -20,19 +19,42 @@ namespace SIGREF.API.Dtos.Healthcare
         public string Name { get; set; } = string.Empty;
 
         [JsonPropertyName("comment")]
-        public string? Comment { get; set; } // descripción
+        public string? Comment { get; set; } //descripcion
 
         [JsonPropertyName("specialty")]
         public List<CodeableConceptDto>? Specialty { get; set; }
 
         [JsonPropertyName("providedBy")]
-        public ReferenceDto? ProvidedBy { get; set; } // organización que presta el servicio
+        public ReferenceDto? ProvidedBy { get; set; }
 
         [JsonPropertyName("location")]
-        public List<ReferenceDto>? Location { get; set; } // áreas donde se presta el servicio
+        public List<ReferenceDto>? Location { get; set; }
 
-        [JsonPropertyName("extension")]
-        public List<ExtensionDto>? Extension { get; set; } // para abreviación y costo
+        // =========================
+        //   PROPIEDADES DE NEGOCIO
+        // =========================
+
+        [JsonPropertyName("abbreviation")]
+        public string? Abbreviation { get; set; }
+
+        /// <summary>
+        /// Alcance del servicio médico.
+        /// Internal  => servicio técnico / no visible
+        /// External  => visible al usuario
+        /// </summary>
+        [JsonPropertyName("scope")]
+        public HealthcareScope Scope { get; set; }
+
+        /// <summary>
+        /// Costo del servicio médico.
+        /// Proviene de SIGREF, no de FHIR.
+        /// </summary>
+        [JsonPropertyName("cost")]
+        public decimal? Cost { get; set; }
+
+        // =========================
+        //   METADATA
+        // =========================
 
         [JsonPropertyName("lastUpdated")]
         public DateTime? LastUpdated { get; set; }

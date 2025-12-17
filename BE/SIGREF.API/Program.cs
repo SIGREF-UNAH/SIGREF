@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using SIGREF.API;
 using SIGREF.API.ServiceDefaults;
+using SIGREF.API.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
-
+// ASCII banner
+ConsoleBanner.Print();
 builder.AddServiceDefaults();
 
 // Add PostgreSQL with Aspire integration - DEBE estar en Program.cs, NO en Startup.cs

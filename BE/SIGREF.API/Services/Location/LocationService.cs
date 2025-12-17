@@ -133,7 +133,7 @@ public class LocationService
     }
 
     // Filtrado
-    public async Task<PagedResult<FhirLocation>> GetFilteredLocationsAsync(LocationFilterDto filter)
+    public async Task<PagedResultDto<FhirLocation>> GetFilteredLocationsAsync(LocationFilterDto filter)
     {
         var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
 

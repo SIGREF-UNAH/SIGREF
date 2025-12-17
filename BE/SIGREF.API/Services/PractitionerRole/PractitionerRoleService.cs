@@ -20,7 +20,7 @@ public class PractitionerRoleService : IPractitionerRoleService
         _fhirClient = fhirClient;
     }
 
-    public async Task<PagedResult<PractitionerRoleDto>> GetFilteredAsync(PractitionerRoleFilterDto filters)
+    public async Task<PagedResultDto<PractitionerRoleDto>> GetFilteredAsync(PractitionerRoleFilterDto filters)
     {
         // Normalizar paginación usando el helper
         var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filters.PageNumber, filters.PageSize);
@@ -49,7 +49,7 @@ public class PractitionerRoleService : IPractitionerRoleService
         var pagedResult = FhirPaginationHelper.ToPagedResult<FhirPractitionerRole>(bundle, pageNumber, pageSize);
 
         // Convertir Items a DTO
-        var resultDto = new PagedResult<PractitionerRoleDto>
+        var resultDto = new PagedResultDto<PractitionerRoleDto>
         {
             Items = pagedResult.Items
                     .Select(r => r.ToDto())

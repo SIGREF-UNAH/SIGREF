@@ -119,7 +119,7 @@ public class PatientService : IPatientService
     }
 
     // Filtros
-    public async Task<PagedResult<PatientDto>> GetFilteredPatientsAsync(PatientFilterDto filter)
+    public async Task<PagedResultDto<PatientDto>> GetFilteredPatientsAsync(PatientFilterDto filter)
     {
         var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
 
@@ -166,7 +166,7 @@ public class PatientService : IPatientService
 
         var pagedResult = FhirPaginationHelper.ToPagedResult<FhirPatient>(bundle, pageNumber, pageSize);
 
-        var resultDto = new PagedResult<PatientDto>
+        var resultDto = new PagedResultDto<PatientDto>
         {
             Items = pagedResult.Items
                     .Select(p => p.ToDto())

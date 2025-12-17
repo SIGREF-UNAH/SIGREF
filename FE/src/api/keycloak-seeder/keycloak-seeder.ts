@@ -21,9 +21,11 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  BooleanResponseDto,
   GetApiKeycloakSeederExistsUsernameParams,
   GetApiKeycloakSeederListParams,
   KeycloakUserDtoPagedResultResponseDto,
+  KeycloakUserDtoResponseDto,
   KeycloakUsernameDtoResponseDto,
   ProblemDetails,
   UserCreateDto,
@@ -177,7 +179,7 @@ export const postApiKeycloakSeederCreateUser = (
   userCreateDto: UserCreateDto,
   signal?: AbortSignal,
 ) => {
-  return customInstance<void>({
+  return customInstance<KeycloakUserDtoResponseDto | void>({
     url: `/api/KeycloakSeeder/create-user`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -187,7 +189,7 @@ export const postApiKeycloakSeederCreateUser = (
 };
 
 export const getPostApiKeycloakSeederCreateUserMutationOptions = <
-  TError = unknown,
+  TError = ProblemDetails | void,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -227,10 +229,11 @@ export type PostApiKeycloakSeederCreateUserMutationResult = NonNullable<
   Awaited<ReturnType<typeof postApiKeycloakSeederCreateUser>>
 >;
 export type PostApiKeycloakSeederCreateUserMutationBody = UserCreateDto;
-export type PostApiKeycloakSeederCreateUserMutationError = unknown;
+export type PostApiKeycloakSeederCreateUserMutationError =
+  ProblemDetails | void;
 
 export const usePostApiKeycloakSeederCreateUser = <
-  TError = unknown,
+  TError = ProblemDetails | void,
   TContext = unknown,
 >(
   options?: {
@@ -257,7 +260,7 @@ export const getApiKeycloakSeederByIdId = (
   id: string,
   signal?: AbortSignal,
 ) => {
-  return customInstance<void>({
+  return customInstance<KeycloakUserDtoResponseDto>({
     url: `/api/KeycloakSeeder/by-id/${id}`,
     method: "GET",
     signal,
@@ -270,7 +273,7 @@ export const getGetApiKeycloakSeederByIdIdQueryKey = (id?: string) => {
 
 export const getGetApiKeycloakSeederByIdIdQueryOptions = <
   TData = Awaited<ReturnType<typeof getApiKeycloakSeederByIdId>>,
-  TError = unknown,
+  TError = ProblemDetails | void,
 >(
   id: string,
   options?: {
@@ -307,11 +310,11 @@ export const getGetApiKeycloakSeederByIdIdQueryOptions = <
 export type GetApiKeycloakSeederByIdIdQueryResult = NonNullable<
   Awaited<ReturnType<typeof getApiKeycloakSeederByIdId>>
 >;
-export type GetApiKeycloakSeederByIdIdQueryError = unknown;
+export type GetApiKeycloakSeederByIdIdQueryError = ProblemDetails | void;
 
 export function useGetApiKeycloakSeederByIdId<
   TData = Awaited<ReturnType<typeof getApiKeycloakSeederByIdId>>,
-  TError = unknown,
+  TError = ProblemDetails | void,
 >(
   id: string,
   options: {
@@ -337,7 +340,7 @@ export function useGetApiKeycloakSeederByIdId<
 };
 export function useGetApiKeycloakSeederByIdId<
   TData = Awaited<ReturnType<typeof getApiKeycloakSeederByIdId>>,
-  TError = unknown,
+  TError = ProblemDetails | void,
 >(
   id: string,
   options?: {
@@ -363,7 +366,7 @@ export function useGetApiKeycloakSeederByIdId<
 };
 export function useGetApiKeycloakSeederByIdId<
   TData = Awaited<ReturnType<typeof getApiKeycloakSeederByIdId>>,
-  TError = unknown,
+  TError = ProblemDetails | void,
 >(
   id: string,
   options?: {
@@ -382,7 +385,7 @@ export function useGetApiKeycloakSeederByIdId<
 
 export function useGetApiKeycloakSeederByIdId<
   TData = Awaited<ReturnType<typeof getApiKeycloakSeederByIdId>>,
-  TError = unknown,
+  TError = ProblemDetails | void,
 >(
   id: string,
   options?: {
@@ -414,7 +417,7 @@ export const getApiKeycloakSeederByPractitionerPractitionerId = (
   practitionerId: string,
   signal?: AbortSignal,
 ) => {
-  return customInstance<void>({
+  return customInstance<KeycloakUserDtoResponseDto>({
     url: `/api/KeycloakSeeder/by-practitioner/${practitionerId}`,
     method: "GET",
     signal,
@@ -431,7 +434,7 @@ export const getGetApiKeycloakSeederByPractitionerPractitionerIdQueryOptions = <
   TData = Awaited<
     ReturnType<typeof getApiKeycloakSeederByPractitionerPractitionerId>
   >,
-  TError = unknown,
+  TError = ProblemDetails | void,
 >(
   practitionerId: string,
   options?: {
@@ -476,13 +479,13 @@ export type GetApiKeycloakSeederByPractitionerPractitionerIdQueryResult =
     Awaited<ReturnType<typeof getApiKeycloakSeederByPractitionerPractitionerId>>
   >;
 export type GetApiKeycloakSeederByPractitionerPractitionerIdQueryError =
-  unknown;
+  ProblemDetails | void;
 
 export function useGetApiKeycloakSeederByPractitionerPractitionerId<
   TData = Awaited<
     ReturnType<typeof getApiKeycloakSeederByPractitionerPractitionerId>
   >,
-  TError = unknown,
+  TError = ProblemDetails | void,
 >(
   practitionerId: string,
   options: {
@@ -516,7 +519,7 @@ export function useGetApiKeycloakSeederByPractitionerPractitionerId<
   TData = Awaited<
     ReturnType<typeof getApiKeycloakSeederByPractitionerPractitionerId>
   >,
-  TError = unknown,
+  TError = ProblemDetails | void,
 >(
   practitionerId: string,
   options?: {
@@ -550,7 +553,7 @@ export function useGetApiKeycloakSeederByPractitionerPractitionerId<
   TData = Awaited<
     ReturnType<typeof getApiKeycloakSeederByPractitionerPractitionerId>
   >,
-  TError = unknown,
+  TError = ProblemDetails | void,
 >(
   practitionerId: string,
   options?: {
@@ -573,7 +576,7 @@ export function useGetApiKeycloakSeederByPractitionerPractitionerId<
   TData = Awaited<
     ReturnType<typeof getApiKeycloakSeederByPractitionerPractitionerId>
   >,
-  TError = unknown,
+  TError = ProblemDetails | void,
 >(
   practitionerId: string,
   options?: {
@@ -611,7 +614,7 @@ export const getApiKeycloakSeederExistsPractitionerPractitionerId = (
   practitionerId: string,
   signal?: AbortSignal,
 ) => {
-  return customInstance<void>({
+  return customInstance<BooleanResponseDto>({
     url: `/api/KeycloakSeeder/exists/practitioner/${practitionerId}`,
     method: "GET",
     signal,
@@ -629,7 +632,7 @@ export const getGetApiKeycloakSeederExistsPractitionerPractitionerIdQueryOptions
     TData = Awaited<
       ReturnType<typeof getApiKeycloakSeederExistsPractitionerPractitionerId>
     >,
-    TError = unknown,
+    TError = ProblemDetails | void,
   >(
     practitionerId: string,
     options?: {
@@ -685,13 +688,13 @@ export type GetApiKeycloakSeederExistsPractitionerPractitionerIdQueryResult =
     >
   >;
 export type GetApiKeycloakSeederExistsPractitionerPractitionerIdQueryError =
-  unknown;
+  ProblemDetails | void;
 
 export function useGetApiKeycloakSeederExistsPractitionerPractitionerId<
   TData = Awaited<
     ReturnType<typeof getApiKeycloakSeederExistsPractitionerPractitionerId>
   >,
-  TError = unknown,
+  TError = ProblemDetails | void,
 >(
   practitionerId: string,
   options: {
@@ -731,7 +734,7 @@ export function useGetApiKeycloakSeederExistsPractitionerPractitionerId<
   TData = Awaited<
     ReturnType<typeof getApiKeycloakSeederExistsPractitionerPractitionerId>
   >,
-  TError = unknown,
+  TError = ProblemDetails | void,
 >(
   practitionerId: string,
   options?: {
@@ -771,7 +774,7 @@ export function useGetApiKeycloakSeederExistsPractitionerPractitionerId<
   TData = Awaited<
     ReturnType<typeof getApiKeycloakSeederExistsPractitionerPractitionerId>
   >,
-  TError = unknown,
+  TError = ProblemDetails | void,
 >(
   practitionerId: string,
   options?: {
@@ -796,7 +799,7 @@ export function useGetApiKeycloakSeederExistsPractitionerPractitionerId<
   TData = Awaited<
     ReturnType<typeof getApiKeycloakSeederExistsPractitionerPractitionerId>
   >,
-  TError = unknown,
+  TError = ProblemDetails | void,
 >(
   practitionerId: string,
   options?: {
@@ -855,7 +858,7 @@ export const getGetApiKeycloakSeederExistsUsernameQueryKey = (
 
 export const getGetApiKeycloakSeederExistsUsernameQueryOptions = <
   TData = Awaited<ReturnType<typeof getApiKeycloakSeederExistsUsername>>,
-  TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
+  TError = ProblemDetails | void,
 >(
   params: GetApiKeycloakSeederExistsUsernameParams,
   options?: {
@@ -889,14 +892,11 @@ export type GetApiKeycloakSeederExistsUsernameQueryResult = NonNullable<
   Awaited<ReturnType<typeof getApiKeycloakSeederExistsUsername>>
 >;
 export type GetApiKeycloakSeederExistsUsernameQueryError =
-  | ProblemDetails
-  | ProblemDetails
-  | ProblemDetails
-  | void;
+  ProblemDetails | void;
 
 export function useGetApiKeycloakSeederExistsUsername<
   TData = Awaited<ReturnType<typeof getApiKeycloakSeederExistsUsername>>,
-  TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
+  TError = ProblemDetails | void,
 >(
   params: GetApiKeycloakSeederExistsUsernameParams,
   options: {
@@ -922,7 +922,7 @@ export function useGetApiKeycloakSeederExistsUsername<
 };
 export function useGetApiKeycloakSeederExistsUsername<
   TData = Awaited<ReturnType<typeof getApiKeycloakSeederExistsUsername>>,
-  TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
+  TError = ProblemDetails | void,
 >(
   params: GetApiKeycloakSeederExistsUsernameParams,
   options?: {
@@ -948,7 +948,7 @@ export function useGetApiKeycloakSeederExistsUsername<
 };
 export function useGetApiKeycloakSeederExistsUsername<
   TData = Awaited<ReturnType<typeof getApiKeycloakSeederExistsUsername>>,
-  TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
+  TError = ProblemDetails | void,
 >(
   params: GetApiKeycloakSeederExistsUsernameParams,
   options?: {
@@ -967,7 +967,7 @@ export function useGetApiKeycloakSeederExistsUsername<
 
 export function useGetApiKeycloakSeederExistsUsername<
   TData = Awaited<ReturnType<typeof getApiKeycloakSeederExistsUsername>>,
-  TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
+  TError = ProblemDetails | void,
 >(
   params: GetApiKeycloakSeederExistsUsernameParams,
   options?: {
@@ -1018,7 +1018,7 @@ export const getGetApiKeycloakSeederListQueryKey = (
 
 export const getGetApiKeycloakSeederListQueryOptions = <
   TData = Awaited<ReturnType<typeof getApiKeycloakSeederList>>,
-  TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
+  TError = ProblemDetails | void,
 >(
   params?: GetApiKeycloakSeederListParams,
   options?: {
@@ -1050,15 +1050,11 @@ export const getGetApiKeycloakSeederListQueryOptions = <
 export type GetApiKeycloakSeederListQueryResult = NonNullable<
   Awaited<ReturnType<typeof getApiKeycloakSeederList>>
 >;
-export type GetApiKeycloakSeederListQueryError =
-  | ProblemDetails
-  | ProblemDetails
-  | ProblemDetails
-  | void;
+export type GetApiKeycloakSeederListQueryError = ProblemDetails | void;
 
 export function useGetApiKeycloakSeederList<
   TData = Awaited<ReturnType<typeof getApiKeycloakSeederList>>,
-  TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
+  TError = ProblemDetails | void,
 >(
   params: undefined | GetApiKeycloakSeederListParams,
   options: {
@@ -1084,7 +1080,7 @@ export function useGetApiKeycloakSeederList<
 };
 export function useGetApiKeycloakSeederList<
   TData = Awaited<ReturnType<typeof getApiKeycloakSeederList>>,
-  TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
+  TError = ProblemDetails | void,
 >(
   params?: GetApiKeycloakSeederListParams,
   options?: {
@@ -1110,7 +1106,7 @@ export function useGetApiKeycloakSeederList<
 };
 export function useGetApiKeycloakSeederList<
   TData = Awaited<ReturnType<typeof getApiKeycloakSeederList>>,
-  TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
+  TError = ProblemDetails | void,
 >(
   params?: GetApiKeycloakSeederListParams,
   options?: {
@@ -1129,7 +1125,7 @@ export function useGetApiKeycloakSeederList<
 
 export function useGetApiKeycloakSeederList<
   TData = Awaited<ReturnType<typeof getApiKeycloakSeederList>>,
-  TError = ProblemDetails | ProblemDetails | ProblemDetails | void,
+  TError = ProblemDetails | void,
 >(
   params?: GetApiKeycloakSeederListParams,
   options?: {

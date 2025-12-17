@@ -16,6 +16,6 @@ public interface IPractitionerService
 
     Task DeletePractitionerAsync(string id);
 
-    Task<PagedResult<PractitionerDto>> GetFilteredPractitionersAsync(PractitionerFilterDto filter);
+    Task<PagedResultDto<PractitionerDto>> GetFilteredPractitionersAsync(PractitionerFilterDto filter);
 }
 

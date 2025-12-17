@@ -1,98 +1,254 @@
-﻿using Hl7.Fhir.Model;
-using Hl7.Fhir.Rest;
-using Task = System.Threading.Tasks.Task;
-using FhirHealthcare = Hl7.Fhir.Model.HealthcareService;
-using SIGREF.API.Dtos.Healthcare;
+﻿using Microsoft.EntityFrameworkCore;
+using SIGREF.API.Database;
+using SIGREF.API.Database.Entity.Catalogs;
 using SIGREF.API.Dtos.Common;
-using SIGREF.API.Helpers;
+using SIGREF.API.Dtos.Healthcare;
+using SIGREF.API.Extensions;
 
-namespace SIGREF.API.Services.Healthcare
+namespace SIGREF.API.Services.Healthcare;
+
+/// <summary>
+/// Implementación del servicio de aplicación para Healthcare.
+/// Contiene la lógica de negocio y la orquestación entre FHIR y SIGREF.
+/// </summary>
+public class HealthcareApplicationService : IHealthcareService
 {
-    public class HealthcareService(FhirClient fhirService)
+    private readonly HealthcareFHIRService _fhirService;
+    private readonly SIGREFContext _dbSigref;
+
+    public HealthcareApplicationService(
+        HealthcareFHIRService fhirService,
+        SIGREFContext db)
     {
-        // Obtener un servicio médico por id
-        public Task<FhirHealthcare> GetHealthcareByIdAsync(string id)
-        {
-            return fhirService.ReadAsync<FhirHealthcare>($"HealthcareService/{id}");
-        }
+        _fhirService = fhirService;
+        _dbSigref = db;
+    }
 
-        // Crear un servicio médico
-        public async Task<FhirHealthcare> CreateHealthcareAsync(FhirHealthcare healthcare)
+    private async Task EnrichWithCostAsync(List<HealthcareDto> items)
+    {
+        var fhirIds = items
+            .Where(x => !string.IsNullOrEmpty(x.Id))
+            .Select(x => x.Id!)
+            .ToList();
+
+        if (fhirIds.Count == 0)
+            return;
+
+        var prices = await _dbSigref.HealthServices
+            .Where(x => fhirIds.Contains(x.HealthServiceFhirId))
+            .ToDictionaryAsync(
+                x => x.HealthServiceFhirId,
+                x => x.Price);
+
+        foreach (var item in items)
         {
-            // Establecer metadatos
-            healthcare.Meta = new Meta
+            if (item.Id != null && prices.TryGetValue(item.Id, out var price))
             {
-                LastUpdated = DateTimeOffset.Now,
-                VersionId = "1"
-            };
-
-            return await fhirService.CreateAsync(healthcare);
-        }
-
-        // Editar un servicio médico
-        public async Task<FhirHealthcare> UpdateHealthcareAsync(FhirHealthcare healthcare)
-        {
-            // Actualizar metadatos
-            if (healthcare.Meta == null)
-            {
-                healthcare.Meta = new Meta();
+                item.Cost = price;
             }
-
-            healthcare.Meta.LastUpdated = DateTimeOffset.Now;
-
-            // Incrementar versión si ya existe
-            if (int.TryParse(healthcare.Meta.VersionId, out var currentVersion))
-            {
-                healthcare.Meta.VersionId = (currentVersion + 1).ToString();
-            }
-            else
-            {
-                healthcare.Meta.VersionId = "1";
-            }
-
-            return await fhirService.UpdateAsync(healthcare);
-        }
-
-        // Eliminar un servicio médico
-        public async Task DeleteHealthcareAsync(string id)
-        {
-            await fhirService.DeleteAsync($"HealthcareService/{id}");
-        }
-
-        // Filtrar
-        public async Task<PagedResult<FhirHealthcare>> GetFilteredHealthcaresAsync(HealthcareFilterDto filter)
-        {
-      
-            var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
-
-            var searchParams = new SearchParams();
-
-            // Filtros
-            if (!string.IsNullOrWhiteSpace(filter.Name))
-                searchParams.Add("name", filter.Name);
-
-            if (filter.Active.HasValue)
-                searchParams.Add("active", filter.Active.Value.ToString().ToLowerInvariant());
-
-            if (!string.IsNullOrWhiteSpace(filter.Specialty))
-                searchParams.Add("specialty", filter.Specialty);
-
-            if (!string.IsNullOrWhiteSpace(filter.ProvidedBy))
-                searchParams.Add("organization", filter.ProvidedBy);
-
-            if (!string.IsNullOrWhiteSpace(filter.Location))
-                searchParams.Add("location", filter.Location);
-           
-            // Paginación FHIR
-            searchParams.Count = pageSize;
-            searchParams.Add("_offset", offset.ToString());
-            searchParams.Add("_total", "accurate");
-
-            // Buscar en FHIR
-            var bundle = await fhirService.SearchAsync<FhirHealthcare>(searchParams);
-
-            // Convertir a PagedResult usando el helper
-            return FhirPaginationHelper.ToPagedResult<FhirHealthcare>(bundle, pageNumber, pageSize);
         }
     }
+
+
+    // ============================================================
+    //                     LISTAR (PAGINADO)
+    // ============================================================
+    public async Task<ResponseDto<PagedResultDto<HealthcareDto>>> GetFilteredAsync(
+        HealthcareFilterDto filter)
+    {
+        // Obtener datos desde FHIR
+        var fhirResult = await _fhirService.GetFilteredHealthcaresAsync(filter);
+
+        // Mapear FHIR DTO
+        var items = fhirResult.Items
+            .Select(h => h.ToDto())
+            .ToList();
+
+        // Meter costo solo si se solicita
+        if (filter.IncludeCost && items.Count > 0)
+        {
+            await EnrichWithCostAsync(items);
+        }
+
+        //  Devolver resultado
+        return new ResponseDto<PagedResultDto<HealthcareDto>>
+        {
+            Data = new PagedResultDto<HealthcareDto>
+            {
+                Items = items,
+                Pagination = fhirResult.Pagination
+            },
+            Status = true,
+            StatusCode = StatusCodes.Status200OK
+        };
+    }
+
+
+    // ============================================================
+    //                    OBTENER POR ID
+    // ============================================================
+    public async Task<ResponseDto<HealthcareDto?>> GetByIdAsync(string id)
+    {
+        var healthcare = await _fhirService.GetHealthcareByIdAsync(id);
+
+        if (healthcare == null)
+        {
+            return new ResponseDto<HealthcareDto?>
+            {
+                Data = null,
+                Status = false,
+                StatusCode = StatusCodes.Status404NotFound,
+                Message = $"HealthcareService con id '{id}' no encontrado"
+            };
+        }
+
+        return new ResponseDto<HealthcareDto?>
+        {
+            Data = healthcare.ToDto(),
+            Status = true,
+            StatusCode = StatusCodes.Status200OK
+        };
+    }
+
+    // ============================================================
+    //                         CREAR
+    // ============================================================
+    public async Task<ResponseDto<HealthcareDto>> CreateAsync(CreateHealthcareDto dto)
+    {
+        // Crear recurso FHIR
+        var fhirHealthcare = dto.ToFhirHealthcare();
+        var created = await _fhirService.CreateHealthcareAsync(fhirHealthcare);
+
+        // Guardar costo en SIGREF
+        var entity = new HealthService
+        {
+            HealthServiceFhirId = created.Id,
+            Price = dto.Cost!.Value
+        };
+
+        _dbSigref.HealthServices.Add(entity);
+        await _dbSigref.SaveChangesAsync();
+
+        // Mapear a DTO
+        var resultDto = created.ToDto();
+
+        // 
+        resultDto.Cost = entity.Price;
+
+        return new ResponseDto<HealthcareDto>
+        {
+            Data = resultDto,
+            Status = true,
+            StatusCode = StatusCodes.Status201Created,
+            Message = "Servicio medico creado correctamente"
+        };
+    }
+
+
+    // ============================================================
+    //                        ACTUALIZAR
+    // ============================================================
+    public async Task<ResponseDto<HealthcareDto>> UpdateAsync(
+        string id,
+        UpdateHealthcareDto dto)
+    {
+        // Obtener recurso FHIR existente
+        var existing = await _fhirService.GetHealthcareByIdAsync(id);
+
+        if (existing == null)
+        {
+            return new ResponseDto<HealthcareDto>
+            {
+                Status = false,
+                StatusCode = StatusCodes.Status404NotFound,
+                Message = $"HealthcareService con id '{id}' no encontrado"
+            };
+        }
+
+        // Aplicar cambios FHIR
+        existing.ApplyUpdate(dto);
+        var updated = await _fhirService.UpdateHealthcareAsync(existing);
+
+        // Actualizar costo en SIGREF (si aplica)
+        var entity = await _dbSigref.HealthServices
+            .FirstOrDefaultAsync(x => x.HealthServiceFhirId == id);
+
+        if (entity != null && dto.Cost.HasValue)
+        {
+            entity.Price = dto.Cost.Value;
+            await _dbSigref.SaveChangesAsync();
+        }
+
+        // Mapear FHIR  DTO
+        var resultDto = updated.ToDto();
+
+        //  Enriquecer con costo
+        // - si vino en el DTO, usarlo
+        // - si no vino, usar el valor persistido
+        if (entity != null)
+        {
+            resultDto.Cost = entity.Price;
+        }
+
+        return new ResponseDto<HealthcareDto>
+        {
+            Data = resultDto,
+            Status = true,
+            StatusCode = StatusCodes.Status200OK,
+            Message = "Servicio medico actualizado correctamente"
+        };
+    }
+
+
+    // ============================================================
+    //                        ELIMINAR
+    // ============================================================
+    public async Task<ResponseDto<bool>> DeleteAsync(string id)
+    {
+        // Verificar existencia en FHIR
+        var existing = await _fhirService.GetHealthcareByIdAsync(id);
+
+        if (existing == null)
+        {
+            return new ResponseDto<bool>
+            {
+                Data = false,
+                Status = false,
+                StatusCode = StatusCodes.Status404NotFound,
+                Message = $"HealthcareService con id '{id}' no encontrado"
+            };
+        }
+
+        //Eliminar recurso FHIR (fuente principal)
+        await _fhirService.DeleteHealthcareAsync(id);
+
+        // Eliminar datos asociados en SIGREF 
+        try
+        {
+            var entity = await _dbSigref.HealthServices
+                .FirstOrDefaultAsync(x => x.HealthServiceFhirId == id);
+
+            if (entity != null)
+            {
+                _dbSigref.HealthServices.Remove(entity);
+                await _dbSigref.SaveChangesAsync();
+            }
+        }
+        catch
+        {
+            // No se revierte el delete FHIR
+            // El sistema queda consistente a nivel funcional
+            // Se podria loguear si se desea
+        }
+
+        // Respuesta final
+        return new ResponseDto<bool>
+        {
+            Data = true,
+            Status = true,
+            StatusCode = StatusCodes.Status200OK,
+            Message = "Servicio medico eliminado correctamente"
+        };
+    }
+
 }

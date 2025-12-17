@@ -96,7 +96,7 @@ public class PractitionerService : IPractitionerService
     }
 
     // Filtrar
-    public async Task<PagedResult<PractitionerDto>> GetFilteredPractitionersAsync(PractitionerFilterDto filter)
+    public async Task<PagedResultDto<PractitionerDto>> GetFilteredPractitionersAsync(PractitionerFilterDto filter)
     {
         // Normalizar paginación usando el helper
         var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
@@ -139,7 +139,7 @@ public class PractitionerService : IPractitionerService
         }
 
         // Convertir Items a DTO
-        var resultDto = new PagedResult<PractitionerDto>
+        var resultDto = new PagedResultDto<PractitionerDto>
         {
             Items = items,
             Pagination = pagedResult.Pagination

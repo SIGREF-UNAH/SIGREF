@@ -13,5 +13,5 @@ public interface IShiftService
     
     Task<ResponseDto<ShiftDto>> GetShiftByIdAsync(Guid id);
     
-    Task<ResponseDto<PagedResult<ShiftDto>>> GetFilteredShiftsAsync(ShiftFilterDto filter);
+    Task<ResponseDto<PagedResultDto<ShiftDto>>> GetFilteredShiftsAsync(ShiftFilterDto filter);
 }
