@@ -5,11 +5,11 @@
  * OpenAPI spec version: 1.0
  */
 
-export type ListStatus = (typeof ListStatus)[keyof typeof ListStatus];
+export type HealthcareScope =
+  (typeof HealthcareScope)[keyof typeof HealthcareScope];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ListStatus = {
-  current: "current",
-  retired: "retired",
-  enteredInError: "enteredInError",
+export const HealthcareScope = {
+  internal: "internal",
+  external: "external",
 } as const;

@@ -10,7 +10,7 @@ export type LocationFilterStatus =
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const LocationFilterStatus = {
-  Active: "Active",
-  Suspended: "Suspended",
-  Inactive: "Inactive",
+  active: "active",
+  suspended: "suspended",
+  inactive: "inactive",
 } as const;

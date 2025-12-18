@@ -137,7 +137,7 @@ export default function OrganizationsList() {
           placeholder="Por Tipo"
           allowClear
           suffixIcon={<FilterOutlined />}
-          style={{ width: 200, height: 36 }}
+          style={{ width: 200 }}
           value={filters.type}
           onChange={handleTypeChange}
           options={[
@@ -161,7 +161,7 @@ export default function OrganizationsList() {
           placeholder="Por Estado"
           allowClear
           suffixIcon={<FilterOutlined />}
-          style={{ width: 150, height: 36 }}
+          style={{ width: 150 }}
           value={filters.status}
           onChange={handleStatusChange}
           options={[

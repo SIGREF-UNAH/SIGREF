@@ -10,16 +10,15 @@ import {
   ProFormSelect,
   ProFormSwitch,
 } from "@ant-design/pro-components";
-import { HealthcareExtensionsUrls } from "../../../shared/constants";
 
 interface HealthcareFormProps {
   initialValues?: Partial<HealthcareDto>;
   organizations: OrganizationDto[];
   locations: LocationDto[];
-  onFinish: (values: CreateHealthcareDto) => Promise<void>;
   submitButtonText?: string;
   isPending?: boolean;
   onCancel: () => void;
+  onFinish: (values: CreateHealthcareDto) => Promise<void>;
 }
 
 export const HealthcareForm = ({
@@ -28,8 +27,8 @@ export const HealthcareForm = ({
   locations,
   submitButtonText = "Crear servicio",
   isPending = false,
-  onFinish,
   onCancel,
+  onFinish,
 }: HealthcareFormProps) => {
   const [searchText, setSearchText] = useState("");
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
@@ -122,14 +121,14 @@ export const HealthcareForm = ({
               type="button"
               onClick={onCancel}
               disabled={isPending}
-              className="px-8 py-2 text-white bg-red-500 hover:bg-red-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-8 py-2 cursor-pointer text-white bg-red-500 hover:bg-red-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="px-8 py-2 text-white bg-green-500 hover:bg-green-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-8 py-2 cursor-pointer text-white bg-green-500 hover:bg-green-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isPending ? "Procesando..." : submitButtonText}
             </button>
@@ -138,16 +137,13 @@ export const HealthcareForm = ({
       }}
       grid
       initialValues={{
-        name: initialValues?.name || "",
-        abbreviation: initialValues?.extension?.find(ext => 
-          ext.url === HealthcareExtensionsUrls.abbreviation // validar que la url sea correcta
-        )?.valueString || "",
-        cost: initialValues?.extension?.find(ext => 
-          ext.url === HealthcareExtensionsUrls.cost // validar que la url sea correcta
-        )?.valueDecimal || 0,
-        comment: initialValues?.comment || "",
+        name: initialValues?.name || null,
+        abbreviation: initialValues?.abbreviation || null,
+        scope: initialValues?.scope as any === 1 ? "external" : "internal",
+        cost: initialValues?.cost || 0,
+        comment: initialValues?.comment || null,
         active: initialValues?.active ?? true,
-        providedBy: organizationId,
+        providedBy: organizationId || null,
       }}
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
@@ -223,10 +219,28 @@ export const HealthcareForm = ({
 
         {/* Columna Derecha */}
         <div className="space-y-4">
+          {/* Tipo */}
+          <ProFormSelect
+            name="scope"
+            label="Tipo"
+            placeholder="Seleccione el tipo de servicio"
+            options={[
+              { label: "Interno", value: "internal" },
+              { label: "Externo", value: "external" },
+            ]}
+            fieldProps={{
+              size: "large",
+              disabled: isPending,
+            }}
+            rules={[
+              { required: true, message: "El tipo de servicio es requerido" },
+            ]}
+          />
+
           {/* Organización */}
           <ProFormSelect
             name="providedBy"
-            label="Organización"
+            label="Proveedor"
             placeholder="Seleccione una organización"
             options={organizations.map((org) => ({
               label: org.name,

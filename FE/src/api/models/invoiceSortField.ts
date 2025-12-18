@@ -10,10 +10,10 @@ export type InvoiceSortField =
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const InvoiceSortField = {
-  CreatedDate: "CreatedDate",
-  Number: "Number",
-  PatientDisplay: "PatientDisplay",
-  FinalTotal: "FinalTotal",
-  Status: "Status",
-  InvoiceType: "InvoiceType",
+  createdDate: "createdDate",
+  number: "number",
+  patientDisplay: "patientDisplay",
+  finalTotal: "finalTotal",
+  status: "status",
+  invoiceType: "invoiceType",
 } as const;

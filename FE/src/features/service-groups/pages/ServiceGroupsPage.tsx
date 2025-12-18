@@ -195,7 +195,7 @@ export const ServiceGroupsPage = () => {
             allowClear
             showSearch
             suffixIcon={<FilterOutlined />}
-            style={{ width: 200, height: 36 }}
+            style={{ width: 200 }}
             value={filters.location}
             onChange={(value) => setFilter("location", value)}
             onSearch={searchLocations}
@@ -208,7 +208,7 @@ export const ServiceGroupsPage = () => {
             placeholder="Por Estado"
             allowClear
             suffixIcon={<FilterOutlined />}
-            style={{ width: 200, height: 36 }}
+            style={{ width: 200 }}
             value={filters.status}
             onChange={(value) => setFilter("status", value)}
             options={getListStatusOptions()}

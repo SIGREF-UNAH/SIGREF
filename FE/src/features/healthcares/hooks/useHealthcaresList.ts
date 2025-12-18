@@ -1,12 +1,12 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router";
-import { useUrlFilters } from "../../../shared/hooks";
 import { useQueryClient } from "@tanstack/react-query";
+import { useUrlFilters } from "../../../shared/hooks";
 import { useMessage } from "../../../shared/hooks";
+import { useAbility } from "../../../config";
+import { useGetApiLocations } from "../../../api/locations/locations";
 import type { TablePaginationConfig } from "antd";
 import type { HealthcareDto } from "../../../api/models";
-import { useGetApiLocations } from "../../../api/locations/locations";
-import { HealthcareExtensionsUrls } from "../../../shared/constants";
 import {
   getGetApiHealthcaresQueryKey,
   useDeleteApiHealthcaresId,
@@ -15,6 +15,7 @@ import {
 
 export function useHealthcaresList() {
   const navigate = useNavigate();
+  const ability = useAbility();
   const queryClient = useQueryClient();
   const msg = useMessage();
 
@@ -31,6 +32,8 @@ export function useHealthcaresList() {
       search: "",
       location: undefined as string | undefined,
       status: undefined as string | undefined,
+      scope: undefined as string | undefined,
+      includeCost: false,
       pageNumber: 1,
       pageSize: 10,
     },
@@ -60,6 +63,16 @@ export function useHealthcaresList() {
       params.active = false;
     }
 
+    // Filtro por tipo
+    if (filters.scope) {
+      params.scope = filters.scope;
+    }
+
+    // Filtro por costo
+    if (filters.includeCost) {
+      params.includeCost = filters.includeCost;
+    }
+
     return params;
   }, [filters]);
 
@@ -71,32 +84,17 @@ export function useHealthcaresList() {
   });
 
   // Obtener todas las ubicaciones para el filtro
-  const { data: locationsResponse } = useGetApiLocations({
-    PageNumber: 1,
-    PageSize: 9999, // Obtener 9999 ubicaciones
-  });
+  const { data: locationsData, isLoading: isLoadingLocations } = useGetApiLocations();
 
   // Extraer datos de la respuesta
-  const healthcares = response?.items || [];
-  const pagination = response?.pagination;
+  const healthcares = (response as any)?.data?.items || [];
+  const pagination = (response as any)?.data?.pagination;
 
-  // Procesar los datos para extraer abbreviation y cost desde extension
+  // Procesar los datos - ahora abbreviation, scope y cost vienen directamente
   const processedHealthcares = useMemo(() => {
-    return healthcares.map((healthcare) => {
-      // Extraer abreviatura
-      const abbreviationExt = healthcare.extension?.find(
-        (ext) => ext.url === HealthcareExtensionsUrls.abbreviation
-      );
-      
-      // Extraer costo
-      const costExt = healthcare.extension?.find(
-        (ext) => ext.url === HealthcareExtensionsUrls.cost
-      );
-
+    return healthcares.map((healthcare : HealthcareDto) => {
       return {
         ...healthcare,
-        abbreviation: abbreviationExt?.valueString || "-",
-        cost: costExt?.valueDecimal || 0,
       };
     });
   }, [healthcares]);
@@ -170,18 +168,13 @@ export function useHealthcaresList() {
     showTotal: (total, range) => `${range[0]}-${range[1]} de ${total}`,
   };
 
-  // Obtener las ubicaciones únicas para filtro desde el endpoint de locations
-  const locations = useMemo(() => {
-    const allLocations = locationsResponse?.items || [];
-    return allLocations.map((loc) => ({
-      reference: loc.id || "",
-      display: loc.name || ""
-    }));
-  }, [locationsResponse]);
+  // Obtener las ubicaciones para filtro desde el endpoint de locations
+  const locations = locationsData?.items || [];
 
   return {
     filters,
     locations,
+    isLoadingLocations,
     healthcares: processedHealthcares,
     paginationConfig,
     isLoading,
@@ -190,6 +183,7 @@ export function useHealthcaresList() {
     selectedHealthcare,
     isModalOpen,
     searchInput,
+    ability,
     handleCreate,
     handleEdit,
     handleDelete,

@@ -9,7 +9,7 @@ export type AddressType = (typeof AddressType)[keyof typeof AddressType];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const AddressType = {
-  NUMBER_0: 0,
-  NUMBER_1: 1,
-  NUMBER_2: 2,
+  postal: "postal",
+  physical: "physical",
+  both: "both",
 } as const;

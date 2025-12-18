@@ -24,7 +24,7 @@ import type {
   BooleanResponseDto,
   GetApiKeycloakSeederExistsUsernameParams,
   GetApiKeycloakSeederListParams,
-  KeycloakUserDtoPagedResultResponseDto,
+  KeycloakUserDtoPagedResultDtoResponseDto,
   KeycloakUserDtoResponseDto,
   KeycloakUsernameDtoResponseDto,
   ProblemDetails,
@@ -1002,7 +1002,7 @@ export const getApiKeycloakSeederList = (
   params?: GetApiKeycloakSeederListParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<KeycloakUserDtoPagedResultResponseDto>({
+  return customInstance<KeycloakUserDtoPagedResultDtoResponseDto>({
     url: `/api/KeycloakSeeder/list`,
     method: "GET",
     params,

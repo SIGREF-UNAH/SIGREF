@@ -7,6 +7,7 @@
 import type { IdentifierDto } from "./identifierDto";
 import type { CodeableConceptDto } from "./codeableConceptDto";
 import type { ReferenceDto } from "./referenceDto";
+import type { HealthcareScope } from "./healthcareScope";
 import type { ExtensionDto } from "./extensionDto";
 
 export interface UpdateHealthcareDto {
@@ -30,6 +31,7 @@ export interface UpdateHealthcareDto {
   location?: ReferenceDto[] | null;
   /** @nullable */
   abbreviation?: string | null;
+  scope: HealthcareScope;
   /** @nullable */
   cost?: number | null;
   /** @nullable */

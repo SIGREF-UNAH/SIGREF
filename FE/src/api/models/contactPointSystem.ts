@@ -10,11 +10,11 @@ export type ContactPointSystem =
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ContactPointSystem = {
-  NUMBER_0: 0,
-  NUMBER_1: 1,
-  NUMBER_2: 2,
-  NUMBER_3: 3,
-  NUMBER_4: 4,
-  NUMBER_5: 5,
-  NUMBER_6: 6,
+  phone: "phone",
+  fax: "fax",
+  email: "email",
+  pager: "pager",
+  url: "url",
+  sms: "sms",
+  other: "other",
 } as const;

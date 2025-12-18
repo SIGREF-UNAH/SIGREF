@@ -4,11 +4,11 @@
  * SIGREF.API
  * OpenAPI spec version: 1.0
  */
-import type { ShiftDto } from "./shiftDto";
+import type { KeycloakUserDto } from "./keycloakUserDto";
 import type { PaginationDto } from "./paginationDto";
 
-export interface ShiftDtoPagedResultDto {
+export interface KeycloakUserDtoPagedResultDto {
   /** @nullable */
-  items?: ShiftDto[] | null;
+  items?: KeycloakUserDto[] | null;
   pagination?: PaginationDto;
 }

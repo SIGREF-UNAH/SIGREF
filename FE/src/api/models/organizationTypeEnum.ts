@@ -10,16 +10,16 @@ export type OrganizationTypeEnum =
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const OrganizationTypeEnum = {
-  Provider: "Provider",
-  Department: "Department",
-  Team: "Team",
-  Government: "Government",
-  Insurer: "Insurer",
-  Payer: "Payer",
-  Educational: "Educational",
-  Regligious: "Regligious",
-  ClinicalResearchSponsor: "ClinicalResearchSponsor",
-  CommunityGroup: "CommunityGroup",
-  NonHealthcareBusiness: "NonHealthcareBusiness",
-  Network: "Network",
+  provider: "provider",
+  department: "department",
+  team: "team",
+  government: "government",
+  insurer: "insurer",
+  payer: "payer",
+  educational: "educational",
+  regligious: "regligious",
+  clinicalResearchSponsor: "clinicalResearchSponsor",
+  communityGroup: "communityGroup",
+  nonHealthcareBusiness: "nonHealthcareBusiness",
+  network: "network",
 } as const;

@@ -1,11 +1,15 @@
+import { useParams } from "react-router-dom";
 import { HealthcareForm } from "../components";
 import { useHealthcareForm, useUpdateHealthcare } from "../hooks";
 import { FormTitle } from "../components/FormTitle";
 import { PageHeaderTabs } from "../../../shared/components/ui";
 import { Spin } from "antd";
 import { useAbility } from "../../../config";
+import type { HealthcareDto } from "../../../api/models";
 
 export const UpdateHealthcarePage = () => {
+  const { id } = useParams<{ id: string }>();
+  
   const {
     healthcare,
     isPending,
@@ -32,7 +36,7 @@ export const UpdateHealthcarePage = () => {
   }
 
   return (
-    <div>
+    <div key={id}> {/* Key para reiniciar el componente cuando cambie el ID */}
       {/* Encabezado */}
       <PageHeaderTabs
         title="Gestión de Servicios"
@@ -65,7 +69,8 @@ export const UpdateHealthcarePage = () => {
       <div className="primary-card">
         <FormTitle title="Editar Servicio" icon="edit" />
         <HealthcareForm
-          initialValues={healthcare}
+          key={healthcare?.id || id} 
+          initialValues={healthcare as HealthcareDto}
           organizations={organizations}
           locations={locations}
           onFinish={handleFinish}

@@ -6,7 +6,8 @@
  */
 
 export interface InvoiceItemCreateDto {
-  serviceId?: string;
+  /** @nullable */
+  serviceId?: string | null;
   /** @nullable */
   nameService?: string | null;
   quantity?: number;

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Card,
   Button,
   Select,
   Checkbox,
@@ -25,7 +24,8 @@ import { healthcares, locations, reportData, users } from "../store";
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
 
-// TODO: Revisar bien los datos de la tabla y cambiar color de botones
+// TODO: Implementar useExport
+// TODO: Traer los logos con useMediaFiles y HospitalProperties
 
 export const ReportGenerator = () => {
   const [selectedArea, setSelectedArea] = useState(null);
@@ -64,7 +64,7 @@ export const ReportGenerator = () => {
     <div className="flex flex-col gap-4">
       <div className="flex gap-4">
         {/* Filtros */}
-        <Card className="primary-card w-full">
+        <div className="primary-card w-full">
           {/* Título */}
           <div className="flex items-center gap-2 mb-4">
             <FilterOutlined 
@@ -163,10 +163,10 @@ export const ReportGenerator = () => {
               Resumen Ejecutivo
             </Checkbox>
           </div>
-        </Card>
+        </div>
 
         {/* Opciones de Exportación */}
-        <Card className="primary-card w-1/2">
+        <div className="primary-card w-1/2">
           {/* Título */}
           <div className="flex items-center gap-2 mb-6">
             <DownloadOutlined 
@@ -200,11 +200,11 @@ export const ReportGenerator = () => {
               Imprimir Reporte
             </Button>
           </Space>
-        </Card>
+        </div>
       </div>
 
       {/* Vista previa del reporte */}
-      <Card className="primary-card">
+      <div className="primary-card">
         {/* Título */}
         <div className="flex items-center gap-2 mb-6">
           <FileTextOutlined 
@@ -312,7 +312,7 @@ export const ReportGenerator = () => {
             </div>
           </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 };
