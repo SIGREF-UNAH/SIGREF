@@ -6,8 +6,8 @@ import { Spin } from "antd";
 import { useAbility } from "../../../config";
 
 export const CreateHealthcarePage = () => {
-  const { isPending, handleFinish } = useCreateHealthcare();
   const ability = useAbility();
+  const { isPending, handleFinish } = useCreateHealthcare();
   const { organizations, locations, isLoading, handleCancel } = useHealthcareForm();
 
   if (isLoading) {

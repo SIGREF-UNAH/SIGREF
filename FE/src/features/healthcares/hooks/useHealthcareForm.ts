@@ -6,20 +6,14 @@ export function useHealthcareForm() {
   const navigate = useNavigate();
 
   // Obtener las organizaciones desde la API
-  const { data: organizationsResponse, isLoading: isLoadingOrganizations } = useGetApiOrganizations({
-    PageNumber: 1,
-    PageSize: 9999, // Obtener 9999 organizaciones
-  });
+  const { data: organizationsResponse, isLoading: isLoadingOrganizations } = useGetApiOrganizations();
 
   // Obtener las ubicaciones desde la API
-  const { data: locationsResponse, isLoading: isLoadingLocations } = useGetApiLocations({
-    PageNumber: 1,
-    PageSize: 9999, // Obtener 9999 ubicaciones
-  });
+  const { data: locationsData, isLoading: isLoadingLocations } = useGetApiLocations();
 
   // Extraer los items de las respuestas
   const organizations = organizationsResponse?.items || [];
-  const locations = locationsResponse?.items || [];
+  const locations = locationsData?.items || [];
 
   const handleCancel = () => {
     navigate("/healthcares");

@@ -4,6 +4,7 @@ import { FormTitle } from "../components/FormTitle";
 import { PageHeaderTabs } from "../../../shared/components/ui";
 import { Spin } from "antd";
 import { useAbility } from "../../../config";
+import type { HealthcareDto } from "../../../api/models";
 
 export const UpdateHealthcarePage = () => {
   const {
@@ -65,7 +66,7 @@ export const UpdateHealthcarePage = () => {
       <div className="primary-card">
         <FormTitle title="Editar Servicio" icon="edit" />
         <HealthcareForm
-          initialValues={healthcare}
+          initialValues={healthcare as HealthcareDto}
           organizations={organizations}
           locations={locations}
           onFinish={handleFinish}

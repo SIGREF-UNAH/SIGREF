@@ -80,11 +80,21 @@ export const HealthcaresListPage = () => {
       title: "Ubicación(es)",
       key: "area",
       width: 200,
-      render: (_, record) =>
-        record.location
+      render: (_, record) => {
+        const locations = record.location
           ?.map((loc) => loc?.display)
-          .filter(Boolean)
-          .join(", ") || "-",
+          .filter(Boolean);
+        
+        if (!locations?.length) return "-";
+        
+        return (
+          <div>
+            {locations.map((loc, index) => (
+              <div key={index}>{loc}</div>
+            ))}
+          </div>
+        );
+      },
     },
     ...(filters.includeCost
       ? [
