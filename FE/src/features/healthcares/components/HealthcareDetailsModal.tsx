@@ -4,12 +4,14 @@ import type { HealthcareDto } from "../../../api/models";
 interface HealthcareDetailModalProps {
   open: boolean;
   healthcare: HealthcareDto | null;
+  filters: any;
   onClose: () => void;
 }
 
 export const HealthcareDetailsModal = ({
   open,
   healthcare,
+  filters,
   onClose,
 }: HealthcareDetailModalProps) => {
   if (!healthcare) {
@@ -48,16 +50,40 @@ export const HealthcareDetailsModal = ({
           labelStyle={{ fontWeight: 600, backgroundColor: "#fafafa" }}
         >
           <Descriptions.Item label="Nombre" span={2}>
-            <span className="text-base">{healthcare.name}</span>
+            <span className="text-base">{healthcare.name} {healthcare.abbreviation && `(${healthcare.abbreviation})`}</span>
           </Descriptions.Item>
+          
+          {healthcare.comment && (
+            <Descriptions.Item label="Descripción" span={2}>
+              <div className="text-gray-700 whitespace-pre-wrap">
+                {healthcare.comment}
+              </div>
+            </Descriptions.Item>
+          )}
 
-          <Descriptions.Item label="Abreviatura">
-            <Tag color="blue" className="text-sm px-3 py-1">
-              {healthcare.abbreviation}
+          {healthcare.providedBy && (
+            <Descriptions.Item label="Proveedor" span={filters.includeCost ? 1 : 2}>
+              <div className="font-semibold text-secondary">
+                {healthcare.providedBy.display}
+              </div>
+            </Descriptions.Item>
+          )}
+
+          {filters.includeCost && (
+            <Descriptions.Item label="Costo" span={1}>
+              <span className="font-semibold text-green-600">
+                L. {healthcare.cost?.toFixed(2) || "0.00"}
+              </span>
+            </Descriptions.Item>
+          )}
+
+          <Descriptions.Item label="Tipo" span={1}>
+            <Tag color={(healthcare.scope as any) === 0 ? "blue" : "orange"}>
+              {(healthcare.scope as any) === 0 ? "Interno" : "Externo"}
             </Tag>
           </Descriptions.Item>
 
-          <Descriptions.Item label="Estado">
+          <Descriptions.Item label="Estado" span={1}>
             {healthcare.active ? (
               <Tag color="success" className="text-sm px-3 py-1">
                 ✓ Activo
@@ -68,28 +94,6 @@ export const HealthcareDetailsModal = ({
               </Tag>
             )}
           </Descriptions.Item>
-
-          <Descriptions.Item label="Costo" span={2}>
-            <span className="text-lg font-semibold text-green-600">
-              L. {healthcare.cost?.toFixed(2) || "0.00"}
-            </span>
-          </Descriptions.Item>
-
-          {healthcare.providedBy && (
-            <Descriptions.Item label="Organización" span={2}>
-              <Tag color="purple" className="text-sm px-3 py-1">
-                {healthcare.providedBy.display}
-              </Tag>
-            </Descriptions.Item>
-          )}
-          
-          {healthcare.comment && (
-            <Descriptions.Item label="Descripción" span={2}>
-              <div className="text-gray-700 whitespace-pre-wrap">
-                {healthcare.comment}
-              </div>
-            </Descriptions.Item>
-          )}
         </Descriptions>
 
         {/* Ubicaciones */}

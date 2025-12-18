@@ -301,6 +301,7 @@ export const HealthcaresListPage = () => {
       <HealthcareDetailsModal
         open={isModalOpen}
         healthcare={selectedHealthcare}
+        filters={filters}
         onClose={handleCloseModal}
       />
     </div>
