@@ -53,7 +53,7 @@ export const HealthcareDetailsModal = ({
             <span className="text-base">{healthcare.name} {healthcare.abbreviation && `(${healthcare.abbreviation})`}</span>
           </Descriptions.Item>
           
-          {healthcare.comment && (
+          {(healthcare.comment || healthcare.comment !== "") && (
             <Descriptions.Item label="Descripción" span={2}>
               <div className="text-gray-700 whitespace-pre-wrap">
                 {healthcare.comment}

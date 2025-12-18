@@ -15,10 +15,10 @@ interface HealthcareFormProps {
   initialValues?: Partial<HealthcareDto>;
   organizations: OrganizationDto[];
   locations: LocationDto[];
-  onFinish: (values: CreateHealthcareDto) => Promise<void>;
   submitButtonText?: string;
   isPending?: boolean;
   onCancel: () => void;
+  onFinish: (values: CreateHealthcareDto) => Promise<void>;
 }
 
 export const HealthcareForm = ({
@@ -27,8 +27,8 @@ export const HealthcareForm = ({
   locations,
   submitButtonText = "Crear servicio",
   isPending = false,
-  onFinish,
   onCancel,
+  onFinish,
 }: HealthcareFormProps) => {
   const [searchText, setSearchText] = useState("");
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
@@ -137,12 +137,13 @@ export const HealthcareForm = ({
       }}
       grid
       initialValues={{
-        name: initialValues?.name || "",
-        abbreviation: initialValues?.abbreviation || "",
+        name: initialValues?.name || null,
+        abbreviation: initialValues?.abbreviation || null,
+        scope: initialValues?.scope as any === 1 ? "external" : "internal",
         cost: initialValues?.cost || 0,
-        comment: initialValues?.comment || "",
+        comment: initialValues?.comment || null,
         active: initialValues?.active ?? true,
-        providedBy: organizationId,
+        providedBy: organizationId || null,
       }}
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">

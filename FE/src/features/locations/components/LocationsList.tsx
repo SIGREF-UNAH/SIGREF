@@ -202,7 +202,7 @@ export const LocationList: React.FC = () => {
             placeholder="Por modo"
             allowClear
             suffixIcon={<FilterOutlined />}
-            style={{ width: 200, height: 36 }}
+            style={{ width: 200 }}
             value={searchMode}
             onChange={(value) => setSearchMode(value as LocationMode)}
           >
@@ -213,7 +213,7 @@ export const LocationList: React.FC = () => {
             placeholder="Por estado"
             allowClear
             suffixIcon={<FilterOutlined />}
-            style={{ width: 150, height: 36 }}
+            style={{ width: 150 }}
             value={searchStatus}
             onChange={(value) => setSearchStatus(value as LocationStatus)}
           >

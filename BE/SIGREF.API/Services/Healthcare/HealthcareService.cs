@@ -102,9 +102,27 @@ public class HealthcareApplicationService : IHealthcareService
             };
         }
 
+        // Mapear FHIR a DTO
+        var resultDto = healthcare.ToDto();
+
+        // Consultar el costo desde la base de datos SIGREF
+        var healthServiceEntity = await _dbSigref.HealthServices
+            .FirstOrDefaultAsync(x => x.HealthServiceFhirId == id);
+
+        // Si existe la entidad, asignar el costo al DTO
+        if (healthServiceEntity != null)
+        {
+            resultDto.Cost = healthServiceEntity.Price;
+        }
+        else
+        {
+            // Opcional: Si no existe, puedes asignar null o un valor por defecto
+            resultDto.Cost = null;
+        }
+
         return new ResponseDto<HealthcareDto?>
         {
-            Data = healthcare.ToDto(),
+            Data = resultDto,
             Status = true,
             StatusCode = StatusCodes.Status200OK
         };

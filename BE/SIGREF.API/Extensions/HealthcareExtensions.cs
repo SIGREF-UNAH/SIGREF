@@ -109,27 +109,18 @@ public static class HealthcareExtensions
     // ============================================================
     //   UPDATE DTO to FHIR
     // ============================================================
-    public static HealthcareService ApplyUpdate(
-        this HealthcareService existing,
-        UpdateHealthcareDto update)
+    public static HealthcareService ApplyUpdate(this HealthcareService existing, UpdateHealthcareDto update)
     {
         ArgumentNullException.ThrowIfNull(existing);
 
-        if (update.Identifier != null)
-            existing.Identifier = update.Identifier.Select(i => i.ToFhirIdentifier()).ToList();
+        if (update.Identifier != null) existing.Identifier = update.Identifier.Select(i => i.ToFhirIdentifier()).ToList();
+        if (!string.IsNullOrEmpty(update.Name)) existing.Name = update.Name;
+        if (update.Specialty != null) existing.Specialty = update.Specialty.Select(s => s.ToFhirCodeableConcept()).ToList();
+        if (update.Location != null) existing.Location = update.Location.Select(l => l.ToFhirReference()).ToList();
 
         existing.Active = update.Active;
-        if (!string.IsNullOrEmpty(update.Name)) existing.Name = update.Name;
-        if (!string.IsNullOrEmpty(update.Comment)) existing.Comment = update.Comment;
-
-        if (update.Specialty != null)
-            existing.Specialty = update.Specialty.Select(s => s.ToFhirCodeableConcept()).ToList();
-
-        if (update.ProvidedBy != null)
-            existing.ProvidedBy = update.ProvidedBy.ToFhirReference();
-
-        if (update.Location != null)
-            existing.Location = update.Location.Select(l => l.ToFhirReference()).ToList();
+        existing.Comment = update.Comment;
+        existing.ProvidedBy = update.ProvidedBy?.ToFhirReference();
 
         // Inicializar extensiones
         existing.Extension ??= new List<Extension>();
@@ -153,8 +144,7 @@ public static class HealthcareExtensions
         // Scope (siempre se guarda)
         var scopeValue = update.Scope.ToString().ToLowerInvariant();
 
-        var scopeExtension = existing.Extension
-            .FirstOrDefault(e => e.Url == ScopeExtensionUrl);
+        var scopeExtension = existing.Extension.FirstOrDefault(e => e.Url == ScopeExtensionUrl);
 
         if (scopeExtension != null)
         {
@@ -173,8 +163,7 @@ public static class HealthcareExtensions
         // Metadatos
         existing.Meta ??= new Meta();
         existing.Meta.LastUpdated = DateTimeOffset.Now;
-        existing.Meta.VersionId =
-            FhirInfrastructureExtensions.IncrementVersion(existing.Meta.VersionId);
+        existing.Meta.VersionId = FhirInfrastructureExtensions.IncrementVersion(existing.Meta.VersionId);
 
         return existing;
     }
