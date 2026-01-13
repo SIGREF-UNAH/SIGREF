@@ -13,12 +13,13 @@ import {
   PhoneOutlined,
   HomeOutlined,
   PlusOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import { Button, Collapse, Space, Form } from "antd";
 import type { CollapseProps } from "antd";
 import { Link } from "react-router-dom";
-import PhoneInput from 'react-phone-number-input';
-import 'react-phone-number-input/style.css';
+import PhoneInput from "react-phone-number-input";
+import "react-phone-number-input/style.css";
 import usePatientForm from "../hooks/usePatientForm";
 
 interface PatientFormProps {
@@ -35,7 +36,6 @@ export default function PatientForm({
   isSubmitting,
   onSubmit,
 }: PatientFormProps) {
-  
   const {
     contextHolder,
     contactTypes,
@@ -53,7 +53,7 @@ export default function PatientForm({
   // Función para renderizar el input según el tipo de contacto
   const renderContactInput = (field: any, index: number) => {
     const contactType = contactTypes[index];
-    
+
     if (contactType === "Email") {
       return (
         <ProFormText
@@ -65,7 +65,10 @@ export default function PatientForm({
           width="md"
         />
       );
-    } else if ((contactType === "Phone" || contactType === "Fax") && mode === "create") {
+    } else if (
+      (contactType === "Phone" || contactType === "Fax") &&
+      mode === "create"
+    ) {
       // Solo usar PhoneInput en modo crear para Phone y Fax
       return (
         <Form.Item
@@ -77,7 +80,9 @@ export default function PatientForm({
                 if (!value) return Promise.resolve();
                 // Validación básica
                 if (value && value.length < 5) {
-                  return Promise.reject(new Error('Número de teléfono muy corto'));
+                  return Promise.reject(
+                    new Error("Número de teléfono muy corto")
+                  );
                 }
                 return Promise.resolve();
               },
@@ -90,24 +95,34 @@ export default function PatientForm({
             defaultCountry="HN"
             value={formRef.current?.getFieldValue(["telecom", index, "value"])}
             onChange={(value) => {
-              formRef.current?.setFieldValue(["telecom", index, "value"], value || "");
+              formRef.current?.setFieldValue(
+                ["telecom", index, "value"],
+                value || ""
+              );
             }}
             className="ant-input bg-white rounded px-3 py-2 border border-gray-300 hover:border-blue-400 focus:border-blue-400 focus:shadow-outline"
             style={{
-              width: '100%',
-              padding: '4px 11px',
+              width: "100%",
+              padding: "4px 11px",
             }}
           />
         </Form.Item>
       );
-    } else if ((contactType === "Phone" || contactType === "Fax") && mode === "edit") {
+    } else if (
+      (contactType === "Phone" || contactType === "Fax") &&
+      mode === "edit"
+    ) {
       // En modo editar usar ProFormText normal para Phone y Fax
       return (
         <ProFormText
           {...field}
           name="value"
           label="Valor"
-          placeholder={contactType === "Phone" ? "Ej. +504 1234-5678" : "Ej. +504 1234-5678"}
+          placeholder={
+            contactType === "Phone"
+              ? "Ej. +504 1234-5678"
+              : "Ej. +504 1234-5678"
+          }
           width="md"
         />
       );
@@ -176,7 +191,7 @@ export default function PatientForm({
           { label: "Fallecido/a", value: 0 },
         ]}
         fieldProps={{
-          disabled: mode === "create"
+          disabled: mode === "create",
         }}
         initialValue={mode === "create" ? 1 : undefined}
       />
@@ -263,6 +278,16 @@ export default function PatientForm({
         creatorButtonText: "Agregar contacto",
         icon: <PlusOutlined />,
       }}
+      actionRender={(field, action) => [
+        <Button
+          key="delete"
+          type="link"
+          danger
+          icon={<DeleteOutlined />}
+          onClick={() => action.remove(field.name)}
+          title="Eliminar"
+        ></Button>,
+      ]}
     >
       {(field, index) => (
         <ProFormGroup key={field.key}>
@@ -282,7 +307,8 @@ export default function PatientForm({
               { label: "Otro", value: "Other" },
             ]}
             fieldProps={{
-              onChange: (value) => handleContactTypeChange(index, value as string),
+              onChange: (value) =>
+                handleContactTypeChange(index, value as string),
             }}
           />
 
@@ -318,6 +344,16 @@ export default function PatientForm({
       {...(mode === "edit" && initialValues?.address
         ? { initialValue: initialValues.address }
         : {})}
+      actionRender={(field, action) => [
+        <Button
+          key="delete"
+          type="link"
+          danger
+          icon={<DeleteOutlined />}
+          onClick={() => action.remove(field.name)}
+          title="Eliminar"
+        ></Button>,
+      ]}
     >
       {(field, index) => (
         <ProFormGroup key={field.key}>
@@ -345,7 +381,8 @@ export default function PatientForm({
             allowClear
             options={countryOptions}
             fieldProps={{
-              onChange: (value) => handleCountryChange(index, value as string | undefined),
+              onChange: (value) =>
+                handleCountryChange(index, value as string | undefined),
             }}
           />
 
@@ -365,7 +402,11 @@ export default function PatientForm({
                   index,
                   "country",
                 ]) as string | undefined;
-                handleStateChange(index, countryValue as string, value as string | undefined);
+                handleStateChange(
+                  index,
+                  countryValue as string,
+                  value as string | undefined
+                );
               },
             }}
           />
