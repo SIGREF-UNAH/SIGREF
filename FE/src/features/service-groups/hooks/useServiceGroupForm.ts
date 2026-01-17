@@ -10,22 +10,33 @@ export function useServiceGroupForm() {
   const [healthcarePageNumber, setHealthcarePageNumber] = useState(1);
   const [healthcarePageSize, setHealthcarePageSize] = useState(10);
   const [healthcareSearch, setHealthcareSearch] = useState("");
+  const [healthcareScope, setHealthcareScope] = useState<string | undefined>(undefined);
 
   // Estados para paginación de ubicaciones
   const [locationPageNumber, setLocationPageNumber] = useState(1);
   const [locationPageSize, setLocationPageSize] = useState(10);
   const [locationSearch, setLocationSearch] = useState("");
 
+  // Construir parámetros para healthcares
+  const healthcareParams: any = {
+    PageNumber: healthcarePageNumber,
+    PageSize: healthcarePageSize,
+  };
+
+  if (healthcareSearch) {
+    healthcareParams.Name = healthcareSearch;
+  }
+
+  if (healthcareScope) {
+    healthcareParams.Scope = healthcareScope;
+  }
+
   // Cargar servicios de salud con paginación
   const {
     data: healthcaresResponse,
     isLoading: isLoadingHealthcares,
     isFetching: isFetchingHealthcares,
-  } = useGetApiHealthcares({
-    PageNumber: healthcarePageNumber,
-    PageSize: healthcarePageSize,
-    Name: healthcareSearch || undefined,
-  });
+  } = useGetApiHealthcares(healthcareParams);
 
   // Cargar ubicaciones con paginación
   const {
@@ -44,15 +55,17 @@ export function useServiceGroupForm() {
 
   return {
     // Datos de servicios de salud
-    healthcares: healthcaresResponse?.items || [],
-    healthcarePagination: healthcaresResponse?.pagination,
+    healthcares: healthcaresResponse?.data?.items || [],
+    healthcarePagination: healthcaresResponse?.data?.pagination,
     isLoadingHealthcares,
     isFetchingHealthcares,
     healthcarePageNumber,
     healthcarePageSize,
+    healthcareScope,
     setHealthcarePageNumber,
     setHealthcarePageSize,
     setHealthcareSearch,
+    setHealthcareScope,
 
     // Datos de ubicaciones
     locations: locationsResponse?.items || [],

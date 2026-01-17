@@ -1,6 +1,7 @@
-import { useState } from "react";
 import { Table, Input } from "antd";
 import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
+
+const { Search } = Input;
 
 interface SelectionTableProps<T> {
   dataSource: T[];
@@ -9,7 +10,10 @@ interface SelectionTableProps<T> {
   selectedRowKeys: React.Key[];
   onSelectionChange: (selectedKeys: React.Key[], selectedRows: T[]) => void;
   searchPlaceholder?: string;
-  onSearch?: (value: string) => void;
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
+  onSearch?: () => void;
+  onClearSearch?: () => void;
   loading?: boolean;
   disabled?: boolean;
   pagination?: false | TablePaginationConfig;
@@ -24,24 +28,26 @@ export function SelectionTable<T extends Record<string, any>>({
   selectedRowKeys,
   onSelectionChange,
   searchPlaceholder = "Buscar...",
+  searchValue = "",
+  onSearchChange,
   onSearch,
+  onClearSearch,
   loading = false,
   disabled = false,
   pagination,
   emptyText = "No hay datos disponibles",
   className = "",
 }: SelectionTableProps<T>) {
-  const [searchText, setSearchText] = useState("");
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onSearchChange?.(e.target.value);
+  };
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchText(value);
-    onSearch?.(value);
+  const handleSearch = () => {
+    onSearch?.();
   };
 
   const handleClear = () => {
-    setSearchText("");
-    onSearch?.("");
+    onClearSearch?.();
   };
 
   const rowSelection = {
@@ -52,16 +58,16 @@ export function SelectionTable<T extends Record<string, any>>({
 
   return (
     <div className={className}>
-      <Input.Search
+      <Search
         placeholder={searchPlaceholder}
         allowClear
-        value={searchText}
-        onChange={handleSearch}
-        onSearch={onSearch}
+        value={searchValue}
+        onChange={handleSearchChange}
+        onSearch={handleSearch}
         className="mb-3"
         disabled={disabled || loading}
-        enterButton={false}
-        onReset={handleClear}
+        enterButton
+        onClear={handleClear}
       />
 
       <div className="border border-gray-300 rounded-lg overflow-hidden">

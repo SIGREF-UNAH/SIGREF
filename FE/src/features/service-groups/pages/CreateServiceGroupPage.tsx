@@ -14,9 +14,11 @@ export const CreateServiceGroupPage = () => {
     isLoadingLocations,
     isFetchingHealthcares,
     isFetchingLocations,
+    healthcareScope,
     setHealthcarePageNumber,
     setHealthcarePageSize,
     setHealthcareSearch,
+    setHealthcareScope,
     setLocationPageNumber,
     setLocationPageSize,
     setLocationSearch,
@@ -74,6 +76,7 @@ export const CreateServiceGroupPage = () => {
           isLoadingLocations={isLoadingLocations}
           isFetchingHealthcares={isFetchingHealthcares}
           isFetchingLocations={isFetchingLocations}
+          healthcareScope={healthcareScope}
           onHealthcarePageChange={(page, pageSize) => {
             setHealthcarePageNumber(page);
             setHealthcarePageSize(pageSize);
@@ -84,6 +87,7 @@ export const CreateServiceGroupPage = () => {
           }}
           onHealthcareSearch={setHealthcareSearch}
           onLocationSearch={setLocationSearch}
+          onHealthcareScopeChange={setHealthcareScope}
           onFinish={handleFinish}
           onCancel={handleCancel}
           submitButtonText="Crear paquete"
