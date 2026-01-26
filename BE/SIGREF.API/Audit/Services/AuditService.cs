@@ -61,21 +61,27 @@ public class AuditService : IAuditService
         return await _auditCollection.Find(filter).FirstOrDefaultAsync();
     }
 
-    public async Task<List<AuditLog>> GetAllLogsAsync(int page = 1, int pageSize = 50)
+    public async Task<(List<AuditLog> logs, int totalCount)> GetAllLogsAsync(int page = 1, int pageSize = 50)
     {
         // Validar parámetros
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 50;
-        if (pageSize > 100) pageSize = 100; // Límite máximo para evitar sobrecarga
+        if (pageSize > 100) pageSize = 100;
 
         var skip = (page - 1) * pageSize;
 
-        return await _auditCollection
+        // Obtener el total de documentos
+        var totalCount = await _auditCollection.CountDocumentsAsync(Builders<AuditLog>.Filter.Empty);
+
+        // Obtener solo la página solicitada
+        var logs = await _auditCollection
             .Find(Builders<AuditLog>.Filter.Empty)
             .SortByDescending(x => x.Timestamp)
             .Skip(skip)
             .Limit(pageSize)
             .ToListAsync();
+
+        return (logs, (int)totalCount);
     }
 
     public async Task<List<AuditLog>> GetLogsByResourceAsync(string resourceType, string resourceId)
@@ -91,7 +97,7 @@ public class AuditService : IAuditService
             .ToListAsync();
     }
 
-    public async Task<List<AuditLog>> GetLogsByUserAsync(string userId, DateTime? from = null, DateTime? to = null)
+    public async Task<(List<AuditLog> logs, int totalCount)> GetLogsByUserAsync(string userId, DateTime? from = null, DateTime? to = null)
     {
         var filterBuilder = Builders<AuditLog>.Filter;
         var filter = filterBuilder.Eq(x => x.UserId, userId);
@@ -102,13 +108,17 @@ public class AuditService : IAuditService
         if (to.HasValue)
             filter &= filterBuilder.Lte(x => x.Timestamp, to.Value);
 
-        return await _auditCollection
+        var totalCount = await _auditCollection.CountDocumentsAsync(filter);
+
+        var logs = await _auditCollection
             .Find(filter)
             .SortByDescending(x => x.Timestamp)
             .ToListAsync();
+
+        return (logs, (int)totalCount);
     }
 
-    public async Task<List<AuditLog>> GetLogsByActionAsync(string action, DateTime? from = null, DateTime? to = null)
+    public async Task<(List<AuditLog> logs, int totalCount)> GetLogsByActionAsync(string action, DateTime? from = null, DateTime? to = null)
     {
         var filterBuilder = Builders<AuditLog>.Filter;
         var filter = filterBuilder.Eq(x => x.Action, action);
@@ -119,10 +129,14 @@ public class AuditService : IAuditService
         if (to.HasValue)
             filter &= filterBuilder.Lte(x => x.Timestamp, to.Value);
 
-        return await _auditCollection
+        var totalCount = await _auditCollection.CountDocumentsAsync(filter);
+
+        var logs = await _auditCollection
             .Find(filter)
             .SortByDescending(x => x.Timestamp)
             .ToListAsync();
+
+        return (logs, (int)totalCount);
     }
 
     public async Task<List<AuditLog>> GetLogsByStatusCodeAsync(int statusCode, DateTime? from = null, DateTime? to = null)
@@ -166,7 +180,7 @@ public class AuditService : IAuditService
         await LogAsync(auditLog);
     }
 
-    public async Task<List<AuditLog>> GetLogsByUserNameAsync(string userName, DateTime? from = null, DateTime? to = null)
+    public async Task<(List<AuditLog> logs, int totalCount)> GetLogsByUserNameAsync(string userName, DateTime? from = null, DateTime? to = null)
     {
         var filterBuilder = Builders<AuditLog>.Filter;
         var filter = filterBuilder.Eq(x => x.UserName, userName);
@@ -177,10 +191,14 @@ public class AuditService : IAuditService
         if (to.HasValue)
             filter &= filterBuilder.Lte(x => x.Timestamp, to.Value);
 
-        return await _auditCollection
+        var totalCount = await _auditCollection.CountDocumentsAsync(filter);
+
+        var logs = await _auditCollection
             .Find(filter)
             .SortByDescending(x => x.Timestamp)
             .ToListAsync();
+
+        return (logs, (int)totalCount);
     }
 
     public async Task ClearAllLogsAsync()
