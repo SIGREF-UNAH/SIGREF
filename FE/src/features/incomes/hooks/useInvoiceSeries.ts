@@ -9,15 +9,12 @@ export function useInvocesSeries() {
     isLoading,
     isError,
     refetch,
-  } = useGetApiSeries(
-    undefined, 
-    {
-      query: {
-        refetchOnWindowFocus: false,
-        staleTime: 5 * 60 * 1000,
-      },
-    }
-  );
+  } = useGetApiSeries(undefined, {
+    query: {
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000,
+    },
+  });
 
   // Procesar las series desde la respuesta de la API
   const series = useMemo(() => {
@@ -29,8 +26,7 @@ export function useInvocesSeries() {
 
     if ("items" in response.data && Array.isArray(response.data.items)) {
       rawSeries = response.data.items as SerieDto[];
-    }
-    else if (Array.isArray(response.data)) {
+    } else if (Array.isArray(response.data)) {
       rawSeries = response.data as SerieDto[];
     }
 
@@ -55,7 +51,7 @@ export function useInvocesSeries() {
 
         return acc;
       },
-      []
+      [],
     );
 
     return uniqueSeries;

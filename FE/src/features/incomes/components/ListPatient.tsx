@@ -1,4 +1,14 @@
-import { Avatar, Col, Input, Row, Select, Space, Spin, Tag, Typography } from "antd";
+import {
+  Avatar,
+  Col,
+  Input,
+  Row,
+  Select,
+  Space,
+  Spin,
+  Tag,
+  Typography,
+} from "antd";
 import { ManOutlined, WomanOutlined, UserOutlined } from "@ant-design/icons";
 import { ProList } from "@ant-design/pro-components";
 
@@ -14,28 +24,28 @@ export const ListPatient = ({
   // Filtrar pacientes basados en los filtros locales
   const pacientesFiltrados = (pacientesData ?? []).filter((paciente: any) => {
     const searchTerm = pacienteFilters.searchPaciente?.toLowerCase() || "";
-    
-    const matchSearch = paciente.nombre
-      ?.toLowerCase()
-      .includes(searchTerm);
-    
+
+    const matchSearch = paciente.nombre?.toLowerCase().includes(searchTerm);
+
     const matchGenero =
       pacienteFilters.genero === "todos" ||
       paciente.genero === pacienteFilters.genero ||
       (pacienteFilters.genero === "M" && paciente.genero === "Masculino") ||
       (pacienteFilters.genero === "F" && paciente.genero === "Femenino");
-    
+
     const matchNacionalidad =
       pacienteFilters.nacionalidad === "todos" ||
       paciente.nacionalidad === pacienteFilters.nacionalidad;
-    
+
     const matchIdentificador =
       !pacienteFilters.identificador ||
       paciente.identificador
         ?.toLowerCase()
         .includes(pacienteFilters.identificador.toLowerCase());
-    
-    return matchSearch && matchGenero && matchNacionalidad && matchIdentificador;
+
+    return (
+      matchSearch && matchGenero && matchNacionalidad && matchIdentificador
+    );
   });
 
   return (
@@ -106,10 +116,10 @@ export const ListPatient = ({
           pagination={{
             current: pacienteFilters.pagePaciente,
             pageSize: pacienteFilters.pageSizePaciente,
-            onChange: (page, pageSize) => 
-              setPacienteFilters({ 
-                pagePaciente: page, 
-                pageSizePaciente: pageSize 
+            onChange: (page, pageSize) =>
+              setPacienteFilters({
+                pagePaciente: page,
+                pageSizePaciente: pageSize,
               }),
             showSizeChanger: true,
             pageSizeOptions: ["5", "10", "20"],
@@ -142,7 +152,9 @@ export const ListPatient = ({
               dataIndex: "nombre",
               search: true,
               render: (text) => (
-                <Typography.Text strong>{text || "Desconocido"}</Typography.Text>
+                <Typography.Text strong>
+                  {text || "Desconocido"}
+                </Typography.Text>
               ),
             },
             description: {
@@ -178,13 +190,16 @@ export const ListPatient = ({
                 selectedPaciente?.id === record.id
                   ? "2px solid #1890ff"
                   : "1px solid #f0f0f0",
-              borderRadius: 4,
-              marginBottom: 8,
+              borderRadius: 8,
+              marginBottom: 12,
+              padding: "12px 16px",
               transition: "all 0.3s",
               backgroundColor:
+                selectedPaciente?.id === record.id ? "#e6f7ff" : "white",
+              boxShadow:
                 selectedPaciente?.id === record.id
-                  ? "#e6f7ff"
-                  : "white",
+                  ? "0 4px 12px rgba(24, 144, 255, 0.15)"
+                  : "none",
             },
           })}
         />
