@@ -27,6 +27,7 @@ using SIGREF.API.Services.Files;
 using SIGREF.API.Services.Serie;
 using SIGREF.API.Audit.Extensions;
 using SIGREF.API.Helpers;
+using SIGREF.API.Services.ValueSet;
 
 
 namespace SIGREF.API;
@@ -70,7 +71,7 @@ public class Startup
         services.AddScoped<IPractitionerService, PractitionerService>();
         services.AddScoped<IOrganizationService, OrganizationService>();
         services.AddScoped<ServiceGroupService>();
-        
+        services.AddScoped<IValueSetService , ValueSetService>();
         // ============= RECUPERADORES FHIR ==========
         services.AddScoped<IFhirLookupService, FhirLookupService>();
         // Registrar dashboard que usa el lookup

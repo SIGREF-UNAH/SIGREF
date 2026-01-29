@@ -63,8 +63,10 @@ public class HapiReadinessWaiter : BackgroundService
                         var initializer =
                             scope.ServiceProvider.GetRequiredService<
                                 HealthcareServiceSearchParameterInitializer>();
-
                         await initializer.EnsureAsync();
+                        //var seeder =
+                        //    scope.ServiceProvider.GetRequiredService<SIGREFSeeder>();
+                        //await seeder.SeedAsync(stoppingToken);
                         _logger.LogInformation(
                             $"{GREEN}[HAPI-READY] HAPI FHIR LISTO - Proceso de siembra Terminado{RESET}");
                         break;
