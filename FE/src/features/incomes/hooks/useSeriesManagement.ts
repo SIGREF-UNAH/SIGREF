@@ -21,7 +21,7 @@ interface UseSeriesManagementResult {
 }
 
 export const useSeriesManagement = (
-  refetch: () => void
+  refetch: () => void,
 ): UseSeriesManagementResult => {
   const [form] = Form.useForm();
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -61,7 +61,7 @@ export const useSeriesManagement = (
       },
       onError: (error: any) => {
         message.error(
-          error?.response?.data?.message || "Error al actualizar la serie"
+          error?.response?.data?.message || "Error al actualizar la serie",
         );
       },
     },
@@ -75,7 +75,7 @@ export const useSeriesManagement = (
       },
       onError: (error: any) => {
         message.error(
-          error?.response?.data?.message || "Error al eliminar la serie"
+          error?.response?.data?.message || "Error al eliminar la serie",
         );
       },
     },
@@ -90,7 +90,6 @@ export const useSeriesManagement = (
     };
 
     if (editingId) {
-      // Forma correcta: pasar un objeto con id y data
       updateSerie({ id: editingId, data: serieData });
     } else {
       createSerie({ data: serieData });

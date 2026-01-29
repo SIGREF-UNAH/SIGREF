@@ -1,7 +1,22 @@
 import { ProList } from "@ant-design/pro-components";
 import { Space, Tag, Typography, Spin, Input } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import { SearchOutlined, MedicineBoxOutlined } from "@ant-design/icons";
 import { useState } from "react";
+import type { HealthcareDto } from "../../../api/models";
+
+interface ServiceIncomeProps {
+  serviciosData: HealthcareDto[];
+  servicioFilters: {
+    searchServicios: string;
+    pageServicio: number;
+    pageSizeServicio: number;
+  };
+  setServicioFilter: (key: string, value: any) => void;
+  setServicioFilters: (filters: any) => void;
+  handleSelectServicio: (servicio: HealthcareDto) => void;
+  selectedServicio: HealthcareDto | null;
+  isLoading: boolean;
+}
 
 export const ServiceIncome = ({
   serviciosData,
@@ -11,26 +26,24 @@ export const ServiceIncome = ({
   handleSelectServicio,
   selectedServicio,
   isLoading,
-}: any) => {
+}: ServiceIncomeProps) => {
   const [searchText, setSearchText] = useState(
-    servicioFilters.searchServicios || ""
+    servicioFilters.searchServicios || "",
   );
 
-  // Filtrado inteligente: busca en AMBOS campos (nombre Y código)
-  const serviciosFiltrados = (serviciosData ?? []).filter((servicio: any) => {
+  // Filtrar servicios segun el texto de busqueda
+  const serviciosFiltrados = (serviciosData ?? []).filter((servicio) => {
     const term = searchText.toLowerCase().trim();
     if (!term) return true;
 
     const name = servicio.name?.toLowerCase() || "";
     const abbr = servicio.abbreviation?.toLowerCase() || "";
 
-    // Busca en nombre O código
     return name.includes(term) || abbr.includes(term);
   });
 
   return (
     <>
-      {/* Barra de búsqueda única */}
       <div style={{ marginBottom: 16 }}>
         <Input
           placeholder="Buscar por nombre o código del servicio..."
@@ -47,7 +60,6 @@ export const ServiceIncome = ({
         />
       </div>
 
-      {/* Lista de Servicios */}
       {isLoading ? (
         <div style={{ textAlign: "center", padding: "60px 0" }}>
           <Spin size="large" tip="Cargando servicios..." />
@@ -61,7 +73,7 @@ export const ServiceIncome = ({
           </Typography.Text>
         </div>
       ) : (
-        <ProList<any>
+        <ProList<HealthcareDto>
           rowKey="id"
           dataSource={serviciosFiltrados}
           pagination={{
@@ -70,6 +82,7 @@ export const ServiceIncome = ({
             total: serviciosFiltrados.length,
             onChange: (page, pageSize) =>
               setServicioFilters({
+                ...servicioFilters,
                 pageServicio: page,
                 pageSizeServicio: pageSize || 10,
               }),
@@ -82,9 +95,8 @@ export const ServiceIncome = ({
               render: (_, record) => (
                 <Space>
                   <Tag color="blue" style={{ fontWeight: "bold" }}>
-                    {record.abbreviation || "S/A"}
+                    <MedicineBoxOutlined /> {record.abbreviation || "S/A"}
                   </Tag>
-
                   <Typography.Text strong>
                     {record.name || "Servicio sin nombre"}
                   </Typography.Text>
@@ -109,18 +121,26 @@ export const ServiceIncome = ({
             subTitle: {
               render: (_, record) => (
                 <div style={{ textAlign: "right" }}>
-                  <Typography.Text
-                    strong
-                    type="success"
-                    style={{ fontSize: 18 }}
-                  >
-                    L. {(record.cost || 0).toFixed(2)}
-                  </Typography.Text>
+                  {record.cost !== null &&
+                  record.cost !== undefined &&
+                  record.cost > 0 ? (
+                    <Typography.Text
+                      strong
+                      type="success"
+                      style={{ fontSize: 18 }}
+                    >
+                      L. {record.cost}
+                    </Typography.Text>
+                  ) : (
+                    <Typography.Text type="secondary" style={{ fontSize: 14 }}>
+                      Sin costo
+                    </Typography.Text>
+                  )}
                 </div>
               ),
             },
           }}
-          onItem={(record: any) => ({
+          onItem={(record) => ({
             onClick: () => handleSelectServicio(record),
             style: {
               cursor: "pointer",
@@ -134,7 +154,6 @@ export const ServiceIncome = ({
               transition: "all 0.3s",
               backgroundColor:
                 selectedServicio?.id === record.id ? "#e6f7ff" : "white",
-
               boxShadow:
                 selectedServicio?.id === record.id
                   ? "0 4px 12px rgba(24, 144, 255, 0.15)"
