@@ -90,7 +90,7 @@ public class CashierSessionConfiguration : IEntityTypeConfiguration<CashierSessi
             .HasColumnName("notes")
             .HasMaxLength(500)
             .HasComment("Notas o comentarios del cajero o administrador sobre discrepancias o correcciones.");
-        
+
         // ============================
         //          AUDITORÍA
         // ============================
@@ -116,8 +116,7 @@ public class CashierSessionConfiguration : IEntityTypeConfiguration<CashierSessi
         //            INDEXES
         // ============================
 
-        builder.HasIndex(x => x.UserId)
-            .HasDatabaseName("idx_cashier_sessions_user");
+        
 
         builder.HasIndex(x => x.ShiftId)
             .HasDatabaseName("idx_cashier_sessions_shift");
@@ -137,9 +136,49 @@ public class CashierSessionConfiguration : IEntityTypeConfiguration<CashierSessi
         // builder.HasIndex(x => x.Difference)
         //     .HasDatabaseName("idx_cashier_sessions_difference");
 
-        // UNIQUE para que un usuario no tenga 2 sesiones abiertas
-        builder.HasIndex(x => new { x.UserId, x.IsOpen })
-            .IsUnique()
-            .HasDatabaseName("uq_cashier_sessions_user_open");
+        // -----------------------------------------------------------------------------
+        // EN: PostgreSQL + EF Core indexing note
+        // This entity requires two different indexes on the same column (user_id):
+        //   1) A UNIQUE PARTIAL index (WHERE is_open = true) to enforce the business
+        //      rule: "a user can only have one open cashier session at a time".
+        //   2) A standard (non-unique) index on (user_id) to optimize historical queries
+        //      over closed sessions.
+        //
+        // Due to EF Core model snapshot limitations, defining multiple indexes with the
+        // same key columns (user_id) may result in one index being overwritten/merged
+        // during migrations, especially when a filter (partial index) is involved.
+        // For this reason, we keep ONLY the partial unique index defined in the model,
+        // and create the non-unique index via a dedicated SQL migration.
+        //
+        // Suggested migration name:
+        //   2026_01_30_AddIdxCashierSessionsUserSql
+        //
+        // ES: Nota sobre índices en PostgreSQL + EF Core
+        // Esta entidad requiere dos índices distintos sobre la misma columna (user_id):
+        //   1) Un índice ÚNICO PARCIAL (WHERE is_open = true) para garantizar la regla
+        //      de negocio: "un usuario solo puede tener una sesión de caja abierta".
+        //   2) Un índice normal (no único) sobre (user_id) para optimizar consultas
+        //      históricas sobre sesiones cerradas.
+        //
+        // Debido a limitaciones del snapshot del modelo de EF Core, al definir múltiples
+        // índices con las mismas columnas clave (user_id) puede ocurrir que uno sea
+        // sobrescrito/colapsado durante la generación de migraciones, especialmente si
+        // existe un filtro (índice parcial).
+        // Por esa razón, aquí dejamos únicamente el índice parcial único en el modelo,
+        // y el índice no-único se crea mediante una migración SQL dedicada.
+        //
+        // Nombre sugerido de migración:
+        //   2026_01_30_AddIdxCashierSessionsUserSql
+        // -----------------------------------------------------------------------------
+
+        // builder.HasIndex(x => x.UserId)
+        //     .HasDatabaseName("idx_cashier_sessions_user");
+
+        // UNIQUE partial: a user cannot have 2 open sessions
+    builder.HasIndex(x => x.UserId)
+        .IsUnique()
+        .HasDatabaseName("uq_cashier_sessions_user_open")
+        .HasFilter("is_open = true");
+
     }
 }
