@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router"
 import CreateUsersPage from "../pages/CreateUsersPage"
 import { ProtectedRoute } from "../../../shared/components"
+import { UsersListPage } from "../pages/UsersListPage"
 
 export const UsersRouter = () => {
   return (
@@ -13,6 +14,9 @@ export const UsersRouter = () => {
         </ProtectedRoute>
         } 
       />
+      <Route path="/list" element={
+          <UsersListPage />
+      } />
     </Routes>
   )
 }
