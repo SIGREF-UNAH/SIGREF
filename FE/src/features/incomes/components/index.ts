@@ -1,5 +1,6 @@
 export * from './IncomeSummary';
 export * from './ListPatient';
+export * from './ServiceGroupIncome';
 export * from './ServiceIncome';
 export * from './modals/EditIncomeModal';
 export * from './modals/EmployeeDetailsModal';

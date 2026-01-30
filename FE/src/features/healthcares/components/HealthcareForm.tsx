@@ -139,7 +139,7 @@ export const HealthcareForm = ({
       initialValues={{
         name: initialValues?.name || null,
         abbreviation: initialValues?.abbreviation || null,
-        scope: initialValues?.scope as any === 1 ? "external" : "internal",
+        scope: (initialValues?.scope as any) === 1 ? "external" : "internal",
         cost: initialValues?.cost || 0,
         comment: initialValues?.comment || null,
         active: initialValues?.active ?? true,
@@ -171,7 +171,10 @@ export const HealthcareForm = ({
             placeholder="Ej. RD"
             rules={[
               { required: true, message: "La abreviatura es requerida" },
-              { max: 10, message: "La abreviatura no puede tener más de 10 caracteres" },
+              {
+                max: 10,
+                message: "La abreviatura no puede tener más de 10 caracteres",
+              },
             ]}
             fieldProps={{
               size: "large",
@@ -223,6 +226,16 @@ export const HealthcareForm = ({
           <ProFormSelect
             name="scope"
             label="Tipo"
+            tooltip={{
+              title: (
+                <>
+                  <b>Interno:</b> Solo en paquetes (oculto en caja).
+                  <br />
+                  <b>Externo:</b> Visible para facturación individual.
+                </>
+              ),
+              overlayInnerStyle: { width: 300 }, 
+            }}
             placeholder="Seleccione el tipo de servicio"
             options={[
               { label: "Interno", value: "internal" },
@@ -257,7 +270,7 @@ export const HealthcareForm = ({
             <label className="block mb-2 text-sm font-medium">
               Seleccione las ubicaciones o áreas donde se ofrece el servicio
             </label>
-            
+
             <Input.Search
               placeholder="Buscar"
               allowClear

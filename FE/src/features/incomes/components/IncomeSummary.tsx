@@ -1,4 +1,13 @@
-import { Card, Typography, Space, Select, Input, Divider, Button, Alert } from "antd";
+import {
+  Card,
+  Typography,
+  Space,
+  Select,
+  Input,
+  Divider,
+  Button,
+  Alert,
+} from "antd";
 import { SettingOutlined } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import { keycloak } from "../../../auth";
@@ -13,6 +22,9 @@ export const IncomeSummary = ({
   setNumeroRecibo,
   selectedPaciente,
   selectedServicio,
+  aPagarEfectivo,
+  exonerado,
+  tramiteEmergencia,
 }: {
   serie: string;
   setSerie: (value: string) => void;
@@ -21,11 +33,13 @@ export const IncomeSummary = ({
   setNumeroRecibo: (value: string) => void;
   selectedPaciente?: any;
   selectedServicio?: any;
+  aPagarEfectivo?: number;
+  exonerado?: boolean;
+  tramiteEmergencia?: boolean;
 }) => {
   const usuario = keycloak.tokenParsed?.name || "N/A";
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Obtener series del backend
   const {
     series,
     isLoading: isLoadingSeries,
@@ -35,53 +49,73 @@ export const IncomeSummary = ({
     getNextNumber,
   } = useInvocesSeries();
 
-  // Auto-abrir modal si no hay series
   useEffect(() => {
     if (!isLoadingSeries && series.length === 0) {
       setModalOpen(true);
     }
   }, [isLoadingSeries, series.length]);
 
-  // Auto-seleccionar primera serie disponible
   useEffect(() => {
     if (series.length > 0 && !serie) {
       const firstSerie = series[0];
-      const firstSerieId = (firstSerie as any).id; 
+      const firstSerieId = (firstSerie as any).id;
       setSerie(firstSerie.prefix || "");
       setSerieId(firstSerieId);
-      
-      // Auto-generar número de recibo
       if (!numeroRecibo) {
-        const nextNum = getNextNumber(firstSerieId);        
+        const nextNum = getNextNumber(firstSerieId);
         setNumeroRecibo(nextNum.toString());
       }
     }
-  }, [series, serie, setSerie, setSerieId, numeroRecibo, setNumeroRecibo, getNextNumber]);
+  }, [
+    series,
+    serie,
+    setSerie,
+    setSerieId,
+    numeroRecibo,
+    setNumeroRecibo,
+    getNextNumber,
+  ]);
 
   // Manejar cambio de serie
   const handleSerieChange = (value: string) => {
     const selectedSerie = getSerieByPrefix(value);
-    
+
     if (selectedSerie) {
-      const selectedSerieId = (selectedSerie as any).id; // Cast para acceder al id
-      
+      const selectedSerieId = (selectedSerie as any).id;
+
       if (!selectedSerieId) {
         console.error("ERROR: Serie seleccionada no tiene ID válido!");
         return;
       }
-      
+
       setSerie(value);
       setSerieId(selectedSerieId);
-      
-      // Auto-generar número de recibo
+
       const nextNum = getNextNumber(selectedSerieId);
       setNumeroRecibo(nextNum.toString());
     }
   };
 
-  // Calcular el precio actual
-  const precioOriginal = selectedServicio?.cost || 0;
-  const precioFinal = precioOriginal;
+  // Calcular precios correctamente
+  const precioOriginal = selectedServicio?.precio || 0;
+
+  // Calcular el descuento basado en el estado
+  let descuento = 0;
+  let razonDescuento = "";
+
+  if (exonerado) {
+    descuento = precioOriginal;
+    razonDescuento = "Exonerado";
+  } else if (tramiteEmergencia) {
+    descuento = precioOriginal;
+    razonDescuento = "Trámite de Emergencia";
+  } else if (aPagarEfectivo !== undefined && aPagarEfectivo < precioOriginal) {
+    descuento = precioOriginal - aPagarEfectivo;
+    razonDescuento = "Ajuste manual";
+  }
+
+  const precioFinal =
+    aPagarEfectivo !== undefined ? aPagarEfectivo : precioOriginal;
 
   return (
     <>
@@ -97,7 +131,6 @@ export const IncomeSummary = ({
         </Space>
       </Typography.Title>
 
-      {/* Alert de error */}
       {isError && (
         <Alert
           message="Error al cargar series"
@@ -109,7 +142,6 @@ export const IncomeSummary = ({
         />
       )}
 
-      {/* Alert de cargando */}
       {isLoadingSeries && (
         <Alert
           message="Cargando series..."
@@ -119,7 +151,6 @@ export const IncomeSummary = ({
         />
       )}
 
-      {/* Alert de sin series */}
       {!isLoadingSeries && !isError && series.length === 0 && (
         <Alert
           message="No hay series configuradas"
@@ -127,15 +158,17 @@ export const IncomeSummary = ({
           type="warning"
           showIcon
           action={
-            <Button size="small" type="primary" onClick={() => setModalOpen(true)}>
+            <Button
+              size="small"
+              type="primary"
+              onClick={() => setModalOpen(true)}
+            >
               Crear Serie
             </Button>
           }
           style={{ marginBottom: 16 }}
         />
       )}
-
-      {/* Alert de éxito */}
       {!isLoadingSeries && !isError && series.length > 0 && (
         <Alert
           message={`${series.length} serie(s) disponible(s)`}
@@ -197,13 +230,14 @@ export const IncomeSummary = ({
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <Typography.Text>Identificador:</Typography.Text>
             <Typography.Text strong>
-              {selectedPaciente?.identificadorTipo || "N/A"}: {selectedPaciente?.identificador || "N/A"}
+              {selectedPaciente?.identificadorTipo || "N/A"}:{" "}
+              {selectedPaciente?.identificador || "N/A"}
             </Typography.Text>
           </div>
 
           <Divider style={{ margin: "8px 0" }} />
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <Typography.Text>Servicio:</Typography.Text>
+            <Typography.Text>Servicio/Paquete:</Typography.Text>
           </div>
           {selectedServicio ? (
             <>
@@ -215,13 +249,55 @@ export const IncomeSummary = ({
                 }}
               >
                 <Typography.Text type="secondary">
-                  {selectedServicio.name || "Servicio sin nombre"}
+                  {selectedServicio.nombre || "Sin nombre"}
                 </Typography.Text>
-                <Typography.Text>
-                  L.{precioOriginal.toFixed(2)}
-                </Typography.Text>
+                <Typography.Text>L.{precioOriginal.toFixed(2)}</Typography.Text>
               </div>
-              {selectedServicio.abbreviation && (
+
+              {/* Mostrar detalles del paquete */}
+              {selectedServicio.tipo === "paquete" &&
+                selectedServicio.items?.length > 0 && (
+                  <div style={{ paddingLeft: 24, marginTop: 8 }}>
+                    <Typography.Text
+                      type="secondary"
+                      style={{ fontSize: 11, fontWeight: "bold" }}
+                    >
+                      Servicios incluidos ({selectedServicio.items.length}):
+                    </Typography.Text>
+                    {selectedServicio.items.map((item: any, idx: number) => (
+                      <div
+                        key={idx}
+                        style={{
+                          paddingLeft: 8,
+                          fontSize: 11,
+                          color: "#8c8c8c",
+                          marginTop: 2,
+                        }}
+                      >
+                        • {item.name || "Servicio"}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+              {/* Mostrar codigo solo para servicios individuales */}
+              {selectedServicio.tipo === "servicio" &&
+                selectedServicio.abbreviation && (
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      paddingLeft: 16,
+                    }}
+                  >
+                    <Typography.Text type="secondary" style={{ fontSize: 11 }}>
+                      Código: {selectedServicio.abbreviation}
+                    </Typography.Text>
+                  </div>
+                )}
+
+              {/* Mostrar codigo del paquete */}
+              {selectedServicio.tipo === "paquete" && selectedServicio.code && (
                 <div
                   style={{
                     display: "flex",
@@ -230,9 +306,30 @@ export const IncomeSummary = ({
                   }}
                 >
                   <Typography.Text type="secondary" style={{ fontSize: 11 }}>
-                    Código: {selectedServicio.abbreviation}
+                    Código: {selectedServicio.code}
                   </Typography.Text>
                 </div>
+              )}
+
+              {/* Mostrar descuento si existe */}
+              {descuento > 0 && (
+                <>
+                  <Divider style={{ margin: "8px 0" }} dashed />
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      paddingLeft: 16,
+                    }}
+                  >
+                    <Typography.Text type="warning">
+                      Descuento ({razonDescuento}):
+                    </Typography.Text>
+                    <Typography.Text type="warning">
+                      -L.{descuento.toFixed(2)}
+                    </Typography.Text>
+                  </div>
+                </>
               )}
             </>
           ) : (
@@ -244,31 +341,53 @@ export const IncomeSummary = ({
               }}
             >
               <Typography.Text type="secondary" italic>
-                Sin servicio seleccionado
+                Sin servicio/paquete seleccionado
               </Typography.Text>
             </div>
           )}
 
           <Divider style={{ margin: "8px 0" }} />
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <Typography.Text strong>Total:</Typography.Text>
+            <Typography.Text strong>Total a Pagar:</Typography.Text>
             <Typography.Text strong style={{ fontSize: 16, color: "#1890ff" }}>
               L.{precioFinal.toFixed(2)}
             </Typography.Text>
           </div>
+
+          {/* Indicador visual si esta exonerado o es emergencia */}
+          {(exonerado || tramiteEmergencia) && (
+            <div style={{ marginTop: 8 }}>
+              <Alert
+                message={
+                  exonerado ? "✓ Servicio Exonerado" : "✓ Trámite de Emergencia"
+                }
+                type="info"
+                showIcon={false}
+                style={{
+                  padding: "4px 8px",
+                  fontSize: 11,
+                  backgroundColor: exonerado ? "#f6ffed" : "#fff7e6",
+                  borderColor: exonerado ? "#b7eb8f" : "#ffd591",
+                }}
+              />
+            </div>
+          )}
         </Space>
       </Card>
 
-      <Typography.Text type="secondary" style={{ fontSize: 12, display: "block", marginTop: 12 }}>
+      <Typography.Text
+        type="secondary"
+        style={{ fontSize: 12, display: "block", marginTop: 12 }}
+      >
         Hospital de Occidente, Santa Rosa de Copán, Honduras
       </Typography.Text>
       <Typography.Text type="secondary" style={{ fontSize: 12 }}>
         Cajero: {usuario}
       </Typography.Text>
 
-      {/* Modal de gestión de series */}
+      {/* Modal de gestion de series */}
       <SeriesManagementModal
-        key={modalOpen ? 'open' : 'closed'} // Forzar remount
+        key={modalOpen ? "open" : "closed"}
         open={modalOpen}
         onClose={() => {
           setModalOpen(false);

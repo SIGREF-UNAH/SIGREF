@@ -12,7 +12,7 @@ interface SelectedService {
   nombre: string;
   precio: number;
   tipo: string;
-  servicios?: string[];
+  items?: any[]; // Para paquetes
 }
 
 interface SelectedPatient {
@@ -32,7 +32,6 @@ export const useCreateIncome = ({
 }: UseCreateIncomeProps = {}) => {
   const [messageApi, contextHolder] = message.useMessage();
 
-  //La mayoría de endpoints de Orval usan body, no data
   const createInvoice = usePostApiInvoices({
     mutation: {
       onSuccess: () => {
@@ -42,10 +41,9 @@ export const useCreateIncome = ({
       onError: (error: any) => {
         messageApi.error(
           error?.response?.data?.message ||
-            error?.response?.data ||
-            "Error desconocido al crear el ingreso"
+            error?.response?.data?.title ||
+            "Error desconocido al crear el ingreso",
         );
-
         onError?.(error);
       },
     },
@@ -69,29 +67,72 @@ export const useCreateIncome = ({
     serieId: string;
   }) => {
     // Validaciones
-    if (!selectedPaciente)
+    if (!selectedPaciente) {
       return messageApi.warning("Por favor selecciona un paciente");
-    if (!selectedServicio)
-      return messageApi.warning("Por favor selecciona un servicio");
-    if (!serieId)
+    }
+    if (!selectedServicio) {
+      return messageApi.warning("Por favor selecciona un servicio o paquete");
+    }
+    if (!serieId) {
       return messageApi.warning("Por favor selecciona una serie válida");
-    if (!numeroRecibo.trim())
+    }
+    if (!numeroRecibo.trim()) {
       return messageApi.warning("Por favor ingresa un número de recibo");
+    }
 
     const precioOriginal = selectedServicio.precio;
-    const discount = exonerado ? precioOriginal : 0;
 
-    // totalAmount debe ser precio - descuento
+    // Calcular descuento: 100% si esta exonerado O si es tramite de emergencia
+    const discount = exonerado || tramiteEmergencia ? precioOriginal : 0;
     const totalAmount = precioOriginal - discount;
 
-    const item: InvoiceItemCreateDto = {
-      serviceId: selectedServicio.id,
-      nameService: selectedServicio.nombre,
-      quantity: 1,
-      unitPrice: precioOriginal,
-      discount,
-      totalAmount,
-    };
+    // Crear items del invoice
+    const items: InvoiceItemCreateDto[] = [];
+
+    if (selectedServicio.tipo === "servicio") {
+      // Si es un servicio individual
+      items.push({
+        serviceId: selectedServicio.id,
+        nameService: selectedServicio.nombre,
+        quantity: 1,
+        unitPrice: precioOriginal,
+        discount: discount,
+        totalAmount: totalAmount,
+      });
+    } else if (selectedServicio.tipo === "paquete") {
+      // Si es un paquete, agregar todos los items del paquete
+      if (selectedServicio.items && Array.isArray(selectedServicio.items)) {
+        selectedServicio.items.forEach((item: any) => {
+          const itemUnitPrice = item.unitPrice || item.precio || 0;
+          const itemQuantity = item.quantity || 1;
+
+          // Descuento: 100% si esta exonerado O si es tramite de emergencia
+          const itemDiscount =
+            exonerado || tramiteEmergencia ? itemUnitPrice : 0;
+          const itemTotal =
+            exonerado || tramiteEmergencia ? 0 : itemUnitPrice * itemQuantity;
+
+          items.push({
+            serviceId: item.id || item.serviceId,
+            nameService: item.name || item.nameService || item.nombre,
+            quantity: itemQuantity,
+            unitPrice: itemUnitPrice,
+            discount: itemDiscount,
+            totalAmount: itemTotal,
+          });
+        });
+      } else {
+        // Si el paquete no tiene items definidos, crear uno generico
+        items.push({
+          serviceId: selectedServicio.id,
+          nameService: selectedServicio.nombre,
+          quantity: 1,
+          unitPrice: precioOriginal,
+          discount: discount,
+          totalAmount: totalAmount,
+        });
+      }
+    }
 
     const invoiceType = tramiteEmergencia
       ? InvoiceType.NUMBER_1
@@ -108,24 +149,18 @@ export const useCreateIncome = ({
       patientDisplay: selectedPaciente.nombre,
       patientSystem: "DNI",
       patientValue: selectedPaciente.identificador,
-
-      singleServiceId:
+      singleServiceFhirId:
         selectedServicio.tipo === "servicio" ? selectedServicio.id : null,
       serviceGroupFhirId:
         selectedServicio.tipo === "paquete" ? selectedServicio.id : null,
-
-      items: [item],
-
+      items,
       invoice_type: invoiceType,
       payment_type: paymentType,
-
       serieId,
       serieNumber: parseInt(numeroRecibo) || 0,
-      initialPayment: exonerado ? 0 : aPagarEfectivo,
-
+      initialPayment: exonerado || tramiteEmergencia ? 0 : aPagarEfectivo,
       parentInvoiceId: null,
     };
-
     createInvoice.mutate({ data: invoiceData });
   };
 
