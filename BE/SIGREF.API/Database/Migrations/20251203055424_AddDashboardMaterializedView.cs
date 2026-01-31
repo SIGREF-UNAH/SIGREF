@@ -49,6 +49,7 @@ namespace SIGREF.API.Database.Migrations
 
                     -- Servicio / Paquete
                     it.service_id                            AS service_id,
+                    hs.health_service_id_fhir                AS health_service_id_fhir
                     i.service_group_fhir_id                  AS package_id,
 
                     -- Contadores
