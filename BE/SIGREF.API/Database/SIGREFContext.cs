@@ -62,6 +62,11 @@ public class SIGREFContext : DbContext
             eb.HasNoKey();      
             eb.ToView(null);    //  no está ligado a una tabla/view real para migraciones
         });
+        modelBuilder.Entity<LocationIncomeRow>(eb =>
+        {
+            eb.HasNoKey();      
+            eb.ToView(null);    //  no está ligado a una tabla/view real para migraciones
+        });
         
     }
 }

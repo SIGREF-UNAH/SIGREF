@@ -10,6 +10,8 @@ namespace SIGREF.API.Services.Dashboard;
 /// <summary>
 ///  TODO :
 /// REVISAR LAS FECHAS EXACTAS YA QUE NO SE COMO SE ESTA TRABAJANDO EN UTC AMERICA O EN ALGO MAS?
+/// Revisar bien las consultas, supongo en cuando FE conecte saltaran errores o Diferencias
+/// Traer los nombres de las locaciones
 /// </summary>
 public class DashboardReportingService : IDashboardReportingService
 {
@@ -628,31 +630,31 @@ public class DashboardReportingService : IDashboardReportingService
         // SQL: dedup por invoice para no inflar por item_id
         // ===============================
         var sql = @"
-        WITH inv AS (
-            SELECT DISTINCT
-                invoice_id,
-                shift_id,
-                shift_name,
-                location_id,
-                real_income
-            FROM mv_dashboard_facts
-            WHERE created_date >= {0} AND created_date < {1}
-              AND invoice_id IS NOT NULL
-              AND shift_id IS NOT NULL
-              AND location_id IS NOT NULL
-              AND (array_length({2}::text[], 1) IS NULL OR location_id = ANY({2}::text[]))
-              AND (array_length({3}::uuid[], 1) IS NULL OR shift_id = ANY({3}::uuid[]))
-        )
-        SELECT
-            shift_id      AS ""ShiftId"",
-            shift_name    AS ""ShiftName"",
-            location_id   AS ""LocationId"",
-            COUNT(*)::int AS ""TotalInvoices"",
-            COALESCE(SUM(real_income), 0) AS ""TotalIncome""
-        FROM inv
-        GROUP BY shift_id, shift_name, location_id
-        ORDER BY ""TotalIncome"" DESC, ""TotalInvoices"" DESC;
-    ";
+                WITH inv AS (
+                    SELECT DISTINCT
+                        invoice_id,
+                        shift_id,
+                        shift_name,
+                        location_id,
+                        real_income
+                    FROM mv_dashboard_facts
+                    WHERE created_date >= {0} AND created_date < {1}
+                      AND invoice_id IS NOT NULL
+                      AND shift_id IS NOT NULL
+                      AND location_id IS NOT NULL
+                      AND (array_length({2}::text[], 1) IS NULL OR location_id = ANY({2}::text[]))
+                      AND (array_length({3}::uuid[], 1) IS NULL OR shift_id = ANY({3}::uuid[]))
+                )
+                SELECT
+                    shift_id      AS ""ShiftId"",
+                    shift_name    AS ""ShiftName"",
+                    location_id   AS ""LocationId"",
+                    COUNT(*)::int AS ""TotalInvoices"",
+                    COALESCE(SUM(real_income), 0) AS ""TotalIncome""
+                FROM inv
+                GROUP BY shift_id, shift_name, location_id
+                ORDER BY ""TotalIncome"" DESC, ""TotalInvoices"" DESC;
+            ";
 
         var rows = await _dbContext
             .Set<ShiftIncomeRow>()
@@ -683,9 +685,77 @@ public class DashboardReportingService : IDashboardReportingService
 // Clase interna para mapear el resultado del SQL
 
 
-
-    public Task<ResponseDto<List<LocationIncomeDto>>> GetLocationIncomeAsync(DashboardFilterDto filter)
+    public async Task<ResponseDto<List<LocationIncomeDto>>> GetLocationIncomeAsync(DashboardFilterDto filter)
     {
-        throw new NotImplementedException();
+        var response = new ResponseDto<List<LocationIncomeDto>>
+        {
+            Status = true,
+            Data = new List<LocationIncomeDto>()
+        };
+
+        // ===============================
+        // VALIDACIÓN / NORMALIZACIÓN FECHAS (UTC)
+        // ===============================
+        var normalized = NormalizeDateRange(filter);
+        if (!normalized.Status)
+        {
+            response.Status = false;
+            response.Message = normalized.Message;
+            return response;
+        }
+
+        var (startUtc, endExclusiveUtc) = normalized.Data;
+
+        // Si LocationIds viene vacío, mandamos null para que el SQL NO filtre
+        var locationIdsArray = (filter.LocationIds != null && filter.LocationIds.Count > 0)
+            ? filter.LocationIds.ToArray()
+            : null;
+
+        // ===============================
+        // SQL: dedup por invoice para no inflar por item_id
+        // ===============================
+        var sql = @"
+                WITH inv AS (
+                    SELECT DISTINCT
+                        invoice_id,
+                        location_id,
+                        real_income
+                    FROM mv_dashboard_facts
+                    WHERE created_date >= {0} AND created_date < {1}
+                      AND invoice_id IS NOT NULL
+                      AND location_id IS NOT NULL
+                      AND (array_length({2}::text[], 1) IS NULL OR location_id = ANY({2}::text[]))
+                )
+                SELECT
+                    location_id   AS ""LocationId"",
+                    COUNT(*)::int AS ""TotalInvoices"",
+                    COALESCE(SUM(real_income), 0) AS ""TotalIncome""
+                FROM inv
+                GROUP BY location_id
+                ORDER BY ""TotalIncome"" DESC, ""TotalInvoices"" DESC;
+            ";
+
+        var rows = await _dbContext
+            .Set<LocationIncomeRow>()
+            .FromSqlRaw(sql, startUtc, endExclusiveUtc, locationIdsArray)
+            .AsNoTracking()
+            .ToListAsync();
+
+        if (rows.Count == 0)
+        {
+            response.Message = "No hay datos disponibles para este rango.";
+            return response;
+        }
+
+        response.Data = rows.Select(r => new LocationIncomeDto
+        {
+            LocationId = r.LocationId ?? "",
+            LocationName = r.LocationId ?? "", // NO existe location_name en la MV
+            TotalInvoices = r.TotalInvoices,
+            TotalIncome = r.TotalIncome
+        }).ToList();
+
+        response.Message = "Ingresos por location generados correctamente.";
+        return response;
     }
 }
