@@ -1,5 +1,6 @@
-import { ModalForm, ProFormText, ProFormSelect, type ProFormInstance, ProFormDateRangePicker } from "@ant-design/pro-components";
+import { ModalForm, ProFormText, ProFormSelect, type ProFormInstance, ProFormDatePicker } from "@ant-design/pro-components";
 import { useEffect } from "react";
+import dayjs from "dayjs";
 
 type PractitionerRoleModalProps = {
   title?: string;
@@ -29,7 +30,7 @@ export default function PractitionerRoleModal({
     if (formRef?.current && initialValues) {
       formRef.current.setFieldsValue(initialValues);
     }
-  }, [initialValues]);
+  }, [initialValues, formRef]);
 
   return (
     <ModalForm
@@ -72,13 +73,46 @@ export default function PractitionerRoleModal({
         options={locationOptions}
       />
 
-      <ProFormDateRangePicker
-        name="period"
-        label="Periodo (Inicio - Fin)"
-        placeholder="Ej. 1999-12-31"
-        allowClear
-        rules={[{ required: false, message: "Seleccione un rango de fechas" }]}
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+        <ProFormDatePicker
+          name="startDate"
+          label="Fecha de inicio *"
+          placeholder="Seleccione fecha de inicio"
+          fieldProps={{
+            format: "DD/MM/YYYY",
+            className: "w-full",
+          }}
+          rules={[
+            { required: true, message: "La fecha de inicio es obligatoria" },
+          ]}
+        />
+
+        <ProFormDatePicker
+          name="endDate"
+          label="Fecha de fin (opcional)"
+          placeholder="Dejar vacío si es permanente"
+          fieldProps={{
+            format: "DD/MM/YYYY",
+            className: "w-full",
+          }}
+          rules={[
+            { required: false },
+            // Validación para que la fecha de fin no sea anterior a la de inicio
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (!value) return Promise.resolve();
+                const start = getFieldValue("startDate");
+                if (start && dayjs(value).isBefore(dayjs(start), "day")) {
+                  return Promise.reject(
+                    new Error("La fecha de fin debe ser posterior o igual a la de inicio")
+                  );
+                }
+                return Promise.resolve();
+              },
+            }),
+          ]}
+        />
+      </div>
     </ModalForm>
   );
 }
