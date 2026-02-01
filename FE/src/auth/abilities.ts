@@ -78,7 +78,6 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can(["read", "create", "update"], "patients");
     can(["read", "create"], "cashier-sessions");
     can(["create", "update"], "incomes");
-    can(["read", "create"], "reports");
     can(["read"], "locations");
     can(["read"], "shifts");
     
