@@ -251,8 +251,7 @@ export const RoutesByRole: Record<
     ),
     pacientes: PatientsRoutes,
     turnos: ShiftsRoutes,
-    ubicaciones: LocationsRoutes.filter((route) => route.action === "read"),
-    reportes: ReportsRoutes,
+    ubicaciones: LocationsRoutes.filter(route => route.action === "read"),
   },
   [USER_ROLE_OPTIONS[3].label]: {
     // Técnico de Informática
