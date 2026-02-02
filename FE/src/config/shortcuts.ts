@@ -229,6 +229,26 @@ export const appShortcuts: ShortcutConfig[] = [
     requiredSubject: "reports",
   },
 
+  // Gestión de Series
+  {
+    keys: "ctrl+shift+b",
+    description: "Generar series",
+    action: (navigate) => navigate("/series/create"),
+    title: "Gestión de Series",
+    category: "series",
+    requiredAction: "create",
+    requiredSubject: "series",
+  },
+  {
+    keys: "ctrl+b",
+    description: "Listar series",
+    action: (navigate) => navigate("/series/list"),
+    title: "Gestión de Series",
+    category: "series",
+    requiredAction: "read",
+    requiredSubject: "series",
+  },
+
   // Gestión de Eventos/Logs
   {
     keys: "ctrl+l",

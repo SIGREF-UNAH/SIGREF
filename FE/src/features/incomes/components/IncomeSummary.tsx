@@ -7,93 +7,59 @@ import {
   Divider,
   Button,
   Alert,
+  Tooltip,
 } from "antd";
-import { SettingOutlined } from "@ant-design/icons";
-import { useState, useEffect } from "react";
+import { InfoCircleOutlined, ReloadOutlined } from "@ant-design/icons";
 import { keycloak } from "../../../auth";
-import { SeriesManagementModal } from "./modals";
-import { useInvocesSeries } from "../hooks";
+import { useInvoiceSeriesManager } from "../hooks";
 
-export const IncomeSummary = ({
-  serie,
-  setSerie,
-  setSerieId,
-  numeroRecibo,
-  setNumeroRecibo,
-  selectedPaciente,
-  selectedServicio,
-  aPagarEfectivo,
-  exonerado,
-  tramiteEmergencia,
-}: {
-  serie: string;
-  setSerie: (value: string) => void;
-  setSerieId: (id: string) => void;
-  numeroRecibo: string;
-  setNumeroRecibo: (value: string) => void;
+
+interface IncomeSummaryProps {
   selectedPaciente?: any;
   selectedServicio?: any;
   aPagarEfectivo?: number;
   exonerado?: boolean;
   tramiteEmergencia?: boolean;
-}) => {
+  onSerieChange?: (serieId: string, seriePrefix: string) => void;
+  onNumeroReciboChange?: (numero: string) => void;
+}
+
+export const IncomeSummary = ({
+  selectedPaciente,
+  selectedServicio,
+  aPagarEfectivo,
+  exonerado,
+  tramiteEmergencia,
+  onSerieChange,
+  onNumeroReciboChange,
+}: IncomeSummaryProps) => {
   const usuario = keycloak.tokenParsed?.name || "N/A";
-  const [modalOpen, setModalOpen] = useState(false);
 
   const {
     series,
-    isLoading: isLoadingSeries,
-    isError,
-    refetch,
-    getSerieByPrefix,
-    getNextNumber,
-  } = useInvocesSeries();
-
-  useEffect(() => {
-    if (!isLoadingSeries && series.length === 0) {
-      setModalOpen(true);
-    }
-  }, [isLoadingSeries, series.length]);
-
-  useEffect(() => {
-    if (series.length > 0 && !serie) {
-      const firstSerie = series[0];
-      const firstSerieId = (firstSerie as any).id;
-      setSerie(firstSerie.prefix || "");
-      setSerieId(firstSerieId);
-      if (!numeroRecibo) {
-        const nextNum = getNextNumber(firstSerieId);
-        setNumeroRecibo(nextNum.toString());
-      }
-    }
-  }, [
-    series,
-    serie,
-    setSerie,
-    setSerieId,
+    seriePrefix,
     numeroRecibo,
+    currentSerie,
+    isLoading,
+    isError,
+    isNumberInRange,
+    handleSerieChange,
     setNumeroRecibo,
-    getNextNumber,
-  ]);
+    refetchSeries,
+  } = useInvoiceSeriesManager();
 
-  // Manejar cambio de serie
-  const handleSerieChange = (value: string) => {
-    const selectedSerie = getSerieByPrefix(value);
-
-    if (selectedSerie) {
-      const selectedSerieId = (selectedSerie as any).id;
-
-      if (!selectedSerieId) {
-        console.error("ERROR: Serie seleccionada no tiene ID válido!");
-        return;
-      }
-
-      setSerie(value);
-      setSerieId(selectedSerieId);
-
-      const nextNum = getNextNumber(selectedSerieId);
-      setNumeroRecibo(nextNum.toString());
+  // Notificar cambios al padre
+  const handleSerieChangeInternal = (prefix: string) => {
+    handleSerieChange(prefix);
+    const selected = series.find((s) => s.prefix === prefix);
+    if (selected?.id && selected?.prefix) {
+      onSerieChange?.(selected.id, selected.prefix);
     }
+  };
+
+  const handleNumeroChange = (value: string) => {
+    setNumeroRecibo(value);
+    onNumeroReciboChange?.(value);
   };
 
   // Calcular precios correctamente
@@ -119,90 +85,123 @@ export const IncomeSummary = ({
 
   return (
     <>
-      <Typography.Title level={5}>
-        <Space>
-          Serie y Número de Recibo
-          <Button
-            type="text"
-            size="small"
-            icon={<SettingOutlined />}
-            onClick={() => setModalOpen(true)}
-          />
-        </Space>
-      </Typography.Title>
-
+      {/* Alertas de estado */}
       {isError && (
         <Alert
-          message="Error al cargar series"
-          description="No se pudieron cargar las series. Intenta recargar la página."
           type="error"
+          message="Error al cargar series"
+          description="Por favor, intenta recargar o contacta a soporte técnico"
           showIcon
           closable
-          style={{ marginBottom: 16 }}
-        />
-      )}
-
-      {isLoadingSeries && (
-        <Alert
-          message="Cargando series..."
-          type="info"
-          showIcon
-          style={{ marginBottom: 16 }}
-        />
-      )}
-
-      {!isLoadingSeries && !isError && series.length === 0 && (
-        <Alert
-          message="No hay series configuradas"
-          description="Haz clic en el ícono de configuración para crear una serie antes de continuar."
-          type="warning"
-          showIcon
           action={
-            <Button
-              size="small"
-              type="primary"
-              onClick={() => setModalOpen(true)}
-            >
-              Crear Serie
+            <Button size="small" type="text" onClick={() => refetchSeries()}>
+              <ReloadOutlined /> Reintentar
             </Button>
           }
-          style={{ marginBottom: 16 }}
         />
       )}
-      {!isLoadingSeries && !isError && series.length > 0 && (
+
+      {isLoading && (
+        <Alert type="info" message="Cargando series..." showIcon />
+      )}
+
+      {!isLoading && !isError && series.length === 0 && (
         <Alert
-          message={`${series.length} serie(s) disponible(s)`}
+          type="warning"
+          message="No hay series configuradas"
+          description="Contacta al administrador del sistema para configurar series"
+          showIcon
+        />
+      )}
+
+      {!isLoading && !isError && series.length > 0 && (
+        <Alert
           type="success"
+          message={`${series.length} serie(s) disponible(s)`}
           showIcon
           closable
-          style={{ marginBottom: 16 }}
         />
       )}
 
-      <Space>
-        <Select
-          value={serie}
-          onChange={handleSerieChange}
-          style={{ width: 200 }}
-          loading={isLoadingSeries}
-          disabled={series.length === 0 || isLoadingSeries}
-          placeholder="Seleccionar serie"
-        >
-          {series.map((s: any) => (
-            <Select.Option key={s.id} value={s.prefix || ""}>
-              {s.name} ({s.prefix})
-            </Select.Option>
-          ))}
-        </Select>
+      {/* Selección de Serie y Número */}
+      <Space direction="vertical" style={{ width: "100%", marginTop: 16 }} size="small">
+        <Space>
+          <div>
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+              Serie de Facturación
+            </Typography.Text>
+            <Space>
+              <Select
+                value={seriePrefix}
+                onChange={handleSerieChangeInternal}
+                placeholder="Seleccionar serie"
+                loading={isLoading}
+                disabled={isLoading || series.length === 0}
+                style={{ width: 240 }}
+              >
+                {series.map((s) => (
+                  <Select.Option key={s.id} value={s.prefix ?? ""}>
+                    <Space>
+                      <span>{s.name || "Sin nombre"}</span>
+                      <Typography.Text type="secondary" style={{ fontSize: 11 }}>
+                        ({s.prefix || "—"})
+                      </Typography.Text>
+                    </Space>
+                  </Select.Option>
+                ))}
+              </Select>
 
-        <Input
-          placeholder="Número de recibo"
-          value={numeroRecibo}
-          onChange={(e) => setNumeroRecibo(e.target.value)}
-          style={{ width: 200 }}
-          type="number"
-          disabled={!serie}
-        />
+              {currentSerie && (
+                <Tooltip
+                  title={
+                    <div>
+                      <div>Rango permitido:</div>
+                      <div>
+                        Inicio: {currentSerie.startNumber ?? "N/A"}
+                      </div>
+                      <div>
+                        Fin: {currentSerie.endNumber ?? "N/A"}
+                      </div>
+                      <div>
+                        Actual: {currentSerie.currentNumber ?? "N/A"}
+                      </div>
+                    </div>
+                  }
+                >
+                  <InfoCircleOutlined style={{ color: "#1890ff" }} />
+                </Tooltip>
+              )}
+            </Space>
+          </div>
+
+          <div>
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+              Número de Recibo
+            </Typography.Text>
+            <Input
+              value={numeroRecibo}
+              onChange={(e) => handleNumeroChange(e.target.value)}
+              placeholder="Número"
+              type="number"
+              disabled={!seriePrefix}
+              style={{ width: 160 }}
+              status={
+                numeroRecibo && !isNumberInRange ? "error" : undefined
+              }
+            />
+          </div>
+        </Space>
+
+        {/* Advertencia si el número está fuera de rango */}
+        {numeroRecibo && !isNumberInRange && (
+          <Alert
+            type="warning"
+            message="Número fuera de rango"
+            description={`El número debe estar entre ${currentSerie?.startNumber ?? "?"} y ${currentSerie?.endNumber ?? "?"}`}
+            showIcon
+            style={{ marginTop: 8 }}
+          />
+        )}
       </Space>
 
       {/* Resumen de Factura */}
@@ -210,23 +209,33 @@ export const IncomeSummary = ({
       <Typography.Title level={5}>Resumen de Factura</Typography.Title>
       <Card size="small" style={{ background: "#fafafa" }}>
         <Space direction="vertical" style={{ width: "100%" }}>
+          {/* Información de la Factura */}
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <Typography.Text>Número:</Typography.Text>
             <Typography.Text strong>
-              {numeroRecibo || "Sin número"}
+              {seriePrefix && numeroRecibo
+                ? `${seriePrefix}-${numeroRecibo.padStart(8, "0")}`
+                : "Sin número"}
             </Typography.Text>
           </div>
+
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <Typography.Text>Serie:</Typography.Text>
-            <Typography.Text strong>{serie || "N/A"}</Typography.Text>
+            <Typography.Text strong>
+              {currentSerie?.name || seriePrefix || "N/A"}
+            </Typography.Text>
           </div>
+
           <Divider style={{ margin: "8px 0" }} />
+
+          {/* Información del Paciente */}
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <Typography.Text>Paciente:</Typography.Text>
             <Typography.Text strong>
               {selectedPaciente?.nombre || "Sin seleccionar"}
             </Typography.Text>
           </div>
+
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <Typography.Text>Identificador:</Typography.Text>
             <Typography.Text strong>
@@ -236,9 +245,12 @@ export const IncomeSummary = ({
           </div>
 
           <Divider style={{ margin: "8px 0" }} />
+
+          {/* Información del Servicio/Paquete */}
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <Typography.Text>Servicio/Paquete:</Typography.Text>
           </div>
+
           {selectedServicio ? (
             <>
               <div
@@ -280,7 +292,7 @@ export const IncomeSummary = ({
                   </div>
                 )}
 
-              {/* Mostrar codigo solo para servicios individuales */}
+              {/* Mostrar código solo para servicios individuales */}
               {selectedServicio.tipo === "servicio" &&
                 selectedServicio.abbreviation && (
                   <div
@@ -296,7 +308,7 @@ export const IncomeSummary = ({
                   </div>
                 )}
 
-              {/* Mostrar codigo del paquete */}
+              {/* Mostrar código del paquete */}
               {selectedServicio.tipo === "paquete" && selectedServicio.code && (
                 <div
                   style={{
@@ -347,6 +359,8 @@ export const IncomeSummary = ({
           )}
 
           <Divider style={{ margin: "8px 0" }} />
+
+          {/* Total a Pagar */}
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <Typography.Text strong>Total a Pagar:</Typography.Text>
             <Typography.Text strong style={{ fontSize: 16, color: "#1890ff" }}>
@@ -354,7 +368,7 @@ export const IncomeSummary = ({
             </Typography.Text>
           </div>
 
-          {/* Indicador visual si esta exonerado o es emergencia */}
+          {/* Indicador visual si está exonerado o es emergencia */}
           {(exonerado || tramiteEmergencia) && (
             <div style={{ marginTop: 8 }}>
               <Alert
@@ -375,6 +389,7 @@ export const IncomeSummary = ({
         </Space>
       </Card>
 
+      {/* Footer */}
       <Typography.Text
         type="secondary"
         style={{ fontSize: 12, display: "block", marginTop: 12 }}
@@ -384,19 +399,6 @@ export const IncomeSummary = ({
       <Typography.Text type="secondary" style={{ fontSize: 12 }}>
         Cajero: {usuario}
       </Typography.Text>
-
-      {/* Modal de gestion de series */}
-      <SeriesManagementModal
-        key={modalOpen ? "open" : "closed"}
-        open={modalOpen}
-        onClose={() => {
-          setModalOpen(false);
-          console.log("Modal cerrado, refetching series...");
-          refetch();
-        }}
-        series={series}
-        refetch={refetch}
-      />
     </>
   );
 };

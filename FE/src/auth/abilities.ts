@@ -16,8 +16,9 @@ export type Subjects =
   | "reports"             // Reportes
   | "users"               // Usuarios
   | "hospital"            // Hospital
-  | "support"             // Soporte
-  | "all";
+  | "support"             // Soporte Técnico
+  | "series"              // Series
+  | "all"; 
   
 export const defineAbilitiesFor = (roles: string[]) => {
   const { can, build } = new AbilityBuilder(Ability);
@@ -34,6 +35,7 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can(["read", "create", "update", "delete"], "service-groups");
     can(["read", "create"], "reports");
     can(["read"], "incomes");
+    can(["read", "create", "update", "delete"], "series");
     
     // Menu desplegable
     can(["read", "create", "update", "delete"], "users");

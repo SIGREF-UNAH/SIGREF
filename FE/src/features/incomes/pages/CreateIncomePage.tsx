@@ -138,14 +138,15 @@ export const CreateIncomePage = () => {
     }
 
     // Obtener el precio correcto según el tipo
-    const precio = selectedServicio
+    const precioNuevo = selectedServicio
       ? selectedServicio.cost || selectedServicio.precio || 0
       : selectedServiceGroup.totalPrice || selectedServiceGroup.precio || 0;
 
+    // Si está exonerado o es emergencia, siempre poner en 0
     if (exonerado || tramiteEmergencia) {
       setAPagarEfectivo(0);
-    } else if (aPagarEfectivo === 0) {
-      setAPagarEfectivo(precio);
+    } else {
+      setAPagarEfectivo(precioNuevo);
     }
   }, [selectedServicio, selectedServiceGroup, exonerado, tramiteEmergencia]);
 
@@ -192,7 +193,7 @@ export const CreateIncomePage = () => {
         ...servicio,
       };
       setSelectedServicio(servicioNormalizado);
-      setSelectedServiceGroup(null); // Deseleccionar paquete
+      setSelectedServiceGroup(null); 
       setTipoSeleccion("servicio");
     }
   };
