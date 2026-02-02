@@ -1,7 +1,5 @@
-import { PageContainer } from "@ant-design/pro-components";
 import {
   Button,
-  Card,
   Table,
   Space,
   Input,
@@ -13,7 +11,6 @@ import {
   Alert,
 } from "antd";
 import {
-  PlusOutlined,
   SearchOutlined,
   EditOutlined,
   DeleteOutlined,
@@ -27,10 +24,14 @@ import { useToggleSerieActive } from "../hooks/useToggleSerieActive";
 import { useState } from "react";
 import { SeriesForm } from "../components";
 import { useUpdateSerie } from "../hooks";
+import { PageHeaderTabs } from "../../../shared/components";
+import { useAbility } from "../../../config";
 
 const { Text } = Typography;
 
 export const SeriesListPage = () => {
+  const ability = useAbility();
+
   // Estados para modal de edición
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingSerie, setEditingSerie] = useState<SerieDto | null>(null);
@@ -47,7 +48,6 @@ export const SeriesListPage = () => {
     isError,
     isDeleting,
     searchInput,
-    handleCreate,
     handleDelete,
     handleSearchInputChange,
     handleSearch,
@@ -82,25 +82,25 @@ export const SeriesListPage = () => {
     setEditModalVisible(true);
   };
 
-const handleEditFinish = async (values: any) => {
-  if (!editingSerie?.id) return;
+  const handleEditFinish = async (values: any) => {
+    if (!editingSerie?.id) return;
 
-  // Construir payload completo
-  const payload: UpdateSeriesDto = {
-    name: values.name ?? editingSerie.name,
-    prefix: values.prefix ?? editingSerie.prefix,
-    startNumber: values.startNumber ?? editingSerie.startNumber,
-    endNumber: values.endNumber ?? editingSerie.endNumber,
-    isActive: values.isActive ?? editingSerie.isActive,  
+    // Construir payload completo
+    const payload: UpdateSeriesDto = {
+      name: values.name ?? editingSerie.name,
+      prefix: values.prefix ?? editingSerie.prefix,
+      startNumber: values.startNumber ?? editingSerie.startNumber,
+      endNumber: values.endNumber ?? editingSerie.endNumber,
+      isActive: values.isActive ?? editingSerie.isActive,
+    };
+
+    const success = await updateSerie(editingSerie.id, payload);
+
+    if (success) {
+      setEditModalVisible(false);
+      setEditingSerie(null);
+    }
   };
-
-  const success = await updateSerie(editingSerie.id, payload);
-
-  if (success) {
-    setEditModalVisible(false);
-    setEditingSerie(null);
-  }
-};
   const handleEditCancel = () => {
     setEditModalVisible(false);
     setEditingSerie(null);
@@ -220,14 +220,36 @@ const handleEditFinish = async (values: any) => {
   ];
 
   return (
-    <PageContainer
-      header={{
-        title: "Gestión de Series",
-        subTitle: "Administre las series de numeración para sus documentos",
-      }}
-    >
-      <Card>
-        {/* Barra de búsqueda y acciones */}
+    <div>
+      {/* Navegación */}
+      <PageHeaderTabs
+        title="Gestión de Series"
+        tabs={[
+          ...(ability.can("read", "series")
+            ? [
+                {
+                  key: "list",
+                  label: "Lista de Series",
+                  path: "/series/list",
+                },
+              ]
+            : []),
+          ...(ability.can("create", "series")
+            ? [
+                {
+                  key: "create",
+                  label: "Crear Serie",
+                  path: "/series/create",
+                },
+              ]
+            : []),
+        ]}
+        defaultActive="create"
+      />
+
+      {/* Contenido */}
+      <div className="primary-card">
+        {/* Barra de búsqueda */}
         <Space style={{ marginBottom: 16, width: "100%" }} direction="vertical">
           <Space style={{ width: "100%", justifyContent: "space-between" }}>
             <Space>
@@ -253,14 +275,6 @@ const handleEditFinish = async (values: any) => {
                 </Button>
               )}
             </Space>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              size="large"
-              onClick={handleCreate}
-            >
-              Nueva Serie
-            </Button>
           </Space>
         </Space>
 
@@ -282,11 +296,10 @@ const handleEditFinish = async (values: any) => {
           rowKey="id"
           loading={isLoading || isFetching}
           pagination={paginationConfig}
-          scroll={{ x: 1200 }}
           bordered
           size="middle"
         />
-      </Card>
+      </div>
 
       {/* Modal de edición */}
       <Modal
@@ -370,6 +383,6 @@ const handleEditFinish = async (values: any) => {
           </div>
         </div>
       </Modal>
-    </PageContainer>
+    </div>
   );
 };
