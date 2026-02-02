@@ -327,7 +327,7 @@ Este proyecto está licenciado bajo la licencia **MIT** - Ver [LICENSE.MD](./LIC
 - Michael Andrey Galdamez Martinez - Frontend
 - Ever Josue Garcia Leonor - Backend
 - Danilo Isaac Vides Chicas - Frontend
-- Anthony Edward Miranda Fuentes - Backend
+- Anthony Edward Miranda Fuentes - Full Stack
 - Hector Rene Martinez Vega - Full Stack - Coordinador de Proyecto
 - Erick Marley Arita - Full Stack
 - Josue David Diaz Rodriguez - Full Stack
