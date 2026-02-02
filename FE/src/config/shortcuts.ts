@@ -232,7 +232,7 @@ export const appShortcuts: ShortcutConfig[] = [
   // Gestión de Series
   {
     keys: "ctrl+shift+b",
-    description: "Generar series",
+    description: "Crear serie",
     action: (navigate) => navigate("/series/create"),
     title: "Gestión de Series",
     category: "series",

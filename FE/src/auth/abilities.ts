@@ -47,7 +47,6 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can(["read", "create", "update", "delete"], "organizations");
     can(["read", "create", "update", "delete"], "practitioners");
     can(["read", "create", "update", "delete"], "practitioner-roles");
-    can(["read", "create"], "reports");
     can(["read"], "healthcares");
     can(["read"], "events");
 
@@ -66,9 +65,9 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can(["read"], "shifts");
     can(["read"], "healthcares");
     can(["read"], "service-groups");
-    can(["read"], "reports");
     can(["read"], "incomes");
     can(["read"], "events");
+    can(["read"], "reports");
 
     // Menu desplegable
     can(["read"], "users");

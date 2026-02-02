@@ -175,14 +175,14 @@ export const ReportsRoutes: RouteItem[] = [
 export const EventsRoutes: RouteItem[] = [
   {
     path: "/events/list",
-    name: "Listar Eventos",
+    name: "Lista de Eventos",
     subject: "events" as Subjects,
     action: "read",
   },
 ];
 
 // Gestión de Series
-export const SerieRoutes: RouteItem[] = [
+export const SeriesRoutes: RouteItem[] = [
   {
     path: "/series/list",
     name: "Lista de Series",
@@ -212,13 +212,13 @@ export const RoutesByRole: Record<
     organizaciones?: RouteItem[];
     reportes?: RouteItem[];
     eventos?: RouteItem[];
-    serie?: RouteItem[];
+    series?: RouteItem[];
   }
 > = {
   [USER_ROLE_OPTIONS[0].label]: {
     // Administrador
     fondos: IncomesRoutes.filter((route) => route.action === "read"),
-    serie: SerieRoutes,
+    series: SeriesRoutes,
     servicios: [...HealthcaresRoutes, ...ServiceGroupsRoutes],
     pacientes: PatientsRoutes,
     empleados: PractitionersRoutes,
@@ -258,7 +258,6 @@ export const RoutesByRole: Record<
     servicios: HealthcaresRoutes.filter((route) => route.action === "read"),
     empleados: PractitionersRoutes,
     organizaciones: OrganizationsRoutes,
-    reportes: ReportsRoutes,
     eventos: EventsRoutes,
   },
 };

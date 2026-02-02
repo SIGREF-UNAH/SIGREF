@@ -14,7 +14,7 @@ import { ShiftsRouter } from "../features/shifts/routers/ShiftsRouter";
 import { HospitalRouter } from "../features/hospital/routers";
 import { UsersRouter } from "../features/users/routers";
 import { CashierSessionsRouter } from "../features/cashier-sessions/routers";
-import { SeriesRouter } from "../features/serie/router";
+import { SeriesRouter } from "../features/series/router";
 
  export const AppRouter = () => {
   return (

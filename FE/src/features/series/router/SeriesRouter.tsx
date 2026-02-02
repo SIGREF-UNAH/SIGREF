@@ -22,9 +22,6 @@ export const SeriesRouter = () => {
         </ProtectedRoute>
         } 
       /> 
-
-
-    
     </Routes>
   );
 };
