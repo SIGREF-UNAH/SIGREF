@@ -91,7 +91,7 @@ public class SeriesController : ControllerBase
     // ============================================================
     //                     DESACTIVAR (SOFT DELETE)
     // ============================================================
-    [HttpDelete("{id:guid}")]
+    [HttpPut("delete/{id:guid}")]
     [Authorize(Roles = $"{RolesConstants.admin}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
