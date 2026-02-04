@@ -226,7 +226,6 @@ export const RoutesByRole: Record<
     ubicaciones: LocationsRoutes,
     organizaciones: OrganizationsRoutes,
     reportes: ReportsRoutes,
-    eventos: EventsRoutes,
   },
   [USER_ROLE_OPTIONS[1].label]: {
     // Auditoria
