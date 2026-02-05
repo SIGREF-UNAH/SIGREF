@@ -16,8 +16,9 @@ export type Subjects =
   | "reports"             // Reportes
   | "users"               // Usuarios
   | "hospital"            // Hospital
-  | "support"             // Soporte
-  | "all";
+  | "support"             // Soporte Técnico
+  | "series"              // Series
+  | "all"; 
   
 export const defineAbilitiesFor = (roles: string[]) => {
   const { can, build } = new AbilityBuilder(Ability);
@@ -34,6 +35,7 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can(["read", "create", "update", "delete"], "service-groups");
     can(["read", "create"], "reports");
     can(["read"], "incomes");
+    can(["read", "create", "update", "delete"], "series");
     
     // Menu desplegable
     can(["read", "create", "update", "delete"], "users");
@@ -45,7 +47,6 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can(["read", "create", "update", "delete"], "organizations");
     can(["read", "create", "update", "delete"], "practitioners");
     can(["read", "create", "update", "delete"], "practitioner-roles");
-    can(["read", "create"], "reports");
     can(["read"], "healthcares");
     can(["read"], "events");
 
@@ -64,9 +65,9 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can(["read"], "shifts");
     can(["read"], "healthcares");
     can(["read"], "service-groups");
-    can(["read"], "reports");
     can(["read"], "incomes");
     can(["read"], "events");
+    can(["read"], "reports");
 
     // Menu desplegable
     can(["read"], "users");
@@ -78,7 +79,6 @@ export const defineAbilitiesFor = (roles: string[]) => {
     can(["read", "create", "update"], "patients");
     can(["read", "create"], "cashier-sessions");
     can(["create", "update"], "incomes");
-    can(["read", "create"], "reports");
     can(["read"], "locations");
     can(["read"], "shifts");
     

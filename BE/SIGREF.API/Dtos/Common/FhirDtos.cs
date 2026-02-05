@@ -139,4 +139,18 @@ namespace SIGREF.API.Dtos.Common
         public DateTime? Start { get; set; }
         public DateTime? End { get; set; }
     }
+    
+    public class ValueSetItemDto
+    {
+        public string Code { get; set; }
+        public string Display { get; set; }
+    }
+    public class ValueSetDto
+    {
+        public string Url { get; set; } = default!;
+        public string? Name { get; set; }
+
+        public List<ValueSetItemDto> Items { get; set; }
+            = new();
+    }
 }

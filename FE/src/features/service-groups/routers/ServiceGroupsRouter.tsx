@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router";
 import { ProtectedRoute } from "../../../shared/components";
 import {
   CreateServiceGroupPage,
+  ServiceGroupDetailsPage,
   ServiceGroupsPage,
   UpdateServiceGroupPage,
 } from "../pages";
@@ -14,6 +15,13 @@ export const ServiceGroupsRouter = () => {
       <Route path="/list" element={
         <ProtectedRoute action="read" subject="service-groups">
           <ServiceGroupsPage />
+        </ProtectedRoute>
+        } 
+      />
+      
+      <Route path="/details/:id" element={
+        <ProtectedRoute action="read" subject="service-groups">
+          <ServiceGroupDetailsPage />
         </ProtectedRoute>
         } 
       />

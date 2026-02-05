@@ -34,9 +34,12 @@ public class ServiceRankingDto
 
 public class WeeklyIncomeDto
 {
-    public string Week { get; set; }
-    public decimal Total { get; set; }
+    public DateTime WeekStart { get; set; }   // en hora local (Tegucigalpa), solo fecha
+    public DateTime WeekEnd { get; set; }     // en hora local (Tegucigalpa), solo fecha (fin inclusivo para UI)
+    public decimal TotalIncome { get; set; }
+    public int InvoiceCount { get; set; }
 }
+
 
 public class ShiftIncomeDto
 {
@@ -68,7 +71,7 @@ public class ServiceUsageDto
     public string FhirServiceId { get; set; }
     public string ServiceName { get; set; } = string.Empty;
 
-    public int Count { get; set; }           // Cantidad de veces utilizado
+    public long Count { get; set; }           // Cantidad de veces utilizado
     public decimal TotalGenerated { get; set; } // Suma total generada
 
     public decimal Percentage { get; set; }  // Para gráficos tipo donut

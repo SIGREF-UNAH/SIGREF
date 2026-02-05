@@ -127,6 +127,7 @@ export function useServiceGroupsList() {
     isFetching,
     isError,
     searchInput,
+    navigate,
     handleEdit,
     handleDelete,
     setFilter,

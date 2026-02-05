@@ -2,7 +2,6 @@ using Hl7.Fhir.Rest;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using SIGREF.API.Constants;
-using SIGREF.API.Database;
 using SIGREF.API.Services.Common;
 using SIGREF.API.Services.Healthcare;
 using SIGREF.API.Services.Location;
@@ -16,7 +15,6 @@ using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.Extensions.FileProviders;
 using SIGREF.API.Services.Auth;
-using MongoDB.Driver;
 using SIGREF.API.Services.AdministrationHospital;
 using SIGREF.API.Services.Auth.Keycloak;
 using SIGREF.API.Services.Billing;
@@ -27,6 +25,7 @@ using SIGREF.API.Services.Files;
 using SIGREF.API.Services.Serie;
 using SIGREF.API.Audit.Extensions;
 using SIGREF.API.Helpers;
+using SIGREF.API.Services.ValueSet;
 
 
 namespace SIGREF.API;
@@ -70,7 +69,7 @@ public class Startup
         services.AddScoped<IPractitionerService, PractitionerService>();
         services.AddScoped<IOrganizationService, OrganizationService>();
         services.AddScoped<ServiceGroupService>();
-        
+        services.AddScoped<IValueSetService , ValueSetService>();
         // ============= RECUPERADORES FHIR ==========
         services.AddScoped<IFhirLookupService, FhirLookupService>();
         // Registrar dashboard que usa el lookup

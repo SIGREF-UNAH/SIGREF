@@ -5,179 +5,195 @@ import { USER_ROLE_OPTIONS } from "../shared/constants";
 export interface RouteItem {
   path: string;
   name: string;
-  subject: Subjects; 
-  action: "read" | "create" | "update" | "delete"; 
+  subject: Subjects;
+  action: "read" | "create" | "update" | "delete";
 }
 
 // Gestión de Fondos
 export const IncomesRoutes: RouteItem[] = [
-  { 
-    path: "/incomes/list", 
+  {
+    path: "/incomes/list",
     name: "Lista de Ingresos",
     subject: "incomes" as Subjects,
-    action: "read"
+    action: "read",
   },
-  { 
-    path: "/incomes/create", 
+  {
+    path: "/incomes/create",
     name: "Generar Ingreso",
     subject: "incomes" as Subjects,
-    action: "create"
+    action: "create",
   },
-  { 
-    path: "/incomes/close", 
+  {
+    path: "/incomes/close",
     name: "Cerrar Caja",
     subject: "incomes" as Subjects,
-    action: "update"
+    action: "update",
   },
-  { 
-    path: "/incomes/history", 
+  {
+    path: "/incomes/history",
     name: "Historial de Cierres de Caja",
     subject: "incomes" as Subjects,
-    action: "read"
+    action: "read",
   },
 ];
 
 // Gestión de Servicios
 export const HealthcaresRoutes: RouteItem[] = [
-  { 
-    path: "/healthcares/list", 
+  {
+    path: "/healthcares/list",
     name: "Lista de Servicios",
     subject: "healthcares" as Subjects,
-    action: "read"
+    action: "read",
   },
-  { 
-    path: "/healthcares/create", 
+  {
+    path: "/healthcares/create",
     name: "Crear Servicio",
     subject: "healthcares" as Subjects,
-    action: "create"
+    action: "create",
   },
 ];
 
 // Gestión de Paquetes
 export const ServiceGroupsRoutes: RouteItem[] = [
-  { 
-    path: "/service-groups/list", 
+  {
+    path: "/service-groups/list",
     name: "Lista de Paquetes",
     subject: "service-groups" as Subjects,
-    action: "read"
+    action: "read",
   },
-  { 
-    path: "/service-groups/create", 
+  {
+    path: "/service-groups/create",
     name: "Crear Paquete",
     subject: "service-groups" as Subjects,
-    action: "create"
+    action: "create",
   },
 ];
 
 // Gestión de Ubicaciones
 export const LocationsRoutes: RouteItem[] = [
-  { 
-    path: "/locations/list", 
+  {
+    path: "/locations/list",
     name: "Lista de Ubicaciones",
     subject: "locations" as Subjects,
-    action: "read"
+    action: "read",
   },
-  { 
-    path: "/locations/create", 
+  {
+    path: "/locations/create",
     name: "Crear Ubicación",
     subject: "locations" as Subjects,
-    action: "create"
+    action: "create",
   },
 ];
 
 // Gestión de Turnos
 export const ShiftsRoutes: RouteItem[] = [
-  { 
-    path: "/shifts/list", 
+  {
+    path: "/shifts/list",
     name: "Lista de Turnos",
     subject: "shifts" as Subjects,
-    action: "read"
+    action: "read",
   },
-  { 
+  {
     path: "/cashier/open-session",
     name: "Iniciar Turno",
     subject: "cashier-sessions" as Subjects,
-    action: "create"
+    action: "create",
   },
 ];
 
 // Gestión de Pacientes
 export const PatientsRoutes: RouteItem[] = [
-  { 
-    path: "/patients/list", 
+  {
+    path: "/patients/list",
     name: "Lista de Pacientes",
     subject: "patients" as Subjects,
-    action: "read"
+    action: "read",
   },
-  { 
-    path: "/patients/create", 
+  {
+    path: "/patients/create",
     name: "Crear Paciente",
     subject: "patients" as Subjects,
-    action: "create"
+    action: "create",
   },
 ];
 
 // Gestión de Empleados
 export const PractitionersRoutes: RouteItem[] = [
-  { 
-    path: "/practitioners/list", 
+  {
+    path: "/practitioners/list",
     name: "Lista de Empleados",
     subject: "practitioners" as Subjects,
-    action: "read"
+    action: "read",
   },
-  { 
-    path: "/practitioners/create", 
+  {
+    path: "/practitioners/create",
     name: "Crear Empleado",
     subject: "practitioners" as Subjects,
-    action: "create"
+    action: "create",
   },
 ];
 
 // Gestión de Organizaciones
 export const OrganizationsRoutes: RouteItem[] = [
-  { 
-    path: "/organizations/list", 
+  {
+    path: "/organizations/list",
     name: "Lista de Organizaciones",
     subject: "organizations" as Subjects,
-    action: "read"
+    action: "read",
   },
-  { 
-    path: "/organizations/create", 
+  {
+    path: "/organizations/create",
     name: "Crear Organización",
     subject: "organizations" as Subjects,
-    action: "create"
+    action: "create",
   },
 ];
 
 // Gestión de Reportes
 export const ReportsRoutes: RouteItem[] = [
-  { 
-    path: "/reports/list", 
+  {
+    path: "/reports/list",
     name: "Control de Reportes",
     subject: "reports" as Subjects,
-    action: "read"
+    action: "read",
   },
-  { 
-    path: "/reports/create", 
+  {
+    path: "/reports/create",
     name: "Generar Reporte",
     subject: "reports" as Subjects,
-    action: "create"
+    action: "create",
   },
-  { 
-    path: "/reports/history", 
+  {
+    path: "/reports/history",
     name: "Historial de Reportes",
     subject: "reports" as Subjects,
-    action: "read"
+    action: "read",
   },
 ];
 
 // Gestión de Eventos/Logs
 export const EventsRoutes: RouteItem[] = [
-  { 
-    path: "/events/list", 
-    name: "Listar Eventos",
+  {
+    path: "/events/list",
+    name: "Lista de Eventos",
     subject: "events" as Subjects,
-    action: "read"
+    action: "read",
+  },
+];
+
+// Gestión de Series
+export const SeriesRoutes: RouteItem[] = [
+  {
+    path: "/series/list",
+    name: "Lista de Series",
+    subject: "serie" as Subjects,
+    action: "read",
+  },
+  {
+    path: "/series/create",
+    name: "Crear Serie",
+    subject: "serie" as Subjects,
+    action: "create",
   },
 ];
 
@@ -196,42 +212,51 @@ export const RoutesByRole: Record<
     organizaciones?: RouteItem[];
     reportes?: RouteItem[];
     eventos?: RouteItem[];
+    series?: RouteItem[];
   }
 > = {
-  [USER_ROLE_OPTIONS[0].label]: { // Administrador
-    fondos: IncomesRoutes.filter(route => route.action === "read"),
+  [USER_ROLE_OPTIONS[0].label]: {
+    // Administrador
+    fondos: IncomesRoutes.filter((route) => route.action === "read"),
+    series: SeriesRoutes,
     servicios: [...HealthcaresRoutes, ...ServiceGroupsRoutes],
     pacientes: PatientsRoutes,
     empleados: PractitionersRoutes,
-    turnos: ShiftsRoutes.filter(route => route.action === "read"),
+    turnos: ShiftsRoutes.filter((route) => route.action === "read"),
     ubicaciones: LocationsRoutes,
     organizaciones: OrganizationsRoutes,
     reportes: ReportsRoutes,
+  },
+  [USER_ROLE_OPTIONS[1].label]: {
+    // Auditoria
+    fondos: IncomesRoutes.filter((route) => route.action === "read"),
+    servicios: [...HealthcaresRoutes, ...ServiceGroupsRoutes].filter(
+      (route) => route.action === "read",
+    ),
+    pacientes: PatientsRoutes.filter((route) => route.action === "read"),
+    empleados: PractitionersRoutes.filter((route) => route.action === "read"),
+    turnos: ShiftsRoutes.filter((route) => route.action === "read"),
+    ubicaciones: LocationsRoutes.filter((route) => route.action === "read"),
+    organizaciones: OrganizationsRoutes.filter(
+      (route) => route.action === "read",
+    ),
+    reportes: ReportsRoutes.filter((route) => route.action === "read"),
     eventos: EventsRoutes,
   },
-  [USER_ROLE_OPTIONS[1].label]: { // Auditoria
-    fondos: IncomesRoutes.filter(route => route.action === "read"),
-    servicios: [...HealthcaresRoutes, ...ServiceGroupsRoutes].filter(route => route.action === "read"),
-    pacientes: PatientsRoutes.filter(route => route.action === "read"),
-    empleados: PractitionersRoutes.filter(route => route.action === "read"),
-    turnos: ShiftsRoutes.filter(route => route.action === "read"),
-    ubicaciones: LocationsRoutes.filter(route => route.action === "read"),
-    organizaciones: OrganizationsRoutes.filter(route => route.action === "read"),
-    reportes: ReportsRoutes.filter(route => route.action === "read"),
-    eventos: EventsRoutes,
-  },
-  [USER_ROLE_OPTIONS[2].label]: { // Auxiliar de Caja
-    fondos: IncomesRoutes.filter(route => route.action === "create" || route.action === "update"),
+  [USER_ROLE_OPTIONS[2].label]: {
+    // Auxiliar de Caja
+    fondos: IncomesRoutes.filter(
+      (route) => route.action === "create" || route.action === "update",
+    ),
     pacientes: PatientsRoutes,
     turnos: ShiftsRoutes,
     ubicaciones: LocationsRoutes.filter(route => route.action === "read"),
-    reportes: ReportsRoutes,
   },
-  [USER_ROLE_OPTIONS[3].label]: { // Técnico de Informática
-    servicios: HealthcaresRoutes.filter(route => route.action === "read"),
+  [USER_ROLE_OPTIONS[3].label]: {
+    // Técnico de Informática
+    servicios: HealthcaresRoutes.filter((route) => route.action === "read"),
     empleados: PractitionersRoutes,
     organizaciones: OrganizationsRoutes,
-    reportes: ReportsRoutes,
     eventos: EventsRoutes,
   },
 };

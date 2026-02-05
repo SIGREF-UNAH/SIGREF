@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PageContainer, ProCard } from "@ant-design/pro-components";
 import {
   Input,
@@ -11,16 +11,21 @@ import {
   Col,
   Divider,
   message,
+  Tabs,
 } from "antd";
 import {
   UserOutlined,
   FileTextOutlined,
   SaveOutlined,
   ReloadOutlined,
+  MedicineBoxOutlined,
+  AppstoreOutlined,
 } from "@ant-design/icons";
 import { useUrlFilters } from "../../../shared/hooks";
 import { IncomeSummary, ListPatient, ServiceIncome } from "../components";
+import { ServiceGroupIncome } from "../components/ServiceGroupIncome";
 import { useHealthcaresList } from "../../healthcares/hooks";
+import { useServiceGroupsList } from "../../service-groups/hooks";
 import { usePatientsInformation } from "../../patients/hooks";
 import { useCreateIncome } from "../hooks/useCreateIncome";
 
@@ -28,47 +33,78 @@ const { TextArea } = Input;
 const { Text } = Typography;
 
 export const CreateIncomePage = () => {
-  // Hook para crear ingresos 
-  const { 
-    createIncome, 
+  const [tipoSeleccion, setTipoSeleccion] = useState<"servicio" | "paquete">(
+    "servicio",
+  );
+
+  const {
+    createIncome,
     isLoading: isCreatingIncome,
-    contextHolder: incomeContextHolder 
+    contextHolder: incomeContextHolder,
   } = useCreateIncome({
     onSuccess: () => {
       handleResetear();
     },
   });
-  
-  // Hook para obtener los servicios del backend
-  const { healthcares, isLoading: isLoadingHealthcares } = useHealthcaresList();
 
-  // Hook para obtener los pacientes del backend
-  const { 
-    patients, 
+  // Hook para servicios
+  const {
+    healthcares,
+    isLoading: isLoadingHealthcares,
+    setFilter: setHealthcareFilter,
+  } = useHealthcaresList();
+
+  useEffect(() => {
+    setHealthcareFilter("includeCost", true);
+  }, []);
+
+  // Hook para paquetes
+  const {
+    serviceGroups,
+    isLoading: isLoadingServiceGroups,
+    setFilter: setServiceGroupFilter,
+  } = useServiceGroupsList();
+
+  // Hook para pacientes
+  const {
+    patients,
     isLoading: isLoadingPatients,
-    filters: patientsHookFilters,
-    setFilter: setPatientsHookFilter,
-    setFilters: setPatientsHookFilters,
+    filters: patientsFilters,
+    setFilter: setPatientsFilter,
+    setFilters: setPatientsFilters,
   } = usePatientsInformation();
 
+  // Filtros UI para servicios
   const {
-    filters: servicioFilters,
-    setFilter: setServicioFilter,
-    resetFilters: resetServicioFilters,
-    setFilters: setServicioFilters,
+    filters: servicioUIFilters,
+    setFilter: setServicioUIFilter,
+    setFilters: setServicioUIFilters,
   } = useUrlFilters({
     defaultValues: {
       searchServicios: "",
-      tipoServicio: "todos",
       pageServicio: 1,
-      pageSizeServicio: 5,
+      pageSizeServicio: 10,
     },
   });
 
+  // Filtros UI para paquetes
   const {
-    filters: pacienteFilters,
-    setFilter: setPacienteFilter,
-    setFilters: setPacienteFilters,
+    filters: serviceGroupUIFilters,
+    setFilter: setServiceGroupUIFilter,
+    setFilters: setServiceGroupUIFilters,
+  } = useUrlFilters({
+    defaultValues: {
+      searchServiceGroups: "",
+      pageServiceGroup: 1,
+      pageSizeServiceGroup: 10,
+    },
+  });
+
+  // Filtros UI para pacientes
+  const {
+    filters: pacienteUIFilters,
+    setFilter: setPacienteUIFilter,
+    setFilters: setPacienteUIFilters,
   } = useUrlFilters({
     defaultValues: {
       searchPaciente: "",
@@ -81,35 +117,9 @@ export const CreateIncomePage = () => {
     },
   });
 
-  // Sincronizar filtros locales con el hook de pacientes
-  const handleSetPacienteFilter = (key: string, value: any) => {
-    setPacienteFilter(key, value);
-    
-    const filterMap: Record<string, string> = {
-      searchPaciente: "nombreCompleto",
-      genero: "genero",
-      nacionalidad: "nacionalidad",
-      tipoIdentificador: "tipoIdentificador",
-      identificador: "identificador",
-    };
-    
-    if (filterMap[key]) {
-      setPatientsHookFilter(filterMap[key], value);
-    }
-  };
-
-  const handleSetPacienteFilters = (newFilters: any) => {
-    setPacienteFilters(newFilters);
-    
-    if (newFilters.pagePaciente || newFilters.pageSizePaciente) {
-      setPatientsHookFilters({
-        pageNumber: newFilters.pagePaciente || patientsHookFilters.pageNumber,
-        pageSize: newFilters.pageSizePaciente || patientsHookFilters.pageSize,
-      });
-    }
-  };
-
+  // Estados del formulario
   const [selectedServicio, setSelectedServicio] = useState<any>(null);
+  const [selectedServiceGroup, setSelectedServiceGroup] = useState<any>(null);
   const [selectedPaciente, setSelectedPaciente] = useState<any>(null);
   const [serie, setSerie] = useState("");
   const [serieId, setSerieId] = useState("");
@@ -119,48 +129,117 @@ export const CreateIncomePage = () => {
   const [tramiteEmergencia, setTramiteEmergencia] = useState(false);
   const [observaciones, setObservaciones] = useState("");
 
+  useEffect(() => {
+    const itemSeleccionado = selectedServicio || selectedServiceGroup;
+
+    if (!itemSeleccionado) {
+      setAPagarEfectivo(0);
+      return;
+    }
+
+    // Obtener el precio correcto según el tipo
+    const precioNuevo = selectedServicio
+      ? selectedServicio.cost || selectedServicio.precio || 0
+      : selectedServiceGroup.totalPrice || selectedServiceGroup.precio || 0;
+
+    // Si está exonerado o es emergencia, siempre poner en 0
+    if (exonerado || tramiteEmergencia) {
+      setAPagarEfectivo(0);
+    } else {
+      setAPagarEfectivo(precioNuevo);
+    }
+  }, [selectedServicio, selectedServiceGroup, exonerado, tramiteEmergencia]);
+
+  // Sincronizar filtros de pacientes
+  const handleSetPacienteFilter = (key: string, value: any) => {
+    setPacienteUIFilter(key, value);
+
+    const filterMap: Record<string, string> = {
+      searchPaciente: "search",
+      genero: "genero",
+      nacionalidad: "nacionalidad",
+      tipoIdentificador: "tipoIdentificador",
+      identificador: "identificador",
+    };
+
+    if (filterMap[key]) {
+      setPatientsFilter(filterMap[key], value);
+    }
+  };
+
+  const handleSetPacienteFilters = (newFilters: any) => {
+    setPacienteUIFilters(newFilters);
+
+    if (newFilters.pagePaciente || newFilters.pageSizePaciente) {
+      setPatientsFilters({
+        pageNumber: newFilters.pagePaciente || patientsFilters.pageNumber,
+        pageSize: newFilters.pageSizePaciente || patientsFilters.pageSize,
+      });
+    }
+  };
+
   // Seleccionar servicio
   const handleSelectServicio = (servicio: any) => {
     if (selectedServicio?.id === servicio.id) {
       setSelectedServicio(null);
-      setAPagarEfectivo(0);
     } else {
-      setSelectedServicio(servicio);
-      if (!exonerado && !tramiteEmergencia) {
-        setAPagarEfectivo(servicio.cost || 0);
-      }
+      const servicioNormalizado = {
+        id: servicio.id,
+        nombre: servicio.name || "Servicio sin nombre",
+        precio: servicio.cost || 0,
+        cost: servicio.cost || 0,
+        tipo: "servicio",
+        abbreviation: servicio.abbreviation,
+        ...servicio,
+      };
+      setSelectedServicio(servicioNormalizado);
+      setSelectedServiceGroup(null); 
+      setTipoSeleccion("servicio");
     }
   };
 
-  // Manejar cambios en exonerado/emergencia
+  // Seleccionar paquete
+  const handleSelectServiceGroup = (serviceGroup: any) => {
+    if (selectedServiceGroup?.id === serviceGroup.id) {
+      setSelectedServiceGroup(null);
+    } else {
+      const paqueteNormalizado = {
+        id: serviceGroup.id,
+        nombre: serviceGroup.title || "Paquete sin título",
+        precio: serviceGroup.totalPrice || 0,
+        totalPrice: serviceGroup.totalPrice || 0,
+        tipo: "paquete",
+        items: serviceGroup.items || [],
+        code: serviceGroup.code?.coding?.[0]?.code,
+        description: serviceGroup.description || "",
+      };
+      setSelectedServiceGroup(paqueteNormalizado);
+      setSelectedServicio(null); // Deseleccionar servicio
+      setTipoSeleccion("paquete");
+    }
+  };
+
   const handleExoneradoChange = (checked: boolean) => {
     setExonerado(checked);
     if (checked) {
-      setAPagarEfectivo(0);
-      setTramiteEmergencia(false);
-    } else if (selectedServicio) {
-      setAPagarEfectivo(selectedServicio.cost || 0);
+      setTramiteEmergencia(false); // Desmarcar tramite de emergencia
     }
   };
 
   const handleEmergenciaChange = (checked: boolean) => {
     setTramiteEmergencia(checked);
     if (checked) {
-      setAPagarEfectivo(0);
-      setExonerado(false);
-    } else if (selectedServicio) {
-      setAPagarEfectivo(selectedServicio.cost || 0);
+      setExonerado(false); // Desmarcar exonerado
     }
   };
 
-  // Guardar y crear el ingreso
   const handleGuardar = () => {
     if (!selectedPaciente) {
       message.warning("Por favor selecciona un paciente");
       return;
     }
-    if (!selectedServicio) {
-      message.warning("Por favor selecciona un servicio");
+    if (!selectedServicio && !selectedServiceGroup) {
+      message.warning("Por favor selecciona un servicio o paquete");
       return;
     }
     if (!numeroRecibo.trim()) {
@@ -171,17 +250,8 @@ export const CreateIncomePage = () => {
       message.error("Por favor selecciona una serie válida");
       return;
     }
-    if (!numeroRecibo.trim()) {
-      messageApi.warning("Por favor ingresa un número de recibo");
-      return;
-    }
 
-    const servicioData = {
-      id: selectedServicio.id,
-      nombre: selectedServicio.name || "Servicio sin nombre",
-      precio: selectedServicio.cost || 0,
-      tipo: "servicio",
-    };
+    const itemSeleccionado = selectedServicio || selectedServiceGroup;
 
     const pacienteData = {
       id: selectedPaciente.id,
@@ -191,7 +261,7 @@ export const CreateIncomePage = () => {
 
     createIncome({
       selectedPaciente: pacienteData,
-      selectedServicio: servicioData,
+      selectedServicio: itemSeleccionado,
       numeroRecibo,
       aPagarEfectivo,
       exonerado,
@@ -200,9 +270,9 @@ export const CreateIncomePage = () => {
     });
   };
 
-  // Resetear todo
   const handleResetear = () => {
     setSelectedServicio(null);
+    setSelectedServiceGroup(null);
     setSelectedPaciente(null);
     setSerie("");
     setSerieId("");
@@ -211,9 +281,35 @@ export const CreateIncomePage = () => {
     setExonerado(false);
     setTramiteEmergencia(false);
     setObservaciones("");
-    resetServicioFilters();
-    
-    setPacienteFilters({
+    setTipoSeleccion("servicio");
+
+    setServicioUIFilters({
+      searchServicios: "",
+      pageServicio: 1,
+      pageSizeServicio: 10,
+    });
+
+    setServiceGroupUIFilters({
+      searchServiceGroups: "",
+      pageServiceGroup: 1,
+      pageSizeServiceGroup: 10,
+    });
+
+    setHealthcareFilter("search", "");
+    setHealthcareFilter("pageNumber", 1);
+    setHealthcareFilter("pageSize", 10);
+    setHealthcareFilter("location", undefined);
+    setHealthcareFilter("status", undefined);
+    setHealthcareFilter("scope", undefined);
+    setHealthcareFilter("includeCost", true);
+
+    setServiceGroupFilter("search", "");
+    setServiceGroupFilter("pageNumber", 1);
+    setServiceGroupFilter("pageSize", 10);
+    setServiceGroupFilter("location", undefined);
+    setServiceGroupFilter("status", undefined);
+
+    setPacienteUIFilters({
       searchPaciente: "",
       tipoIdentificador: "DNI",
       genero: "todos",
@@ -222,8 +318,8 @@ export const CreateIncomePage = () => {
       pagePaciente: 1,
       pageSizePaciente: 5,
     });
-    
-    setPatientsHookFilters({
+
+    setPatientsFilters({
       search: "",
       pageNumber: 1,
       pageSize: 10,
@@ -234,58 +330,96 @@ export const CreateIncomePage = () => {
       identificador: null,
       fechaNacimiento: null,
     });
-    
+
     message.info("Formulario reseteado");
   };
-  console.log("=== SERVICIOS DESDE useHealthcaresList ===");
-console.log(JSON.stringify(healthcares, null, 2));
 
+  const itemSeleccionado = selectedServicio || selectedServiceGroup;
 
   return (
     <>
       {incomeContextHolder}
       <PageContainer
         title="Registro de Ingresos por Servicios"
-        subTitle="Genere ingresos de los servicios del paciente"
+        subTitle="Genere ingresos de servicios o paquetes del paciente"
       >
         <Row gutter={16}>
-          {/* Panel Izquierdo - Servicios */}
+          {/* Servicios y Paquetes */}
           <Col xs={24} lg={10}>
             <ProCard
               title={
                 <Space>
                   <FileTextOutlined />
-                  <span>Servicios</span>
+                  <span>Servicios y Paquetes</span>
                 </Space>
               }
               bordered
             >
-              <ServiceIncome
-                serviciosData={healthcares}
-                servicioFilters={servicioFilters}
-                setServicioFilter={setServicioFilter}
-                setServicioFilters={setServicioFilters}
-                handleSelectServicio={handleSelectServicio}
-                selectedServicio={selectedServicio}
-                isLoading={isLoadingHealthcares}
+              <Tabs
+                activeKey={tipoSeleccion}
+                onChange={(key) =>
+                  setTipoSeleccion(key as "servicio" | "paquete")
+                }
+                items={[
+                  {
+                    key: "servicio",
+                    label: (
+                      <Space>
+                        <MedicineBoxOutlined />
+                        Servicios
+                      </Space>
+                    ),
+                    children: (
+                      <ServiceIncome
+                        serviciosData={healthcares}
+                        servicioFilters={servicioUIFilters}
+                        setServicioFilter={setServicioUIFilter}
+                        setServicioFilters={setServicioUIFilters}
+                        handleSelectServicio={handleSelectServicio}
+                        selectedServicio={selectedServicio}
+                        isLoading={isLoadingHealthcares}
+                      />
+                    ),
+                  },
+                  {
+                    key: "paquete",
+                    label: (
+                      <Space>
+                        <AppstoreOutlined />
+                        Paquetes
+                      </Space>
+                    ),
+                    children: (
+                      <ServiceGroupIncome
+                        serviceGroupsData={serviceGroups}
+                        serviceGroupFilters={serviceGroupUIFilters}
+                        setServiceGroupFilter={setServiceGroupUIFilter}
+                        setServiceGroupFilters={setServiceGroupUIFilters}
+                        handleSelectServiceGroup={handleSelectServiceGroup}
+                        selectedServiceGroup={selectedServiceGroup}
+                        isLoading={isLoadingServiceGroups}
+                      />
+                    ),
+                  },
+                ]}
               />
-
               <Divider />
-
               <IncomeSummary
                 serie={serie}
                 setSerie={setSerie}
-                serieId={serieId}
                 setSerieId={setSerieId}
                 numeroRecibo={numeroRecibo}
                 setNumeroRecibo={setNumeroRecibo}
                 selectedPaciente={selectedPaciente}
-                selectedServicio={selectedServicio}
+                selectedServicio={itemSeleccionado}
+                aPagarEfectivo={aPagarEfectivo}
+                exonerado={exonerado}
+                tramiteEmergencia={tramiteEmergencia}
               />
             </ProCard>
           </Col>
 
-          {/* Panel Derecho - Registro de Ingresos */}
+          {/* Registro de Ingresos */}
           <Col xs={24} lg={14}>
             <ProCard
               title={
@@ -300,12 +434,11 @@ console.log(JSON.stringify(healthcares, null, 2));
                 pacientesData={patients}
                 setSelectedPaciente={setSelectedPaciente}
                 selectedPaciente={selectedPaciente}
-                pacienteFilters={pacienteFilters}
+                pacienteFilters={pacienteUIFilters}
                 setPacienteFilter={handleSetPacienteFilter}
                 setPacienteFilters={handleSetPacienteFilters}
                 isLoading={isLoadingPatients}
               />
-
               <Divider />
               <Row gutter={16} style={{ marginBottom: 16 }}>
                 <Col span={8}>
@@ -341,7 +474,6 @@ console.log(JSON.stringify(healthcares, null, 2));
                   </div>
                 </Col>
               </Row>
-
               <div style={{ marginBottom: 24 }}>
                 <Text strong>Observaciones</Text>
                 <TextArea
@@ -352,7 +484,6 @@ console.log(JSON.stringify(healthcares, null, 2));
                   placeholder="Ingrese observaciones adicionales..."
                 />
               </div>
-
               <Space>
                 <Button
                   type="primary"
@@ -360,7 +491,10 @@ console.log(JSON.stringify(healthcares, null, 2));
                   size="large"
                   onClick={handleGuardar}
                   loading={isCreatingIncome}
-                  disabled={!selectedPaciente || !selectedServicio}
+                  disabled={
+                    !selectedPaciente ||
+                    (!selectedServicio && !selectedServiceGroup)
+                  }
                 >
                   Guardar
                 </Button>

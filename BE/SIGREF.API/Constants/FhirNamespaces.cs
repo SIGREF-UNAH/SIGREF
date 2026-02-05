@@ -27,9 +27,13 @@ public static class FhirNamespaces
     // =========================
     // ValueSets
     // =========================
+    
+    // Usados para la busqueda interna de los Value Set de Sigref
     public const string RolesAdminValueSet =
         Base + "/ValueSet/roles-admin";
 
     public const string TiposUbicacionValueSet =
         Base + "/ValueSet/tipos-ubicacion";
+    
+    
 }

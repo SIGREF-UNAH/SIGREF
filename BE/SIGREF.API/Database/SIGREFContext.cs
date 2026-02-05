@@ -6,6 +6,7 @@ using SIGREF.API.Database.Entity.Catalogs;
 using SIGREF.API.Database.Entity.Dashboard;
 using SIGREF.API.Database.Entity.Files;
 using SIGREF.API.Database.Entity.Reports;
+using SIGREF.API.Dtos.Dashboard;
 
 namespace SIGREF.API.Database;
 
@@ -50,14 +51,22 @@ public class SIGREFContext : DbContext
 
         // Aplica automáticamente TODAS las configuraciones
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(SIGREFContext).Assembly);
-        // =======================
-        // MATERIALIZED VIEW MAP
-        // =======================
-        modelBuilder.Entity<DashboardFact>(entity =>
+        
+        modelBuilder.Entity<ServiceUsageRow>(entity =>
         {
-            entity.ToView("mv_dashboard_facts");  // nombre exacto de la MV en Postgres
-            entity.HasNoKey();                    // obligatorio para VIEW o MV
+            entity.HasNoKey();
+            entity.ToView(null); // no existe tabla/view física
         });
-
+        modelBuilder.Entity<ShiftIncomeRow>(eb =>
+        {
+            eb.HasNoKey();      
+            eb.ToView(null);    //  no está ligado a una tabla/view real para migraciones
+        });
+        modelBuilder.Entity<LocationIncomeRow>(eb =>
+        {
+            eb.HasNoKey();      
+            eb.ToView(null);    //  no está ligado a una tabla/view real para migraciones
+        });
+        
     }
 }

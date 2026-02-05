@@ -13,6 +13,7 @@ import {
   UserOutlined,
   BarChartOutlined,
   RetweetOutlined,
+  SnippetsOutlined,
 } from "@ant-design/icons";
 import { USER_ROLE_OPTIONS } from "../constants";
 
@@ -113,6 +114,17 @@ export const HomePage: React.FC = () => {
             icon={<DollarOutlined />}
             shortcut="Ctrl + F"
             path="/incomes/create"
+          />
+        </Can>
+
+        {/* Gestión de Series */}
+        <Can I="read" a="series" ability={ability}>
+          <ModuleCard
+            title="Gestión de Series"
+            description={"Registre los números de serie que se adjuntan a los ingresos"}
+            icon={<SnippetsOutlined />}
+            shortcut="Ctrl + B"
+            path="/series/list"
           />
         </Can>
 

@@ -20,9 +20,11 @@ export const UpdateServiceGroupPage = () => {
     isLoadingLocations,
     isFetchingHealthcares,
     isFetchingLocations,
+    healthcareScope,
     setHealthcarePageNumber,
     setHealthcarePageSize,
     setHealthcareSearch,
+    setHealthcareScope,
     setLocationPageNumber,
     setLocationPageSize,
     setLocationSearch,
@@ -83,6 +85,7 @@ export const UpdateServiceGroupPage = () => {
           isLoadingLocations={isLoadingLocations}
           isFetchingHealthcares={isFetchingHealthcares}
           isFetchingLocations={isFetchingLocations}
+          healthcareScope={healthcareScope}
           onHealthcarePageChange={(page, pageSize) => {
             setHealthcarePageNumber(page);
             setHealthcarePageSize(pageSize);
@@ -93,6 +96,7 @@ export const UpdateServiceGroupPage = () => {
           }}
           onHealthcareSearch={setHealthcareSearch}
           onLocationSearch={setLocationSearch}
+          onHealthcareScopeChange={setHealthcareScope}
           onFinish={handleFinish}
           onCancel={handleCancel}
           submitButtonText="Actualizar paquete"

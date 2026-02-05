@@ -163,7 +163,7 @@ public abstract class TerminologySeederBase
             try
             {
                 var searchParams = new SearchParams().Where($"url={url}");
-                var result = await FhirClient.SearchAsync<CodeSystem>(searchParams, cancellationToken);
+                var result = await FhirClient.SearchAsync<ValueSet>(searchParams, cancellationToken);
 
                 return result.Entry.Any();
             }
@@ -179,6 +179,7 @@ public abstract class TerminologySeederBase
 
         return false;
     }
+
 
 }
 
