@@ -133,7 +133,7 @@ public class AuditMiddleware
 
         var auditLog = new AuditLog
         {
-            Action = MapHttpMethodToAction(request.Method),
+            Action = MapHttpMethodToAction(request.Method, response.StatusCode),
             Endpoint = request.Path.Value,
             HttpMethod = request.Method,
             StatusCode = response.StatusCode,
@@ -176,12 +176,12 @@ public class AuditMiddleware
         }
     }
 
-    private string MapHttpMethodToAction(string httpMethod)
+    private string MapHttpMethodToAction(string httpMethod, int statusCode)
     {
         return httpMethod switch
         {
-            "POST" => "create",
-            "PUT" => "update",
+            "POST" => statusCode == 201 ? "create" : "update",
+            "PUT" => statusCode == 201 ? "create" : "update",
             "PATCH" => "update",
             "DELETE" => "delete",
             "GET" => "read",
