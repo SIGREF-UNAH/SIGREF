@@ -5,6 +5,7 @@ namespace SIGREF.API.Audit.Services;
 public interface IAuditService
 {
     Task LogAsync(AuditLog auditLog);
+    Task<AuditLog> GetLogByIdAsync(string id);
     Task<(List<AuditLog> logs, int totalCount)> GetAllLogsAsync(int page = 1, int pageSize = 50);
     Task<List<AuditLog>> GetLogsByResourceAsync(string resourceType, string resourceId);
     Task<(List<AuditLog> logs, int totalCount)> GetLogsByUserAsync(string userId, DateTime? from = null, DateTime? to = null);
