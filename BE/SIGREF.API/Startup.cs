@@ -25,6 +25,7 @@ using SIGREF.API.Services.Files;
 using SIGREF.API.Services.Serie;
 using SIGREF.API.Audit.Extensions;
 using SIGREF.API.Helpers;
+using SIGREF.API.Services.Reports;
 using SIGREF.API.Services.ValueSet;
 
 
@@ -84,6 +85,10 @@ public class Startup
         services.AddScoped<ISerieService, SerieService>();
         services.AddScoped<IInvoiceService, InvoiceService>();
         services.AddScoped<IHealthcareService, HealthcareApplicationService>();
+        
+        //Reportes
+        services.AddScoped<IReportQueryService, ReportQueryService>();
+        services.AddScoped<IReportExportService>();
 
 
         // ==============================================================
