@@ -1,4 +1,4 @@
-import { useState, type SetStateAction } from "react";
+import { useState } from "react";
 import {
   DollarOutlined,
   BoxPlotOutlined,
@@ -27,17 +27,39 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { Select, DatePicker } from "antd";
+import { Select, DatePicker,  Alert } from "antd";
 import dayjs from "dayjs";
+import { useDashboardData } from "../hooks/useDashboardData";
+import { EmptyState } from "./EmpityState";
+import { DashboardSkeleton } from "./DashboardSkeleton";
 
 const { RangePicker } = DatePicker;
 
-export const ControlReport = () => {
-  const [periodo, setPeriodo] = useState("semana");
-  const [fechaInicio, setFechaInicio] = useState(null);
-  const [fechaFin, setFechaFin] = useState(null);
+const COLORS = ["#10b981", "#3b82f6", "#8b5cf6", "#f59e0b", "#ec4899"];
 
-  const handlePeriodoChange = (value: SetStateAction<string>) => {
+export const ControlReport = () => {
+  const [periodo, setPeriodo] = useState<"semana" | "mes" | "personalizado">(
+    "semana",
+  );
+  const [fechaInicio, setFechaInicio] = useState<dayjs.Dayjs | null>(null);
+  const [fechaFin, setFechaFin] = useState<dayjs.Dayjs | null>(null);
+
+  const {
+    isLoading,
+    error,
+    totalIncome,
+    totalServices,
+    totalPatients,
+    totalErrors,
+    serviciosMasSolicitados,
+    serviciosMenosSolicitados,
+    paquetesMasUtilizados,
+    ingresosDiarios,
+    ingresosPorModulo,
+    ingresosPorTurno,
+  } = useDashboardData(periodo, fechaInicio, fechaFin);
+
+  const handlePeriodoChange = (value: "semana" | "mes" | "personalizado") => {
     setPeriodo(value);
     if (value !== "personalizado") {
       setFechaInicio(null);
@@ -45,7 +67,9 @@ export const ControlReport = () => {
     }
   };
 
-  const handleDateChange = (dates: SetStateAction<null>[]) => {
+  const handleDateChange = (
+    dates: [dayjs.Dayjs | null, dayjs.Dayjs | null],
+  ) => {
     if (dates) {
       setFechaInicio(dates[0]);
       setFechaFin(dates[1]);
@@ -55,153 +79,8 @@ export const ControlReport = () => {
     }
   };
 
-  const formatearFecha = (fecha: string | number | dayjs.Dayjs | Date | null | undefined) => {
-    if (!fecha) return "";
-    return dayjs(fecha).format("DD/MM/YYYY");
-  };
-
-  // Datos para la semana
-  const ingresosDiariosSemanales = [
-    { dia: "Lunes", ingreso: 7000 },
-    { dia: "Martes", ingreso: 4200 },
-    { dia: "Miércoles", ingreso: 4800 },
-    { dia: "Jueves", ingreso: 1300 },
-    { dia: "Viernes", ingreso: 3400 },
-    { dia: "Sábado", ingreso: 2100 },
-    { dia: "Domingo", ingreso: 5500 },
-  ];
-
-  // Datos para el mes
-  const ingresosDiariosMensuales = [
-    { dia: "Sem 1", ingreso: 18500 },
-    { dia: "Sem 2", ingreso: 22300 },
-    { dia: "Sem 3", ingreso: 19800 },
-    { dia: "Sem 4", ingreso: 20000 },
-  ];
-
-  const ingresosDiarios =
-    periodo === "semana" ? ingresosDiariosSemanales : ingresosDiariosMensuales;
-  const totalIngresos = periodo === "semana" ? 28300 : 80600;
-
-  // Datos por módulo
-  const ingresosPorModuloSemana = [
-    { modulo: "Consulta Externa", cantidad: 893, ingreso: 7093 },
-    { modulo: "Emergencia", cantidad: 316, ingreso: 3800 },
-  ];
-
-  const ingresosPorModuloMes = [
-    { modulo: "Consulta Externa", cantidad: 3572, ingreso: 28372 },
-    { modulo: "Emergencia", cantidad: 1264, ingreso: 15200 },
-  ];
-
-  const ingresosPorModulo =
-    periodo === "semana" ? ingresosPorModuloSemana : ingresosPorModuloMes;
-
-  // Datos por turno
-  const ingresosPorTurnoSemana = [
-    { turno: "Turno A", consultaExterna: 4893, emergencia: 2100 },
-    { turno: "Turno B", consultaExterna: 3200, emergencia: 5200 },
-    { turno: "Turno C", consultaExterna: 2000, emergencia: 3500 },
-  ];
-
-  const ingresosPorTurnoMes = [
-    { turno: "Turno A", consultaExterna: 19572, emergencia: 8400 },
-    { turno: "Turno B", consultaExterna: 12800, emergencia: 20800 },
-    { turno: "Turno C", consultaExterna: 8000, emergencia: 14000 },
-  ];
-
-  const ingresosPorTurno =
-    periodo === "semana" ? ingresosPorTurnoSemana : ingresosPorTurnoMes;
-
-  // Servicios más solicitados
-  const serviciosMasSolicitadosSemana = [
-    { nombre: "Consulta General", cantidad: 45 },
-    { nombre: "Rayos X", cantidad: 38 },
-    { nombre: "Laboratorio Completo", cantidad: 32 },
-    { nombre: "Ecografía", cantidad: 28 },
-    { nombre: "Electrocardiograma", cantidad: 25 },
-  ];
-
-  const serviciosMasSolicitadosMes = [
-    { nombre: "Consulta General", cantidad: 180 },
-    { nombre: "Rayos X", cantidad: 152 },
-    { nombre: "Laboratorio Completo", cantidad: 128 },
-    { nombre: "Ecografía", cantidad: 112 },
-    { nombre: "Electrocardiograma", cantidad: 100 },
-  ];
-
-  const serviciosMasSolicitados =
-    periodo === "semana"
-      ? serviciosMasSolicitadosSemana
-      : serviciosMasSolicitadosMes;
-
-  // Servicios menos solicitados
-  const serviciosMenosSolicitadosSemana = [
-    { nombre: "Endoscopia", cantidad: 3 },
-    { nombre: "Colonoscopia", cantidad: 4 },
-    { nombre: "Biopsia", cantidad: 5 },
-    { nombre: "Tomografía", cantidad: 7 },
-    { nombre: "Resonancia Magnética", cantidad: 8 },
-  ];
-
-  const serviciosMenosSolicitadosMes = [
-    { nombre: "Endoscopia", cantidad: 12 },
-    { nombre: "Colonoscopia", cantidad: 16 },
-    { nombre: "Biopsia", cantidad: 20 },
-    { nombre: "Tomografía", cantidad: 28 },
-    { nombre: "Resonancia Magnética", cantidad: 32 },
-  ];
-
-  const serviciosMenosSolicitados =
-    periodo === "semana"
-      ? serviciosMenosSolicitadosSemana
-      : serviciosMenosSolicitadosMes;
-
-  // Paquetes más utilizados
-  const paquetesMasUtilizadosSemana = [
-    { nombre: "Paquete Prenatal", cantidad: 42 },
-    { nombre: "Chequeo Ejecutivo", cantidad: 35 },
-    { nombre: "Paquete Cardiológico", cantidad: 28 },
-    { nombre: "Análisis Completo", cantidad: 22 },
-    { nombre: "Paquete Pediátrico", cantidad: 18 },
-  ];
-
-  const paquetesMasUtilizadosMes = [
-    { nombre: "Chequeo Ejecutivo", cantidad: 140 },
-    { nombre: "Paquete Cardiológico", cantidad: 112 },
-    { nombre: "Paquete Prenatal", cantidad: 168 },
-    { nombre: "Análisis Completo", cantidad: 88 },
-    { nombre: "Paquete Pediátrico", cantidad: 72 },
-  ];
-
-  const paquetesMasUtilizados =
-    periodo === "semana"
-      ? paquetesMasUtilizadosSemana
-      : paquetesMasUtilizadosMes;
-
-  const comparativo4ultimossemanas = [
-    { periodo: "Semana 1", ingresos: 18500 },
-    { periodo: "Semana 2", ingresos: 22300 },
-    { periodo: "Semana 3", ingresos: 19800 },
-    { periodo: "Semana 4", ingresos: 20000 },
-  ];
-
-  const comprartivoUltimos4Meses = [
-    { periodo: "Enero", ingresos: 75000 },
-    { periodo: "Febrero", ingresos: 82000 },
-    { periodo: "Marzo", ingresos: 79000 },
-    { periodo: "Abril", ingresos: 86000 },
-  ];
-  const comparativoMensual =
-    periodo === "semana"
-      ? comparativo4ultimossemanas
-      : comprartivoUltimos4Meses;
-
-  const COLORS = ["#10b981", "#3b82f6", "#8b5cf6", "#f59e0b", "#ec4899"];
-
-  const ingresosTotales = periodo === "semana" ? 20000 : 80600;
-  const serviciosRealizados = periodo === "semana" ? 209 : 836;
-  const pacientesAtendidos = periodo === "semana" ? 209 : 836;
+  const formatearFecha = (fecha: dayjs.Dayjs | null) =>
+    fecha ? fecha.format("DD/MM/YYYY") : "";
 
   const getPeriodoLabel = () => {
     if (periodo === "semana") return "Esta semana";
@@ -211,7 +90,24 @@ export const ControlReport = () => {
     }
     return "Seleccione fechas";
   };
+  if (isLoading) {
+    return (
+    <DashboardSkeleton/>
+    );
+  }
 
+  if (error) {
+    return (
+      <div className="min-h-screen p-6">
+        <Alert
+          message="Error al cargar datos"
+          description={error}
+          type="error"
+          showIcon
+        />
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen p-3">
       {/* Header */}
@@ -238,7 +134,6 @@ export const ControlReport = () => {
               suffixIcon={<CalendarOutlined />}
             />
           )}
-          {/* TODO:agregar despues  el exportar */}
         </div>
       </div>
       <div>
@@ -246,9 +141,12 @@ export const ControlReport = () => {
         {periodo === "personalizado" && fechaInicio && fechaFin && (
           <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="flex items-center gap-2">
-              <CalendarOutlined style={{ color: "#3b82f6", fontSize: "18px" }} />
+              <CalendarOutlined
+                style={{ color: "#3b82f6", fontSize: "18px" }}
+              />
               <span className="text-sm font-medium text-blue-800">
-                Mostrando datos del {formatearFecha(fechaInicio)} al {formatearFecha(fechaFin)}
+                Mostrando datos del {formatearFecha(fechaInicio)} al{" "}
+                {formatearFecha(fechaFin)}
               </span>
             </div>
           </div>
@@ -260,9 +158,7 @@ export const ControlReport = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-general text-sm">Ingresos Totales</p>
-                <p className="text-2xl font-bold">
-                  L. {ingresosTotales.toLocaleString()}.00
-                </p>
+                <p className="text-2xl font-bold">L. {totalIncome || "0.00"}</p>
                 <p className="text-xs text-general-secondary mt-1">
                   {getPeriodoLabel()}
                 </p>
@@ -279,7 +175,7 @@ export const ControlReport = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-general text-sm">Servicios Realizados</p>
-                <p className="text-2xl font-bold">{serviciosRealizados}</p>
+                <p className="text-2xl font-bold">{totalServices || "0"}</p>
                 <p className="text-xs text-general-secondary mt-1">
                   {getPeriodoLabel()}
                 </p>
@@ -296,7 +192,7 @@ export const ControlReport = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-general text-sm">Pacientes Atendidos</p>
-                <p className="text-2xl font-bold">{pacientesAtendidos}</p>
+                <p className="text-2xl font-bold">{totalPatients || "0"}</p>
                 <p className="text-xs text-general-secondary mt-1">
                   {getPeriodoLabel()}
                 </p>
@@ -311,7 +207,9 @@ export const ControlReport = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-general text-sm">Cierres con Errores</p>
-                <p className="text-2xl font-bold text-red-600">5</p>
+                <p className="text-2xl font-bold text-red-600">
+                  {totalErrors || "0"}
+                </p>
                 <p className="text-xs text-general-secondary mt-1">
                   {getPeriodoLabel()}
                 </p>
@@ -333,26 +231,36 @@ export const ControlReport = () => {
               <TrophyOutlined style={{ color: "#f59e0b" }} />
               Servicios Más Solicitados
             </h3>
-            <div className="space-y-3">
-              {serviciosMasSolicitados.map((servicio, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 bg-linear-to-r from-blue-50 to-transparent rounded hover:from-blue-100 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center font-bold text-white">
-                      {index + 1}
+            {serviciosMasSolicitados && serviciosMasSolicitados.length > 0 ? (
+              <div className="space-y-3">
+                {serviciosMasSolicitados?.slice(0, 5).map((servicio, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-linear-to-r from-blue-50 to-transparent rounded hover:from-blue-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center font-bold text-white">
+                        {index + 1}
+                      </div>
+                      <span className="text-sm font-medium">
+                        {servicio.nombre}
+                      </span>
                     </div>
-                    <span className="text-sm font-medium">
-                      {servicio.nombre}
+                    <span className="font-bold text-blue-600 text-lg">
+                      {servicio.cantidad}
                     </span>
                   </div>
-                  <span className="font-bold text-blue-600 text-lg">
-                    {servicio.cantidad}
-                  </span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                title="No hay servicios solicitados"
+                description="No se encontraron servicios solicitados para el período seleccionado."
+                icon={TrophyOutlined}
+                iconColor="#3b82f6"
+              />
+            )}
+
             <p className="text-xs text-general-secondary mt-2">
               {getPeriodoLabel()}
             </p>
@@ -364,26 +272,38 @@ export const ControlReport = () => {
               <FallOutlined style={{ color: "#f59e0b" }} />
               Servicios Menos Solicitados
             </h3>
-            <div className="space-y-3">
-              {serviciosMenosSolicitados.map((servicio, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 bg-linear-to-r from-orange-50 to-transparent rounded hover:from-orange-100 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center font-bold text-white">
-                      {index + 1}
+            {serviciosMenosSolicitados &&
+            serviciosMenosSolicitados.length > 0 ? (
+              <div className="space-y-3">
+                {serviciosMenosSolicitados
+                  ?.slice(0, 5)
+                  .map((servicio, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-linear-to-r from-orange-50 to-transparent rounded hover:from-orange-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center font-bold text-white">
+                          {index + 1}
+                        </div>
+                        <span className="text-sm font-medium">
+                          {servicio.nombre}
+                        </span>
+                      </div>
+                      <span className="font-bold text-orange-600 text-lg">
+                        {servicio.cantidad}
+                      </span>
                     </div>
-                    <span className="text-sm font-medium">
-                      {servicio.nombre}
-                    </span>
-                  </div>
-                  <span className="font-bold text-orange-600 text-lg">
-                    {servicio.cantidad}
-                  </span>
-                </div>
-              ))}
-            </div>
+                  ))}
+              </div>
+            ) : (
+              <EmptyState
+                title="No hay servicios solicitados"
+                description="No se encontraron servicios solicitados para el período seleccionado."
+                icon={FallOutlined}
+                iconColor="#f59e0b"
+              />
+            )}
             <p className="text-xs text-general-secondary mt-2">
               {getPeriodoLabel()}
             </p>
@@ -395,49 +315,62 @@ export const ControlReport = () => {
               <BoxPlotOutlined style={{ color: "#8b5cf6" }} />
               Paquetes Más Utilizados
             </h3>
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie
-                  data={paquetesMasUtilizados}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ percent }) =>
-                    percent !== undefined
-                      ? `${(percent * 100).toFixed(0)}%`
-                      : ""
-                  }
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="cantidad"
-                >
-                  {paquetesMasUtilizados.map((_entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="mt-4 space-y-2">
-              {paquetesMasUtilizados.map((paquete, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between text-xs"
-                >
-                  <div className="flex items-center gap-2">
+            {paquetesMasUtilizados && paquetesMasUtilizados.length > 0 ? (
+              <>
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie
+                      data={paquetesMasUtilizados}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ percent }) =>
+                        percent !== undefined
+                          ? `${(percent * 100).toFixed(0)}%`
+                          : ""
+                      }
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="cantidad"
+                    >
+                      {paquetesMasUtilizados?.map((_entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="mt-4 space-y-2">
+                  {paquetesMasUtilizados?.map((paquete, index) => (
                     <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: COLORS[index] }}
-                    ></div>
-                    <span>{paquete.nombre}</span>
-                  </div>
-                  <span className="font-bold">{paquete.cantidad}</span>
+                      key={index}
+                      className="flex items-center justify-between text-xs"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{
+                            backgroundColor: COLORS[index % COLORS.length],
+                          }}
+                        ></div>
+                        <span>{paquete.nombre}</span>
+                      </div>
+                      <span className="font-bold">{paquete.cantidad}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </>
+            ) : (
+              <EmptyState
+                title="No hay paquetes utilizados"
+                description="No se encontraron paquetes utilizados para el período seleccionado."
+                icon={BoxPlotOutlined}
+                iconColor="#8b5cf6"
+              />
+            )}
             <p className="text-xs text-general-secondary mt-2">
               {getPeriodoLabel()}
             </p>
@@ -454,23 +387,38 @@ export const ControlReport = () => {
                 Ingresos Diarios
               </h3>
             </div>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={ingresosDiarios}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="dia" />
-                <YAxis />
-                <Tooltip
-                  formatter={(value) => `L. ${value.toLocaleString()}`}
-                />
-                <Bar dataKey="ingreso" fill="#3b82f6" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-            <div className="mt-4 p-3 bg-blue-50 rounded">
-              <p className="text-sm text-general">Total de Ingreso:</p>
-              <p className="text-xl font-bold text-blue-600">
-                L. {totalIngresos.toLocaleString()}.00
-              </p>
-            </div>
+            {ingresosDiarios && ingresosDiarios.length > 0 ? (
+              <>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={ingresosDiarios}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="dia" />
+                    <YAxis />
+                    <Tooltip
+                      formatter={(value) => `L. ${value.toLocaleString()}`}
+                    />
+                    <Bar
+                      dataKey="ingreso"
+                      fill="#3b82f6"
+                      radius={[8, 8, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+                <div className="mt-4 p-3 bg-blue-50 rounded">
+                  <p className="text-sm text-general">Total de Ingreso:</p>
+                  <p className="text-xl font-bold text-blue-600">
+                    L. {totalIncome || "0.00"}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <EmptyState
+                title="No hay ingresos diarios"
+                description="No se encontraron ingresos diarios para el período seleccionado."
+                icon={RiseOutlined}
+                iconColor="#3b82f6"
+              />
+            )}
             <p className="text-xs text-general-secondary mt-2">
               {getPeriodoLabel()}
             </p>
@@ -484,35 +432,30 @@ export const ControlReport = () => {
                 Ingreso por Módulo
               </h3>
             </div>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={ingresosPorModulo}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="modulo" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="ingreso" fill="#10b981" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-            <div className="mt-4 grid grid-cols-2 gap-4">
-              <div className="p-3 bg-green-50 rounded">
-                <p className="text-xs text-general">Consulta Externa</p>
-                <p className="font-bold">
-                  {ingresosPorModulo[0].cantidad} servicios
-                </p>
-                <p className="text-green-600 font-bold">
-                  L. {ingresosPorModulo[0].ingreso.toLocaleString()}.00
-                </p>
-              </div>
-              <div className="p-3 bg-blue-50 rounded">
-                <p className="text-xs text-general">Emergencia</p>
-                <p className="font-bold">
-                  {ingresosPorModulo[1].cantidad} servicios
-                </p>
-                <p className="text-blue-600 font-bold">
-                  L. {ingresosPorModulo[1].ingreso.toLocaleString()}.00
-                </p>
-              </div>
-            </div>
+            {ingresosPorModulo && ingresosPorModulo.length > 0 ? (
+              <>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={ingresosPorModulo}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="modulo" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar
+                      dataKey="ingreso"
+                      fill="#10b981"
+                      radius={[8, 8, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </>
+            ) : (
+              <EmptyState
+                title="No hay ingresos por módulo"
+                description="No se encontraron ingresos por módulo para el período seleccionado."
+                icon={FileProtectOutlined}
+                iconColor="#10b981"
+              />
+            )}
             <p className="text-xs text-general-secondary mt-2">
               {getPeriodoLabel()}
             </p>
@@ -529,44 +472,39 @@ export const ControlReport = () => {
                 Ingresos Por turno
               </h3>
             </div>
+            {ingresosPorTurno && ingresosPorTurno.length > 0 ? (
+              <>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={ingresosPorTurno} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" />
+                    <YAxis dataKey="turno" type="category" />
+                    <Tooltip />
+                    <Legend />
+                    <Bar
+                      dataKey="consultaExterna"
+                      name="Consulta Externa"
+                      fill="#10b981"
+                      radius={[0, 8, 8, 0]}
+                    />
+                    <Bar
+                      dataKey="emergencia"
+                      name="Emergencia"
+                      fill="#3b82f6"
+                      radius={[0, 8, 8, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </>
+            ) : (
+              <EmptyState
+                title="No hay ingresos por turno"
+                description="No se encontraron ingresos por turno para el período seleccionado."
+                icon={MedicineBoxOutlined}
+                iconColor="#8b5cf6"
+              />
+            )}
 
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={ingresosPorTurno} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis dataKey="turno" type="category" />
-                <Tooltip />
-                <Legend />
-                <Bar
-                  dataKey="consultaExterna"
-                  name="Consulta Externa"
-                  fill="#10b981"
-                  radius={[0, 8, 8, 0]}
-                />
-                <Bar
-                  dataKey="emergencia"
-                  name="Emergencia"
-                  fill="#3b82f6"
-                  radius={[0, 8, 8, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-            <div className="mt-4 p-3 bg-gray-50 rounded">
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <p className="text-general">Consulta Externa:</p>
-                  <p className="font-bold text-green-600">
-                    L. {ingresosPorTurno[2].consultaExterna.toLocaleString()}.00
-                  </p>
-                </div>
-                <div>
-                  <p className="text-general">Emergencia:</p>
-                  <p className="font-bold text-blue-600">
-                    L. {ingresosPorTurno[2].emergencia.toLocaleString()}.00
-                  </p>
-                </div>
-              </div>
-            </div>
             <p className="text-xs text-general-secondary mt-2">
               {getPeriodoLabel()}
             </p>
@@ -581,37 +519,37 @@ export const ControlReport = () => {
                 {periodo === "semana" ? "Semanal" : "Mensual"}
               </h3>
             </div>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={comparativoMensual}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="periodo" />
-                <YAxis />
-                <Tooltip
-                  formatter={(value) => `L. ${value.toLocaleString()}`}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="ingresos"
-                  stroke="#ff8000"
-                  strokeWidth={3}
-                  name="Ingresos"
-                  dot={{ fill: "#ff8000", r: 6 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-            <div className="mt-4 grid grid-cols-2 gap-4">
-              <div className="p-3 bg-purple-50 rounded">
-                <p className="text-xs text-general">Promedio Semanal</p>
-                <p className="text-xl font-bold text-purple-600">
-                  L. 20,150.00
-                </p>
-              </div>
-              <div className="p-3 bg-green-50 rounded">
-                <p className="text-xs text-general">Mejor Semana</p>
-                <p className="text-xl font-bold text-green-600">L. 22,300.00</p>
-              </div>
-            </div>
+            {ingresosDiarios && ingresosDiarios.length > 0 ? (
+              <>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={ingresosDiarios}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="periodo" />
+                    <YAxis />
+                    <Tooltip
+                      formatter={(value) => `L. ${value.toLocaleString()}`}
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="ingresos"
+                      stroke="#ff8000"
+                      strokeWidth={3}
+                      name="Ingresos"
+                      dot={{ fill: "#ff8000", r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </>
+            ) : (
+              <EmptyState
+                title="No hay datos para comparar"
+                description="No se encontraron datos de ingresos para el período seleccionado."
+                icon={FundOutlined}
+                iconColor="#ff8000"
+              />
+            )}
+
             <p className="text-xs text-general-secondary mt-2">
               {getPeriodoLabel()}
             </p>
