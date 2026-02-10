@@ -142,10 +142,8 @@ export default function usePractitionerInfo() {
         role.organization?.reference?.replace("Organization/", "") || undefined,
       locationId:
         role.location?.[0]?.reference?.replace("Location/", "") || undefined,
-      period: [
-        role.period?.start ? dayjs(role.period.start) : null,
-        role.period?.end ? dayjs(role.period.end) : null,
-      ],
+      startDate: role.period?.start ? dayjs(role.period.start) : null,
+      endDate: role.period?.end ? dayjs(role.period.end) : null,
     };
   };
 
@@ -176,17 +174,17 @@ export default function usePractitionerInfo() {
         : [
             {
               use: "usual",
-              system:
+              system: 
                 "https://hospitalpublico.hn/fhir/identifier/practitionerrole",
               value: `role-${id}-${Date.now()}`,
             },
           ],
       period: {
-        start: values.period?.[0]
-          ? dayjs(values.period[0]).format("YYYY-MM-DD")
+        start: values.startDate
+          ? dayjs(values.startDate).format("YYYY-MM-DD")
           : null,
-        end: values.period?.[1]
-          ? dayjs(values.period[1]).format("YYYY-MM-DD")
+        end: values.endDate
+          ? dayjs(values.endDate).format("YYYY-MM-DD")
           : null,
       },
       practitioner: { reference: `Practitioner/${id}` },
@@ -196,7 +194,7 @@ export default function usePractitionerInfo() {
             {
               system: "https://hospitalpublico.hn/fhir/CodeSystem/roles-admin",
               code: selectedRole?.value || values.role,
-              display: selectedRole?.label || values.role,
+              display: selectedRole?.label || values.roleName,
             },
           ],
           text: values.roleName,
@@ -235,6 +233,7 @@ export default function usePractitionerInfo() {
       }
       return true;
     } catch (error) {
+      console.error("Error al enviar rol:", error);
       return false;
     }
   };
@@ -270,7 +269,7 @@ export default function usePractitionerInfo() {
     rolesLoading,
     practitionerRoles,
     roleModalOpen,
-    editingRole,  
+    editingRole,
     formRef,
     ability,
     orgsData,

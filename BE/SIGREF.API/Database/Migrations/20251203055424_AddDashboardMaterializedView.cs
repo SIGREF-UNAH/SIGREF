@@ -49,6 +49,7 @@ namespace SIGREF.API.Database.Migrations
 
                     -- Servicio / Paquete
                     it.service_id                            AS service_id,
+                    hs.health_service_id_fhir                AS health_service_id_fhir,
                     i.service_group_fhir_id                  AS package_id,
 
                     -- Contadores
@@ -72,28 +73,37 @@ namespace SIGREF.API.Database.Migrations
             // ============================================
             // 2. Crear índices optimizados
             // ============================================
+            migrationBuilder.Sql(@"
+                CREATE INDEX IF NOT EXISTS idx_mv_facts_created_location_shift
+                ON public.mv_dashboard_facts (created_date, location_id, shift_id);
+                ");
+
+            migrationBuilder.Sql(@"
+                CREATE INDEX IF NOT EXISTS idx_mv_facts_invoice
+                ON public.mv_dashboard_facts (invoice_id);
+                ");
 
             // Índices por fecha
-            migrationBuilder.Sql("CREATE INDEX IF NOT EXISTS idx_mv_facts_created_date ON mv_dashboard_facts(created_date);");
+            migrationBuilder.Sql(@"CREATE INDEX IF NOT EXISTS idx_mv_facts_created_date ON mv_dashboard_facts(created_date);");
 
             // Índices de filtros comunes
-            migrationBuilder.Sql("CREATE INDEX IF NOT EXISTS idx_mv_facts_status ON mv_dashboard_facts(status);");
-            migrationBuilder.Sql("CREATE INDEX IF NOT EXISTS idx_mv_facts_type ON mv_dashboard_facts(invoice_type);");
+            migrationBuilder.Sql(@"CREATE INDEX IF NOT EXISTS idx_mv_facts_status ON mv_dashboard_facts(status);");
+            migrationBuilder.Sql(@"CREATE INDEX IF NOT EXISTS idx_mv_facts_type ON mv_dashboard_facts(invoice_type);");
 
             // Índices para dimensiones del dashboard
-            migrationBuilder.Sql("CREATE INDEX IF NOT EXISTS idx_mv_facts_shift ON mv_dashboard_facts(shift_id);");
-            migrationBuilder.Sql("CREATE INDEX IF NOT EXISTS idx_mv_facts_location ON mv_dashboard_facts(location_id);");
-            migrationBuilder.Sql("CREATE INDEX IF NOT EXISTS idx_mv_facts_service ON mv_dashboard_facts(service_id);");
-            migrationBuilder.Sql("CREATE INDEX IF NOT EXISTS idx_mv_facts_package ON mv_dashboard_facts(package_id);");
+            migrationBuilder.Sql(@"CREATE INDEX IF NOT EXISTS idx_mv_facts_shift ON mv_dashboard_facts(shift_id);");
+            migrationBuilder.Sql(@"CREATE INDEX IF NOT EXISTS idx_mv_facts_location ON mv_dashboard_facts(location_id);");
+            migrationBuilder.Sql(@"CREATE INDEX IF NOT EXISTS idx_mv_facts_service ON mv_dashboard_facts(service_id);");
+            migrationBuilder.Sql(@"CREATE INDEX IF NOT EXISTS idx_mv_facts_package ON mv_dashboard_facts(package_id);");
 
             // Compuesto por fecha + estado
-            migrationBuilder.Sql("CREATE INDEX IF NOT EXISTS idx_mv_facts_created_status ON mv_dashboard_facts(created_date, status);");
+            migrationBuilder.Sql(@"CREATE INDEX IF NOT EXISTS idx_mv_facts_created_status ON mv_dashboard_facts(created_date, status);");
 
             // Compuesto por fecha + location
-            migrationBuilder.Sql("CREATE INDEX IF NOT EXISTS idx_mv_facts_created_location ON mv_dashboard_facts(created_date, location_id);");
+            migrationBuilder.Sql(@"CREATE INDEX IF NOT EXISTS idx_mv_facts_created_location ON mv_dashboard_facts(created_date, location_id);");
 
             // Ingresos reales (para agregaciones rápidas)
-            migrationBuilder.Sql("CREATE INDEX IF NOT EXISTS idx_mv_facts_real_income ON mv_dashboard_facts(real_income);");
+            migrationBuilder.Sql(@"CREATE INDEX IF NOT EXISTS idx_mv_facts_real_income ON mv_dashboard_facts(real_income);");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

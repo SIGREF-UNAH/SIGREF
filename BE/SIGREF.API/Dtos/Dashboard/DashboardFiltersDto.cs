@@ -5,12 +5,12 @@ public class DashboardFilterDto
     /// <summary>
     /// Fecha inicial del rango.
     /// </summary>
-    public DateTime StartDate { get; set; }
+    public DateTime? StartDate { get; set; }
 
     /// <summary>
     /// Fecha final del rango.
     /// </summary>
-    public DateTime EndDate { get; set; }
+    public DateTime? EndDate { get; set; }
 
     /// <summary>
     /// Lista de Locations a incluir. Si viene vacía = todos.
@@ -20,7 +20,7 @@ public class DashboardFilterDto
     /// <summary>
     /// Lista de Módulos (si aplica). Si viene vacía = todos.
     /// </summary>
-    public List<Guid> ModuleIds { get; set; } = new();
+   /// public List<Guid> ModuleIds { get; set; } = new();
 
     /// <summary>
     /// Lista de turnos (ShiftIds). Si viene vacía = todos.

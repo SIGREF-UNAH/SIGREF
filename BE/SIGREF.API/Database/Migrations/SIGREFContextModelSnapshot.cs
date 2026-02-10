@@ -555,11 +555,9 @@ namespace SIGREF.API.Database.Migrations
                         .HasDatabaseName("idx_cashier_sessions_shift");
 
                     b.HasIndex("UserId")
-                        .HasDatabaseName("idx_cashier_sessions_user");
-
-                    b.HasIndex("UserId", "IsOpen")
                         .IsUnique()
-                        .HasDatabaseName("uq_cashier_sessions_user_open");
+                        .HasDatabaseName("uq_cashier_sessions_user_open")
+                        .HasFilter("is_open = true");
 
                     b.ToTable("cashier_sessions", null, t =>
                         {
@@ -703,9 +701,6 @@ namespace SIGREF.API.Database.Migrations
                     b.Property<Guid?>("CashierSessionId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("CashierUserName")
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -727,13 +722,7 @@ namespace SIGREF.API.Database.Migrations
                     b.Property<string>("LocationId")
                         .HasColumnType("text");
 
-                    b.Property<string>("LocationName")
-                        .HasColumnType("text");
-
                     b.Property<string>("PackageId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("PackageName")
                         .HasColumnType("text");
 
                     b.Property<string>("PatientIdFhir")
@@ -744,9 +733,6 @@ namespace SIGREF.API.Database.Migrations
 
                     b.Property<Guid?>("ServiceId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("ServiceName")
-                        .HasColumnType("text");
 
                     b.Property<Guid?>("ShiftId")
                         .HasColumnType("uuid");

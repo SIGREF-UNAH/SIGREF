@@ -36,8 +36,17 @@ public class CreateSeriesDto
         public long EndNumber { get; set; }
 }
 
-public class UpdateSeriesDto : CreateSeriesDto
+public class UpdateSeriesDto
 {
+        public string? Name { get; set; }
+        public string? Prefix { get; set; }
+
+        // ===============================
+        //       RANGO DE NUMERACIÓN
+        // ===============================
+        public long? StartNumber { get; set; }
+        public long? EndNumber { get; set; }
+
         public bool? IsActive { get; set; }
 }
 

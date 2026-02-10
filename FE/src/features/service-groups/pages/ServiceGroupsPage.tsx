@@ -38,6 +38,7 @@ export const ServiceGroupsPage = () => {
     isFetching,
     isError,
     searchInput,
+    navigate,
     handleEdit,
     handleDelete,
     setFilter,
@@ -101,7 +102,7 @@ export const ServiceGroupsPage = () => {
             <Button
               type="text"
               icon={<EyeOutlined />}
-              onClick={() => console.log("Ver detalles")} // TODO: Implementar
+              onClick={() => navigate(`/service-groups/details/${record.id}`)}
               title="Ver detalles"
             />
           </Can>

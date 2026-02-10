@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using SIGREF.API.Constants;
 using SIGREF.API.Database;
 using SIGREF.API.Database.Entity.Billing;
 using SIGREF.API.Database.Entity.common;
@@ -6,6 +7,7 @@ using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Invoice;
 using SIGREF.API.Helpers;
 using SIGREF.API.Services.Auth;
+using SIGREF.API.Services.Cashier;
 
 namespace SIGREF.API.Services.Billing;
 
@@ -16,11 +18,13 @@ public class InvoiceService : IInvoiceService
 {
     private readonly SIGREFContext _dbContext;
     private readonly IUserContextService _userContextService;
+    private readonly ICashierSessionService _cashierSessionService;
 
-    public InvoiceService(SIGREFContext dbContext, IUserContextService userContextService)
+    public InvoiceService(SIGREFContext dbContext, IUserContextService userContextService , ICashierSessionService  cashierSessionService)
     {
         _dbContext = dbContext;
         _userContextService = userContextService;
+        _cashierSessionService = cashierSessionService;
     }
 
     private void ApplyInvoiceTypeBehavior(InvoiceEntity invoice, InvoiceCreateDto dto)
@@ -64,15 +68,33 @@ public class InvoiceService : IInvoiceService
         // ============================
         // VALIDACIONES
         // ============================
-
+        
+        
         // No permite crear FACTURAS HIJAS usando este método
         if (dto.ParentInvoiceId != null)
             return ResponseHelper.Fail<InvoiceDetailDto>(400,
                 "Para notas de crédito o débito debe usar los métodos específicos.");
+
+        var userId = _userContextService.GetUserId();
+        var roles = _userContextService.GetUserRoles();
+
+        if (roles.Contains(RolesConstants.cashier))
+        {
+            var sesion = await _cashierSessionService.GetActiveSessionByUserAsync(userId);
+
+            if (sesion == null || !sesion.Status)
+            {
+                return ResponseHelper.Fail<InvoiceDetailDto>(
+                    400,
+                    "No se ha aperturado un turno. Registrar la factura fuera del horario es imposible."
+                );
+            }
+
+        }
         // Realizo las validaciones por la Congelacion Historica de los DATOS
         if (dto.Items == null || dto.Items.Count == 0)
             return ResponseHelper.Fail<InvoiceDetailDto>(400, "La factura debe tener al menos un item.");
-
+        
 
         var serie = _dbContext.InvoiceSeries.FirstOrDefault(x => x.Id == dto.SerieId && x.IsActive);
         if (serie == null)

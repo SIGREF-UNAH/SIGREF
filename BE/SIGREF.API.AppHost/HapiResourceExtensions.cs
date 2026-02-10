@@ -6,39 +6,45 @@ using Aspire.Hosting.Postgres;
 namespace SIGREF.API.AppHost;
 
 /// <summary>
-/// Representa un recurso de HAPI FHIR Server
+/// Representa un recurso de servidor HAPI FHIR (JPA Server Starter)
+/// ejecutándose como contenedor Docker dentro de Aspire.
 /// </summary>
-public class HapiResource(string name) : ContainerResource(name), IResourceWithServiceDiscovery
+public class HapiResource(string name)
+    : ContainerResource(name), IResourceWithServiceDiscovery
 {
     internal const string PrimaryEndpointName = "http";
 
-   
-
     /// <summary>
-    /// Obtiene la cadena de conexión para acceder al servidor HAPI FHIR
+    /// Expresión de conexión base al endpoint FHIR del servidor.
+    /// Ejemplo resultante:
+    /// http://hapi:8080/fhir
     /// </summary>
     public ReferenceExpression ConnectionStringExpression =>
-        ReferenceExpression.Create($"{PrimaryEndpointScheme}://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}/fhir");
+        ReferenceExpression.Create(
+            $"{PrimaryEndpointScheme}://" +
+            $"{PrimaryEndpoint.Property(EndpointProperty.Host)}:" +
+            $"{PrimaryEndpoint.Property(EndpointProperty.Port)}/fhir");
 
-    private EndpointReference PrimaryEndpoint => new(this, PrimaryEndpointName);
+    private EndpointReference PrimaryEndpoint =>
+        new(this, PrimaryEndpointName);
 
     private string PrimaryEndpointScheme => "http";
 }
 
 /// <summary>
-/// Métodos de extensión para configurar HAPI FHIR Server en Aspire
+/// Métodos de extensión para configurar HAPI FHIR Server
+/// dentro de una aplicación distribuida con Aspire.
 /// </summary>
 public static class HapiResourceExtensions
 {
     /// <summary>
-    /// Agrega un servidor HAPI FHIR a la aplicación
+    /// Agrega un servidor HAPI FHIR (JPA Server Starter) a la aplicación.
+    ///
+    /// IMPORTANTE:
+    /// - Esta imagen es OFICIAL (hapiproject/hapi)
+    /// - No es demo
+    /// 
     /// </summary>
-    /// <param name="builder">El builder de la aplicación distribuida</param>
-    /// <param name="name">El nombre del recurso</param>
-    /// <param name="port">El puerto HTTP (opcional)</param>
-    /// <param name="image">La imagen Docker a utilizar (por defecto: hapiproject/hapi)</param>
-    /// <param name="tag">La etiqueta de la imagen (por defecto: latest)</param>
-    /// <returns>Un resource builder para HAPI FHIR</returns>
     public static IResourceBuilder<HapiResource> AddHapiFhir(
         this IDistributedApplicationBuilder builder,
         string name,
@@ -48,17 +54,22 @@ public static class HapiResourceExtensions
     {
         var resource = new HapiResource(name);
 
-        var resourceBuilder = builder.AddResource(resource)
+        return builder
+            .AddResource(resource)
             .WithImage(image, tag)
-            .WithHttpEndpoint(port: port, targetPort: 8080, name: HapiResource.PrimaryEndpointName)
-                            
+            .WithHttpEndpoint(
+                port: port,
+                targetPort: 8080,
+                name: HapiResource.PrimaryEndpointName)
             .PublishAsContainer();
-
-        return resourceBuilder;
     }
 
     /// <summary>
-    /// Configura la base de datos PostgreSQL para HAPI FHIR
+    /// Configura PostgreSQL como base de datos para HAPI FHIR.
+    ///
+    /// Esta configuración:
+    /// - Inyecta las variables estándar de Spring Boot
+    /// - Usa el dialecto oficial de HAPI FHIR para PostgreSQL
     /// </summary>
     public static IResourceBuilder<HapiResource> WithPostgresDatabase(
         this IResourceBuilder<HapiResource> builder,
@@ -69,33 +80,60 @@ public static class HapiResourceExtensions
     {
         if (database.Resource.Parent != postgresServer.Resource)
         {
-            throw new InvalidOperationException("The provided database does not belong to the supplied Postgres server.");
+            throw new InvalidOperationException(
+                "The provided database does not belong to the supplied Postgres server.");
         }
 
         return builder
             .WithReference(postgresServer)
             .WithReference(database)
-             .WithEnvironment("SPRING_DATASOURCE_URL",
-               ReferenceExpression.Create($"jdbc:postgresql://{postgresServer.Resource.Name}:5432/{database.Resource.DatabaseName}"))
+
+            // Spring Boot datasource configuration
+            .WithEnvironment(
+                "SPRING_DATASOURCE_URL",
+                ReferenceExpression.Create(
+                    $"jdbc:postgresql://{postgresServer.Resource.Name}:5432/{database.Resource.DatabaseName}"))
             .WithEnvironment("SPRING_DATASOURCE_USERNAME", username)
             .WithEnvironment("SPRING_DATASOURCE_PASSWORD", password)
-            .WithEnvironment("SPRING_DATASOURCE_DRIVER_CLASS_NAME", "org.postgresql.Driver")
-            .WithEnvironment("SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT", "ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect")
+            .WithEnvironment(
+                "SPRING_DATASOURCE_DRIVER_CLASS_NAME",
+                "org.postgresql.Driver")
+
+            // Dialecto propio de HAPI FHIR (OBLIGATORIO)
+            .WithEnvironment(
+                "SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT",
+                "ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect")
+
+            // Espera a que PostgreSQL esté listo antes de iniciar HAPI
             .WaitFor(postgresServer);
     }
 
     /// <summary>
-    /// Configura el archivo de configuración de HAPI FHIR
+    /// Monta y ACTIVA el archivo application.yaml de HAPI FHIR.
+    ///
+    /// Spring Boot NO usa automáticamente archivos montados,
+    /// por lo que es obligatorio definir SPRING_CONFIG_LOCATION.
     /// </summary>
     public static IResourceBuilder<HapiResource> WithConfigurationFile(
         this IResourceBuilder<HapiResource> builder,
-        string configPath)
+        string localConfigPath)
     {
-        return builder.WithBindMount(configPath, "/app/config/application.yaml");
+        return builder
+            // Monta el YAML dentro del contenedor
+            .WithBindMount(localConfigPath, "/configs/application.yaml")
+
+            // Indica explícitamente a Spring Boot que use ese archivo
+            .WithEnvironment(
+                "SPRING_CONFIG_LOCATION",
+                "file:///configs/application.yaml");
     }
 
     /// <summary>
-    /// Habilita CORS en HAPI FHIR
+    /// Habilita CORS en HAPI FHIR.
+    ///
+    /// NOTA:
+    /// Para producción se recomienda definir CORS en application.yaml
+    /// o en el reverse proxy (Traefik / Nginx).
     /// </summary>
     public static IResourceBuilder<HapiResource> WithCorsEnabled(
         this IResourceBuilder<HapiResource> builder,
@@ -107,13 +145,17 @@ public static class HapiResourceExtensions
     }
 
     /// <summary>
-    /// Configura el nivel de log de HAPI FHIR
+    /// Configura el nivel de logging raíz de Spring Boot.
+    ///
+    /// Valores comunes:
+    /// TRACE | DEBUG | INFO | WARN | ERROR
     /// </summary>
     public static IResourceBuilder<HapiResource> WithLogLevel(
         this IResourceBuilder<HapiResource> builder,
         string logLevel = "INFO")
     {
-        return builder.WithEnvironment("SPRING_LOG_LEVEL", logLevel);
+        return builder.WithEnvironment(
+            "LOGGING_LEVEL_ROOT",
+            logLevel);
     }
 }
-

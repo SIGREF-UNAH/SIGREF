@@ -10,7 +10,7 @@ namespace SIGREF.API.Controllers.Audit;
 [ApiController]
 public class AuditController(IAuditService auditService) : ControllerBase
 {
-    /// <returns>Lista paginada de logs de auditoría</returns>
+
     [HttpGet]
     [Authorize(AuthenticationSchemes = "Bearer", Roles = $"{RolesConstants.ti},{RolesConstants.auditor}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -38,51 +38,40 @@ public class AuditController(IAuditService auditService) : ControllerBase
             return BadRequest(new { message = "La fecha inicial no puede ser mayor a la fecha final" });
 
         List<AuditLog> logs;
+        int totalItems;
 
         // Si se especifica userId, filtrar por usuario y rango de fechas
         if (!string.IsNullOrWhiteSpace(userId))
         {
-            logs = await auditService.GetLogsByUserAsync(userId, from, to);
+            (logs, totalItems) = await auditService.GetLogsByUserAsync(userId, from, to);
         }
         // Si se especifica userName, filtrar por nombre de usuario y rango de fechas
         else if (!string.IsNullOrWhiteSpace(userName))
         {
-            logs = await auditService.GetLogsByUserNameAsync(userName, from, to);
+            (logs, totalItems) = await auditService.GetLogsByUserNameAsync(userName, from, to);
         }
         // Si se especifica action, filtrar por acción y rango de fechas
         else if (!string.IsNullOrWhiteSpace(action))
         {
-            logs = await auditService.GetLogsByActionAsync(action.ToLower(), from, to);
+            (logs, totalItems) = await auditService.GetLogsByActionAsync(action.ToLower(), from, to);
         }
-        // Si solo se especifica rango de fechas sin action ni userId, obtener todos con filtro de fechas
-        else if (from.HasValue || to.HasValue)
-        {
-            // Obtener todos los logs y filtrar por fechas
-            var allLogs = await auditService.GetAllLogsAsync(1, int.MaxValue);
-            logs = [.. allLogs.Where(log =>
-            {
-                if (from.HasValue && log.Timestamp < from.Value)
-                    return false;
-                if (to.HasValue && log.Timestamp > to.Value)
-                    return false;
-                return true;
-            })];
-        }
+        // Sin filtros, obtener todos con paginación directa en MongoDB
         else
         {
-            // Sin filtros, obtener todos con paginación
-            logs = await auditService.GetAllLogsAsync(page, pageSize);
+            (logs, totalItems) = await auditService.GetAllLogsAsync(page, pageSize);
         }
 
-        // Calcular totales
-        var totalItems = logs.Count;
+        // Calcular total de páginas
         var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
 
-        // Aplicar paginación
-        logs = [.. logs
-            .OrderByDescending(l => l.Timestamp)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)];
+        // Aplicar paginación en memoria solo si se usaron filtros
+        if (!string.IsNullOrWhiteSpace(action) || !string.IsNullOrWhiteSpace(userId) || !string.IsNullOrWhiteSpace(userName))
+        {
+            logs = logs
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+        }
 
         var dtos = logs.Select(AuditLogDto.FromAuditLog);
 
@@ -98,23 +87,6 @@ public class AuditController(IAuditService auditService) : ControllerBase
         });
     }
 
-    [HttpGet("{id}")]
-    [Authorize(AuthenticationSchemes = "Bearer", Roles = $"{RolesConstants.ti},{RolesConstants.auditor}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [Produces<AuditLogDto>()]
-    public async Task<IActionResult> GetById(string id)
-    {
-        var log = await auditService.GetLogByIdAsync(id);
-
-        if (log == null)
-            return NotFound(new { message = $"Log de auditoría con ID '{id}' no encontrado" });
-
-        var dto = AuditLogDto.FromAuditLog(log);
-        return Ok(dto);
-    }
 
     [HttpDelete("test/clear")]
     [Authorize(AuthenticationSchemes = "Bearer", Roles = $"{RolesConstants.ti},{RolesConstants.auditor}")]

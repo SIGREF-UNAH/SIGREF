@@ -14,6 +14,7 @@ import { ShiftsRouter } from "../features/shifts/routers/ShiftsRouter";
 import { HospitalRouter } from "../features/hospital/routers";
 import { UsersRouter } from "../features/users/routers";
 import { CashierSessionsRouter } from "../features/cashier-sessions/routers";
+import { SeriesRouter } from "../features/series/router";
 
  export const AppRouter = () => {
   return (
@@ -68,6 +69,8 @@ import { CashierSessionsRouter } from "../features/cashier-sessions/routers";
 
         {/* Página de Documentación */}
         <Route path="/documentation" element={<DocumentationPage />} />
+
+        <Route path="/series/*" element={<SeriesRouter />} />
 
         {/* Página de Soporte */}
         <Route path="/support" 
