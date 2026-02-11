@@ -244,6 +244,7 @@ public class SerieService : ISerieService
                     CurrentNumber = entity.CurrentNumber,
                     CreatedDate = entity.CreatedDate,
                     ModifiedDate = entity.UpdatedDate,
+                    IsActive = entity.IsActive
                 }
             };
         });
@@ -303,7 +304,8 @@ public class SerieService : ISerieService
                 EndNumber = x.EndNumber,
                 CurrentNumber = x.CurrentNumber,
                 CreatedDate = x.CreatedDate,
-                ModifiedDate = x.UpdatedDate
+                ModifiedDate = x.UpdatedDate,
+                IsActive = x.IsActive
             })
             .ToListAsync();
 
@@ -342,7 +344,8 @@ public class SerieService : ISerieService
                 EndNumber = x.EndNumber,
                 CurrentNumber = x.CurrentNumber,
                 CreatedDate = x.CreatedDate,
-                ModifiedDate = x.UpdatedDate
+                ModifiedDate = x.UpdatedDate,
+                IsActive = x.IsActive
             })
             .FirstOrDefaultAsync();
 
@@ -406,7 +409,8 @@ public class SerieService : ISerieService
                         EndNumber = entity.EndNumber,
                         CurrentNumber = entity.CurrentNumber,
                         CreatedDate = entity.CreatedDate,
-                        ModifiedDate = entity.UpdatedDate
+                        ModifiedDate = entity.UpdatedDate,
+                        IsActive = entity.IsActive
                     }
                 };
             }
@@ -432,7 +436,8 @@ public class SerieService : ISerieService
                     EndNumber = entity.EndNumber,
                     CurrentNumber = entity.CurrentNumber,
                     CreatedDate = entity.CreatedDate,
-                    ModifiedDate = entity.UpdatedDate
+                    ModifiedDate = entity.UpdatedDate,
+                    IsActive = entity.IsActive
                 }
             };
         });
