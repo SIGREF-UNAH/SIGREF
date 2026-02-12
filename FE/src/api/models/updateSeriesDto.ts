@@ -6,12 +6,14 @@
  */
 
 export interface UpdateSeriesDto {
-  /** @minLength 1 */
-  name: string;
-  /** @minLength 1 */
-  prefix: string;
-  startNumber: number;
-  endNumber: number;
+  /** @nullable */
+  name?: string | null;
+  /** @nullable */
+  prefix?: string | null;
+  /** @nullable */
+  startNumber?: number | null;
+  /** @nullable */
+  endNumber?: number | null;
   /** @nullable */
   isActive?: boolean | null;
 }

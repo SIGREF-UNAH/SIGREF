@@ -12,4 +12,6 @@ export interface CreateSeriesDto {
   prefix: string;
   startNumber: number;
   endNumber: number;
+  /** @nullable */
+  isActive?: boolean | null;
 }
