@@ -35,6 +35,8 @@ public class CreateSeriesDto
         public long StartNumber { get; set; }
         [Required]
         public long EndNumber { get; set; }
+
+        public bool? IsActive { get; set; } = true;
 }
 
 public class UpdateSeriesDto

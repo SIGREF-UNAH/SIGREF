@@ -71,6 +71,7 @@ public class SerieService : ISerieService
             CurrentNumber = dto.StartNumber, // arranca en el inicio del rango
             CreatedById = user,
             CreatedDate = DateTime.UtcNow,
+            IsActive =  dto.IsActive,
         };
 
         _context.InvoiceSeries.Add(entity);
@@ -90,6 +91,7 @@ public class SerieService : ISerieService
                 EndNumber = entity.EndNumber,
                 CurrentNumber = entity.CurrentNumber,
                 CreatedDate = entity.CreatedDate,
+                IsActive = entity.IsActive,
             }
         };
     }
