@@ -10,6 +10,7 @@ builder.AddServiceDefaults();
 
 // Add PostgreSQL with Aspire integration - DEBE estar en Program.cs, NO en Startup.cs
 builder.AddNpgsqlDbContext<SIGREF.API.Database.SIGREFContext>("sigref");
+builder.Services.AddDbContextFactory<SIGREF.API.Database.SIGREFContext>();
 
 // Add MongoDB client with Aspire integration
 builder.AddMongoDBClient("MongoDb");

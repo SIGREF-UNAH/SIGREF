@@ -10,7 +10,7 @@ namespace SIGREF.API.Controllers.Reports;
 
 [Route("reports/[controller]")]
 [ApiController]
-[Authorize(Roles = $"{RolesConstants.admin},{RolesConstants.auditor}")]
+//[Authorize(Roles = $"{RolesConstants.admin},{RolesConstants.auditor}")]
 public class ReportsController : ControllerBase
 {
     private readonly IReportQueryService _reportQueryService;

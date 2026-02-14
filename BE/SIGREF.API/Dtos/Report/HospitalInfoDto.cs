@@ -17,12 +17,15 @@ public class HospitalInfoDto
     /// Identificador del recurso de imagen (ej: en storage) para el logo del hospital.
     /// </summary>
     public Guid HospitalLogoImageId { get; set; }
+    // URL pública al logo (si existe)
+    public string? UrlLogo { get; set; }
 
     /// <summary>
     /// Identificador del recurso de imagen (ej: en storage) para el logo de Salud / Secretaría.
     /// </summary>
     public Guid HealthDepartmentLogoImageId { get; set; }
-
+    // URL pública al logo de la Secretaría/Salud (si existe)
+    public string? UrlLogoHealth { get; set; }
     public HospitalContactDto Contact { get; set; } = new();
 }
 

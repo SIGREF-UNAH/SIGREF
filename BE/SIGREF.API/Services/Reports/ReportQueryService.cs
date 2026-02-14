@@ -7,6 +7,8 @@ using SIGREF.API.Dtos.Report;
 using SIGREF.API.Services.Auth;
 using SIGREF.API.Services.Reports;
 
+namespace SIGREF.API.Services.Reports;
+
 /// <summary>
 /// Servicio de consulta de reportes usando InvoiceEntity directamente.
 /// Esta versión es más confiable y no depende de la vista materializada DashboardFact.
@@ -15,14 +17,20 @@ public class ReportQueryService : IReportQueryService
 {
     private readonly SIGREFContext _context;
     private readonly IUserContextService _userContext;
+    private readonly IDbContextFactory<SIGREFContext> _dbFactory;
 
     public ReportQueryService(
         SIGREFContext context,
-        IUserContextService userContext)
+        IUserContextService userContext,
+        IDbContextFactory<SIGREFContext> dbFactory)
     {
         _context = context;
         _userContext = userContext;
+        _dbFactory = dbFactory;
     }
+    
+    private IQueryable<InvoiceEntity> BaseQuery(ReportFilterDto filter)
+        => BaseQuery(_context, filter);
 
     public async Task<ResponseDto<ReportSummaryResponseDto>> GetReportSummaryAsync(ReportFilterDto filter)
     {
@@ -34,33 +42,30 @@ public class ReportQueryService : IReportQueryService
                 Status = false,
                 StatusCode = 400,
                 Data = null
-
             };
 
-        var query = BaseQuery(filter);
+        await using var db1 = await _dbFactory.CreateDbContextAsync();
+        await using var db2 = await _dbFactory.CreateDbContextAsync();
 
-        // Ejecutar queries en paralelo para mejor performance
-        var summaryTask = query
+        var query1 = BaseQuery(db1, filter);
+        var query2 = BaseQuery(db2, filter);
+
+        var summaryTask = query1
             .GroupBy(_ => 1)
             .Select(g => new
             {
                 TotalTransactions = g.LongCount(),
-
                 TotalCollected = g
                     .Where(x => x.Status == InvoiceStatus.Paid)
                     .Select(x => (decimal?)x.FinalTotal)
                     .Sum() ?? 0m,
-
                 PaidCount = g.Count(x => x.Status == InvoiceStatus.Paid),
-
                 ExoneratedCount = g.Count(x => x.InvoiceType == InvoiceType.Exempt),
-
                 CanceledCount = g.Count(x => x.Status == InvoiceStatus.Cancelled)
             })
             .FirstOrDefaultAsync();
 
-
-        var seriesTask = query
+        var seriesTask = query2
             .Where(x => x.Serie != null)
             .Select(x => x.Serie!.Prefix + " - " + x.Serie.Name)
             .Distinct()
@@ -72,10 +77,31 @@ public class ReportQueryService : IReportQueryService
         var summary = await summaryTask;
         var executedSeries = await seriesTask;
 
+        var hospitalInfo = await _context.HospitalProperties
+            .AsNoTracking()
+            .Where(h => h.IsSingleton)
+            .Select(h => new HospitalInfoDto
+            {
+                HospitalName = h.Name,
+                DirectorName = h.Director ?? string.Empty,
+                HospitalCode = h.HospitalCode ?? string.Empty,
+                HospitalLogoImageId = h.LogoMediaId ?? Guid.Empty,
+                UrlLogo = h.UrlLogo ?? string.Empty, 
+                HealthDepartmentLogoImageId = h.HealthLogoMediaId ?? Guid.Empty,
+                UrlLogoHealth = h.UrlLogoHealth ??  string.Empty,
+                Contact = new HospitalContactDto
+                {
+                    PhoneNumber = h.PhoneNumber ?? string.Empty,
+                    Email = h.Email ?? string.Empty,
+                    Address = h.Ubication ?? string.Empty
+                }
+            })
+            .FirstOrDefaultAsync();
+
         return new ResponseDto<ReportSummaryResponseDto>
         {
             Status = true,
-            StatusCode = 200, 
+            StatusCode = 200,
             Message = "OK",
             Data = new ReportSummaryResponseDto
             {
@@ -89,60 +115,73 @@ public class ReportQueryService : IReportQueryService
                     CanceledServicesCount = summary?.CanceledCount ?? 0,
                     ExecutedSeries = executedSeries ?? new List<string>()
                 },
-                Metadata = BuildMetadata()
+                Metadata = BuildMetadata(),
+                Hospital = hospitalInfo
             }
         };
-
     }
 
-    public async Task<ResponseDto<ReportDetailPageResponseDto>> GetReportDetailPageAsync(
-        ReportFilterDto filter)
+
+    public async Task<ResponseDto<ReportDetailPageResponseDto>> GetReportDetailPageAsync(ReportFilterDto filter)
     {
         var error = ValidateFilter(filter);
         if (error != null)
             return new ResponseDto<ReportDetailPageResponseDto>
-        {
-            Status = false,
-            StatusCode = 400,
-            Message = error,
-            Data = null
-        };
-
+            {
+                Status = false,
+                StatusCode = 400,
+                Message = error,
+                Data = null
+            };
 
         var pageNumber = Math.Max(filter.PageNumber, 1);
         var pageSize = Math.Clamp(filter.PageSize, 50, 500);
 
-        var baseQuery = BaseQuery(filter);
+      
+        var baseQuery = BaseQuery(_context, filter).AsNoTracking();
 
+        // Total (solo filtros)
         var totalItems = await baseQuery.LongCountAsync();
         var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
 
+        // Página
         var items = await baseQuery
             .OrderByDescending(x => x.CreatedDate)
             .ThenByDescending(x => x.Id)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
+            .Select(x => new
+            {
+                x.CreatedDate,
+                SeriePrefix = x.Serie != null ? x.Serie.Prefix : null,
+                x.Number,
+                CashierUserId = x.CashierSession != null ? (Guid?)x.CashierSession.UserId : null,
+                x.PatientDisplay,
+                ItemsCount = x.Items.Count(),
+                FirstItemDesc = x.Items
+                    .OrderBy(i => i.Id)
+                    .Select(i => i.Description)
+                    .FirstOrDefault(),
+                Status = x.Status,
+                x.AmountPaid
+            })
             .Select(x => new ReportLineDto
             {
                 TransactionDate = x.CreatedDate,
-                ReceiptNumber = x.Serie!.Prefix + "-" + x.Number.ToString().PadLeft(8, '0'),
-                
-                // NOTA: CashierName necesita resolverse
-                // TODO : RESOLVER EL CASHIER NAME
-                
-                CashierName = x.CashierSession != null 
-                    ? "Usuario: " + x.CashierSession.UserId.ToString() 
+                ReceiptNumber = (x.SeriePrefix ?? "SIN") + "-" + x.Number.ToString().PadLeft(8, '0'),
+
+                CashierName = x.CashierUserId.HasValue
+                    ? "Usuario: " + x.CashierUserId.Value.ToString()
                     : "Sin cajero",
-                
+
                 PatientName = x.PatientDisplay ?? "Sin paciente",
-                
-                // Manejar multiples servicios
-                ServiceName = x.Items.Count == 1 
-                    ? x.Items.First().Description 
-                    : x.Items.Count > 1
-                        ? $"Múltiples servicios ({x.Items.Count})"
+
+                ServiceName = x.ItemsCount == 1
+                    ? (x.FirstItemDesc ?? "Sin servicios")
+                    : x.ItemsCount > 1
+                        ? $"Múltiples servicios ({x.ItemsCount})"
                         : "Sin servicios",
-                
+
                 Status = x.Status.ToString(),
                 AmountPaid = x.AmountPaid
             })
@@ -169,23 +208,33 @@ public class ReportQueryService : IReportQueryService
                 Items = items
             }
         };
-
     }
+
 
     // =====================================================
     // Helpers
     // =====================================================
 
-    private IQueryable<InvoiceEntity> BaseQuery(ReportFilterDto filter)
+    private IQueryable<InvoiceEntity> BaseQuery(SIGREFContext db, ReportFilterDto filter)
     {
-        var query = _context.Invoices
+        // Si Start/End vienen con Z (UTC), perfecto.
+        // Si en algún momento te llegan Unspecified, esto los "marca" como UTC para evitar Npgsql timestamptz error.
+        var start = filter.StartDate!.Value;
+        var end = filter.EndDate!.Value;
+
+        if (start.Kind == DateTimeKind.Unspecified)
+            start = DateTime.SpecifyKind(start, DateTimeKind.Utc);
+
+        if (end.Kind == DateTimeKind.Unspecified)
+            end = DateTime.SpecifyKind(end, DateTimeKind.Utc);
+
+        // No hacemos Include() aquí para evitar duplicar filas cuando hay
+        // relaciones coleccion (Items) o sesiones. Las propiedades de navegación
+        // necesarias se usarán en proyecciones y EF Core las traducirá a JOINs
+        // sólo cuando sea necesario, reduciendo la carga de datos transferidos.
+        var query = db.Invoices
             .AsNoTracking()
-            .Include(x => x.Serie)
-            .Include(x => x.CashierSession)
-            .Include(x => x.Items)
-            .Where(x =>
-                x.CreatedDate >= filter.StartDate!.Value &&
-                x.CreatedDate <= filter.EndDate!.Value);
+            .Where(x => x.CreatedDate >= start && x.CreatedDate <= end);
 
         // Filtrar por SeriesIds si se especifica
         if (filter.SeriesIds != null && filter.SeriesIds.Any())
@@ -196,7 +245,6 @@ public class ReportQueryService : IReportQueryService
         // Filtrar por CashiersKeycloakIds si se especifica
         if (filter.CashiersKeycloakIds != null && filter.CashiersKeycloakIds.Any())
         {
-            // Convertir los Keycloak IDs (strings) a Guids
             var cashierUserIds = filter.CashiersKeycloakIds
                 .Select(id => Guid.TryParse(id, out var guid) ? guid : (Guid?)null)
                 .Where(g => g.HasValue)
@@ -214,6 +262,7 @@ public class ReportQueryService : IReportQueryService
         return query;
     }
 
+
     private static string? ValidateFilter(ReportFilterDto filter)
     {
         if (!filter.StartDate.HasValue || !filter.EndDate.HasValue)
@@ -225,7 +274,9 @@ public class ReportQueryService : IReportQueryService
         // Validar que el rango no sea excesivamente largo (prevenir queries pesadas)
         var dateRange = filter.EndDate.Value - filter.StartDate.Value;
         if (dateRange.TotalDays > 365)
-            return "El rango de fechas no puede ser mayor a 1 año. Use la funcionalidad de exportación para rangos mayores.";
+            return
+                "El rango de fechas no puede ser mayor a 1 año. Use la funcionalidad de exportación para rangos mayores.";
+
 
         return null;
     }
