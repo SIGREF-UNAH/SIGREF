@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import dayjs from "dayjs";
+import isoWeek from "dayjs/plugin/isoWeek";
 import {
   useGetApiDashboardLocationIncome,
   useGetApiDashboardPackageUsage,
@@ -8,6 +9,8 @@ import {
   useGetApiDashboardSummary,
   useGetApiDashboardWeeklyIncome,
 } from "../../../api/dashboard/dashboard";
+
+dayjs.extend(isoWeek);
 
 type PeriodoType = "semana" | "mes" | "personalizado";
 
@@ -21,9 +24,8 @@ export function useDashboardData(
     let end: string | undefined;
     const format = "YYYY-MM-DDTHH:mm:ss";
     if (periodo === "personalizado" && fechaInicio && fechaFin) {
-      // Inicio del día → 00:00:00
+      // Inicio del día para fechaInicio y fin del día para fechaFin  
       start = fechaInicio.startOf("day").format(format);
-      // Fin del día → 23:59:59 (para incluir todo el EndDate)
       end = fechaFin.endOf("day").format(format);
     } else {
       const today = dayjs();
@@ -48,14 +50,15 @@ export function useDashboardData(
   const qShifts = useGetApiDashboardShiftIncome(params);
   const qLocations = useGetApiDashboardLocationIncome(params);
 
+  // TODO: Agregar qServices.isLoading y qServices.error cuando el endpoint esté arreglado
   const isLoading =
     qSummary.isLoading ||
-    qServices.isLoading ||
+    // qServices.isLoading ||
     qPackages.isLoading ||
     qWeekly.isLoading ||
     qShifts.isLoading ||
     qLocations.isLoading;
-  // TODO: quitar qServices.error cuando el endpoint esté listo
+
   const error =
     qSummary.error ||
     // qServices.error ||
@@ -64,7 +67,6 @@ export function useDashboardData(
     qShifts.error ||
     qLocations.error;
 
-  // Datos preparados para los gráficos / tarjetas
   const prepared = useMemo(() => {
     if (isLoading || error) return {};
 
@@ -72,49 +74,117 @@ export function useDashboardData(
       totalIncome: qSummary.data?.data?.totalIncome ?? 0,
       totalServices: qSummary.data?.data?.totalServices ?? 0,
       totalPatients: qSummary.data?.data?.totalPatients ?? 0,
-      totalErrors: qSummary.data?.data?.totalCashierClosuresWithErrors ?? 0,
+      totalCashierClosuresWithErrors: qSummary.data?.data?.totalCashierClosuresWithErrors ?? 0,
 
       serviciosMasSolicitados: (qServices.data?.data?.topUsed ?? []).map(
         (item) => ({
-          nombre: item.serviceName || "Sin nombre",
-          cantidad: item.count ?? 0,
+          serviceId: item.serviceId,
+          fhirServiceId: item.fhirServiceId,
+          serviceName: item.serviceName || "Sin nombre",
+          count: item.count ?? 0,
+          totalGenerated: item.totalGenerated ?? 0,
+          percentage: item.percentage ?? 0,
         }),
       ),
 
       serviciosMenosSolicitados: (qServices.data?.data?.bottomUsed ?? []).map(
         (item) => ({
-          nombre: item.serviceName || "Sin nombre",
-          cantidad: item.count ?? 0,
+          serviceId: item.serviceId,
+          fhirServiceId: item.fhirServiceId,
+          serviceName: item.serviceName || "Sin nombre",
+          count: item.count ?? 0,
+          totalGenerated: item.totalGenerated ?? 0,
+          percentage: item.percentage ?? 0,
         }),
       ),
 
-      paquetesMasUtilizados: [
-        ...(qPackages.data?.data?.top5 ?? []).map((p) => ({
-          nombre: p.packageName || "Paquete",
-          cantidad: p.count ?? 0,
-        })),
-      ].slice(0, 5), // limitamos a 5 para el pie chart
-
-      ingresosDiarios: (qWeekly.data?.data ?? []).map((w) => ({
-        dia: dayjs(w.weekStart).format("DD MMM"), // o usa weekStart directamente
-        ingreso: w.totalIncome ?? 0,
+      paquetesMasUtilizados: (qPackages.data?.data?.top5 ?? []).map((p) => ({
+        fhirPackageId: p.fhirPackageId,
+        packageName: p.packageName || "Sin nombre",
+        count: p.count ?? 0,
+        totalGenerated: p.totalGenerated ?? 0,
+        percentage: p.percentage ?? 0,
       })),
 
-      totalIngresosSemanalMensual:
-        qWeekly.data?.data?.reduce((sum, w) => sum + (w.totalIncome ?? 0), 0) ??
-        0,
+      paquetesMenosUtilizados: (() => {
+        const others = qPackages.data?.data?.others;
+        if (!others) return [];
+
+        return [
+          {
+            fhirPackageId: others.fhirPackageId,
+            packageName: others.packageName || "Otros",
+            count: others.count ?? 0,
+            totalGenerated: others.totalGenerated ?? 0,
+            percentage: others.percentage ?? 0,
+          },
+        ];
+      })(),
+
+      ingresosDiarios: (qWeekly.data?.data ?? []).map((w) => ({
+        weekStart: w.weekStart,
+        weekEnd: w.weekEnd,
+        totalIncome: w.totalIncome ?? 0,
+        invoiceCount: w.invoiceCount ?? 0,
+      })),
+
+      // MODIFICADO: Ahora retorna array para el gráfico comparativo
+      totalIngresosSemanalMensual: (() => {
+        const data = qWeekly.data?.data ?? [];
+        if (data.length === 0) return [];
+
+        // Para período semanal: mostrar por día de la semana
+        if (periodo === "semana") {
+          return data.map((w) => ({
+            dia: dayjs(w.weekStart).format("ddd"), // Lun, Mar, Mié, etc.
+            totalIncome: w.totalIncome ?? 0,
+          }));
+        }
+
+        // Para período mensual: mostrar por semanas
+        if (periodo === "mes") {
+          return data.map((w, index) => ({
+            dia: `Sem ${index + 1}`,
+            totalIncome: w.totalIncome ?? 0,
+          }));
+        }
+
+        // Para período personalizado: depende del rango
+        if (periodo === "personalizado" && fechaInicio && fechaFin) {
+          const diff = fechaFin.diff(fechaInicio, "day");
+          
+          // Si es menos de 14 días, mostrar por día
+          if (diff <= 14) {
+            return data.map((w) => ({
+              dia: dayjs(w.weekStart).format("DD/MM"),
+              totalIncome: w.totalIncome ?? 0,
+            }));
+          }
+          
+          // Si es más de 14 días, mostrar por semana
+          return data.map((w, index) => ({
+            dia: `Sem ${index + 1}`,
+            totalIncome: w.totalIncome ?? 0,
+          }));
+        }
+
+        return [];
+      })(),
 
       ingresosPorModulo: (qLocations.data?.data ?? []).map((loc) => ({
-        modulo: loc.locationName || "Ubicación",
-        ingreso: loc.totalIncome ?? 0,
-        cantidad: loc.totalInvoices ?? 0, // o servicios si lo tuvieras
+        locationId: loc.locationId,
+        locationName: loc.locationName || "Ubicación",
+        totalIncome: loc.totalIncome ?? 0,
+        totalInvoices: loc.totalInvoices ?? 0,
       })),
 
       ingresosPorTurno: (qShifts.data?.data ?? []).map((s) => ({
-        turno: s.shiftName || "Turno",
-        consultaExterna: 0,
-        emergencia: 0,
-        total: s.totalIncome ?? 0,
+        shiftId: s.shiftId,
+        shiftName: s.shiftName || "Turno",
+        locationId: s.locationId,
+        locationName: s.locationName || "Ubicación",
+        totalIncome: s.totalIncome ?? 0,
+        totalInvoices: s.totalInvoices ?? 0,
       })),
     };
   }, [
@@ -126,6 +196,9 @@ export function useDashboardData(
     qLocations.data,
     isLoading,
     error,
+    periodo,
+    fechaInicio,
+    fechaFin,
   ]);
 
   return {
