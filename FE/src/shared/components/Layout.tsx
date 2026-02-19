@@ -161,11 +161,6 @@ export const Layout = () => {
           icon: <span className="text-xs font-thin text-white">{getInitials(name)}</span>,
           render: (_props, dom) => {
             const userMenu = [
-              ...(ability.can("read", "users") ? [{
-                key: "0",
-                label: <Link to="/users">Usuarios</Link>,
-                icon: <UserAddOutlined />,
-              }] : []),
               ...(ability.can("read", "hospital") ? [
               {
                 key: "1",
