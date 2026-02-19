@@ -27,7 +27,7 @@ public class CashierSessionService : ICashierSessionService
     {
         var userId = _userContext.GetUserId();
         var activeSession = await _db.CashierSessions
-            .Where(x => x.UserId == userId && x.IsOpen == true)
+            .Where(x => x.UserId == userId && x.IsOpen)
             .FirstOrDefaultAsync();
 
         if (activeSession != null)
@@ -66,7 +66,7 @@ public class CashierSessionService : ICashierSessionService
     public async Task<ResponseDto<CashierSessionDto>> GetActiveSessionByUserAsync(Guid userId)
     {
         var activeSession = await _db.CashierSessions
-            .Where(x => x.UserId == userId && x.IsOpen == true)
+            .Where(x => x.UserId == userId && x.IsOpen)
             .FirstOrDefaultAsync();
         if (activeSession == null)
         {
