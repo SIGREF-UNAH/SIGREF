@@ -27,15 +27,15 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { Select, DatePicker,  Alert } from "antd";
+import { Select, DatePicker, Alert } from "antd";
 import dayjs from "dayjs";
-import { useDashboardData } from "../hooks/useDashboardData";
 import { EmptyState } from "./EmpityState";
 import { DashboardSkeleton } from "./DashboardSkeleton";
+import { useDashboardData } from "../hooks";
 
 const { RangePicker } = DatePicker;
 
-const COLORS = ["#10b981", "#3b82f6", "#8b5cf6", "#f59e0b", "#ec4899"];
+const COLORS = ["#10b981", "#3b82f6", "#8b5cf6", "#f59e0b", "#ec4899",  "#e11d48", "#f97316", "#6366f1", "#22d3ee"];
 
 export const ControlReport = () => {
   const [periodo, setPeriodo] = useState<"semana" | "mes" | "personalizado">(
@@ -50,11 +50,13 @@ export const ControlReport = () => {
     totalIncome,
     totalServices,
     totalPatients,
-    totalErrors,
+    totalCashierClosuresWithErrors,
     serviciosMasSolicitados,
     serviciosMenosSolicitados,
     paquetesMasUtilizados,
+    paquetesMenosUtilizados,
     ingresosDiarios,
+    totalIngresosSemanalMensual,
     ingresosPorModulo,
     ingresosPorTurno,
   } = useDashboardData(periodo, fechaInicio, fechaFin);
@@ -68,7 +70,7 @@ export const ControlReport = () => {
   };
 
   const handleDateChange = (
-    dates: [dayjs.Dayjs | null, dayjs.Dayjs | null],
+    dates: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null,
   ) => {
     if (dates) {
       setFechaInicio(dates[0]);
@@ -90,10 +92,9 @@ export const ControlReport = () => {
     }
     return "Seleccione fechas";
   };
+
   if (isLoading) {
-    return (
-    <DashboardSkeleton/>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (error) {
@@ -108,6 +109,7 @@ export const ControlReport = () => {
       </div>
     );
   }
+
   return (
     <div className="min-h-screen p-3">
       {/* Header */}
@@ -130,12 +132,14 @@ export const ControlReport = () => {
               size="large"
               placeholder={["Fecha Inicio", "Fecha Fin"]}
               format="DD/MM/YYYY"
-              onChange={() => handleDateChange}
+              onChange={handleDateChange}
+              value={fechaInicio && fechaFin ? [fechaInicio, fechaFin] : null}
               suffixIcon={<CalendarOutlined />}
             />
           )}
         </div>
       </div>
+
       <div>
         {/* Indicador de período personalizado */}
         {periodo === "personalizado" && fechaInicio && fechaFin && (
@@ -158,7 +162,9 @@ export const ControlReport = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-general text-sm">Ingresos Totales</p>
-                <p className="text-2xl font-bold">L. {totalIncome || "0.00"}</p>
+                <p className="text-2xl font-bold">
+                  L. {totalIncome?.toLocaleString() || "0.00"}
+                </p>
                 <p className="text-xs text-general-secondary mt-1">
                   {getPeriodoLabel()}
                 </p>
@@ -175,7 +181,9 @@ export const ControlReport = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-general text-sm">Servicios Realizados</p>
-                <p className="text-2xl font-bold">{totalServices || "0"}</p>
+                <p className="text-2xl font-bold">
+                  {totalServices?.toLocaleString() || "0"}
+                </p>
                 <p className="text-xs text-general-secondary mt-1">
                   {getPeriodoLabel()}
                 </p>
@@ -192,7 +200,9 @@ export const ControlReport = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-general text-sm">Pacientes Atendidos</p>
-                <p className="text-2xl font-bold">{totalPatients || "0"}</p>
+                <p className="text-2xl font-bold">
+                  {totalPatients?.toLocaleString() || "0"}
+                </p>
                 <p className="text-xs text-general-secondary mt-1">
                   {getPeriodoLabel()}
                 </p>
@@ -208,7 +218,7 @@ export const ControlReport = () => {
               <div>
                 <p className="text-general text-sm">Cierres con Errores</p>
                 <p className="text-2xl font-bold text-red-600">
-                  {totalErrors || "0"}
+                  {totalCashierClosuresWithErrors || "0"}
                 </p>
                 <p className="text-xs text-general-secondary mt-1">
                   {getPeriodoLabel()}
@@ -225,30 +235,55 @@ export const ControlReport = () => {
 
         {/* Gráficos secundarios */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          {/* Servicios Más Solicitados */}
+          {/* Servicios Más Solicitados - CON TOOLTIP MEJORADO */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h3 className="text-lg text-general font-semibold mb-4 flex items-center gap-2">
-              <TrophyOutlined style={{ color: "#f59e0b" }} />
+              <TrophyOutlined style={{ color: "#3b82f6" }} />
               Servicios Más Solicitados
             </h3>
             {serviciosMasSolicitados && serviciosMasSolicitados.length > 0 ? (
-              <div className="space-y-3">
-                {serviciosMasSolicitados?.slice(0, 5).map((servicio, index) => (
+              <div className="space-y-3 max-h-[450px]">
+                {serviciosMasSolicitados?.map((servicio, index) => (
                   <div
-                    key={index}
-                    className="flex items-center justify-between p-3 bg-linear-to-r from-blue-50 to-transparent rounded hover:from-blue-100 transition-colors"
+                    key={servicio.serviceId || index}
+                    className="group relative flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-transparent rounded hover:from-blue-100 transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center font-bold text-white">
                         {index + 1}
                       </div>
                       <span className="text-sm font-medium">
-                        {servicio.nombre}
+                        {servicio.serviceName}
                       </span>
                     </div>
                     <span className="font-bold text-blue-600 text-lg">
-                      {servicio.cantidad}
+                      {servicio.count}
                     </span>
+
+                    {/* Tooltip personalizado */}
+                    <div
+                      className="absolute left-0 top-full mt-1 text-xs rounded-lg p-3 shadow-lg
+                          opacity-0 invisible group-hover:opacity-100 group-hover:visible
+                          transition-all duration-200 z-50 whitespace-nowrap
+                          bg-white/95 backdrop-blur-md border border-gray-200"
+                    >
+                      <div className="space-y-1">
+                        <div>
+                          Ingresos:{" "}
+                          <span className="font-semibold">
+                            L.{" "}
+                            {servicio.totalGenerated?.toLocaleString() || "0"}
+                          </span>
+                        </div>
+                        <div>
+                          Porcentaje:{" "}
+                          <span className="font-semibold">
+                            {servicio.percentage?.toFixed(1) || "0"}%
+                          </span>
+                        </div>
+                      </div>
+                      <div className="absolute -top-1 left-8 w-3 h-3 bg-white border-l border-t border-gray-200 rotate-45"></div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -266,7 +301,7 @@ export const ControlReport = () => {
             </p>
           </div>
 
-          {/* Servicios Menos Solicitados */}
+          {/* Servicios Menos Solicitados - CON TOOLTIP MEJORADO */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h3 className="text-lg text-general font-semibold mb-4 flex items-center gap-2">
               <FallOutlined style={{ color: "#f59e0b" }} />
@@ -274,27 +309,50 @@ export const ControlReport = () => {
             </h3>
             {serviciosMenosSolicitados &&
             serviciosMenosSolicitados.length > 0 ? (
-              <div className="space-y-3">
-                {serviciosMenosSolicitados
-                  ?.slice(0, 5)
-                  .map((servicio, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 bg-linear-to-r from-orange-50 to-transparent rounded hover:from-orange-100 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center font-bold text-white">
-                          {index + 1}
-                        </div>
-                        <span className="text-sm font-medium">
-                          {servicio.nombre}
-                        </span>
+              <div className="space-y-3 max-h-[450px]">
+                {serviciosMenosSolicitados?.map((servicio, index) => (
+                  <div
+                    key={servicio.serviceId || index}
+                    className="group relative flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-transparent rounded hover:from-orange-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center font-bold text-white">
+                        {index + 1}
                       </div>
-                      <span className="font-bold text-orange-600 text-lg">
-                        {servicio.cantidad}
+                      <span className="text-sm font-medium">
+                        {servicio.serviceName}
                       </span>
                     </div>
-                  ))}
+                    <span className="font-bold text-orange-600 text-lg">
+                      {servicio.count}
+                    </span>
+
+                    {/* Tooltip personalizado */}
+                          <div
+                      className="absolute left-0 top-full mt-1 text-xs rounded-lg p-3 shadow-lg
+                          opacity-0 invisible group-hover:opacity-100 group-hover:visible
+                          transition-all duration-200 z-50 whitespace-nowrap
+                          bg-white/95 backdrop-blur-md border border-gray-200"
+                    >
+                      <div className="space-y-1">
+                        <div>
+                          Ingresos:{" "}
+                          <span className="font-semibold">
+                            L.{" "}
+                            {servicio.totalGenerated?.toLocaleString() || "0"}
+                          </span>
+                        </div>
+                        <div>
+                          Porcentaje:{" "}
+                          <span className="font-semibold">
+                            {servicio.percentage?.toFixed(1) || "0"}%
+                          </span>
+                        </div>
+                      </div>
+                <div className="absolute -top-1 left-8 w-3 h-3 bg-white border-l border-t border-gray-200 rotate-45"></div>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
               <EmptyState
@@ -309,69 +367,120 @@ export const ControlReport = () => {
             </p>
           </div>
 
-          {/* Paquetes Más Utilizados */}
+          {/* Paquetes Más Utilizados - CON TOOLTIP */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <BoxPlotOutlined style={{ color: "#8b5cf6" }} />
               Paquetes Más Utilizados
             </h3>
-            {paquetesMasUtilizados && paquetesMasUtilizados.length > 0 ? (
-              <>
-                <ResponsiveContainer width="100%" height={200}>
-                  <PieChart>
-                    <Pie
-                      data={paquetesMasUtilizados}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ percent }) =>
-                        percent !== undefined
-                          ? `${(percent * 100).toFixed(0)}%`
-                          : ""
-                      }
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="cantidad"
-                    >
-                      {paquetesMasUtilizados?.map((_entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="mt-4 space-y-2">
-                  {paquetesMasUtilizados?.map((paquete, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between text-xs"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{
-                            backgroundColor: COLORS[index % COLORS.length],
-                          }}
-                        ></div>
-                        <span>{paquete.nombre}</span>
+            {(() => {
+              const allPackages = [
+                ...(paquetesMasUtilizados || []),
+                ...(paquetesMenosUtilizados || []),
+              ];
+
+              return allPackages.length > 0 ? (
+                <>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <PieChart>
+                      <Pie
+                        data={allPackages}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ percent }) =>
+                          percent !== undefined
+                            ? `${(percent * 100).toFixed(0)}%`
+                            : ""
+                        }
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="count"
+                        nameKey="packageName"
+                      >
+                        {allPackages.map((_entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "rgba(255, 255, 255, 0.95)",
+                          backdropFilter: "blur(8px)",
+                          borderRadius: "8px",
+                          border: "1px solid #e5e7eb",
+                          boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                          padding: "12px",
+                        }}
+                        formatter={(_value, _name, props) => {
+                          const pkg = props.payload;
+                          return [
+                            <div key="tooltip" className="space-y-1">
+                              <div className="font-semibold text-sm">
+                                {pkg.packageName}
+                              </div>
+                              <div className="text-xs">
+                                Cantidad:{" "}
+                                <span className="font-semibold">
+                                  {pkg.count}
+                                </span>
+                              </div>
+                              <div className="text-xs text-gray-600">
+                                Ingresos:{" "}
+                                <span className="font-semibold text-gray-600">
+                                  L.{" "}
+                                  {pkg.totalGenerated?.toLocaleString() || "0"}
+                                </span>
+                              </div>
+                              <div className="text-xs text-gray-600">
+                                Porcentaje:{" "}
+                                <span className="font-semibold text-gray-600">
+                                  {pkg.percentage?.toFixed(1) || "0"}%
+                                </span>
+                              </div>
+                            </div>,
+                          ];
+                        }}
+                        labelFormatter={() => ""}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="mt-1 max-h-[150px]">
+                    {allPackages.map((paquete, index) => (
+                      <div
+                        key={index}
+                        className="group relative flex items-center justify-between text-xs px-2 py-1 rounded"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-3 h-3 rounded-full shrink-0"
+                            style={{
+                              backgroundColor: COLORS[index % COLORS.length],
+                            }}
+                          ></div>
+                          <span className="text-xs font-medium">
+                            {paquete.packageName}
+                          </span>
+                        </div>
+                        <span className="font-bold text-sm">
+                          {paquete.count}
+                        </span>
                       </div>
-                      <span className="font-bold">{paquete.cantidad}</span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <EmptyState
-                title="No hay paquetes utilizados"
-                description="No se encontraron paquetes utilizados para el período seleccionado."
-                icon={BoxPlotOutlined}
-                iconColor="#8b5cf6"
-              />
-            )}
-            <p className="text-xs text-general-secondary mt-2">
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <EmptyState
+                  title="No hay paquetes utilizados"
+                  description="No se encontraron paquetes utilizados para el período seleccionado."
+                  icon={BoxPlotOutlined}
+                  iconColor="#8b5cf6"
+                />
+              );
+            })()}
+            <p className="text-xs text-general-secondary mt-4">
               {getPeriodoLabel()}
             </p>
           </div>
@@ -379,7 +488,7 @@ export const ControlReport = () => {
 
         {/* Gráficos principales */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* Ingresos Diarios */}
+          {/* Ingresos Diarios - MOSTRANDO TODOS LOS DATOS */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg text-general font-semibold flex items-center gap-2">
@@ -392,23 +501,83 @@ export const ControlReport = () => {
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={ingresosDiarios}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="dia" />
+                    <XAxis
+                      dataKey="weekStart"
+                      tickFormatter={(value) => dayjs(value).format("DD/MM")}
+                    />
                     <YAxis />
                     <Tooltip
-                      formatter={(value) => `L. ${value.toLocaleString()}`}
+                      contentStyle={{
+                        backgroundColor: "rgba(255, 255, 255, 0.95)",
+                        backdropFilter: "blur(8px)",
+                        borderRadius: "8px",
+                        border: "1px solid #e5e7eb",
+                        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                      }}
+                      formatter={(value, _name, props) => {
+                        return [
+                          <div key="tooltip" className="space-y-1">
+                            <div>
+                              Ingresos: L. {Number(value).toLocaleString()}
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              Facturas: {props.payload.invoiceCount}
+                            </div>
+                          </div>,
+                        ];
+                      }}
+                      labelFormatter={(value) =>
+                        dayjs(value).format("DD/MM/YYYY")
+                      }
                     />
+                    <defs>
+                      <linearGradient
+                        id="colorIngreso"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#3b82f6"
+                          stopOpacity={0.8}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#3b82f6"
+                          stopOpacity={0.2}
+                        />
+                      </linearGradient>
+                    </defs>
                     <Bar
-                      dataKey="ingreso"
-                      fill="#3b82f6"
-                      radius={[8, 8, 0, 0]}
+                      dataKey="totalIncome"
+                      fill="url(#colorIngreso)"
+                      radius={[6, 6, 0, 0]}
                     />
                   </BarChart>
                 </ResponsiveContainer>
-                <div className="mt-4 p-3 bg-blue-50 rounded">
-                  <p className="text-sm text-general">Total de Ingreso:</p>
-                  <p className="text-xl font-bold text-blue-600">
-                    L. {totalIncome || "0.00"}
-                  </p>
+                <div className="mt-4 p-3 bg-blue-50 rounded space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-general">
+                      Total de Ingresos:
+                    </span>
+                    <span className="text-xl font-bold text-blue-600">
+                      L.{" "}
+                      {ingresosDiarios
+                        ?.reduce((sum, item) => sum + item.totalIncome, 0)
+                        .toLocaleString() || "0.00"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-600">Total Facturas:</span>
+                    <span className="font-semibold text-gray-700">
+                      {ingresosDiarios?.reduce(
+                        (sum, item) => sum + item.invoiceCount,
+                        0,
+                      ) || 0}
+                    </span>
+                  </div>
                 </div>
               </>
             ) : (
@@ -424,7 +593,7 @@ export const ControlReport = () => {
             </p>
           </div>
 
-          {/* Ingreso por Módulo */}
+          {/* Ingreso por Módulo - MOSTRANDO TODOS LOS DATOS */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg text-general font-semibold flex items-center gap-2">
@@ -437,16 +606,78 @@ export const ControlReport = () => {
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={ingresosPorModulo}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="modulo" />
+                    <XAxis dataKey="locationName" />
                     <YAxis />
-                    <Tooltip />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "rgba(255, 255, 255, 0.95)",
+                        backdropFilter: "blur(8px)",
+                        borderRadius: "8px",
+                        border: "1px solid #e5e7eb",
+                        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                      }}
+                      formatter={(value, _name, props) => {
+                        return [
+                          <div key="tooltip" className="space-y-1">
+                            <div>
+                              Ingresos: L. {Number(value).toLocaleString()}
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              Facturas: {props.payload.totalInvoices}
+                            </div>
+                          </div>,
+                        ];
+                      }}
+                    />
+                    <defs>
+                      <linearGradient
+                        id="colorIngresoModulo"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#10b981"
+                          stopOpacity={0.8}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#10b981"
+                          stopOpacity={0.2}
+                        />
+                      </linearGradient>
+                    </defs>
                     <Bar
-                      dataKey="ingreso"
-                      fill="#10b981"
-                      radius={[8, 8, 0, 0]}
+                      dataKey="totalIncome"
+                      fill="url(#colorIngresoModulo)"
+                      radius={[6, 6, 0, 0]}
                     />
                   </BarChart>
                 </ResponsiveContainer>
+                <div className="mt-4 p-3 bg-green-50 rounded space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-general">
+                      Total de Ingresos:
+                    </span>
+                    <span className="text-xl font-bold text-green-600">
+                      L.{" "}
+                      {ingresosPorModulo
+                        ?.reduce((sum, item) => sum + item.totalIncome, 0)
+                        .toLocaleString() || "0.00"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-600">Total Facturas:</span>
+                    <span className="font-semibold text-gray-700">
+                      {ingresosPorModulo?.reduce(
+                        (sum, item) => sum + item.totalInvoices,
+                        0,
+                      ) || 0}
+                    </span>
+                  </div>
+                </div>
               </>
             ) : (
               <EmptyState
@@ -464,37 +695,96 @@ export const ControlReport = () => {
 
         {/* Gráficos inferiores */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Ingresos Por Turno */}
+          {/* Ingresos Por Turno - MOSTRANDO TODOS LOS DATOS */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg text-general font-semibold flex items-center gap-2">
                 <MedicineBoxOutlined style={{ color: "#8b5cf6" }} />
-                Ingresos Por turno
+                Ingresos Por Turno
               </h3>
             </div>
             {ingresosPorTurno && ingresosPorTurno.length > 0 ? (
               <>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={ingresosPorTurno} layout="vertical">
+                  <BarChart data={ingresosPorTurno}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis dataKey="turno" type="category" />
-                    <Tooltip />
-                    <Legend />
-                    <Bar
-                      dataKey="consultaExterna"
-                      name="Consulta Externa"
-                      fill="#10b981"
-                      radius={[0, 8, 8, 0]}
+                    <XAxis dataKey="shiftName" />
+                    <YAxis />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "rgba(255, 255, 255, 0.95)",
+                        backdropFilter: "blur(8px)",
+                        borderRadius: "8px",
+                        border: "1px solid #e5e7eb",
+                        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                      }}
+                      formatter={(value, _name, props) => {
+                        return [
+                          <div key="tooltip" className="space-y-1">
+                            <div>
+                              Ingresos: L. {Number(value).toLocaleString()}
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              Facturas: {props.payload.totalInvoices}
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              Ubicación: {props.payload.locationName}
+                            </div>
+                          </div>,
+                        ];
+                      }}
                     />
+                    <Legend />
+                    <defs>
+                      <linearGradient
+                        id="colorIngresoTurno"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#8b5cf6"
+                          stopOpacity={0.8}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#8b5cf6"
+                          stopOpacity={0.2}
+                        />
+                      </linearGradient>
+                    </defs>
                     <Bar
-                      dataKey="emergencia"
-                      name="Emergencia"
-                      fill="#3b82f6"
-                      radius={[0, 8, 8, 0]}
+                      dataKey="totalIncome"
+                      name="Total"
+                      fill="url(#colorIngresoTurno)"
+                      radius={[8, 8, 0, 0]}
                     />
                   </BarChart>
                 </ResponsiveContainer>
+                <div className="mt-4 p-3 bg-purple-50 rounded space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-general">
+                      Total de Ingresos:
+                    </span>
+                    <span className="text-xl font-bold text-purple-600">
+                      L.{" "}
+                      {ingresosPorTurno
+                        ?.reduce((sum, item) => sum + item.totalIncome, 0)
+                        .toLocaleString() || "0.00"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-600">Total Facturas:</span>
+                    <span className="font-semibold text-gray-700">
+                      {ingresosPorTurno?.reduce(
+                        (sum, item) => sum + item.totalInvoices,
+                        0,
+                      ) || 0}
+                    </span>
+                  </div>
+                </div>
               </>
             ) : (
               <EmptyState
@@ -504,13 +794,12 @@ export const ControlReport = () => {
                 iconColor="#8b5cf6"
               />
             )}
-
             <p className="text-xs text-general-secondary mt-2">
               {getPeriodoLabel()}
             </p>
           </div>
 
-          {/* Comparativo Semanal */}
+          {/* Comparativo Semanal/Mensual */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg text-general font-semibold flex items-center gap-2">
@@ -519,27 +808,63 @@ export const ControlReport = () => {
                 {periodo === "semana" ? "Semanal" : "Mensual"}
               </h3>
             </div>
-            {ingresosDiarios && ingresosDiarios.length > 0 ? (
+            {totalIngresosSemanalMensual &&
+            totalIngresosSemanalMensual.length > 0 ? (
               <>
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={ingresosDiarios}>
+                  <LineChart data={totalIngresosSemanalMensual}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="periodo" />
+                    <XAxis dataKey="dia" />
                     <YAxis />
                     <Tooltip
-                      formatter={(value) => `L. ${value.toLocaleString()}`}
+                      contentStyle={{
+                        backgroundColor: "rgba(255, 255, 255, 0.95)",
+                        backdropFilter: "blur(8px)",
+                        borderRadius: "8px",
+                        border: "1px solid #e5e7eb",
+                        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                      }}
+                      formatter={(value) =>
+                      {return [
+                        <div key="tooltip" className="space-y-1 text-gray-600">
+                          <div>
+                            Ingresos: L. {Number(value).toLocaleString()}
+                          </div>
+                        </div>,
+                      ]}
+                        
+                      }
                     />
                     <Legend />
                     <Line
                       type="monotone"
-                      dataKey="ingresos"
+                      dataKey="totalIncome"
                       stroke="#ff8000"
-                      strokeWidth={3}
                       name="Ingresos"
-                      dot={{ fill: "#ff8000", r: 6 }}
+                      strokeWidth={4}
+                      dot={{
+                        r: 4,
+                        fill: "#ff8000",
+                        strokeWidth: 2,
+                        stroke: "#fff",
+                      }}
+                      activeDot={{ r: 8, strokeWidth: 0 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
+                <div className="mt-4 p-6 bg-orange-50 rounded">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-general">
+                      Total de Ingresos:
+                    </span>
+                    <span className="text-xl font-bold text-orange-600">
+                      L.{" "}
+                      {totalIngresosSemanalMensual
+                        ?.reduce((sum, item) => sum + item.totalIncome, 0)
+                        .toLocaleString() || "0.00"}
+                    </span>
+                  </div>
+                </div>
               </>
             ) : (
               <EmptyState
@@ -549,7 +874,6 @@ export const ControlReport = () => {
                 iconColor="#ff8000"
               />
             )}
-
             <p className="text-xs text-general-secondary mt-2">
               {getPeriodoLabel()}
             </p>
