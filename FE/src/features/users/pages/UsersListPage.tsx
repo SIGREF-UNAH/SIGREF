@@ -1,6 +1,9 @@
 import { Card, Col, Row, Spin, Statistic, Table, Tag, Input, Button, Drawer, Descriptions } from "antd";
 import { UserOutlined } from "@ant-design/icons";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { useGetApiKeycloakSeederList } from "../../../api/keycloak-seeder/keycloak-seeder";
+import { PageHeaderTabs } from "../../../shared/components";
+import { useAbility } from "../../../config";
 
 // --------------------
 // Tipos
@@ -24,75 +27,55 @@ type User = {
   };
 };
 
-// --------------------
-// Datos simulados
-// --------------------
-const MOCK_USERS: User[] = Array.from({ length: 23 }).map((_, i) => ({
-  id: `${i + 1}`,
-  name: `Usuario${i + 1}`,
-  lastName: `Apellido${i + 1}`,
-  email: `usuario${i + 1}@correo.com`,
-  active: i % 3 !== 0,
-  practitionerId: `PRAC-${1000 + i}`,
-  fhir: {
-    id: `FHIR-${i + 1}`,
-    names: [`Usuario${i + 1} Apellido${i + 1}`],
-    identifiers: [
-      { system: "DNI", value: `0101-199${i}-000${i}` },
-      { system: "Internal", value: `INT-${i + 1}` },
-    ],
-  },
-}));
 
 // --------------------
 // Página principal
 // --------------------
 export const UsersListPage = () => {
-  const [loading] = useState(false);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<any | null>(null);
+
+  const ability = useAbility();
 
   const pageSize = 5;
 
-  const filteredUsers = useMemo(() => {
-    return MOCK_USERS.filter(
-      (u) =>
-        u.name.toLowerCase().includes(search.toLowerCase()) ||
-        u.email.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [search]);
+  const { data, isLoading } = useGetApiKeycloakSeederList({
+    pageNumber: page,
+    pageSize,
+    search: search || undefined,
+  });
 
-  const paginatedUsers = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return filteredUsers.slice(start, start + pageSize);
-  }, [filteredUsers, page]);
+  console.log(data);
+  
+  const users = data?.data?.items ?? [];
+  const pagination = data?.data?.pagination;
 
-  const hasNext = page * pageSize < filteredUsers.length;
-  const hasPrevious = page > 1;
+  const hasNext = pagination?.hasNext ?? false;
+  const hasPrevious = pagination?.hasPrevious ?? false;
 
-  const totalUsers = MOCK_USERS.length;
-  const activeUsers = MOCK_USERS.filter((u) => u.active).length;
+  const totalUsers = users.length; // porque totalItems viene null
+  const activeUsers = users.filter((u: any) => u.enabled).length;
   const inactiveUsers = totalUsers - activeUsers;
 
   const columns = [
-    { title: "Nombre", dataIndex: "name", key: "name" },
+    { title: "Nombre", dataIndex: "firstName", key: "firstName" },
     { title: "Apellido", dataIndex: "lastName", key: "lastName" },
     { title: "Correo", dataIndex: "email", key: "email" },
     {
       title: "Estado",
-      dataIndex: "active",
-      key: "active",
-      render: (active: boolean) => (
-        <Tag color={active ? "green" : "red"}>
-          {active ? "✓ Activo" : "✗ Inactivo"}
+      dataIndex: "enabled",
+      key: "enabled",
+      render: (enabled: boolean) => (
+        <Tag color={enabled ? "green" : "red"}>
+          {enabled ? "✓ Activo" : "✗ Inactivo"}
         </Tag>
       ),
     },
     {
       title: "Acciones",
       key: "actions",
-      render: (_: any, record: User) => (
+      render: (_: any, record: any) => (
         <Button type="link" onClick={() => setSelectedUser(record)}>
           Ver detalles
         </Button>
@@ -100,7 +83,7 @@ export const UsersListPage = () => {
     },
   ];
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <Spin size="large" />
@@ -110,6 +93,24 @@ export const UsersListPage = () => {
 
   return (
     <div>
+      {/* Header */}
+      <PageHeaderTabs
+        title="Gestión de Usuarios"
+        tabs={[
+          ...(ability.can("read", "users") ? [{
+            key: "listar",
+            label: "Lista de Usuarios",
+            path: "/users/list",
+          }] : []),
+            ...(ability.can("create", "users") ? [{
+              key: "crear",
+              label: "Crear Usuario",
+              path: "/users/create",
+            }] : []),
+          ]}
+        defaultActive="crear"
+      />
+
       {/* Resumen */}
       <Row gutter={16} className="mb-4">
         <Col span={8}>
@@ -119,12 +120,20 @@ export const UsersListPage = () => {
         </Col>
         <Col span={8}>
           <Card bordered={false} className="primary-card">
-            <Statistic title="Usuarios Activos" value={activeUsers} valueStyle={{ color: "#52c41a" }} />
+            <Statistic
+              title="Usuarios Activos"
+              value={activeUsers}
+              valueStyle={{ color: "#52c41a" }}
+            />
           </Card>
         </Col>
         <Col span={8}>
           <Card bordered={false} className="primary-card">
-            <Statistic title="Usuarios Inactivos" value={inactiveUsers} valueStyle={{ color: "#faad14" }} />
+            <Statistic
+              title="Usuarios Inactivos"
+              value={inactiveUsers}
+              valueStyle={{ color: "#faad14" }}
+            />
           </Card>
         </Col>
       </Row>
@@ -147,26 +156,38 @@ export const UsersListPage = () => {
           <UserOutlined />
           <span className="text-lg">Lista de Usuarios</span>
         </div>
+
         <Table
           columns={columns}
-          dataSource={paginatedUsers}
+          dataSource={users}
           rowKey="id"
+          // pagination={{
+          //   current: page,
+          //   pageSize: pageSize,
+          //   total: totalUsers,
+          //   onChange: (newPage) => setPage(newPage),
+          // }}
           pagination={false}
           bordered
         />
 
-        {/* Paginación simple */}
         <div className="flex justify-end gap-2 mt-4">
-          <Button disabled={!hasPrevious} onClick={() => setPage(page - 1)}>
+          <Button
+            disabled={!hasPrevious}
+            onClick={() => setPage((p) => p - 1)}
+          >
             Página anterior
           </Button>
-          <Button disabled={!hasNext} onClick={() => setPage(page + 1)}>
+          <Button
+            disabled={!hasNext}
+            onClick={() => setPage((p) => p + 1)}
+          >
             Página siguiente
           </Button>
         </div>
       </Card>
 
-      {/* Detalle usuario */}
+      {/* Drawer */}
       <Drawer
         title="Detalle del Usuario"
         open={!!selectedUser}
@@ -175,8 +196,14 @@ export const UsersListPage = () => {
       >
         {selectedUser && (
           <Descriptions column={1} bordered>
+            <Descriptions.Item label="ID">
+              {selectedUser.id}
+            </Descriptions.Item>
+            <Descriptions.Item label="Username">
+              {selectedUser.username}
+            </Descriptions.Item>
             <Descriptions.Item label="Nombre">
-              {selectedUser.name} {selectedUser.lastName}
+              {selectedUser.firstName} {selectedUser.lastName}
             </Descriptions.Item>
             <Descriptions.Item label="Correo">
               {selectedUser.email}
@@ -184,25 +211,10 @@ export const UsersListPage = () => {
             <Descriptions.Item label="Estado">
               {selectedUser.active ? "Activo" : "Inactivo"}
             </Descriptions.Item>
-            <Descriptions.Item label="Practitioner ID">
-              {selectedUser.practitionerId}
-            </Descriptions.Item>
-            <Descriptions.Item label="FHIR ID">
-              {selectedUser.fhir.id}
-            </Descriptions.Item>
-            <Descriptions.Item label="FHIR Names">
-              {selectedUser.fhir.names.join(", ")}
-            </Descriptions.Item>
-            <Descriptions.Item label="FHIR Identifiers">
-              {selectedUser.fhir.identifiers.map((id) => (
-                <div key={id.value}>
-                  <strong>{id.system}:</strong> {id.value}
-                </div>
-              ))}
-            </Descriptions.Item>
           </Descriptions>
         )}
       </Drawer>
     </div>
   );
 };
+

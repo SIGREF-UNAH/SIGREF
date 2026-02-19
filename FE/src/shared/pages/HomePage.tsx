@@ -160,6 +160,17 @@ export const HomePage: React.FC = () => {
             path="/practitioners/list"
           />
         </Can>
+
+        {/* Gestión de Usuarios */}
+        <Can I="read" a="users" ability={ability}>
+          <ModuleCard
+            title="Gestión de Usuarios"
+            description={"Lleve a cabo las tareas de gestión de los usuarios del sistema"}
+            icon={<UserOutlined />}
+            shortcut="Ctrl + U"
+            path="/users/list"
+          />
+        </Can>
         
         {/* Gestión de Turnos */}
         <Can I="read" a="shifts" ability={ability}>
