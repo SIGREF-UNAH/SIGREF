@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Infrastructure;
 using SIGREF.API;
 using SIGREF.API.ServiceDefaults;
 using SIGREF.API.Utils;
@@ -6,6 +7,17 @@ using SIGREF.API.Utils;
 var builder = WebApplication.CreateBuilder(args);
 // ASCII banner
 ConsoleBanner.Print();
+
+QuestPDF.Settings.License = LicenseType.Community;
+// ===== ENBEBEDED FILES CONFIG =====
+if (builder.Environment.IsDevelopment())
+{
+    var names = typeof(Program).Assembly.GetManifestResourceNames();
+    Console.WriteLine(string.Join("\n", names));
+}
+
+// ======================
+
 builder.AddServiceDefaults();
 
 // Add PostgreSQL with Aspire integration - DEBE estar en Program.cs, NO en Startup.cs

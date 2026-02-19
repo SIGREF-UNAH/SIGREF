@@ -92,6 +92,9 @@ public class Startup
         services.AddScoped<IReportExportService, ReportExportService>();
 
 
+        // PDFS
+        services.AddScoped<ITestPdfService, TestPdfService>();
+        
         // ==============================================================
         //  KEYCLOAK CLIENT + ADMIN SERVICE 
         // ==============================================================
