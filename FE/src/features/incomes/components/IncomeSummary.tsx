@@ -127,8 +127,8 @@ export const IncomeSummary = ({
       <Space direction="vertical" style={{ width: "100%", marginTop: 16 }} size="small">
         <Space>
           <div>
-            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              Serie de Facturación
+            <Typography.Text type="secondary" style={{ fontSize: 14 }}>
+              Serie de Facturación {" "}
             </Typography.Text>
             <Space>
               <Select
@@ -175,8 +175,8 @@ export const IncomeSummary = ({
           </div>
 
           <div>
-            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              Número de Recibo
+            <Typography.Text type="secondary" style={{ fontSize: 14 }}>
+              Número de Recibo {" "}
             </Typography.Text>
             <Input
               value={numeroRecibo}
