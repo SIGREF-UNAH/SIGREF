@@ -5,28 +5,6 @@ import { useGetApiKeycloakSeederList } from "../../../api/keycloak-seeder/keyclo
 import { PageHeaderTabs } from "../../../shared/components";
 import { useAbility } from "../../../config";
 
-// --------------------
-// Tipos
-// --------------------
-type FhirIdentifier = {
-  system: string;
-  value: string;
-};
-
-type User = {
-  id: string;
-  name: string;
-  lastName: string;
-  email: string;
-  active: boolean;
-  practitionerId: string;
-  fhir: {
-    id: string;
-    names: string[];
-    identifiers: FhirIdentifier[];
-  };
-};
-
 
 // --------------------
 // Página principal
@@ -95,20 +73,30 @@ export const UsersListPage = () => {
     <div>
       {/* Header */}
       <PageHeaderTabs
-        title="Gestión de Usuarios"
+        title="Gestión de Empleados"
         tabs={[
+          ...(ability.can("read", "practitioners") ? [{
+            key: "read-practitioners",
+            label: "Lista de Empleados",
+            path: "/practitioners/list",
+          }] : []),
+          ...(ability.can("create", "practitioners") ? [{
+            key: "create-practitioners",
+            label: "Crear Empleado",
+            path: "/practitioners/create",
+          }] : []),
           ...(ability.can("read", "users") ? [{
-            key: "listar",
+            key: "read-users",
             label: "Lista de Usuarios",
             path: "/users/list",
           }] : []),
             ...(ability.can("create", "users") ? [{
-              key: "crear",
+              key: "create-users",
               label: "Crear Usuario",
               path: "/users/create",
-            }] : []),
-          ]}
-        defaultActive="crear"
+          }] : []),
+        ]}
+        defaultActive="read-users"
       />
 
       {/* Resumen */}

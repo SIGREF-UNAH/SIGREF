@@ -131,6 +131,18 @@ export const PractitionersRoutes: RouteItem[] = [
     subject: "practitioners" as Subjects,
     action: "create",
   },
+  {
+    path: "/users/list",
+    name: "Lista de Usuarios",
+    subject: "users" as Subjects,
+    action: "read",
+  },
+  {
+    path: "/users/create",
+    name: "Crear Usuario",
+    subject: "users" as Subjects,
+    action: "create",
+  },
 ];
 
 // Gestión de Organizaciones

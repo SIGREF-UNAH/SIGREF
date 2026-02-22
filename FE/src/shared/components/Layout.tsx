@@ -14,7 +14,6 @@ import {
   LogoutOutlined,
   PhoneOutlined,
   QuestionCircleOutlined,
-  UserAddOutlined,
 } from "@ant-design/icons";
 
 export const Layout = () => {
@@ -120,7 +119,7 @@ export const Layout = () => {
                   }}
                 />
               </div>
-              <div className="ml-4 mr-8 text-xs md:text-xl font-semibold text-general truncate max-w-[150px] md:max-w-none">
+              <div className="ml-4 mr-8 text-xs md:text-xl font-semibold text-general truncate max-w-37.5 md:max-w-none">
                 {`SIGREF - Panel de ${rolesValidos}`}
               </div>
             </div>
