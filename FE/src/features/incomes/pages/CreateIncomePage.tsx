@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { PageContainer, ProCard } from "@ant-design/pro-components";
 import {
   Input,
   Button,
@@ -28,11 +27,14 @@ import { useHealthcaresList } from "../../healthcares/hooks";
 import { useServiceGroupsList } from "../../service-groups/hooks";
 import { usePatientsInformation } from "../../patients/hooks";
 import { useCreateIncome } from "../hooks/useCreateIncome";
+import { PageHeaderTabs } from "../../../shared/components";
+import { useAbility } from "../../../config";
 
 const { TextArea } = Input;
 const { Text } = Typography;
 
 export const CreateIncomePage = () => {
+  const ability = useAbility();
   const [tipoSeleccion, setTipoSeleccion] = useState<"servicio" | "paquete">(
     "servicio",
   );
@@ -193,7 +195,7 @@ export const CreateIncomePage = () => {
         ...servicio,
       };
       setSelectedServicio(servicioNormalizado);
-      setSelectedServiceGroup(null); 
+      setSelectedServiceGroup(null);
       setTipoSeleccion("servicio");
     }
   };
@@ -339,107 +341,68 @@ export const CreateIncomePage = () => {
   return (
     <>
       {incomeContextHolder}
-      <PageContainer
-        title="Registro de Ingresos por Servicios"
-        subTitle="Genere ingresos de servicios o paquetes del paciente"
-      >
-        <Row gutter={16}>
-          {/* Servicios y Paquetes */}
-          <Col xs={24} lg={10}>
-            <ProCard
-              title={
-                <Space>
-                  <FileTextOutlined />
-                  <span>Servicios y Paquetes</span>
-                </Space>
-              }
-              bordered
-            >
-              <Tabs
-                activeKey={tipoSeleccion}
-                onChange={(key) =>
-                  setTipoSeleccion(key as "servicio" | "paquete")
-                }
-                items={[
+      <div>
+        {/* Header */}
+        <PageHeaderTabs
+          title="Gestión de Ingresos"
+          tabs={[
+            ...(ability.can("read", "incomes")
+              ? [
                   {
-                    key: "servicio",
-                    label: (
-                      <Space>
-                        <MedicineBoxOutlined />
-                        Servicios
-                      </Space>
-                    ),
-                    children: (
-                      <ServiceIncome
-                        serviciosData={healthcares}
-                        servicioFilters={servicioUIFilters}
-                        setServicioFilter={setServicioUIFilter}
-                        setServicioFilters={setServicioUIFilters}
-                        handleSelectServicio={handleSelectServicio}
-                        selectedServicio={selectedServicio}
-                        isLoading={isLoadingHealthcares}
-                      />
-                    ),
+                    key: "read",
+                    label: "Lista de Ingresos",
+                    path: "/incomes/list",
                   },
+                ]
+              : []),
+            ...(ability.can("create", "incomes")
+              ? [
                   {
-                    key: "paquete",
-                    label: (
-                      <Space>
-                        <AppstoreOutlined />
-                        Paquetes
-                      </Space>
-                    ),
-                    children: (
-                      <ServiceGroupIncome
-                        serviceGroupsData={serviceGroups}
-                        serviceGroupFilters={serviceGroupUIFilters}
-                        setServiceGroupFilter={setServiceGroupUIFilter}
-                        setServiceGroupFilters={setServiceGroupUIFilters}
-                        handleSelectServiceGroup={handleSelectServiceGroup}
-                        selectedServiceGroup={selectedServiceGroup}
-                        isLoading={isLoadingServiceGroups}
-                      />
-                    ),
+                    key: "create",
+                    label: "Generar Ingreso",
+                    path: "/incomes/create",
                   },
-                ]}
-              />
-              <Divider />
-              <IncomeSummary
-                serie={serie}
-                setSerie={setSerie}
-                setSerieId={setSerieId}
-                numeroRecibo={numeroRecibo}
-                setNumeroRecibo={setNumeroRecibo}
-                selectedPaciente={selectedPaciente}
-                selectedServicio={itemSeleccionado}
-                aPagarEfectivo={aPagarEfectivo}
-                exonerado={exonerado}
-                tramiteEmergencia={tramiteEmergencia}
-              />
-            </ProCard>
-          </Col>
-
-          {/* Registro de Ingresos */}
-          <Col xs={24} lg={14}>
-            <ProCard
-              title={
-                <Space>
-                  <UserOutlined />
-                  <span>Registro de Ingresos</span>
-                </Space>
-              }
-              bordered
-            >
-              <ListPatient
-                pacientesData={patients}
-                setSelectedPaciente={setSelectedPaciente}
-                selectedPaciente={selectedPaciente}
-                pacienteFilters={pacienteUIFilters}
-                setPacienteFilter={handleSetPacienteFilter}
-                setPacienteFilters={handleSetPacienteFilters}
-                isLoading={isLoadingPatients}
-              />
-              <Divider />
+                ]
+              : []),
+            ...(ability.can("update", "incomes")
+              ? [
+                  {
+                    key: "update",
+                    label: "Cerrar Caja",
+                    path: "/incomes/close",
+                  },
+                ]
+              : []),
+            ...(ability.can("read", "incomes")
+              ? [
+                  {
+                    key: "history",
+                    label: "Historial de Cierres de Caja",
+                    path: "/incomes/history",
+                  },
+                ]
+              : []),
+          ]}
+          defaultActive="create"
+        />
+        {/* Content */}
+        <div className="primary-card">
+          {/* Resumen de la factura */}
+          <div className="secondary-card mb-4">
+            <IncomeSummary
+              serie={serie}
+              setSerie={setSerie}
+              setSerieId={setSerieId}
+              numeroRecibo={numeroRecibo}
+              setNumeroRecibo={setNumeroRecibo}
+              selectedPaciente={selectedPaciente}
+              selectedServicio={itemSeleccionado}
+              aPagarEfectivo={aPagarEfectivo}
+              exonerado={exonerado}
+              tramiteEmergencia={tramiteEmergencia}
+            />
+            <Divider />
+            <div>
               <Row gutter={16} style={{ marginBottom: 16 }}>
                 <Col span={8}>
                   <Text strong>A Pagar Efectivo:</Text>
@@ -484,7 +447,15 @@ export const CreateIncomePage = () => {
                   placeholder="Ingrese observaciones adicionales..."
                 />
               </div>
-              <Space>
+              <Space className="flex! justify-end!">
+                <Button
+                  icon={<ReloadOutlined />}
+                  size="large"
+                  onClick={handleResetear}
+                  disabled={isCreatingIncome}
+                >
+                  Cancelar
+                </Button>
                 <Button
                   type="primary"
                   icon={<SaveOutlined />}
@@ -498,19 +469,90 @@ export const CreateIncomePage = () => {
                 >
                   Guardar
                 </Button>
-                <Button
-                  icon={<ReloadOutlined />}
-                  size="large"
-                  onClick={handleResetear}
-                  disabled={isCreatingIncome}
-                >
-                  Resetear
-                </Button>
               </Space>
-            </ProCard>
-          </Col>
-        </Row>
-      </PageContainer>
+            </div>
+          </div>
+
+          <Row gutter={16}>
+            {/* Servicios y Paquetes */}
+            <Col xs={24} lg={10}>
+              <div className="secondary-card">
+                <Space className="text-lg!">
+                  <FileTextOutlined />
+                  <span>Servicios y Paquetes</span>
+                </Space>
+                <Tabs
+                  activeKey={tipoSeleccion}
+                  onChange={(key) =>
+                    setTipoSeleccion(key as "servicio" | "paquete")
+                  }
+                  items={[
+                    {
+                      key: "servicio",
+                      label: (
+                        <Space>
+                          <MedicineBoxOutlined />
+                          Servicios
+                        </Space>
+                      ),
+                      children: (
+                        <ServiceIncome
+                          serviciosData={healthcares}
+                          servicioFilters={servicioUIFilters}
+                          setServicioFilter={setServicioUIFilter}
+                          setServicioFilters={setServicioUIFilters}
+                          handleSelectServicio={handleSelectServicio}
+                          selectedServicio={selectedServicio}
+                          isLoading={isLoadingHealthcares}
+                        />
+                      ),
+                    },
+                    {
+                      key: "paquete",
+                      label: (
+                        <Space>
+                          <AppstoreOutlined />
+                          Paquetes
+                        </Space>
+                      ),
+                      children: (
+                        <ServiceGroupIncome
+                          serviceGroupsData={serviceGroups}
+                          serviceGroupFilters={serviceGroupUIFilters}
+                          setServiceGroupFilter={setServiceGroupUIFilter}
+                          setServiceGroupFilters={setServiceGroupUIFilters}
+                          handleSelectServiceGroup={handleSelectServiceGroup}
+                          selectedServiceGroup={selectedServiceGroup}
+                          isLoading={isLoadingServiceGroups}
+                        />
+                      ),
+                    },
+                  ]}
+                />
+              </div>
+            </Col>
+
+            {/* Pacientes */}
+            <Col xs={24} lg={14}>
+              <div className="secondary-card">
+                <Space className="mb-2! text-lg!">
+                  <UserOutlined />
+                  <span>Pacientes</span>
+                </Space>
+                <ListPatient
+                  pacientesData={patients}
+                  setSelectedPaciente={setSelectedPaciente}
+                  selectedPaciente={selectedPaciente}
+                  pacienteFilters={pacienteUIFilters}
+                  setPacienteFilter={handleSetPacienteFilter}
+                  setPacienteFilters={handleSetPacienteFilters}
+                  isLoading={isLoadingPatients}
+                />
+              </div>
+            </Col>
+          </Row>
+        </div>
+      </div>
     </>
   );
 };
