@@ -28,11 +28,14 @@ import { useHealthcaresList } from "../../healthcares/hooks";
 import { useServiceGroupsList } from "../../service-groups/hooks";
 import { usePatientsInformation } from "../../patients/hooks";
 import { useCreateIncome } from "../hooks/useCreateIncome";
+import { PageHeaderTabs } from "../../../shared/components";
+import { useAbility } from "../../../config";
 
 const { TextArea } = Input;
 const { Text } = Typography;
 
 export const CreateIncomePage = () => {
+  const ability = useAbility();
   const [tipoSeleccion, setTipoSeleccion] = useState<"servicio" | "paquete">(
     "servicio",
   );
@@ -339,22 +342,35 @@ export const CreateIncomePage = () => {
   return (
     <>
       {incomeContextHolder}
-      <PageContainer
-        title="Registro de Ingresos por Servicios"
-        subTitle="Genere ingresos de servicios o paquetes del paciente"
-      >
+      <div>
+        {/* Header */}
+        <PageHeaderTabs
+          title="Gestión de Ingresos"
+          tabs={[
+            ...(ability.can("read", "incomes") ? [{
+              key: "read", label: "Lista de Ingresos", path: "/incomes/list",
+            }] : []),
+            ...(ability.can("create", "incomes") ? [{
+              key: "create", label: "Generar Ingreso", path: "/incomes/create",
+            }] : []),
+            ...(ability.can("update", "incomes") ? [{
+              key: "update", label: "Cerrar Caja", path: "/incomes/close",
+            }] : []),
+            ...(ability.can("read", "incomes") ? [{
+              key: "history", label: "Historial de Cierres de Caja", path: "/incomes/history",
+            }] : []),
+          ]}
+          defaultActive="create"
+        />
+        {/* Content */}
         <Row gutter={16}>
           {/* Servicios y Paquetes */}
           <Col xs={24} lg={10}>
-            <ProCard
-              title={
-                <Space>
-                  <FileTextOutlined />
-                  <span>Servicios y Paquetes</span>
-                </Space>
-              }
-              bordered
-            >
+            <div className="primary-card">
+              <Space className="text-lg!">
+                <FileTextOutlined />
+                <span>Servicios y Paquetes</span>
+              </Space>
               <Tabs
                 activeKey={tipoSeleccion}
                 onChange={(key) =>
@@ -416,20 +432,16 @@ export const CreateIncomePage = () => {
                 exonerado={exonerado}
                 tramiteEmergencia={tramiteEmergencia}
               />
-            </ProCard>
+            </div>
           </Col>
 
           {/* Registro de Ingresos */}
           <Col xs={24} lg={14}>
-            <ProCard
-              title={
-                <Space>
-                  <UserOutlined />
-                  <span>Registro de Ingresos</span>
-                </Space>
-              }
-              bordered
-            >
+            <div className="primary-card">
+              <Space className="mb-2! text-lg!">
+                <UserOutlined />
+                <span>Registro de Ingresos</span>
+              </Space>
               <ListPatient
                 pacientesData={patients}
                 setSelectedPaciente={setSelectedPaciente}
@@ -507,10 +519,10 @@ export const CreateIncomePage = () => {
                   Resetear
                 </Button>
               </Space>
-            </ProCard>
+            </div>
           </Col>
         </Row>
-      </PageContainer>
+      </div>
     </>
   );
 };
