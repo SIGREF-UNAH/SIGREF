@@ -1,7 +1,7 @@
 ﻿#nullable enable
+using System.Text.Json.Serialization;
 using Hl7.Fhir.Model;
 using SIGREF.API.Dtos.Common;
-using System.Text.Json.Serialization;
 
 namespace SIGREF.API.Dtos.Patient
 {

@@ -1,10 +1,10 @@
 ﻿using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
-using Task = System.Threading.Tasks.Task;
-using FhirHealthcare = Hl7.Fhir.Model.HealthcareService;
-using SIGREF.API.Dtos.Healthcare;
 using SIGREF.API.Dtos.Common;
+using SIGREF.API.Dtos.Healthcare;
 using SIGREF.API.Helpers;
+using FhirHealthcare = Hl7.Fhir.Model.HealthcareService;
+using Task = System.Threading.Tasks.Task;
 
 namespace SIGREF.API.Services.Healthcare
 {

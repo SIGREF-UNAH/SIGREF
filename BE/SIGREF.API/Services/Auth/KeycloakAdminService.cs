@@ -1,10 +1,10 @@
 ﻿using System.Security.Claims;
+using System.Text.Json;
 using Hl7.Fhir.Rest;
-using FhirPractitioner = Hl7.Fhir.Model.Practitioner;
 using SIGREF.API.Dtos.Auth;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Services.Auth.Keycloak;
-using System.Text.Json;
+using FhirPractitioner = Hl7.Fhir.Model.Practitioner;
 namespace SIGREF.API.Services.Auth;
 
 public class KeycloakAdminService : IKeycloakAdminService

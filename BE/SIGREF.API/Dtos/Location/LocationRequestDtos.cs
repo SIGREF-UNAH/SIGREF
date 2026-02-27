@@ -3,8 +3,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Hl7.Fhir.Model;
-using FhirLocation = Hl7.Fhir.Model.Location;
 using SIGREF.API.Dtos.Common;
+using FhirLocation = Hl7.Fhir.Model.Location;
 
 namespace SIGREF.API.Dtos.Location;
 

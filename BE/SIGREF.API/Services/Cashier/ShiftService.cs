@@ -1,6 +1,6 @@
 using System.ComponentModel;
+using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
-using FhirLocation = Hl7.Fhir.Model.Location;
 using Microsoft.EntityFrameworkCore;
 using SIGREF.API.Database;
 using SIGREF.API.Database.Entity.Cashier;
@@ -9,7 +9,7 @@ using SIGREF.API.Dtos.Common;
 using SIGREF.API.Extensions;
 using SIGREF.API.Helpers;
 using SIGREF.API.Services.Auth;
-using Hl7.Fhir.Model;
+using FhirLocation = Hl7.Fhir.Model.Location;
 
 namespace SIGREF.API.Services.Cashier;
 

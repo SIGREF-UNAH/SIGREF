@@ -1,7 +1,7 @@
 ﻿#nullable enable
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using Hl7.Fhir.Model;
-using System.ComponentModel.DataAnnotations;
 namespace SIGREF.API.Dtos.Common
 {
     /* 

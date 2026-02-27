@@ -1,8 +1,8 @@
 ﻿#nullable enable
+using System.Linq;
 using Hl7.Fhir.Model;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Extensions.Common;
-using System.Linq;
 
 namespace SIGREF.API.Extensions;
 public static class CommonExtensions
