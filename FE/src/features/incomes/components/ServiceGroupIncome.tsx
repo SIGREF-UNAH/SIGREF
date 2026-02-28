@@ -11,7 +11,7 @@ interface ServiceGroupIncomeProps {
     pageServiceGroup: number;
     pageSizeServiceGroup: number;
   };
-  setServiceGroupFilter: (key: string, value: any) => void;
+  setServiceGroupFilter: (key: "searchServiceGroups" | "pageServiceGroup" | "pageSizeServiceGroup", value: any) => void;
   setServiceGroupFilters: (filters: any) => void;
   handleSelectServiceGroup: (serviceGroup: ServiceGroupDto) => void;
   selectedServiceGroup: ServiceGroupDto | null;
