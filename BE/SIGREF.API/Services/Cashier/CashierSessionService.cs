@@ -444,15 +444,19 @@ public class CashierSessionService : ICashierSessionService
             };
         }
         
-        if (!canViewAll && sessionDto.UserId != userId)
+        if (!canViewAll)
         {
-            return new ResponseDto<CashierSessionDto>
+            // Cajero solo sus propias sesiones
+            if (sessionDto.UserId != userId)
             {
-                Status = false,
-                Message = "You do not have permission to view this session.",
-                StatusCode = 403,
-                Data = null
-            };
+                return new ResponseDto<CashierSessionDto>
+                {
+                    Status = false,
+                    Message = "You do not have permission to view this session.",
+                    StatusCode = 403,
+                    Data = null
+                };
+            }
         }
         
         return new ResponseDto<CashierSessionDto>
