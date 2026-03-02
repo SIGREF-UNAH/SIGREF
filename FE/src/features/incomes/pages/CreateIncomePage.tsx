@@ -41,9 +41,10 @@ export const CreateIncomePage = () => {
     createIncome,
     isLoading: isCreatingIncome,
     contextHolder: incomeContextHolder,
+    messageApi,
   } = useCreateIncome({
     onSuccess: () => {
-      handleResetear();
+      handleResetear(false);
     },
   });
 
@@ -235,19 +236,19 @@ export const CreateIncomePage = () => {
 
   const handleGuardar = () => {
     if (!selectedPaciente) {
-      message.warning("Por favor selecciona un paciente");
+      messageApi.warning("Por favor selecciona un paciente");
       return;
     }
     if (!selectedServicio && !selectedServiceGroup) {
-      message.warning("Por favor selecciona un servicio o paquete");
+      messageApi.warning("Por favor selecciona un servicio o paquete");
       return;
     }
     if (!numeroRecibo.trim()) {
-      message.warning("Por favor ingresa un número de recibo");
+      messageApi.warning("Por favor ingresa un número de recibo");
       return;
     }
     if (!serieId || serieId === "") {
-      message.error("Por favor selecciona una serie válida");
+      messageApi.error("Por favor selecciona una serie válida");
       return;
     }
 
@@ -270,7 +271,7 @@ export const CreateIncomePage = () => {
     });
   };
 
-  const handleResetear = () => {
+  const handleResetear = (showNotification = true) => {
     setSelectedServicio(null);
     setSelectedServiceGroup(null);
     setSelectedPaciente(null);
@@ -331,7 +332,9 @@ export const CreateIncomePage = () => {
       fechaNacimiento: null,
     });
 
-    message.info("Formulario reseteado");
+    if (showNotification) {
+      messageApi.info("Formulario reseteado");
+    }
   };
 
   const itemSeleccionado = selectedServicio || selectedServiceGroup;

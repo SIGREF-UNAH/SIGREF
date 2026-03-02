@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../node_modules/rc-picker/es/locale/common.js"],
+  "sourcesContent": ["export var commonLocale = {\n  yearFormat: 'YYYY',\n  dayFormat: 'D',\n  cellMeridiemFormat: 'A',\n  monthBeforeYear: true\n};"],
+  "mappings": ";AAAO,IAAI,eAAe;AAAA,EACxB,YAAY;AAAA,EACZ,WAAW;AAAA,EACX,oBAAoB;AAAA,EACpB,iBAAiB;AACnB;",
+  "names": []
+}

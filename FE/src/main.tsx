@@ -1,3 +1,4 @@
+import "@ant-design/v5-patch-for-react-19";
 import { ReactKeycloakProvider } from "@react-keycloak/web";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";

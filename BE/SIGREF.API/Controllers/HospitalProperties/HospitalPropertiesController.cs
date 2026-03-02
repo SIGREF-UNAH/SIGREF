@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Constants;
 using SIGREF.API.Dtos.Administration;
@@ -27,7 +27,7 @@ public class HospitalPropertiesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Produces<HospitalPublicDto>()]
-    [Authorize(Roles = $"{RolesConstants.auditor},{RolesConstants.admin},{RolesConstants.ti},{RolesConstants.cashier}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetPublic()
     {
         var result = await _hospitalService.GetPublicAsync();
@@ -37,7 +37,7 @@ public class HospitalPropertiesController : ControllerBase
     [HttpGet("details")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [Produces<HospitalDetailsDto>()]
+    [Produces(typeof(HospitalDetailsDto))]
     [Authorize(Roles = $"{RolesConstants.auditor},{RolesConstants.admin},{RolesConstants.ti},{RolesConstants.cashier}")]
     public async Task<IActionResult> GetAllDetails()
     {

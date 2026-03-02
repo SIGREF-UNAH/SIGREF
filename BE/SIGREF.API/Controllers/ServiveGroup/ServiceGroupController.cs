@@ -10,7 +10,7 @@ namespace SIGREF.API.Controllers.ServiveGroup;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = $"{RolesConstants.admin},{RolesConstants.cashier},{RolesConstants.auditor}")]
+[Authorize(Roles = $"{RolesConstants.admin},{RolesConstants.cashier},{RolesConstants.auditor},{RolesConstants.ti}")]
 public class ServiceGroupController(ServiceGroupService serviceGroupService) : ControllerBase
 {
     [HttpGet]
@@ -18,7 +18,7 @@ public class ServiceGroupController(ServiceGroupService serviceGroupService) : C
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces(typeof(PagedResultDto<ServiceGroupDto>))]
-    [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor} ")]
+    [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor},{RolesConstants.ti}")]
      public async Task<ActionResult<ServiceGroupDto>> GetFiltered([FromQuery] ServiceGroupFilterDto filter)
     {
         var (items, pagination) = await serviceGroupService.GetFilteredServiceGroupsAsync(filter);
@@ -34,7 +34,7 @@ public class ServiceGroupController(ServiceGroupService serviceGroupService) : C
 
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor} ")]
+    [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor},{RolesConstants.ti}")]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Produces<ServiceGroupDto>()]
     public async Task<IActionResult> GetById(string id)

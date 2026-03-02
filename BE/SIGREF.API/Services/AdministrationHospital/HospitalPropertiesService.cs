@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SIGREF.API.Database;
 using SIGREF.API.Database.Entity.Administration;
 using SIGREF.API.Dtos.Administration;
@@ -28,13 +28,20 @@ public class HospitalPropertiesService : IHospitalPropertiesService
 
         if (hospital == null)
         {
-            return new ResponseDto<HospitalPublicDto>
+            // Auto-create default hospital if missing
+            hospital = new HospitalPropertiesEntity
             {
-                Status = false,
-                Message = "Hospital no configurado.",
-                StatusCode = 404,
-                Data = null
+                Name = "Hospital de Occidente",
+                IsSingleton = true,
+                Currency = "LPS",
+                CreatedDate = DateTime.UtcNow,
+                UpdatedDate = DateTime.UtcNow,
+                CreatedById = Guid.Empty,
+                UpdatedById = Guid.Empty,
+                IsActive = true
             };
+            _context.HospitalProperties.Add(hospital);
+            await _context.SaveChangesAsync();
         }
 
         return new ResponseDto<HospitalPublicDto>
@@ -59,13 +66,20 @@ public class HospitalPropertiesService : IHospitalPropertiesService
 
         if (hospital == null)
         {
-            return new ResponseDto<HospitalDetailsDto>
+             // Auto-create default hospital if missing
+            hospital = new HospitalPropertiesEntity
             {
-                Status = false,
-                StatusCode = 404,
-                Message = "Hospital no configurado.",
-                Data = null
+                Name = "Hospital de Occidente",
+                IsSingleton = true,
+                Currency = "LPS",
+                CreatedDate = DateTime.UtcNow,
+                UpdatedDate = DateTime.UtcNow,
+                CreatedById = Guid.Empty,
+                UpdatedById = Guid.Empty,
+                IsActive = true
             };
+            _context.HospitalProperties.Add(hospital);
+            await _context.SaveChangesAsync();
         }
 
         return new ResponseDto<HospitalDetailsDto>

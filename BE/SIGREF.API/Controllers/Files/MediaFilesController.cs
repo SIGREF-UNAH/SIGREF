@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Constants;
 using SIGREF.API.Database.Entity.common;
@@ -37,7 +37,7 @@ public class MediaFilesController : ControllerBase
     //             GET BY ID  (URL + info del archivo)
     // ============================================================
     [HttpGet("{id:guid}")]
-    [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor},{RolesConstants.ti}")] // Para que clientes y FE puedan cargar logos
+    [AllowAnonymous] // Para que clientes y FE puedan cargar logos
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Produces<MediaFileDto>()]
@@ -86,7 +86,7 @@ public class MediaFilesController : ControllerBase
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [Produces<MediaFileDto>()]
-    [Authorize(Roles = $"{RolesConstants.ti}")]
+    [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin},{RolesConstants.auditor},{RolesConstants.cashier}")]
     public async Task<IActionResult> GetPaged([FromQuery] MediaFileFilterDto filter)
     {
         var result = await _mediaService.GetPagedAsync(filter);

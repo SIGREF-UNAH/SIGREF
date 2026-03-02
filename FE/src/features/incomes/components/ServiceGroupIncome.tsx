@@ -67,7 +67,7 @@ export const ServiceGroupIncome = ({
         <div style={{ textAlign: "center", padding: "60px 0" }}>
           <Spin size="large" tip="Cargando paquetes..." />
         </div>
-      ) : serviceGroupsFiltrados.length === 0 ? (
+      ) : (serviceGroupsData ?? []).length === 0 ? (
         <div style={{ textAlign: "center", padding: "60px 0", color: "#999" }}>
           <Typography.Text type="secondary">
             {searchText

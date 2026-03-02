@@ -1,7 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SIGREF.API.Constants;
 using SIGREF.API.Database;
 using SIGREF.API.Database.Entity.Cashier;
+using SIGREF.API.Database.Entity.common;
 using SIGREF.API.Dtos.Cashier;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Extensions;
@@ -105,7 +106,6 @@ public class CashierSessionService : ICashierSessionService
             };
         }
 
-        //Validar que esté abierta
         if (!session.IsOpen)
         {
             return new ResponseDto<CashierSessionDto>
@@ -117,14 +117,40 @@ public class CashierSessionService : ICashierSessionService
             };
         }
 
-        // TODO : VERIFICAR ESTO CON OTRO REQUEST PUEDE SER SI ESTA INDEXADO LA SUMA DE INVOICES 
-        // cálculo del cierre
+        if (dto.DeclaredAmount < 0)
+        {
+            return new ResponseDto<CashierSessionDto>
+            {
+                Status = false,
+                Message = "El monto declarado no puede ser negativo.",
+                StatusCode = 400,
+                Data = session.ToDto()
+            };
+        }
+
+        var invoicesQuery = _db.Invoices
+            .AsNoTracking()
+            .Where(i => i.CashierSessionId == sessionId)
+            .Where(i => i.InvoiceType != InvoiceType.CreditNote && i.InvoiceType != InvoiceType.DebitNote)
+            .Where(i => i.Status != InvoiceStatus.Cancelled);
+
+        var invoiceCount = await invoicesQuery.CountAsync();
+        var totalPaid = await invoicesQuery.SumAsync(i => (decimal?)i.AmountPaid) ?? 0m;
+
+        if (invoiceCount > 0 && totalPaid == 0m)
+        {
+            return new ResponseDto<CashierSessionDto>
+            {
+                Status = false,
+                Message = "Monto del sistema calculado es 0 pese a existir facturas válidas. No se puede cerrar.",
+                StatusCode = 400,
+                Data = session.ToDto()
+            };
+        }
+
+        session.SystemAmount = totalPaid;
         session.DeclaredAmount = dto.DeclaredAmount;
-
-        // SystemAmount ya existe (lo gestionan los recibos)
-        var systemAmount = session.SystemAmount ?? 0;
-
-        session.Difference = dto.DeclaredAmount - systemAmount;
+        session.Difference = dto.DeclaredAmount - totalPaid;
 
         // Marcar estado de la sesión
         session.IsOpen = false;
@@ -132,15 +158,11 @@ public class CashierSessionService : ICashierSessionService
         session.UpdatedById = userId;
         session.UpdatedDate = DateTime.UtcNow;
 
-        // Calcular si quedó correcta o incorrecta
         bool isCorrect = session.Difference == 0;
-        // Marcar si requiere corrección
         session.RequiresCorrection = session.Difference != 0;
 
-        // Guardar cambios
         await _db.SaveChangesAsync();
 
-        // Retornar DTO COMPLETO
         var resultDto = session.ToDto();
         resultDto.IsClosedCorrectly = isCorrect;
 
@@ -295,13 +317,14 @@ public class CashierSessionService : ICashierSessionService
 
         bool isAdmin = roles.Contains(RolesConstants.admin);
         bool isAuditor = roles.Contains(RolesConstants.auditor);
+        bool canViewAll = isAdmin || isAuditor;
 
         // Query base
         var query = _db.CashierSessions.AsQueryable().AsNoTracking();
 
         // Rol: solo Admin/Auditor pueden ver todo
         // si es otro tipo de usuario, solo pueden ver sus cierres 
-        if (!isAdmin && !isAuditor)
+        if (!canViewAll)
         {
             query = query.Where(x => x.UserId == userId);
         }
@@ -389,6 +412,7 @@ public class CashierSessionService : ICashierSessionService
 
         bool isAdmin = roles.Contains(RolesConstants.admin);
         bool isAuditor = roles.Contains(RolesConstants.auditor);
+        bool canViewAll = isAdmin || isAuditor;
 
         // peticion entity a DTO directamente desde la BD
         var sessionDto = await _db.CashierSessions
@@ -422,19 +446,15 @@ public class CashierSessionService : ICashierSessionService
             };
         }
         
-        if (!isAdmin && !isAuditor)
+        if (!canViewAll && sessionDto.UserId != userId)
         {
-            // Cajero solo sus propias sesiones
-            if (sessionDto.UserId != userId)
+            return new ResponseDto<CashierSessionDto>
             {
-                return new ResponseDto<CashierSessionDto>
-                {
-                    Status = false,
-                    Message = "You do not have permission to view this session.",
-                    StatusCode = 403,
-                    Data = null
-                };
-            }
+                Status = false,
+                Message = "You do not have permission to view this session.",
+                StatusCode = 403,
+                Data = null
+            };
         }
         
         return new ResponseDto<CashierSessionDto>
