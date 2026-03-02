@@ -86,13 +86,19 @@ public class InvoiceService : IInvoiceService
         {
             activeSessionId = sessionResponse.Data.Id;
         }
-        else if (roles.Contains(RolesConstants.cashier))
+        Guid? cashierSessionId = null;
+        if (roles.Contains(RolesConstants.cashier))
         {
-            // Si es cajero ES OBLIGATORIO tener sesión
-            return ResponseHelper.Fail<InvoiceDetailDto>(
-                400,
-                "No se ha aperturado un turno. Registrar la factura fuera del horario es imposible."
-            );
+            var sesion = await _cashierSessionService.GetActiveSessionByUserAsync(userId);
+
+            if (sesion == null || !sesion.Status || sesion.Data == null)
+            {
+                return ResponseHelper.Fail<InvoiceDetailDto>(
+                    400,
+                    "No se ha aperturado un turno. Registrar la factura fuera del horario es imposible."
+                );
+            }
+            cashierSessionId = sesion.Data.Id;
         }
         // Realizo las validaciones por la Congelacion Historica de los DATOS
         if (dto.Items == null || dto.Items.Count == 0)
@@ -170,6 +176,7 @@ public class InvoiceService : IInvoiceService
             PaymentMethod = dto.PaymentMethod,
             SerieId = dto.SerieId,
             ParentInvoiceId = dto.ParentInvoiceId,
+            CashierSessionId = cashierSessionId,
 
             CreatedById = _userContextService.GetUserId(),
             CreatedDate = DateTime.UtcNow

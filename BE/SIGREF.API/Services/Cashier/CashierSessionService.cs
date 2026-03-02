@@ -175,7 +175,6 @@ public class CashierSessionService : ICashierSessionService
         };
     }
 
-
     public async Task<ResponseDto<CashierSessionDto>> RequestCorrectionAsync(Guid sessionId, RequestCorrectionDto dto)
     {
         var userId = _userContext.GetUserId();
@@ -236,7 +235,6 @@ public class CashierSessionService : ICashierSessionService
             Data = session.ToDto()
         };
     }
-
 
     public async Task<ResponseDto<CashierSessionDto>> ResolveCorrectionAsync(Guid sessionId, ResolveCorrectionDto dto)
     {
