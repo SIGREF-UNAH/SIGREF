@@ -30,16 +30,7 @@
             <h1>SIGREF</h1>
 
             <div class="logos-container">
-                <img
-                    src="https://curoc.unah.edu.hn/assets/CUROC/paginas/nuevo-pagina/_resampled/ResizedImageWzMwMCwzMDBd/logos-UNAH-12.png"
-                    alt="Ingeniería en Sistemas"
-                    class="logo-sistemas"
-                />
-                <img
-                    src="https://krti.cl/wp-content/uploads/2021/04/Logo-Hospital-Final.png"
-                    alt="Hospital de Occidente"
-                    class="logo-hospital"
-                />
+                
             </div>
         </div>
 

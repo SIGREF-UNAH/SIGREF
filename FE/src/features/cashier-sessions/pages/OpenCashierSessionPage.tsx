@@ -145,11 +145,6 @@ export default function OpenCashierSessionPage() {
                       <EnvironmentOutlined className="mr-2 text-blue-500" />
                       <div>
                         <div className="font-medium">{location.name}</div>
-                        {location.description && (
-                          <div className="text-xs text-gray-500">
-                            {location.description}
-                          </div>
-                        )}
                       </div>
                     </div>
                   </Option>

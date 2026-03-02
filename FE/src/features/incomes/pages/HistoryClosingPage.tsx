@@ -4,7 +4,6 @@ import {
   Input,
   Select,
   Button,
-  Card,
   Space,
   Tag,
   Dropdown,
@@ -27,6 +26,8 @@ import jsPDF from "jspdf";
 import * as XLSX from "xlsx";
 import autoTable from "jspdf-autotable";
 import { EmployeeDetailsModal, ErrorClosingModal } from "../components/modals";
+import { PageHeaderTabs } from "../../../shared/components";
+import { useAbility } from "../../../config";
 
 const { Option } = Select;
 
@@ -51,6 +52,7 @@ export interface CierreCaja {
 }
 
 export const HistoryClosingPage = () => {
+  const ability = useAbility();
   const { filters, setFilter, resetFilters } = useUrlFilters({
     defaultValues: {
       nombre: "",
@@ -370,145 +372,193 @@ export const HistoryClosingPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      {/* Título de la sección */}
-      <h2 className="text-xl font-bold text-gray-800 mb-4">
-        Historial de Cierres de Caja
-      </h2>
-
-      {/* Filtros */}
-      <Card className="mb-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-4">
-          <FilterOutlined className="text-blue-500" />
-          <span className="font-semibold text-gray-700">
-            Filtros de Búsqueda
-          </span>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Buscar por nombre
-            </label>
-            <Input
-              placeholder="Nombre de empleado"
-              prefix={<SearchOutlined />}
-              value={filters.nombre}
-              onChange={(e) => setFilter("nombre", e.target.value)}
-              size="large"
-              allowClear
-            />
+    <div>
+      {/* Header */}
+      <PageHeaderTabs
+        title="Gestión de Ingresos"
+        tabs={[
+          ...(ability.can("read", "incomes")
+            ? [
+                {
+                  key: "read",
+                  label: "Lista de Ingresos",
+                  path: "/incomes/list",
+                },
+              ]
+            : []),
+          ...(ability.can("create", "incomes")
+            ? [
+                {
+                  key: "create",
+                  label: "Generar Ingreso",
+                  path: "/incomes/create",
+                },
+              ]
+            : []),
+          ...(ability.can("update", "incomes")
+            ? [
+                {
+                  key: "update",
+                  label: "Cerrar Caja",
+                  path: "/incomes/close",
+                },
+              ]
+            : []),
+          ...(ability.can("read", "incomes")
+            ? [
+                {
+                  key: "history",
+                  label: "Historial de Cierres de Caja",
+                  path: "/incomes/history",
+                },
+              ]
+            : []),
+        ]}
+        defaultActive="history"
+      />
+      {/* Content */}
+      <div className="primary-card flex flex-col gap-y-2">
+        {/* Filtros */}
+        <div className="secondary-card">
+          <div className="flex items-center gap-2 mb-4">
+            <FilterOutlined className="text-blue-500" />
+            <span className="font-semibold text-gray-700">
+              Filtros de Búsqueda
+            </span>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Filtrar por turno
-            </label>
-            <Select
-              value={filters.turno}
-              onChange={(value) => setFilter("turno", value)}
-              size="large"
-              className="w-full"
-            >
-              <Option value="todos">Todos los turnos</Option>
-              <Option value="turno-a">Turno A</Option>
-              <Option value="turno-b">Turno B</Option>
-              <Option value="turno-c">Turno C</Option>
-            </Select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Filtrar por módulo
-            </label>
-            <Select
-              value={filters.modulo}
-              onChange={(value) => setFilter("modulo", value)}
-              size="large"
-              className="w-full"
-            >
-              <Option value="todos">Todos los módulos</Option>
-              <Option value="consulta">Consulta Externa</Option>
-              <Option value="emergencia">Emergencia</Option>
-            </Select>
-          </div>
-        </div>
-        <div className="mt-4 flex justify-end">
-          <Button icon={<ClearOutlined />} onClick={handleLimpiar} size="large">
-            Limpiar
-          </Button>
-        </div>
-      </Card>
-
-      {/* Opciones de Exportación */}
-      <Card className="mb-6 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <ExportOutlined className="text-blue-500" />
-              <span className="font-semibold text-gray-700">
-                Opciones de Exportación
-              </span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Buscar por nombre
+              </label>
+              <Input
+                placeholder="Nombre de empleado"
+                prefix={<SearchOutlined />}
+                value={filters.nombre}
+                onChange={(e) => setFilter("nombre", e.target.value)}
+                size="large"
+                allowClear
+              />
             </div>
-            <p className="text-sm text-gray-500">
-              Fecha de Impresión del reporte:{" "}
-              {new Date().toLocaleString("es-HN")}
-            </p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Filtrar por turno
+              </label>
+              <Select
+                value={filters.turno}
+                onChange={(value) => setFilter("turno", value)}
+                size="large"
+                className="w-full"
+              >
+                <Option value="todos">Todos los turnos</Option>
+                <Option value="turno-a">Turno A</Option>
+                <Option value="turno-b">Turno B</Option>
+                <Option value="turno-c">Turno C</Option>
+              </Select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Filtrar por módulo
+              </label>
+              <Select
+                value={filters.modulo}
+                onChange={(value) => setFilter("modulo", value)}
+                size="large"
+                className="w-full"
+              >
+                <Option value="todos">Todos los módulos</Option>
+                <Option value="consulta">Consulta Externa</Option>
+                <Option value="emergencia">Emergencia</Option>
+              </Select>
+            </div>
           </div>
-          <Dropdown menu={menuExportar} placement="bottomRight">
+          <div className="mt-4 flex justify-end">
             <Button
-              type="primary"
-              icon={<DownloadOutlined />}
+              icon={<ClearOutlined />}
+              onClick={handleLimpiar}
               size="large"
-              className="bg-blue-500 hover:bg-blue-600"
             >
-              Exportar tabla
+              Limpiar
             </Button>
-          </Dropdown>
-        </div>
-      </Card>
-
-      {/* Tabla de Cierres */}
-      <Card className="shadow-sm">
-        <div className="mb-4 flex items-center gap-2">
-          <div className="bg-gray-100 p-2 rounded">
-            <SearchOutlined className="text-gray-600" />
           </div>
-          <span className="font-semibold text-gray-700">Detalle de Cierre</span>
         </div>
-        <Table
-          columns={columns}
-          dataSource={dataFiltrada}
-          rowSelection={rowSelection}
-          pagination={{
-            current: filters.page,
-            pageSize: filters.pageSize,
-            total: dataFiltrada.length,
-            showSizeChanger: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} de ${total}`,
-            locale: { items_per_page: "/ página" },
-            pageSizeOptions: ["10", "20", "50", "100"],
-            onChange: handlePageChange,
-          }}
-          scroll={{ x: 1200 }}
-          className="custom-table"
-          bordered
+
+        {/* Opciones de Exportación */}
+        <div className="secondary-card">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <ExportOutlined className="text-blue-500" />
+                <span className="font-semibold text-gray-700">
+                  Opciones de Exportación
+                </span>
+              </div>
+              <p className="text-sm text-gray-500">
+                Fecha de Impresión del reporte:{" "}
+                {new Date().toLocaleString("es-HN")}
+              </p>
+            </div>
+            <Dropdown menu={menuExportar} placement="bottomRight">
+              <Button
+                type="primary"
+                icon={<DownloadOutlined />}
+                size="large"
+                className="bg-blue-500 hover:bg-blue-600"
+              >
+                Exportar tabla
+              </Button>
+            </Dropdown>
+          </div>
+        </div>
+
+        {/* Tabla de Cierres */}
+        <div  className="secondary-card">
+          <div className="mb-4 flex items-center gap-2">
+            <div className="bg-gray-100 p-2 rounded">
+              <SearchOutlined className="text-gray-600" />
+            </div>
+            <span className="font-semibold text-gray-700">
+              Detalle de Cierre
+            </span>
+          </div>
+          <Table
+            columns={columns}
+            dataSource={dataFiltrada}
+            rowSelection={rowSelection}
+            pagination={{
+              current: filters.page,
+              pageSize: filters.pageSize,
+              total: dataFiltrada.length,
+              showSizeChanger: true,
+              showTotal: (total, range) =>
+                `${range[0]}-${range[1]} de ${total}`,
+              locale: { items_per_page: "/ página" },
+              pageSizeOptions: ["10", "20", "50", "100"],
+              onChange: handlePageChange,
+            }}
+            scroll={{ x: 1200 }}
+            className="custom-table"
+            bordered
+          />
+        </div>
+
+        {/* Modal de Detalle del Empleado */}
+        <EmployeeDetailsModal
+          copiarNombre={copiarNombre}
+          empleadoSeleccionado={empleadoSeleccionado}
+          getConfiabilidadColor={getConfiabilidadColor}
+          modalDetalleVisible={modalDetalleVisible}
+          setModalDetalleVisible={setModalDetalleVisible}
         />
-      </Card>
 
-      {/* Modal de Detalle del Empleado */}
-      <EmployeeDetailsModal
-        copiarNombre={copiarNombre}
-        empleadoSeleccionado={empleadoSeleccionado}
-        getConfiabilidadColor={getConfiabilidadColor}
-        modalDetalleVisible={modalDetalleVisible}
-        setModalDetalleVisible={setModalDetalleVisible}
-      />
-
-      {/* Modal de Advertencia - Error en Cierre */}
-      <ErrorClosingModal
-        setModalAdvertenciaVisible={setModalAdvertenciaVisible}
-        modalAdvertenciaVisible={modalAdvertenciaVisible}
-        empleadoSeleccionado={empleadoSeleccionado}
-        copiarNombre={copiarNombre}
-      />
+        {/* Modal de Advertencia - Error en Cierre */}
+        <ErrorClosingModal
+          setModalAdvertenciaVisible={setModalAdvertenciaVisible}
+          modalAdvertenciaVisible={modalAdvertenciaVisible}
+          empleadoSeleccionado={empleadoSeleccionado}
+          copiarNombre={copiarNombre}
+        />
+      </div>
     </div>
   );
 };

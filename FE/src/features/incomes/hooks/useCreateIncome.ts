@@ -39,10 +39,20 @@ export const useCreateIncome = ({
         onSuccess?.();
       },
       onError: (error: any) => {
+        console.error("[useCreateIncome] Error al crear invoice:", {
+          status: error?.response?.status,
+          message: error?.response?.data?.message,
+          payload: error?.config?.data, // qué se envió
+          timestamp: new Date().toISOString(),
+        });
+        const backendMessage =
+          error?.response?.data?.message || error?.response?.data?.title;
+        const statusCode = error?.response?.status;
+
         messageApi.error(
-          error?.response?.data?.message ||
-            error?.response?.data?.title ||
-            "Error desconocido al crear el ingreso",
+          backendMessage
+            ? `Error ${statusCode}: ${backendMessage}`
+            : `Error ${statusCode ?? "desconocido"} al crear el ingreso. Verifique los datos e intente nuevamente.`,
         );
         onError?.(error);
       },
@@ -102,15 +112,15 @@ export const useCreateIncome = ({
     } else if (selectedServicio.tipo === "paquete") {
       // Si es un paquete, agregar todos los items del paquete
       if (selectedServicio.items && Array.isArray(selectedServicio.items)) {
+        // Calcular items para paquete
         selectedServicio.items.forEach((item: any) => {
           const itemUnitPrice = item.unitPrice || item.precio || 0;
           const itemQuantity = item.quantity || 1;
+          const itemSubtotal = itemUnitPrice * itemQuantity;
 
-          // Descuento: 100% si esta exonerado O si es tramite de emergencia
           const itemDiscount =
-            exonerado || tramiteEmergencia ? itemUnitPrice : 0;
-          const itemTotal =
-            exonerado || tramiteEmergencia ? 0 : itemUnitPrice * itemQuantity;
+            exonerado || tramiteEmergencia ? itemSubtotal : 0;
+          const itemTotal = itemSubtotal - itemDiscount;
 
           items.push({
             serviceId: item.id || item.serviceId,

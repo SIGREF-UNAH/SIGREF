@@ -1,8 +1,13 @@
-import { PageContainer, ProCard, ProTable, type ProColumns } from "@ant-design/pro-components";
-import { Typography, Button, Input } from "antd";
+import {
+  ProTable,
+  type ProColumns,
+} from "@ant-design/pro-components";
+import { Button, Input } from "antd";
 import { useState } from "react";
 import { useUrlFilters } from "../../../shared/hooks";
 import { EditIncomeModal } from "../components/modals";
+import { useAbility } from "../../../config";
+import { PageHeaderTabs } from "../../../shared/components";
 interface Income {
   id: number;
   fecha: string;
@@ -91,6 +96,7 @@ const listIncomeData = [
 ];
 
 export const ListIncomePage = () => {
+  const ability = useAbility();
   const { filters, setFilter, setFilters } = useUrlFilters({
     defaultValues: {
       search: "",
@@ -144,7 +150,7 @@ export const ListIncomePage = () => {
       title: "Monto (L)",
       dataIndex: "monto",
       key: "monto",
-      render: (value: any) => `L. ${(value.toFixed(2))}`
+      render: (value: any) => `L. ${value.toFixed(2)}`,
     },
     {
       title: "Paciente",
@@ -180,30 +186,60 @@ export const ListIncomePage = () => {
   ];
 
   return (
-    <PageContainer
-      title={
-        <Typography.Title level={3} style={{ margin: 0 }}>
-          Gestión de Fondos
-        </Typography.Title>
-      }
-      subTitle={
-        <Typography.Text>
-          Gestión de contrapartidas, libro contable y egresos
-        </Typography.Text>
-      }
-    >
-      <ProCard
-        title={<Typography.Title level={4}>Lista de Ingresos</Typography.Title>}
-        extra={
-          <Input.Search
-            placeholder="Buscar por paciente, servicio o recibo..."
-            allowClear
-            style={{ width: 400 }}
-            value={filters.search}
-            onChange={(e) => setFilter("search", e.target.value)}
-          />
-        }
-      >
+    <div>
+      {/* Header */}
+      <PageHeaderTabs
+        title="Gestión de Ingresos"
+        tabs={[
+          ...(ability.can("read", "incomes")
+            ? [
+                {
+                  key: "read",
+                  label: "Lista de Ingresos",
+                  path: "/incomes/list",
+                },
+              ]
+            : []),
+          ...(ability.can("create", "incomes")
+            ? [
+                {
+                  key: "create",
+                  label: "Generar Ingreso",
+                  path: "/incomes/create",
+                },
+              ]
+            : []),
+          ...(ability.can("update", "incomes")
+            ? [
+                {
+                  key: "update",
+                  label: "Cerrar Caja",
+                  path: "/incomes/close",
+                },
+              ]
+            : []),
+          ...(ability.can("read", "incomes")
+            ? [
+                {
+                  key: "history",
+                  label: "Historial de Cierres de Caja",
+                  path: "/incomes/history",
+                },
+              ]
+            : []),
+        ]}
+        defaultActive="read"
+      />
+
+      {/* Content */}
+      <div className="primary-card">
+        <Input.Search
+          placeholder="Buscar por paciente, servicio o recibo..."
+          allowClear
+          style={{ width: 400 }}
+          value={filters.search}
+          onChange={(e) => setFilter("search", e.target.value)}
+        />
         {/* Lista de Ingresos */}
         <ProTable
           rowKey="id"
@@ -219,7 +255,7 @@ export const ListIncomePage = () => {
           }}
           toolBarRender={false}
         />
-      </ProCard>
+      </div>
 
       {/* Editar */}
       <EditIncomeModal
@@ -227,6 +263,6 @@ export const ListIncomePage = () => {
         setModalVisible={setModalVisible}
         selectedIncome={selectedIncome}
       />
-    </PageContainer>
+    </div>
   );
 };

@@ -11,7 +11,7 @@ interface ServiceIncomeProps {
     pageServicio: number;
     pageSizeServicio: number;
   };
-  setServicioFilter: (key: string, value: any) => void;
+  setServicioFilter: (key: "searchServicios" | "pageServicio" | "pageSizeServicio", value: any) => void;
   setServicioFilters: (filters: any) => void;
   handleSelectServicio: (servicio: HealthcareDto) => void;
   selectedServicio: HealthcareDto | null;
