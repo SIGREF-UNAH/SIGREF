@@ -1,202 +1,125 @@
+# ============================================================================
+# MÓDULO: Configuración de Servidor HAPI FHIR JPA
+# PROYECTO: SIGREF
+# ----------------------------------------------------------------------------
+# AUTORES: 
+#   - @TETvega (Héctor Rene Martínez Vega) -> Arquitectura y lógica clínica
+#   - @erickArita (Erick Marley Arita) -> Base de infraestructura
+# CO-AUTOR DE OPTIMIZACIÓN: 
+#   - Gemini 3 Flash (Google AI) -> Ajustes de performance y batching
+# ----------------------------------------------------------------------------
+# PROPÓSITO: Configuración optimizada de persistencia HL7 FHIR R4 para 
+#            entornos hospitalarios de alta disponibilidad.
+# ============================================================================
+
 spring:
   datasource:
-
     # ============================================================
     # CONFIGURACIÓN DE DATA SOURCE (SPRING BOOT)
     # ============================================================
-    # Esta sección pertenece a Spring Boot y NO a HAPI FHIR.
-    # Define cómo el servidor JPA se conecta a la base de datos.
-    #
-    # Documentación oficial:
-    # https://docs.spring.io/spring-boot/reference/data/sql.html#data.sql.datasource.configuration
-    #
-    # En entornos de producción hospitalaria:
-    # - NUNCA se usa H2
-    # - SIEMPRE se usa PostgreSQL o MySQL externos
-    # - Normalmente estas propiedades se inyectan por variables de entorno
-    #   (Docker / Kubernetes / CI-CD)
-    #
-    # Ejemplo:
-    # url: jdbc:postgresql://postgres:5432/hapi
-    # username: hapi
-    # password: ********
-    #
-
-    # Driver JDBC requerido para PostgreSQL.
-    # Permite a Spring inicializar correctamente el pool de conexiones.
+    # Define cómo el servidor JPA gestiona el pool de conexiones a la DB.
+    # Ref Oficial: https://docs.spring.io/spring-boot/reference/data/sql.html#data.sql.datasource.configuration
+    
+    # Driver JDBC requerido para PostgreSQL. Crucial para inicializar el pool HikariCP.
     driverClassName: org.postgresql.Driver
-
 
   jpa:
     hibernate:
-
       # ============================================================
       # CONTROL DE ESQUEMA (HIBERNATE)
       # ============================================================
-      # validate:
-      # - Hibernate SOLO valida que las tablas existen
-      # - NO crea
-      # - NO modifica
-      # - NO elimina
-      #
-      # Esta es la única opción segura en producción.
-      #
-      # create / update / create-drop:
-      #  PELIGROSO en producción
-      #  Puede destruir datos clínicos
+      # 'validate': Hibernate solo verifica que las tablas existan.
+      # Evita cambios accidentales en la estructura de datos médicos.
+      # Ref: https://docs.jboss.org/hibernate/orm/current/userguide/html_single/#schema-generation
       ddl-auto: validate
 
-
     properties:
-
       # ============================================================
       # DIALECTO HAPI FHIR PARA POSTGRESQL
       # ============================================================
-      # HAPI FHIR NO utiliza el dialecto estándar de Hibernate.
-      # Usa un dialecto propio optimizado para:
-      # - Estructura interna de recursos FHIR
-      # - Índices compuestos
-      # - Tipos específicos usados por el JPA Server
-      #
-      # Código fuente oficial:
-      # https://github.com/hapifhir/hapi-fhir/blob/master/hapi-fhir-jpa/src/main/java/ca/uhn/fhir/jpa/model/dialect/HapiFhirPostgresDialect.java
+      # Utiliza un dialecto especializado para índices GIN/GIST y estructuras FHIR.
+      # Código: https://github.com/hapifhir/hapi-fhir/blob/master/hapi-fhir-jpa/src/main/java/ca/uhn/fhir/jpa/model/dialect/HapiFhirPostgresDialect.java
       hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
 
-
       # ============================================================
-      # LOGGING SQL
+      # LOGGING Y TRAZABILIDAD SQL
       # ============================================================
-      # Desactiva formateo de SQL.
-      # Reduce uso de CPU y tamaño de logs.
+      # Desactivar en producción para proteger PHI (Protected Health Information)
+      # y ahorrar ciclos de CPU en el formateo de strings.
       hibernate.format_sql: false
-
-      # No imprime SQL en logs.
-      # Importante por:
-      # - Rendimiento
-      # - Seguridad (datos sensibles)
       hibernate.show_sql: false
-
 
       # ============================================================
       # OPTIMIZACIÓN DE BATCHING (RENDIMIENTO)
       # ============================================================
-      # Estas propiedades son estándar de Hibernate y MUY IMPORTANTES
-      # para HAPI FHIR, ya que el JPA Server genera múltiples inserts
-      # internos por cada recurso FHIR persistido.
-      #
-      # Documentación oficial:
-      # https://docs.hibernate.org/orm/current/userguide/html_single/#batch
-
-      # Número de operaciones INSERT/UPDATE enviadas en un solo batch.
-      # Reduce round-trips a la base de datos.
+      # HAPI FHIR genera múltiples inserciones por cada recurso (tags, indices, string data).
+      # El batching reduce drásticamente los round-trips de red.
+      # Ref: https://docs.hibernate.org/orm/current/userguide/html_single/#batch
+      
       hibernate.jdbc.batch_size: 50
-
-      # Agrupa INSERTs por tipo de entidad.
-      # Mejora eficiencia y reduce locks.
       hibernate.order_inserts: true
-
-      # Agrupa UPDATEs por tipo de entidad.
-      # Reduce deadlocks en concurrencia.
       hibernate.order_updates: true
-
+      
+      # Optimización adicional para PostgreSQL: permite reescribir sentencias batch.
+      # Nota: Se debe asegurar que el parámetro 'reWriteBatchedInserts=true' esté en la URL JDBC.
+      hibernate.jdbc.lob.non_contextual_creation: true
 
   transaction:
     # ============================================================
     # TIMEOUT DE TRANSACCIONES
     # ============================================================
-    # Tiempo máximo (segundos) que una transacción puede permanecer activa.
-    # Previene bloqueos prolongados en:
-    # - Escrituras concurrentes
-    # - Procesos batch
+    # 60 segundos es el balance ideal para permitir búsquedas complejas (Chain/Include)
+    # sin bloquear indefinidamente las tablas en caso de error.
     default-timeout: 60
-
 
 # ============================================================
 # HAPI FHIR – JPA SERVER CONFIGURATION
 # ============================================================
 hapi:
-  # Documentación oficial:
-  # https://hapifhir.io/hapi-fhir/docs/server_jpa/configuration.html
-
+  # Ref Oficial: https://hapifhir.io/hapi-fhir/docs/server_jpa/configuration.html
   fhir:
-
     # ============================================================
     # VERSIÓN FHIR
     # ============================================================
-    # Versión del estándar HL7 FHIR que expone el servidor.
-    #
-    # R4 es:
-    # - La más estable
-    # - La más usada en producción
-    # - Compatible con la mayoría de perfiles nacionales
+    # R4 (R4B) es el estándar actual para interoperabilidad internacional.
     fhir_version: R4
-
 
     # ============================================================
     # SEGURIDAD Y CONSISTENCIA DE REFERENCIAS
     # ============================================================
-    # Estas opciones controlan cómo los recursos FHIR se relacionan
-    # entre sí (Patient, Practitioner, Organization, etc.).
-
-    # No permite referencias absolutas externas:
-    # Ej: http://otro-servidor/fhir/Patient/123
-    #
-    # Recomendado para:
-    # - Hospitales
-    # - Entornos cerrados
-    # - Integraciones controladas
+    # Garantiza que el servidor sea una fuente de verdad confiable y aislada.
+    
+    # Bloquea referencias a servidores externos (Previene fugas de datos y dependencias externas).
     allow_external_references: false
-
-    # No permite referencias placeholder (vacías o temporales).
-    # Obliga a que todas las referencias sean válidas y persistentes.
+    # Obliga a que cada referencia apunte a un recurso real en este servidor.
     allow_placeholder_references: false
-
-    # Verifica integridad referencial al escribir recursos.
-    # Ej: un Encounter no puede apuntar a un Patient inexistente.
+    # Integración referencial forzada en escritura y borrado (Crucial para integridad clínica).
     enforce_referential_integrity_on_write: true
-
-    # Verifica integridad referencial al eliminar recursos.
-    # Evita borrar recursos aún referenciados por otros.
     enforce_referential_integrity_on_delete: true
-
 
     # ============================================================
     # CACHE DE BÚSQUEDAS FHIR
     # ============================================================
-    # Tiempo (en milisegundos) que se reutilizan resultados
-    # de búsquedas idénticas.
-    #
-    # Reduce carga sobre:
-    # - PostgreSQL
-    # - Lucene embebido
-    #
-    # 6000 ms = 6 segundos
+    # Reutiliza el conjunto de resultados (SearchSet) por 6 segundos.
+    # Mitiga el impacto de refrescos accidentales o consultas repetitivas de UI.
     reuse_cached_search_results_millis: 6000
 
-
     # ============================================================
-    # PAGINACIÓN DE RESULTADOS
+    # PAGINACIÓN DE RESULTADOS (BUNDLES)
     # ============================================================
-    # Controla cuántos recursos FHIR se devuelven por búsqueda.
-
-    # Tamaño de página por defecto.
     default_page_size: 20
-
-    # Tamaño máximo permitido.
-    # Evita consultas abusivas o clientes mal configurados.
     max_page_size: 200
-
 
     # ============================================================
     # UI / FHIR TESTER
     # ============================================================
-    # El FHIR Tester es útil SOLO en desarrollo.
-    #
-    # En producción:
-    # - Expone endpoints
-    # - Permite consultas arbitrarias
-    # - Representa un riesgo de seguridad
-    #
-    # Por ello se desactiva explícitamente.
+    # El módulo 'Tester' se deshabilita por seguridad en producción.
+    # Ref: https://hapifhir.io/hapi-fhir/docs/server_jpa/ui_and_tester.html
     tester:
       - enabled: false
+
+# ----------------------------------------------------------------------------
+# NOTAS ADICIONALES PARA POSTGRESQL:
+# - Asegurarse de que las extensiones 'pg_trgm' y 'unaccent' estén instaladas
+#   en la base de datos 'hapi' para búsquedas de texto eficientes.
+# ----------------------------------------------------------------------------

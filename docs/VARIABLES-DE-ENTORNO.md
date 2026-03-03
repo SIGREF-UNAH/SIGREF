@@ -189,6 +189,37 @@ FHIR_SERVER_URL=https://hapi.fhir.org/baseR4   # Servidor FHIR público (opciona
 
 ---
 
+## ⚙️ Variables de Hangfire
+
+La cola de trabajos en segundo plano utiliza Hangfire con almacenamiento en PostgreSQL. Puedes controlar su comportamiento desde estas variables:
+
+```bash
+# Cadena de conexión para la base de datos de Hangfire
+# (se puede apuntar a la misma BD principal o a otra independiente)
+ConnectionStrings__hangfire=Host=db;Database=hangfire;Username=...;Password=...
+
+# Solo se habilita el servidor de procesamiento (workers) si este valor es true
+en Hangfire:ServerEnabled=true
+
+# El dashboard web se publica bajo /hangfire cuando está en true
+# (la API o el worker deben iniciar UseHangfireDashboard en Configure)
+Hangfire:DashboardEnabled=false
+```
+
+> 🔄 **Comprobación automática de esquema**
+> Cuando la API arranca (y también el worker, si corresponde) se ejecuta un
+> servicio en segundo plano que se conecta a la base de datos indicada. Si no
+> encuentra las tablas típicas de Hangfire las crea automáticamente utilizando
+> la misma configuración (`PrepareSchemaIfNecessary = true`) y escribe líneas
+> de log como "[HANGFIRE-READY] esquema creado, Hangfire listo.".
+
+**Uso típico:**
+
+- En la imagen **api** se pone `Hangfire:ServerEnabled=false` y `DashboardEnabled=true` para exponer solo el panel.
+- En el contenedor **hangfire-worker** se habilita el servidor (`ServerEnabled=true`) y normalmente se deja `DashboardEnabled=false`.
+
+---
+
 ## 💾 Variables de MongoDB
 
 ```bash
@@ -352,4 +383,4 @@ docker-compose exec sigref-api printenv | sort
 - [.NET Configuration](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.configuration)
 - [Seq Documentation](https://docs.datalust.co/docs/getting-started)
 
-**Última actualización:** 31 de enero de 2026
+**Última actualización:** 1 de marzo de 2026
