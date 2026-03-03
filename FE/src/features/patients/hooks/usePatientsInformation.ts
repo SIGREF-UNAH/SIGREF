@@ -326,11 +326,14 @@ export function usePatientsInformation() {
     }
 
     const info = `
-Nombre: ${selectedPatient.nombre} ${selectedPatient.apellidos}
+ID: ${selectedPatient.id}
+Nombre: ${selectedPatient.nombre} 
+Apellido:${selectedPatient.apellidos}
 Fecha de Nacimiento: ${selectedPatient.fechaNacimiento}
 Edad: ${selectedPatient.edad}
 Género: ${selectedPatient.genero}
 Nacionalidad: ${selectedPatient.nacionalidad}
+Estado Civil: ${selectedPatient.estadoCivil}
 Estado Vital: ${selectedPatient.estadoVital}
 ${selectedPatient.identificadores
 .map((id) => `${id.tipo}: ${id.valor} (${id.emisor})`)

@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SIGREF.API.Constants;
 using SIGREF.API.Database;
+using SIGREF.API.Database.Entity.Billing;
 using SIGREF.API.Database.Entity.Cashier;
+using SIGREF.API.Database.Entity.common;
 using SIGREF.API.Dtos.Cashier;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Extensions;
@@ -27,7 +29,7 @@ public class CashierSessionService : ICashierSessionService
     {
         var userId = _userContext.GetUserId();
         var activeSession = await _db.CashierSessions
-            .Where(x => x.UserId == userId && x.IsOpen == true)
+            .Where(x => x.UserId == userId && x.IsOpen)
             .FirstOrDefaultAsync();
 
         if (activeSession != null)
@@ -66,7 +68,7 @@ public class CashierSessionService : ICashierSessionService
     public async Task<ResponseDto<CashierSessionDto>> GetActiveSessionByUserAsync(Guid userId)
     {
         var activeSession = await _db.CashierSessions
-            .Where(x => x.UserId == userId && x.IsOpen == true)
+            .Where(x => x.UserId == userId && x.IsOpen)
             .FirstOrDefaultAsync();
         if (activeSession == null)
         {
@@ -117,13 +119,44 @@ public class CashierSessionService : ICashierSessionService
             };
         }
 
-        // TODO : VERIFICAR ESTO CON OTRO REQUEST PUEDE SER SI ESTA INDEXADO LA SUMA DE INVOICES 
+        if (dto.DeclaredAmount < 0)
+        {
+            return new ResponseDto<CashierSessionDto>
+            {
+                Status = false,
+                Message = "El monto declarado no puede ser negativo.",
+                StatusCode = 400,
+                Data = session.ToDto()
+            };
+        }
+
+        // Calcular el monto real del sistema sumando las facturas pagadas de esta sesión
+        var systemAmount = await _db.Invoices
+            .Where(i => i.CashierSessionId == sessionId && i.Status == InvoiceStatus.Paid)
+            .SumAsync(i => (decimal?)i.AmountPaid) ?? 0;
+
+        // Validar que no se cierre con monto 0 si se espera recaudación (opcional pero recomendado)
+        if (systemAmount == 0)
+        {
+            // Verificar si existen facturas pero no están pagas o no están asociadas
+            var hasInvoices = await _db.Invoices
+                .AnyAsync(i => i.CashierSessionId == sessionId);
+                
+            if (hasInvoices)
+            {
+                return new ResponseDto<CashierSessionDto>
+                {
+                    Status = false,
+                    Message = "Existen facturas asociadas pero el monto calculado es 0. Verifique el estado de las facturas.",
+                    StatusCode = 400,
+                    Data = session.ToDto()
+                };
+            }
+        }
+
         // cálculo del cierre
         session.DeclaredAmount = dto.DeclaredAmount;
-
-        // SystemAmount ya existe (lo gestionan los recibos)
-        var systemAmount = session.SystemAmount ?? 0;
-
+        session.SystemAmount = systemAmount;
         session.Difference = dto.DeclaredAmount - systemAmount;
 
         // Marcar estado de la sesión
@@ -295,13 +328,14 @@ public class CashierSessionService : ICashierSessionService
 
         bool isAdmin = roles.Contains(RolesConstants.admin);
         bool isAuditor = roles.Contains(RolesConstants.auditor);
+        bool canViewAll = isAdmin || isAuditor;
 
         // Query base
         var query = _db.CashierSessions.AsQueryable().AsNoTracking();
 
         // Rol: solo Admin/Auditor pueden ver todo
         // si es otro tipo de usuario, solo pueden ver sus cierres 
-        if (!isAdmin && !isAuditor)
+        if (!canViewAll)
         {
             query = query.Where(x => x.UserId == userId);
         }
@@ -389,6 +423,7 @@ public class CashierSessionService : ICashierSessionService
 
         bool isAdmin = roles.Contains(RolesConstants.admin);
         bool isAuditor = roles.Contains(RolesConstants.auditor);
+        bool canViewAll = isAdmin || isAuditor;
 
         // peticion entity a DTO directamente desde la BD
         var sessionDto = await _db.CashierSessions
@@ -422,7 +457,7 @@ public class CashierSessionService : ICashierSessionService
             };
         }
         
-        if (!isAdmin && !isAuditor)
+        if (!canViewAll)
         {
             // Cajero solo sus propias sesiones
             if (sessionDto.UserId != userId)

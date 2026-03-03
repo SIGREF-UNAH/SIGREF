@@ -17,8 +17,10 @@ import {
 } from "antd";
 import { PageHeaderTabs } from "../../../shared/components";
 import useCashClosing from "../hooks/useCashClosing";
+import { useAbility } from "../../../config";
 
 export const CashClosingPage = () => {
+  const ability = useAbility();
   const {
     session,
     amount,
@@ -56,14 +58,20 @@ export const CashClosingPage = () => {
       label: "Exportar como PDF",
       icon: <FilePdfOutlined />,
       onClick: () =>
-        exportData("print-area", "pdf", { fileName: "Cierre-de-caja-" + currentDateTime.replace(/[: ]/g, "-") + ".pdf" }),
+        exportData("print-area", "pdf", {
+          fileName:
+            "Cierre-de-caja-" + currentDateTime.replace(/[: ]/g, "-") + ".pdf",
+        }),
     },
     {
       key: "image",
       label: "Exportar como Imagen",
       icon: <FileImageOutlined />,
       onClick: () =>
-        exportData("print-area", "png", { fileName: "Cierre-de-caja-" + currentDateTime.replace(/[: ]/g, "-") + ".png" }),
+        exportData("print-area", "png", {
+          fileName:
+            "Cierre-de-caja-" + currentDateTime.replace(/[: ]/g, "-") + ".png",
+        }),
     },
   ];
 
@@ -78,8 +86,49 @@ export const CashClosingPage = () => {
 
   return (
     <div>
-      {/* Encabezado */}
-      <PageHeaderTabs title="Cierre de Caja" tabs={[]} />
+      {/* Header */}
+      <PageHeaderTabs
+        title="Gestión de Ingresos"
+        tabs={[
+          ...(ability.can("read", "incomes")
+            ? [
+                {
+                  key: "read",
+                  label: "Lista de Ingresos",
+                  path: "/incomes/list",
+                },
+              ]
+            : []),
+          ...(ability.can("create", "incomes")
+            ? [
+                {
+                  key: "create",
+                  label: "Generar Ingreso",
+                  path: "/incomes/create",
+                },
+              ]
+            : []),
+          ...(ability.can("update", "incomes")
+            ? [
+                {
+                  key: "update",
+                  label: "Cerrar Caja",
+                  path: "/incomes/close",
+                },
+              ]
+            : []),
+          ...(ability.can("read", "incomes")
+            ? [
+                {
+                  key: "history",
+                  label: "Historial de Cierres de Caja",
+                  path: "/incomes/history",
+                },
+              ]
+            : []),
+        ]}
+        defaultActive="update"
+      />
 
       {/* Contenido */}
       <div className="primary-card">
@@ -101,7 +150,8 @@ export const CashClosingPage = () => {
                 alt="Logo Salud"
                 style={{ height: "48px", objectFit: "contain" }}
                 onError={(e) => {
-                  e.currentTarget.src = "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Logo_de_SESAL.svg/1200px-Logo_de_SESAL.svg.png";
+                  e.currentTarget.src =
+                    "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Logo_de_SESAL.svg/1200px-Logo_de_SESAL.svg.png";
                 }}
               />
               <div className="flex-1"></div>
@@ -110,7 +160,8 @@ export const CashClosingPage = () => {
                 alt={hospitalName}
                 style={{ height: "48px", objectFit: "contain" }}
                 onError={(e) => {
-                  e.currentTarget.src = "https://krti.cl/wp-content/uploads/2021/04/Logo-Hospital-Final.png";
+                  e.currentTarget.src =
+                    "https://krti.cl/wp-content/uploads/2021/04/Logo-Hospital-Final.png";
                 }}
               />
             </div>
@@ -169,22 +220,22 @@ export const CashClosingPage = () => {
               <div>
                 <div className="flex flex-col text-left pb-6 gap-y-2">
                   <div>
-                    <Typography.Text strong>
-                        Auxiliar de Caja:
-                    </Typography.Text>{" "}
-                    <Typography.Text strong className="text-secondary!">{userName}</Typography.Text>
+                    <Typography.Text strong>Auxiliar de Caja:</Typography.Text>{" "}
+                    <Typography.Text strong className="text-secondary!">
+                      {userName}
+                    </Typography.Text>
                   </div>
                   <div>
-                    <Typography.Text strong>
-                        Turno:
-                    </Typography.Text>{" "}
-                    <Typography.Text strong className="text-secondary!">{session?.shiftName}</Typography.Text>
+                    <Typography.Text strong>Turno:</Typography.Text>{" "}
+                    <Typography.Text strong className="text-secondary!">
+                      {session?.shiftName}
+                    </Typography.Text>
                   </div>
                   <div>
-                    <Typography.Text strong>
-                        Ubicación:
-                    </Typography.Text>{" "}
-                    <Typography.Text strong className="text-secondary!">{session?.locationName}</Typography.Text>
+                    <Typography.Text strong>Ubicación:</Typography.Text>{" "}
+                    <Typography.Text strong className="text-secondary!">
+                      {session?.locationName}
+                    </Typography.Text>
                   </div>
                   <div>
                     <Typography.Text>
@@ -230,22 +281,22 @@ export const CashClosingPage = () => {
             {showConfirmation && (
               <div className="flex flex-col text-center pb-6 gap-y-3">
                 <div>
-                  <Typography.Text strong>
-                      Auxiliar de Caja:
-                  </Typography.Text>{" "}
-                  <Typography.Text strong className="text-secondary!">{userName}</Typography.Text>
+                  <Typography.Text strong>Auxiliar de Caja:</Typography.Text>{" "}
+                  <Typography.Text strong className="text-secondary!">
+                    {userName}
+                  </Typography.Text>
                 </div>
                 <div>
-                  <Typography.Text strong>
-                      Ubicación:
-                  </Typography.Text>{" "}
-                  <Typography.Text strong className="text-secondary!">{session?.locationName}</Typography.Text>
+                  <Typography.Text strong>Ubicación:</Typography.Text>{" "}
+                  <Typography.Text strong className="text-secondary!">
+                    {session?.locationName}
+                  </Typography.Text>
                 </div>
                 <div>
-                  <Typography.Text strong>
-                      Turno:
-                  </Typography.Text>{" "}
-                  <Typography.Text strong className="text-secondary!">{session?.shiftName}</Typography.Text>
+                  <Typography.Text strong>Turno:</Typography.Text>{" "}
+                  <Typography.Text strong className="text-secondary!">
+                    {session?.shiftName}
+                  </Typography.Text>
                 </div>
                 <div>
                   <Typography.Text strong>Monto Registrado:</Typography.Text>{" "}
@@ -266,7 +317,7 @@ export const CashClosingPage = () => {
                 </div>
                 <div className="flex items-center justify-center">
                   <Alert
-                    style={{width: "50%"}}
+                    style={{ width: "50%" }}
                     showIcon
                     type="warning"
                     description="Una vez confirmado, no podrá modificar los datos del cierre actual."
@@ -319,22 +370,22 @@ export const CashClosingPage = () => {
 
                 <div className="flex flex-col text-center pb-6 gap-y-3">
                   <div>
-                    <Typography.Text strong>
-                        Auxiliar de Caja:
-                    </Typography.Text>{" "}
-                    <Typography.Text strong className="text-secondary!">{userName}</Typography.Text>
+                    <Typography.Text strong>Auxiliar de Caja:</Typography.Text>{" "}
+                    <Typography.Text strong className="text-secondary!">
+                      {userName}
+                    </Typography.Text>
                   </div>
                   <div>
-                    <Typography.Text strong>
-                        Ubicación:
-                    </Typography.Text>{" "}
-                    <Typography.Text strong className="text-secondary!">{session?.locationName}</Typography.Text>
+                    <Typography.Text strong>Ubicación:</Typography.Text>{" "}
+                    <Typography.Text strong className="text-secondary!">
+                      {session?.locationName}
+                    </Typography.Text>
                   </div>
                   <div>
-                    <Typography.Text strong>
-                        Turno:
-                    </Typography.Text>{" "}
-                    <Typography.Text strong className="text-secondary!">{session?.shiftName}</Typography.Text>
+                    <Typography.Text strong>Turno:</Typography.Text>{" "}
+                    <Typography.Text strong className="text-secondary!">
+                      {session?.shiftName}
+                    </Typography.Text>
                   </div>
                   <div>
                     <Typography.Text strong>Monto Registrado:</Typography.Text>{" "}
@@ -381,7 +432,8 @@ export const CashClosingPage = () => {
                       ID: {closedSessionId}
                     </div>
                   </>
-                ) : ( // Si hay diferencia
+                ) : (
+                  // Si hay diferencia
                   <>
                     <div className="my-2 flex items-center justify-center">
                       <Alert
@@ -397,7 +449,8 @@ export const CashClosingPage = () => {
                                   fontWeight: "bold",
                                 }}
                               >
-                                {hospitalCurrency} {Math.abs(difference).toFixed(2)}
+                                {hospitalCurrency}{" "}
+                                {Math.abs(difference).toFixed(2)}
                               </span>
                             </p>
                             <p style={{ marginBottom: 0 }}>
@@ -434,11 +487,7 @@ export const CashClosingPage = () => {
                 trigger={["click"]}
                 placement="topCenter"
               >
-                <Button
-                  type="primary"
-                  size="large"
-                  icon={<PrinterOutlined />}
-                >
+                <Button type="primary" size="large" icon={<PrinterOutlined />}>
                   Exportar
                 </Button>
               </Dropdown>

@@ -160,9 +160,30 @@ export default function CreateUsersPage() {
     <div>
       {/* Header */}
       <PageHeaderTabs
-        title="Gestión de Usuarios"
-        tabs={[]}
-        defaultActive="null"
+        title="Gestión de Empleados"
+        tabs={[
+          ...(ability.can("read", "practitioners") ? [{
+            key: "read-practitioners",
+            label: "Lista de Empleados",
+            path: "/practitioners/list",
+          }] : []),
+          ...(ability.can("create", "practitioners") ? [{
+            key: "create-practitioners",
+            label: "Crear Empleado",
+            path: "/practitioners/create",
+          }] : []),
+          ...(ability.can("read", "users") ? [{
+            key: "read-users",
+            label: "Lista de Usuarios",
+            path: "/users/list",
+          }] : []),
+            ...(ability.can("create", "users") ? [{
+              key: "create-users",
+              label: "Crear Usuario",
+              path: "/users/create",
+          }] : []),
+        ]}
+        defaultActive="create-users"
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

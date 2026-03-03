@@ -139,6 +139,24 @@ export const appShortcuts: ShortcutConfig[] = [
     requiredAction: "create",
     requiredSubject: "practitioners",
   },
+  {
+    keys: "alt+e",
+    description: "Listar usuarios",
+    action: (navigate) => navigate("/users/list"),
+    title: "Gestión de Empleados",
+    category: "practitioners",
+    requiredAction: "read",
+    requiredSubject: "users",
+  },
+  {
+    keys: "alt+shift+e",
+    description: "Crear usuario",
+    action: (navigate) => navigate("/users/create"),
+    title: "Gestión de Empleados",
+    category: "practitioners",
+    requiredAction: "create",
+    requiredSubject: "users",
+  },
 
   // Gestión de Turnos
   {

@@ -453,30 +453,30 @@ export function useGetApiSeriesId<
   return query;
 }
 
-export const deleteApiSeriesId = (id: string) => {
+export const putApiSeriesDeleteId = (id: string) => {
   return customInstance<SerieDtoResponseDto>({
-    url: `/api/Series/${id}`,
-    method: "DELETE",
+    url: `/api/Series/delete/${id}`,
+    method: "PUT",
   });
 };
 
-export const getDeleteApiSeriesIdMutationOptions = <
+export const getPutApiSeriesDeleteIdMutationOptions = <
   TError = ProblemDetails | void,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof deleteApiSeriesId>>,
+    Awaited<ReturnType<typeof putApiSeriesDeleteId>>,
     TError,
     { id: string },
     TContext
   >;
 }): UseMutationOptions<
-  Awaited<ReturnType<typeof deleteApiSeriesId>>,
+  Awaited<ReturnType<typeof putApiSeriesDeleteId>>,
   TError,
   { id: string },
   TContext
 > => {
-  const mutationKey = ["deleteApiSeriesId"];
+  const mutationKey = ["putApiSeriesDeleteId"];
   const { mutation: mutationOptions } = options
     ? options.mutation &&
       "mutationKey" in options.mutation &&
@@ -486,30 +486,30 @@ export const getDeleteApiSeriesIdMutationOptions = <
     : { mutation: { mutationKey } };
 
   const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof deleteApiSeriesId>>,
+    Awaited<ReturnType<typeof putApiSeriesDeleteId>>,
     { id: string }
   > = (props) => {
     const { id } = props ?? {};
 
-    return deleteApiSeriesId(id);
+    return putApiSeriesDeleteId(id);
   };
 
   return { mutationFn, ...mutationOptions };
 };
 
-export type DeleteApiSeriesIdMutationResult = NonNullable<
-  Awaited<ReturnType<typeof deleteApiSeriesId>>
+export type PutApiSeriesDeleteIdMutationResult = NonNullable<
+  Awaited<ReturnType<typeof putApiSeriesDeleteId>>
 >;
 
-export type DeleteApiSeriesIdMutationError = ProblemDetails | void;
+export type PutApiSeriesDeleteIdMutationError = ProblemDetails | void;
 
-export const useDeleteApiSeriesId = <
+export const usePutApiSeriesDeleteId = <
   TError = ProblemDetails | void,
   TContext = unknown,
 >(
   options?: {
     mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof deleteApiSeriesId>>,
+      Awaited<ReturnType<typeof putApiSeriesDeleteId>>,
       TError,
       { id: string },
       TContext
@@ -517,12 +517,12 @@ export const useDeleteApiSeriesId = <
   },
   queryClient?: QueryClient,
 ): UseMutationResult<
-  Awaited<ReturnType<typeof deleteApiSeriesId>>,
+  Awaited<ReturnType<typeof putApiSeriesDeleteId>>,
   TError,
   { id: string },
   TContext
 > => {
-  const mutationOptions = getDeleteApiSeriesIdMutationOptions(options);
+  const mutationOptions = getPutApiSeriesDeleteIdMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

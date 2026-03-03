@@ -13,15 +13,13 @@ import { InfoCircleOutlined, ReloadOutlined } from "@ant-design/icons";
 import { keycloak } from "../../../auth";
 import { useInvoiceSeriesManager } from "../hooks";
 
-
 interface IncomeSummaryProps {
   selectedPaciente?: any;
   selectedServicio?: any;
   aPagarEfectivo?: number;
   exonerado?: boolean;
   tramiteEmergencia?: boolean;
-  onSerieChange?: (serieId: string, seriePrefix: string) => void;
-  onNumeroReciboChange?: (numero: string) => void;
+  seriesManager: ReturnType<typeof useInvoiceSeriesManager>;
 }
 
 export const IncomeSummary = ({
@@ -30,8 +28,7 @@ export const IncomeSummary = ({
   aPagarEfectivo,
   exonerado,
   tramiteEmergencia,
-  onSerieChange,
-  onNumeroReciboChange,
+  seriesManager,
 }: IncomeSummaryProps) => {
   const usuario = keycloak.tokenParsed?.name || "N/A";
 
@@ -46,22 +43,16 @@ export const IncomeSummary = ({
     handleSerieChange,
     setNumeroRecibo,
     refetchSeries,
-  } = useInvoiceSeriesManager();
+  } = seriesManager;
 
   // Notificar cambios al padre
   const handleSerieChangeInternal = (prefix: string) => {
     handleSerieChange(prefix);
-    const selected = series.find((s) => s.prefix === prefix);
-    if (selected?.id && selected?.prefix) {
-      onSerieChange?.(selected.id, selected.prefix);
-    }
   };
 
   const handleNumeroChange = (value: string) => {
     setNumeroRecibo(value);
-    onNumeroReciboChange?.(value);
   };
-
   // Calcular precios correctamente
   const precioOriginal = selectedServicio?.precio || 0;
 
@@ -101,9 +92,7 @@ export const IncomeSummary = ({
         />
       )}
 
-      {isLoading && (
-        <Alert type="info" message="Cargando series..." showIcon />
-      )}
+      {isLoading && <Alert type="info" message="Cargando series..." showIcon />}
 
       {!isLoading && !isError && series.length === 0 && (
         <Alert
@@ -124,11 +113,15 @@ export const IncomeSummary = ({
       )}
 
       {/* Selección de Serie y Número */}
-      <Space direction="vertical" style={{ width: "100%", marginTop: 16 }} size="small">
+      <Space
+        direction="vertical"
+        style={{ width: "100%", marginTop: 16 }}
+        size="small"
+      >
         <Space>
           <div>
-            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              Serie de Facturación
+            <Typography.Text type="secondary" style={{ fontSize: 14 }}>
+              Serie de Facturación{" "}
             </Typography.Text>
             <Space>
               <Select
@@ -143,7 +136,10 @@ export const IncomeSummary = ({
                   <Select.Option key={s.id} value={s.prefix ?? ""}>
                     <Space>
                       <span>{s.name || "Sin nombre"}</span>
-                      <Typography.Text type="secondary" style={{ fontSize: 11 }}>
+                      <Typography.Text
+                        type="secondary"
+                        style={{ fontSize: 11 }}
+                      >
                         ({s.prefix || "—"})
                       </Typography.Text>
                     </Space>
@@ -156,15 +152,9 @@ export const IncomeSummary = ({
                   title={
                     <div>
                       <div>Rango permitido:</div>
-                      <div>
-                        Inicio: {currentSerie.startNumber ?? "N/A"}
-                      </div>
-                      <div>
-                        Fin: {currentSerie.endNumber ?? "N/A"}
-                      </div>
-                      <div>
-                        Actual: {currentSerie.currentNumber ?? "N/A"}
-                      </div>
+                      <div>Inicio: {currentSerie.startNumber ?? "N/A"}</div>
+                      <div>Fin: {currentSerie.endNumber ?? "N/A"}</div>
+                      <div>Actual: {currentSerie.currentNumber ?? "N/A"}</div>
                     </div>
                   }
                 >
@@ -175,8 +165,8 @@ export const IncomeSummary = ({
           </div>
 
           <div>
-            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              Número de Recibo
+            <Typography.Text type="secondary" style={{ fontSize: 14 }}>
+              Número de Recibo{" "}
             </Typography.Text>
             <Input
               value={numeroRecibo}
@@ -185,9 +175,7 @@ export const IncomeSummary = ({
               type="number"
               disabled={!seriePrefix}
               style={{ width: 160 }}
-              status={
-                numeroRecibo && !isNumberInRange ? "error" : undefined
-              }
+              status={numeroRecibo && !isNumberInRange ? "error" : undefined}
             />
           </div>
         </Space>

@@ -331,6 +331,15 @@ export default function PatientsInformation() {
                         );
                       },
                     },
+                    ...(selectedPatient.id
+                    ? [
+                        {
+                          title: "ID Maestro (FHIR)",
+                          dataIndex: "fhirId",
+                          key: "fhirId",
+                        },
+                      ]
+                    : []),
                   ]}
                 />
               </div>

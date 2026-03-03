@@ -9,13 +9,20 @@ import {
   Tooltip,
   Typography,
   Alert,
+  Tabs,
+  Badge,
+  Card,
+  Statistic,
+  Row,
+  Col,
 } from "antd";
 import {
   SearchOutlined,
   EditOutlined,
-  DeleteOutlined,
   ClearOutlined,
-  ExclamationCircleOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  BarChartOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import type { SerieDto, UpdateSeriesDto } from "../../../api/models";
@@ -26,6 +33,7 @@ import { SeriesForm } from "../components";
 import { useUpdateSerie } from "../hooks";
 import { PageHeaderTabs } from "../../../shared/components";
 import { useAbility } from "../../../config";
+import type { SeriesStatusFilter } from "../hooks/useSeriesList";
 
 const { Text } = Typography;
 
@@ -36,19 +44,16 @@ export const SeriesListPage = () => {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingSerie, setEditingSerie] = useState<SerieDto | null>(null);
 
-  // Estados para modal de eliminación
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [deletingSerie, setDeletingSerie] = useState<SerieDto | null>(null);
-
   const {
     series,
+    stats,            
+    statusFilter,       
     paginationConfig,
     isLoading,
     isFetching,
     isError,
-    isDeleting,
     searchInput,
-    handleDelete,
+    handleStatusFilterChange,
     handleSearchInputChange,
     handleSearch,
     handleClearSearch,
@@ -57,26 +62,7 @@ export const SeriesListPage = () => {
   const { handleToggle, isPending: isToggling } = useToggleSerieActive();
   const { handleEdit: updateSerie, isPending: isUpdating } = useUpdateSerie();
 
-  // Funciones para modal de eliminación
-  const showDeleteConfirm = (record: SerieDto) => {
-    setDeletingSerie(record);
-    setDeleteModalVisible(true);
-  };
-
-  const handleDeleteConfirm = () => {
-    if (deletingSerie?.id) {
-      handleDelete(deletingSerie.id);
-      setDeleteModalVisible(false);
-      setDeletingSerie(null);
-    }
-  };
-
-  const handleDeleteCancel = () => {
-    setDeleteModalVisible(false);
-    setDeletingSerie(null);
-  };
-
-  // Funciones para modal de edición
+  // modal de edición
   const handleEditClick = (record: SerieDto) => {
     setEditingSerie(record);
     setEditModalVisible(true);
@@ -85,13 +71,12 @@ export const SeriesListPage = () => {
   const handleEditFinish = async (values: any) => {
     if (!editingSerie?.id) return;
 
-    // Construir payload completo
     const payload: UpdateSeriesDto = {
       name: values.name ?? editingSerie.name,
       prefix: values.prefix ?? editingSerie.prefix,
       startNumber: values.startNumber ?? editingSerie.startNumber,
       endNumber: values.endNumber ?? editingSerie.endNumber,
-      isActive: values.isActive ?? editingSerie.isActive,
+      isActive: editingSerie.isActive, 
     };
 
     const success = await updateSerie(editingSerie.id, payload);
@@ -101,11 +86,13 @@ export const SeriesListPage = () => {
       setEditingSerie(null);
     }
   };
+
   const handleEditCancel = () => {
     setEditModalVisible(false);
     setEditingSerie(null);
   };
 
+  // tablas y columnas
   const columns: ColumnsType<SerieDto> = [
     {
       title: "Nombre",
@@ -158,9 +145,11 @@ export const SeriesListPage = () => {
         const available = (record.endNumber || 0) - (record.currentNumber || 0);
         const isLow = available < 10;
         return (
-          <Tag color={isLow ? "red" : "cyan"} style={{ fontSize: 13 }}>
-            {available}
-          </Tag>
+          <Tooltip title={isLow ? "⚠️ Quedan pocos números disponibles" : ""}>
+            <Tag color={isLow ? "red" : "cyan"} style={{ fontSize: 13 }}>
+              {available}
+            </Tag>
+          </Tooltip>
         );
       },
     },
@@ -168,20 +157,23 @@ export const SeriesListPage = () => {
       title: "Estado",
       dataIndex: "isActive",
       key: "isActive",
-      width: 100,
+      width: 150,
       align: "center",
       render: (isActive, record) => (
-        <Tooltip title={isActive ? "Desactivar" : "Activar"}>
+        <Tooltip title={isActive ? "Click para desactivar" : "Click para activar"}>
           <Switch
             checked={isActive ?? true}
             loading={isToggling}
-            onChange={(checked) =>
-              handleToggle(record.id!, checked, {
-                name: record.name,
-                prefix: record.prefix,
-                startNumber: record.startNumber,
-                endNumber: record.endNumber,
+            checkedChildren="Activa"
+            unCheckedChildren="Inactiva"
+            onChange={() =>
+              handleToggle(record.id!, {
+                name: record.name!,
+                prefix: record.prefix!,
+                startNumber: record.startNumber!,
+                endNumber: record.endNumber!,
                 currentNumber: record.currentNumber,
+                isActive: record.isActive,
               })
             }
           />
@@ -191,30 +183,59 @@ export const SeriesListPage = () => {
     {
       title: "Acciones",
       key: "actions",
-      width: 150,
+      width: 100,
       align: "center",
       fixed: "right",
       render: (_, record) => (
         <Space>
-          <Tooltip title="Editar">
+          <Tooltip title="Editar serie">
             <Button
               type="primary"
               ghost
               icon={<EditOutlined />}
               size="small"
               onClick={() => handleEditClick(record)}
-            />
-          </Tooltip>
-          <Tooltip title="Desactivar">
-            <Button
-              danger
-              icon={<DeleteOutlined />}
-              size="small"
-              loading={isDeleting}
-              onClick={() => showDeleteConfirm(record)}
+              disabled={!record.isActive} // ⭐ Solo editar si está activa
             />
           </Tooltip>
         </Space>
+      ),
+    },
+  ];
+
+  // ============ ITEMS DE TABS ============
+  const tabItems = [
+    {
+      key: "active",
+      label: (
+        <Badge count={stats.active} offset={[10, 0]} showZero>
+          <Space>
+            <CheckCircleOutlined />
+            Activas
+          </Space>
+        </Badge>
+      ),
+    },
+    {
+      key: "inactive",
+      label: (
+        <Badge count={stats.inactive} offset={[10, 0]} showZero>
+          <Space>
+            <CloseCircleOutlined />
+            Inactivas
+          </Space>
+        </Badge>
+      ),
+    },
+    {
+      key: "all",
+      label: (
+        <Badge count={stats.total} offset={[10, 0]} showZero>
+          <Space>
+            <BarChartOutlined />
+            Todas
+          </Space>
+        </Badge>
       ),
     },
   ];
@@ -244,11 +265,51 @@ export const SeriesListPage = () => {
               ]
             : []),
         ]}
-        defaultActive="create"
+        defaultActive="list"
       />
+
+      <Row gutter={16} style={{ marginBottom: 16 }}>
+        <Col span={8}>
+          <Card>
+            <Statistic
+              title="Series Activas"
+              value={stats.active}
+              valueStyle={{ color: "#52c41a" }}
+              prefix={<CheckCircleOutlined />}
+            />
+          </Card>
+        </Col>
+        <Col span={8}>
+          <Card>
+            <Statistic
+              title="Series Inactivas"
+              value={stats.inactive}
+              valueStyle={{ color: "#ff4d4f" }}
+              prefix={<CloseCircleOutlined />}
+            />
+          </Card>
+        </Col>
+        <Col span={8}>
+          <Card>
+            <Statistic
+              title="Total de Series"
+              value={stats.total}
+              valueStyle={{ color: "#1890ff" }}
+              prefix={<BarChartOutlined />}
+            />
+          </Card>
+        </Col>
+      </Row>
 
       {/* Contenido */}
       <div className="primary-card">
+        <Tabs
+          activeKey={statusFilter}
+          items={tabItems}
+          onChange={(key) => handleStatusFilterChange(key as SeriesStatusFilter)}
+          style={{ marginBottom: 16 }}
+        />
+
         {/* Barra de búsqueda */}
         <Space style={{ marginBottom: 16, width: "100%" }} direction="vertical">
           <Space style={{ width: "100%", justifyContent: "space-between" }}>
@@ -323,65 +384,6 @@ export const SeriesListPage = () => {
             loading={isUpdating}
           />
         )}
-      </Modal>
-
-      {/* Modal de eliminación */}
-      <Modal
-        title={
-          <Space>
-            <ExclamationCircleOutlined style={{ color: "#ff4d4f" }} />
-            <span>Desactivar Serie</span>
-          </Space>
-        }
-        open={deleteModalVisible}
-        onOk={handleDeleteConfirm}
-        onCancel={handleDeleteCancel}
-        okText="Sí, desactivar"
-        okType="danger"
-        cancelText="Cancelar"
-        confirmLoading={isDeleting}
-        width={500}
-      >
-        <div style={{ marginTop: 16 }}>
-          <p style={{ fontSize: 16, marginBottom: 16 }}>
-            ¿Está seguro de <strong>desactivar</strong> la serie:{" "}
-            <Text strong style={{ fontSize: 16 }}>
-              {deletingSerie?.name}
-            </Text>
-            ?
-          </p>
-
-          <Alert
-            message="Importante"
-            description="La serie no se eliminará permanentemente, solo quedará inactiva y no se podrá usar para nuevos documentos."
-            type="warning"
-            showIcon
-          />
-
-          <div
-            style={{
-              marginTop: 16,
-              padding: 12,
-              backgroundColor: "#f5f5f5",
-              borderRadius: 4,
-            }}
-          >
-            <Space direction="vertical" size="small">
-              <Text type="secondary">Detalles de la serie:</Text>
-              <Text>
-                <strong>Prefijo:</strong> {deletingSerie?.prefix}
-              </Text>
-              <Text>
-                <strong>Rango:</strong> {deletingSerie?.startNumber} -{" "}
-                {deletingSerie?.endNumber}
-              </Text>
-              <Text>
-                <strong>Número actual:</strong>{" "}
-                {deletingSerie?.currentNumber || 0}
-              </Text>
-            </Space>
-          </div>
-        </div>
       </Modal>
     </div>
   );

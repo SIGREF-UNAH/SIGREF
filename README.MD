@@ -47,9 +47,11 @@ SIGREF automatiza y centraliza:
 
 ### 💳 Módulo de Facturación
 - Generación automática de facturas con series correlativas
-- Múltiples métodos de pago (efectivo, tarjeta, cheque, transferencia)
-- Documentos imprimibles (facturas, recibos, detalles)
+- Múltiples métodos de pago (efectivo)
 - Reportes de ingresos por período y método de pago
+- Documentos imprimibles: Facturas y recibos de caja. 
+> [!WARNING]
+> **Aviso Legal:** El módulo de facturación actual es de uso administrativo interno. No cumple con los estándares del régimen de facturación de la SAR y no es válido para deducción de impuestos.
 
 ### 💰 Módulo de Caja
 - Apertura y cierre de sesiones de caja
@@ -325,7 +327,7 @@ Este proyecto está licenciado bajo la licencia **MIT** - Ver [LICENSE.MD](./LIC
 **Desarrolladores:**
 - Carlos Ovidio Dubón Pineda - Full Stack
 - Michael Andrey Galdamez Martinez - Frontend
-- Ever Josue Garcia Leonor - Backend
+- Ever Josue Garcia Leonor - Frontend
 - Danilo Isaac Vides Chicas - Frontend
 - Anthony Edward Miranda Fuentes - Full Stack
 - Hector Rene Martinez Vega - Full Stack - Coordinador de Proyecto
@@ -354,13 +356,6 @@ Para reportar bugs, sugerencias o preguntas técnicas:
 - Reportes administrativos
 - Auditoría inmutable
 - Autenticación OIDC
-
-### 🔄 v2.0 (Próximo)
-- Integración completa FHIR R5
-- Portal de pacientes
-- API de reportes REST
-- Soporte para múltiples monedas
-- Mobile app (iOS/Android)
 
 ---
 

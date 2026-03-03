@@ -262,7 +262,7 @@ public class DashboardReportingService : IDashboardReportingService
                 SELECT
                     service_id AS ""ServiceId"",
                     health_service_id_fhir AS ""FhirServiceId"",
-                    COUNT(*)::int AS ""Count"",
+                    COUNT(*) AS ""Count"",
                     COALESCE(SUM(real_income), 0) AS ""TotalGenerated"",
                     ROW_NUMBER() OVER (ORDER BY COUNT(*) DESC) AS rn_desc,
                     ROW_NUMBER() OVER (ORDER BY COUNT(*) ASC)  AS rn_asc
@@ -649,7 +649,7 @@ public class DashboardReportingService : IDashboardReportingService
                     shift_id      AS ""ShiftId"",
                     shift_name    AS ""ShiftName"",
                     location_id   AS ""LocationId"",
-                    COUNT(*)::int AS ""TotalInvoices"",
+                    COUNT(*) AS ""TotalInvoices"",
                     COALESCE(SUM(real_income), 0) AS ""TotalIncome""
                 FROM inv
                 GROUP BY shift_id, shift_name, location_id
@@ -728,7 +728,7 @@ public class DashboardReportingService : IDashboardReportingService
                 )
                 SELECT
                     location_id   AS ""LocationId"",
-                    COUNT(*)::int AS ""TotalInvoices"",
+                    COUNT(*) AS ""TotalInvoices"",
                     COALESCE(SUM(real_income), 0) AS ""TotalIncome""
                 FROM inv
                 GROUP BY location_id

@@ -17,6 +17,7 @@ public class SerieDto
         public long CurrentNumber { get; set; }
         public DateTime? CreatedDate { get; set; }
         public DateTime? ModifiedDate { get; set; }
+        public bool IsActive { get; set; }
 }
 
 public class CreateSeriesDto
@@ -34,10 +35,21 @@ public class CreateSeriesDto
         public long StartNumber { get; set; }
         [Required]
         public long EndNumber { get; set; }
+
+        public bool? IsActive { get; set; } = true;
 }
 
-public class UpdateSeriesDto : CreateSeriesDto
+public class UpdateSeriesDto
 {
+        public string? Name { get; set; }
+        public string? Prefix { get; set; }
+
+        // ===============================
+        //       RANGO DE NUMERACIÓN
+        // ===============================
+        public long? StartNumber { get; set; }
+        public long? EndNumber { get; set; }
+
         public bool? IsActive { get; set; }
 }
 

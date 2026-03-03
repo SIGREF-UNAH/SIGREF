@@ -71,6 +71,7 @@ public class SerieService : ISerieService
             CurrentNumber = dto.StartNumber, // arranca en el inicio del rango
             CreatedById = user,
             CreatedDate = DateTime.UtcNow,
+            IsActive =  dto.IsActive ?? true 
         };
 
         _context.InvoiceSeries.Add(entity);
@@ -83,13 +84,14 @@ public class SerieService : ISerieService
             Message = "Serie creada correctamente.",
             Data = new SerieDto
             {
-                Id  = entity.Id,
+                Id = entity.Id,
                 Name = entity.Name,
                 Prefix = entity.Prefix,
                 StartNumber = entity.StartNumber,
                 EndNumber = entity.EndNumber,
                 CurrentNumber = entity.CurrentNumber,
                 CreatedDate = entity.CreatedDate,
+                IsActive = entity.IsActive,
             }
         };
     }
@@ -98,52 +100,82 @@ public class SerieService : ISerieService
     {
         var user = _userContextService.GetUserId();
 
-        // Bloqueo al registro para actualizacion
-        await using var tx = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
+        var strategy = _context.Database.CreateExecutionStrategy();
 
-        var entity = await _context.InvoiceSeries
-            .Where(x => x.Id == id)
-            .FirstOrDefaultAsync();
-
-        if (entity == null)
+        return await strategy.ExecuteAsync(async () =>
         {
-            return new ResponseDto<SerieDto>
+            await using var tx = await _context.Database
+                .BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
+
+            var entity = await _context.InvoiceSeries
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (entity == null)
             {
-                Status = false,
-                StatusCode = 404,
-                Message = "La serie no existe."
-            };
-        }
+                return new ResponseDto<SerieDto>
+                {
+                    Status = false,
+                    StatusCode = 404,
+                    Message = "La serie no existe."
+                };
+            }
 
-        // ===== VALIDACIONES =====
-        if (dto.StartNumber > dto.EndNumber)
-        {
-            return new ResponseDto<SerieDto>
+            // ======================
+            // VALIDACIONES (PARCIALES)
+            // ======================
+
+            if (dto.StartNumber.HasValue && dto.EndNumber.HasValue &&
+                dto.StartNumber.Value > dto.EndNumber.Value)
             {
-                Status = false,
-                StatusCode = 400,
-                Message = "El número de inicio no puede ser mayor al número final."
-            };
-        }
+                return new ResponseDto<SerieDto>
+                {
+                    Status = false,
+                    StatusCode = 400,
+                    Message = "El número de inicio no puede ser mayor al número final."
+                };
+            }
 
-        // Validación de nombre duplicado
-        var exists = await _context.InvoiceSeries
-            .AnyAsync(x => x.Name.ToLower() == dto.Name.ToLower() && x.Id != id);
-
-        if (exists)
-        {
-            return new ResponseDto<SerieDto>
+            if (!string.IsNullOrWhiteSpace(dto.Name))
             {
-                Status = false,
-                StatusCode = 400,
-                Message = "Ya existe una serie con ese nombre."
-            };
-        }
+                var nameNormalized = dto.Name.Trim().ToLower();
 
-        // ===== CAMBIOS =====
-        if (dto.StartNumber != entity.StartNumber)
-        {
-            if (entity.CurrentNumber != entity.StartNumber)
+                var exists = await _context.InvoiceSeries
+                    .AnyAsync(x => x.Id != id && x.Name.ToLower() == nameNormalized);
+
+                if (exists)
+                {
+                    return new ResponseDto<SerieDto>
+                    {
+                        Status = false,
+                        StatusCode = 400,
+                        Message = "Ya existe una serie con ese nombre."
+                    };
+                }
+            }
+
+            // ======================
+            // CAMBIOS (SOLO SI VIENEN)
+            // ======================
+
+            // 1. Determinar valores efectivos (candidatos a ser guardados)
+            long newStart = dto.StartNumber ?? entity.StartNumber;
+            long newEnd = dto.EndNumber ?? entity.EndNumber;
+            bool startChanging = dto.StartNumber.HasValue && dto.StartNumber.Value != entity.StartNumber;
+            bool endChanging = dto.EndNumber.HasValue && dto.EndNumber.Value != entity.EndNumber;
+
+            // 2. Regla: StartNumber no puede ser mayor que EndNumber (Rango Coherente)
+            if (newStart > newEnd)
+            {
+                return new ResponseDto<SerieDto>
+                {
+                    Status = false,
+                    StatusCode = 400,
+                    Message = "El número de inicio no puede ser mayor al número final."
+                };
+            }
+
+            // 3. Regla: No permitir modificar el inicio si la serie ya tuvo movimiento
+            if (startChanging && entity.CurrentNumber != entity.StartNumber)
             {
                 return new ResponseDto<SerieDto>
                 {
@@ -153,49 +185,66 @@ public class SerieService : ISerieService
                 };
             }
 
-            entity.StartNumber = dto.StartNumber;
-            entity.CurrentNumber = dto.StartNumber;
-        }
+            // 4. Regla: El nuevo número final no puede ser menor al progreso actual de la serie
+            // Si el inicio cambia, el "progreso actual" se reinicia al nuevo inicio.
+            long effectiveCurrent = startChanging ? newStart : entity.CurrentNumber;
 
-        if (dto.EndNumber < entity.CurrentNumber)
-        {
+            if (newEnd < effectiveCurrent)
+            {
+                return new ResponseDto<SerieDto>
+                {
+                    Status = false,
+                    StatusCode = 400,
+                    Message = "El número final no puede ser menor al número actual correlativo."
+                };
+            }
+
+            // 5. Aplicar cambios a la entidad
+            if (startChanging)
+            {
+                entity.StartNumber = newStart;
+                entity.CurrentNumber = newStart; // Reiniciar correlativo al nuevo inicio
+            }
+
+            if (endChanging)
+            {
+                entity.EndNumber = newEnd;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.Name))
+                entity.Name = dto.Name.Trim();
+
+            if (!string.IsNullOrWhiteSpace(dto.Prefix))
+                entity.Prefix = dto.Prefix.Trim();
+
+            if (dto.IsActive.HasValue)
+                entity.IsActive = dto.IsActive.Value;
+
+            entity.UpdatedById = user;
+            entity.UpdatedDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            await tx.CommitAsync();
+
             return new ResponseDto<SerieDto>
             {
-                Status = false,
-                StatusCode = 400,
-                Message = "El número final no puede ser menor al número actual."
+                Status = true,
+                StatusCode = 200,
+                Message = "Serie actualizada correctamente.",
+                Data = new SerieDto
+                {
+                    Id = entity.Id,
+                    Name = entity.Name,
+                    Prefix = entity.Prefix,
+                    StartNumber = entity.StartNumber,
+                    EndNumber = entity.EndNumber,
+                    CurrentNumber = entity.CurrentNumber,
+                    CreatedDate = entity.CreatedDate,
+                    ModifiedDate = entity.UpdatedDate,
+                    IsActive = entity.IsActive
+                }
             };
-        }
-
-        entity.EndNumber = dto.EndNumber;
-        entity.Name = dto.Name;
-        entity.Prefix = dto.Prefix;
-
-        if (dto.IsActive.HasValue)
-            entity.IsActive = dto.IsActive.Value;
-
-        entity.UpdatedById = user;
-        entity.UpdatedDate = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-        await tx.CommitAsync();
-
-        return new ResponseDto<SerieDto>
-        {
-            Status = true,
-            StatusCode = 200,
-            Message = "Serie actualizada correctamente.",
-            Data = new SerieDto
-            {
-                Name = entity.Name,
-                Prefix = entity.Prefix,
-                StartNumber = entity.StartNumber,
-                EndNumber = entity.EndNumber,
-                CurrentNumber = entity.CurrentNumber,
-                CreatedDate = entity.CreatedDate,
-                ModifiedDate = entity.UpdatedDate,
-            }
-        };
+        });
     }
 
 
@@ -252,7 +301,8 @@ public class SerieService : ISerieService
                 EndNumber = x.EndNumber,
                 CurrentNumber = x.CurrentNumber,
                 CreatedDate = x.CreatedDate,
-                ModifiedDate = x.UpdatedDate
+                ModifiedDate = x.UpdatedDate,
+                IsActive = x.IsActive
             })
             .ToListAsync();
 
@@ -291,7 +341,8 @@ public class SerieService : ISerieService
                 EndNumber = x.EndNumber,
                 CurrentNumber = x.CurrentNumber,
                 CreatedDate = x.CreatedDate,
-                ModifiedDate = x.UpdatedDate
+                ModifiedDate = x.UpdatedDate,
+                IsActive = x.IsActive
             })
             .FirstOrDefaultAsync();
 
@@ -319,61 +370,73 @@ public class SerieService : ISerieService
     {
         var userId = _userContextService.GetUserId();
 
-        var entity = await _context.InvoiceSeries
-            .FirstOrDefaultAsync(x => x.Id == id);
+        var strategy = _context.Database.CreateExecutionStrategy();
 
-        if (entity == null)
+        return await strategy.ExecuteAsync(async () =>
         {
-            return new ResponseDto<SerieDto>
+            await using var tx = await _context.Database.BeginTransactionAsync();
+
+            var entity = await _context.InvoiceSeries
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (entity == null)
             {
-                Status = false,
-                StatusCode = 404,
-                Message = "La serie no existe."
-            };
-        }
+                return new ResponseDto<SerieDto>
+                {
+                    Status = false,
+                    StatusCode = 404,
+                    Message = "La serie no existe."
+                };
+            }
 
-        if (!entity.IsActive)
-        {
+            if (!entity.IsActive)
+            {
+                // Ya estaba desactivada (idempotente)
+                return new ResponseDto<SerieDto>
+                {
+                    Status = true,
+                    StatusCode = 200,
+                    Message = "La serie ya estaba desactivada.",
+                    Data = new SerieDto
+                    {
+                        Id = entity.Id,
+                        Name = entity.Name,
+                        Prefix = entity.Prefix,
+                        StartNumber = entity.StartNumber,
+                        EndNumber = entity.EndNumber,
+                        CurrentNumber = entity.CurrentNumber,
+                        CreatedDate = entity.CreatedDate,
+                        ModifiedDate = entity.UpdatedDate,
+                        IsActive = entity.IsActive
+                    }
+                };
+            }
+
+            entity.IsActive = false;
+            entity.UpdatedById = userId;
+            entity.UpdatedDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            await tx.CommitAsync();
+
             return new ResponseDto<SerieDto>
             {
                 Status = true,
                 StatusCode = 200,
-                Message = "La serie ya estaba desactivada.",
+                Message = "Serie desactivada correctamente.",
                 Data = new SerieDto
                 {
+                    Id = entity.Id,
                     Name = entity.Name,
                     Prefix = entity.Prefix,
                     StartNumber = entity.StartNumber,
                     EndNumber = entity.EndNumber,
                     CurrentNumber = entity.CurrentNumber,
                     CreatedDate = entity.CreatedDate,
-                    ModifiedDate = entity.UpdatedDate
+                    ModifiedDate = entity.UpdatedDate,
+                    IsActive = entity.IsActive
                 }
             };
-        }
-
-        // Desactivar
-        entity.IsActive = false;
-        entity.UpdatedById = userId;
-        entity.UpdatedDate = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-
-        return new ResponseDto<SerieDto>
-        {
-            Status = true,
-            StatusCode = 200,
-            Message = "Serie desactivada correctamente.",
-            Data = new SerieDto
-            {
-                Name = entity.Name,
-                Prefix = entity.Prefix,
-                StartNumber = entity.StartNumber,
-                EndNumber = entity.EndNumber,
-                CurrentNumber = entity.CurrentNumber,
-                CreatedDate = entity.CreatedDate,
-                ModifiedDate = entity.UpdatedDate
-            }
-        };
+        });
     }
 }

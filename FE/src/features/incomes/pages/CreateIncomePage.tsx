@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { PageContainer, ProCard } from "@ant-design/pro-components";
 import {
   Input,
   Button,
@@ -28,11 +27,15 @@ import { useHealthcaresList } from "../../healthcares/hooks";
 import { useServiceGroupsList } from "../../service-groups/hooks";
 import { usePatientsInformation } from "../../patients/hooks";
 import { useCreateIncome } from "../hooks/useCreateIncome";
+import { PageHeaderTabs } from "../../../shared/components";
+import { useAbility } from "../../../config";
+import { useInvoiceSeriesManager } from "../hooks";
 
 const { TextArea } = Input;
 const { Text } = Typography;
 
 export const CreateIncomePage = () => {
+  const ability = useAbility();
   const [tipoSeleccion, setTipoSeleccion] = useState<"servicio" | "paquete">(
     "servicio",
   );
@@ -121,65 +124,27 @@ export const CreateIncomePage = () => {
   const [selectedServicio, setSelectedServicio] = useState<any>(null);
   const [selectedServiceGroup, setSelectedServiceGroup] = useState<any>(null);
   const [selectedPaciente, setSelectedPaciente] = useState<any>(null);
-  const [serie, setSerie] = useState("");
-  const [serieId, setSerieId] = useState("");
-  const [numeroRecibo, setNumeroRecibo] = useState("");
-  const [aPagarEfectivo, setAPagarEfectivo] = useState(0);
+  const seriesManager = useInvoiceSeriesManager();
   const [exonerado, setExonerado] = useState(false);
   const [tramiteEmergencia, setTramiteEmergencia] = useState(false);
   const [observaciones, setObservaciones] = useState("");
 
-  useEffect(() => {
-    const itemSeleccionado = selectedServicio || selectedServiceGroup;
+  // Solo guardar el ajuste manual del cajero
+  const [ajusteManual, setAjusteManual] = useState<number | null>(null);
 
-    if (!itemSeleccionado) {
-      setAPagarEfectivo(0);
-      return;
-    }
+  const precioBase =
+    selectedServicio?.cost ||
+    selectedServicio?.precio ||
+    selectedServiceGroup?.totalPrice ||
+    selectedServiceGroup?.precio ||
+    0;
 
-    // Obtener el precio correcto según el tipo
-    const precioNuevo = selectedServicio
-      ? selectedServicio.cost || selectedServicio.precio || 0
-      : selectedServiceGroup.totalPrice || selectedServiceGroup.precio || 0;
+  // aPagarEfectivo se calcula, nunca se guarda en estado
+  const aPagarEfectivo =
+    exonerado || tramiteEmergencia ? 0 : (ajusteManual ?? precioBase);
 
-    // Si está exonerado o es emergencia, siempre poner en 0
-    if (exonerado || tramiteEmergencia) {
-      setAPagarEfectivo(0);
-    } else {
-      setAPagarEfectivo(precioNuevo);
-    }
-  }, [selectedServicio, selectedServiceGroup, exonerado, tramiteEmergencia]);
-
-  // Sincronizar filtros de pacientes
-  const handleSetPacienteFilter = (key: string, value: any) => {
-    setPacienteUIFilter(key, value);
-
-    const filterMap: Record<string, string> = {
-      searchPaciente: "search",
-      genero: "genero",
-      nacionalidad: "nacionalidad",
-      tipoIdentificador: "tipoIdentificador",
-      identificador: "identificador",
-    };
-
-    if (filterMap[key]) {
-      setPatientsFilter(filterMap[key], value);
-    }
-  };
-
-  const handleSetPacienteFilters = (newFilters: any) => {
-    setPacienteUIFilters(newFilters);
-
-    if (newFilters.pagePaciente || newFilters.pageSizePaciente) {
-      setPatientsFilters({
-        pageNumber: newFilters.pagePaciente || patientsFilters.pageNumber,
-        pageSize: newFilters.pageSizePaciente || patientsFilters.pageSize,
-      });
-    }
-  };
-
-  // Seleccionar servicio
   const handleSelectServicio = (servicio: any) => {
+    setAjusteManual(null);
     if (selectedServicio?.id === servicio.id) {
       setSelectedServicio(null);
     } else {
@@ -193,13 +158,13 @@ export const CreateIncomePage = () => {
         ...servicio,
       };
       setSelectedServicio(servicioNormalizado);
-      setSelectedServiceGroup(null); 
+      setSelectedServiceGroup(null);
       setTipoSeleccion("servicio");
     }
   };
 
-  // Seleccionar paquete
   const handleSelectServiceGroup = (serviceGroup: any) => {
+    setAjusteManual(null);
     if (selectedServiceGroup?.id === serviceGroup.id) {
       setSelectedServiceGroup(null);
     } else {
@@ -214,8 +179,36 @@ export const CreateIncomePage = () => {
         description: serviceGroup.description || "",
       };
       setSelectedServiceGroup(paqueteNormalizado);
-      setSelectedServicio(null); // Deseleccionar servicio
+      setSelectedServicio(null);
       setTipoSeleccion("paquete");
+    }
+  };
+  // Sincronizar filtros de pacientes
+  const handleSetPacienteFilter = (key: string | number, value: any) => {
+    const typedKey = key as "searchPaciente" | "tipoIdentificador" | "genero" | "nacionalidad" | "identificador" | "pagePaciente" | "pageSizePaciente";
+    setPacienteUIFilter(typedKey, value);
+
+    const filterMap: Record<string, string> = {
+      searchPaciente: "search",
+      tipoIdentificador: "tipoIdentificador",
+      genero: "genero",
+      nacionalidad: "nacionalidad",
+      identificador: "identificador",
+    };
+
+    if (filterMap[key]) {
+      setPatientsFilter(filterMap[key] as "tipoIdentificador" | "genero" | "identificador" | "search" | "pageNumber" | "pageSize" | "nombreCompleto" | "estadoVital" | "fechaNacimiento", value);
+    }
+  };
+
+  const handleSetPacienteFilters = (newFilters: any) => {
+    setPacienteUIFilters(newFilters);
+
+    if (newFilters.pagePaciente || newFilters.pageSizePaciente) {
+      setPatientsFilters({
+        pageNumber: newFilters.pagePaciente || patientsFilters.pageNumber,
+        pageSize: newFilters.pageSizePaciente || patientsFilters.pageSize,
+      });
     }
   };
 
@@ -242,12 +235,19 @@ export const CreateIncomePage = () => {
       message.warning("Por favor selecciona un servicio o paquete");
       return;
     }
-    if (!numeroRecibo.trim()) {
+    if (!seriesManager.numeroRecibo.trim()) {
       message.warning("Por favor ingresa un número de recibo");
       return;
     }
-    if (!serieId || serieId === "") {
+    if (!seriesManager.serieId) {
       message.error("Por favor selecciona una serie válida");
+      return;
+    }
+    if (!seriesManager.isNumberInRange) {
+      message.error(
+        `El número de recibo está fuera del rango permitido 
+     (${seriesManager.currentSerie?.startNumber} - ${seriesManager.currentSerie?.endNumber})`,
+      );
       return;
     }
 
@@ -262,11 +262,11 @@ export const CreateIncomePage = () => {
     createIncome({
       selectedPaciente: pacienteData,
       selectedServicio: itemSeleccionado,
-      numeroRecibo,
+      numeroRecibo: seriesManager.numeroRecibo,
       aPagarEfectivo,
       exonerado,
       tramiteEmergencia,
-      serieId: serieId,
+      serieId: seriesManager.serieId,
     });
   };
 
@@ -274,10 +274,8 @@ export const CreateIncomePage = () => {
     setSelectedServicio(null);
     setSelectedServiceGroup(null);
     setSelectedPaciente(null);
-    setSerie("");
-    setSerieId("");
-    setNumeroRecibo("");
-    setAPagarEfectivo(0);
+    seriesManager.resetSerie();
+    setAjusteManual(null);
     setExonerado(false);
     setTramiteEmergencia(false);
     setObservaciones("");
@@ -339,114 +337,71 @@ export const CreateIncomePage = () => {
   return (
     <>
       {incomeContextHolder}
-      <PageContainer
-        title="Registro de Ingresos por Servicios"
-        subTitle="Genere ingresos de servicios o paquetes del paciente"
-      >
-        <Row gutter={16}>
-          {/* Servicios y Paquetes */}
-          <Col xs={24} lg={10}>
-            <ProCard
-              title={
-                <Space>
-                  <FileTextOutlined />
-                  <span>Servicios y Paquetes</span>
-                </Space>
-              }
-              bordered
-            >
-              <Tabs
-                activeKey={tipoSeleccion}
-                onChange={(key) =>
-                  setTipoSeleccion(key as "servicio" | "paquete")
-                }
-                items={[
+      <div>
+        {/* Header */}
+        <PageHeaderTabs
+          title="Gestión de Ingresos"
+          tabs={[
+            ...(ability.can("read", "incomes")
+              ? [
                   {
-                    key: "servicio",
-                    label: (
-                      <Space>
-                        <MedicineBoxOutlined />
-                        Servicios
-                      </Space>
-                    ),
-                    children: (
-                      <ServiceIncome
-                        serviciosData={healthcares}
-                        servicioFilters={servicioUIFilters}
-                        setServicioFilter={setServicioUIFilter}
-                        setServicioFilters={setServicioUIFilters}
-                        handleSelectServicio={handleSelectServicio}
-                        selectedServicio={selectedServicio}
-                        isLoading={isLoadingHealthcares}
-                      />
-                    ),
+                    key: "read",
+                    label: "Lista de Ingresos",
+                    path: "/incomes/list",
                   },
+                ]
+              : []),
+            ...(ability.can("create", "incomes")
+              ? [
                   {
-                    key: "paquete",
-                    label: (
-                      <Space>
-                        <AppstoreOutlined />
-                        Paquetes
-                      </Space>
-                    ),
-                    children: (
-                      <ServiceGroupIncome
-                        serviceGroupsData={serviceGroups}
-                        serviceGroupFilters={serviceGroupUIFilters}
-                        setServiceGroupFilter={setServiceGroupUIFilter}
-                        setServiceGroupFilters={setServiceGroupUIFilters}
-                        handleSelectServiceGroup={handleSelectServiceGroup}
-                        selectedServiceGroup={selectedServiceGroup}
-                        isLoading={isLoadingServiceGroups}
-                      />
-                    ),
+                    key: "create",
+                    label: "Generar Ingreso",
+                    path: "/incomes/create",
                   },
-                ]}
-              />
-              <Divider />
-              <IncomeSummary
-                serie={serie}
-                setSerie={setSerie}
-                setSerieId={setSerieId}
-                numeroRecibo={numeroRecibo}
-                setNumeroRecibo={setNumeroRecibo}
-                selectedPaciente={selectedPaciente}
-                selectedServicio={itemSeleccionado}
-                aPagarEfectivo={aPagarEfectivo}
-                exonerado={exonerado}
-                tramiteEmergencia={tramiteEmergencia}
-              />
-            </ProCard>
-          </Col>
-
-          {/* Registro de Ingresos */}
-          <Col xs={24} lg={14}>
-            <ProCard
-              title={
-                <Space>
-                  <UserOutlined />
-                  <span>Registro de Ingresos</span>
-                </Space>
-              }
-              bordered
-            >
-              <ListPatient
-                pacientesData={patients}
-                setSelectedPaciente={setSelectedPaciente}
-                selectedPaciente={selectedPaciente}
-                pacienteFilters={pacienteUIFilters}
-                setPacienteFilter={handleSetPacienteFilter}
-                setPacienteFilters={handleSetPacienteFilters}
-                isLoading={isLoadingPatients}
-              />
-              <Divider />
+                ]
+              : []),
+            ...(ability.can("update", "incomes")
+              ? [
+                  {
+                    key: "update",
+                    label: "Cerrar Caja",
+                    path: "/incomes/close",
+                  },
+                ]
+              : []),
+            ...(ability.can("read", "incomes")
+              ? [
+                  {
+                    key: "history",
+                    label: "Historial de Cierres de Caja",
+                    path: "/incomes/history",
+                  },
+                ]
+              : []),
+          ]}
+          defaultActive="create"
+        />
+        {/* Content */}
+        <div className="primary-card">
+          {/* Resumen de la factura */}
+          <div className="secondary-card mb-4">
+            <IncomeSummary
+              seriesManager={seriesManager}
+              selectedPaciente={selectedPaciente}
+              selectedServicio={itemSeleccionado}
+              aPagarEfectivo={aPagarEfectivo}
+              exonerado={exonerado}
+              tramiteEmergencia={tramiteEmergencia}
+            />
+            <Divider />
+            <div>
               <Row gutter={16} style={{ marginBottom: 16 }}>
                 <Col span={8}>
                   <Text strong>A Pagar Efectivo:</Text>
                   <InputNumber
                     prefix="L"
                     value={aPagarEfectivo}
-                    onChange={(value) => setAPagarEfectivo(value || 0)}
+                    onChange={(value) => setAjusteManual(value || 0)}
                     style={{ width: "100%", marginTop: 8 }}
                     disabled={exonerado || tramiteEmergencia}
                   />
@@ -484,7 +439,15 @@ export const CreateIncomePage = () => {
                   placeholder="Ingrese observaciones adicionales..."
                 />
               </div>
-              <Space>
+              <Space className="flex! justify-end!">
+                <Button
+                  icon={<ReloadOutlined />}
+                  size="large"
+                  onClick={handleResetear}
+                  disabled={isCreatingIncome}
+                >
+                  Cancelar
+                </Button>
                 <Button
                   type="primary"
                   icon={<SaveOutlined />}
@@ -498,19 +461,90 @@ export const CreateIncomePage = () => {
                 >
                   Guardar
                 </Button>
-                <Button
-                  icon={<ReloadOutlined />}
-                  size="large"
-                  onClick={handleResetear}
-                  disabled={isCreatingIncome}
-                >
-                  Resetear
-                </Button>
               </Space>
-            </ProCard>
-          </Col>
-        </Row>
-      </PageContainer>
+            </div>
+          </div>
+
+          <Row gutter={16}>
+            {/* Servicios y Paquetes */}
+            <Col xs={24} lg={10}>
+              <div className="secondary-card">
+                <Space className="text-lg!">
+                  <FileTextOutlined />
+                  <span>Servicios y Paquetes</span>
+                </Space>
+                <Tabs
+                  activeKey={tipoSeleccion}
+                  onChange={(key) =>
+                    setTipoSeleccion(key as "servicio" | "paquete")
+                  }
+                  items={[
+                    {
+                      key: "servicio",
+                      label: (
+                        <Space>
+                          <MedicineBoxOutlined />
+                          Servicios
+                        </Space>
+                      ),
+                      children: (
+                        <ServiceIncome
+                          serviciosData={healthcares}
+                          servicioFilters={servicioUIFilters}
+                          setServicioFilter={setServicioUIFilter}
+                          setServicioFilters={setServicioUIFilters}
+                          handleSelectServicio={handleSelectServicio}
+                          selectedServicio={selectedServicio}
+                          isLoading={isLoadingHealthcares}
+                        />
+                      ),
+                    },
+                    {
+                      key: "paquete",
+                      label: (
+                        <Space>
+                          <AppstoreOutlined />
+                          Paquetes
+                        </Space>
+                      ),
+                      children: (
+                        <ServiceGroupIncome
+                          serviceGroupsData={serviceGroups}
+                          serviceGroupFilters={serviceGroupUIFilters}
+                          setServiceGroupFilter={setServiceGroupUIFilter}
+                          setServiceGroupFilters={setServiceGroupUIFilters}
+                          handleSelectServiceGroup={handleSelectServiceGroup}
+                          selectedServiceGroup={selectedServiceGroup}
+                          isLoading={isLoadingServiceGroups}
+                        />
+                      ),
+                    },
+                  ]}
+                />
+              </div>
+            </Col>
+
+            {/* Pacientes */}
+            <Col xs={24} lg={14}>
+              <div className="secondary-card">
+                <Space className="mb-2! text-lg!">
+                  <UserOutlined />
+                  <span>Pacientes</span>
+                </Space>
+                <ListPatient
+                  pacientesData={patients}
+                  setSelectedPaciente={setSelectedPaciente}
+                  selectedPaciente={selectedPaciente}
+                  pacienteFilters={pacienteUIFilters}
+                  setPacienteFilter={handleSetPacienteFilter}
+                  setPacienteFilters={handleSetPacienteFilters}
+                  isLoading={isLoadingPatients}
+                />
+              </div>
+            </Col>
+          </Row>
+        </div>
+      </div>
     </>
   );
 };

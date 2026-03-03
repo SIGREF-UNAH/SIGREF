@@ -41,17 +41,27 @@ export const PractitionersListPage = () => {
         title="Gestión de Empleados"
         tabs={[
           ...(ability.can("read", "practitioners") ? [{
-            key: "listar",
+            key: "read-practitioners",
             label: "Lista de Empleados",
             path: "/practitioners/list",
           }] : []),
           ...(ability.can("create", "practitioners") ? [{
-            key: "crear",
+            key: "create-practitioners",
             label: "Crear Empleado",
             path: "/practitioners/create",
           }] : []),
+          ...(ability.can("read", "users") ? [{
+            key: "read-users",
+            label: "Lista de Usuarios",
+            path: "/users/list",
+          }] : []),
+            ...(ability.can("create", "users") ? [{
+              key: "create-users",
+              label: "Crear Usuario",
+              path: "/users/create",
+          }] : []),
         ]}
-        defaultActive="crear"
+        defaultActive="read-practitioners"
       />
 
       {/* Tarjetas resumen */}

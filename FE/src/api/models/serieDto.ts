@@ -18,4 +18,5 @@ export interface SerieDto {
   createdDate?: string | null;
   /** @nullable */
   modifiedDate?: string | null;
+  isActive?: boolean;
 }
