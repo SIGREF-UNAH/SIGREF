@@ -157,62 +157,57 @@ public class SerieService : ISerieService
             // CAMBIOS (SOLO SI VIENEN)
             // ======================
 
-            if (dto.StartNumber.HasValue)
+            // 1. Determinar valores efectivos (candidatos a ser guardados)
+            long newStart = dto.StartNumber ?? entity.StartNumber;
+            long newEnd = dto.EndNumber ?? entity.EndNumber;
+            bool startChanging = dto.StartNumber.HasValue && dto.StartNumber.Value != entity.StartNumber;
+            bool endChanging = dto.EndNumber.HasValue && dto.EndNumber.Value != entity.EndNumber;
+
+            // 2. Regla: StartNumber no puede ser mayor que EndNumber (Rango Coherente)
+            if (newStart > newEnd)
             {
-                var newStart = dto.StartNumber.Value;
-
-                if (newStart != entity.StartNumber)
+                return new ResponseDto<SerieDto>
                 {
-                    if (entity.CurrentNumber != entity.StartNumber)
-                    {
-                        return new ResponseDto<SerieDto>
-                        {
-                            Status = false,
-                            StatusCode = 400,
-                            Message = "No se puede cambiar el inicio porque la serie ya fue usada."
-                        };
-                    }
-
-                    // si no mandan EndNumber, validar contra el end actual
-                    if (!dto.EndNumber.HasValue && newStart > entity.EndNumber)
-                    {
-                        return new ResponseDto<SerieDto>
-                        {
-                            Status = false,
-                            StatusCode = 400,
-                            Message = "El número de inicio no puede ser mayor al número final actual."
-                        };
-                    }
-
-                    entity.StartNumber = newStart;
-                    entity.CurrentNumber = newStart;
-                }
+                    Status = false,
+                    StatusCode = 400,
+                    Message = "El número de inicio no puede ser mayor al número final."
+                };
             }
 
-            if (dto.EndNumber.HasValue)
+            // 3. Regla: No permitir modificar el inicio si la serie ya tuvo movimiento
+            if (startChanging && entity.CurrentNumber != entity.StartNumber)
             {
-                var newEnd = dto.EndNumber.Value;
-
-                if (newEnd < entity.CurrentNumber)
+                return new ResponseDto<SerieDto>
                 {
-                    return new ResponseDto<SerieDto>
-                    {
-                        Status = false,
-                        StatusCode = 400,
-                        Message = "El número final no puede ser menor al número actual."
-                    };
-                }
+                    Status = false,
+                    StatusCode = 400,
+                    Message = "No se puede cambiar el inicio porque la serie ya fue usada."
+                };
+            }
 
-                if (!dto.StartNumber.HasValue && newEnd < entity.StartNumber)
+            // 4. Regla: El nuevo número final no puede ser menor al progreso actual de la serie
+            // Si el inicio cambia, el "progreso actual" se reinicia al nuevo inicio.
+            long effectiveCurrent = startChanging ? newStart : entity.CurrentNumber;
+
+            if (newEnd < effectiveCurrent)
+            {
+                return new ResponseDto<SerieDto>
                 {
-                    return new ResponseDto<SerieDto>
-                    {
-                        Status = false,
-                        StatusCode = 400,
-                        Message = "El número final no puede ser menor al número de inicio actual."
-                    };
-                }
+                    Status = false,
+                    StatusCode = 400,
+                    Message = "El número final no puede ser menor al número actual correlativo."
+                };
+            }
 
+            // 5. Aplicar cambios a la entidad
+            if (startChanging)
+            {
+                entity.StartNumber = newStart;
+                entity.CurrentNumber = newStart; // Reiniciar correlativo al nuevo inicio
+            }
+
+            if (endChanging)
+            {
                 entity.EndNumber = newEnd;
             }
 
