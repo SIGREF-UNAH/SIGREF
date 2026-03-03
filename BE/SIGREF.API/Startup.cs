@@ -5,6 +5,7 @@ namespace SIGREF.API;
 public partial class Startup
 {
     private readonly IConfiguration _configuration;
+    private WebApplicationBuilder _builder;
 
     public Startup(IConfiguration configuration)
     {
@@ -13,16 +14,17 @@ public partial class Startup
 
     public void ConfigureServices(IServiceCollection services, WebApplicationBuilder applicationBuilder)
     {
+        this._builder = applicationBuilder;
         ConfigureBase(services);             // Env, cache, httpcontext
         AddFhir(services);                   // FhirService + FhirClient
         AddSeeders(services);                // Seeders
-        AddDomainServices(services);         // Health + SIGREF + Reportes + PDFs
+        AddDomainServices(services, applicationBuilder);         // Health + SIGREF + Reportes + PDFs
         AddKeycloakAdmin(services);          // HttpClient + KeycloakClient + AdminService
         AddControllersAndSwagger(services);  // MVC + Swagger + filters
         AddAuditAndReadiness(services);      // Audit + HostedService + readiness
         AddAuth(services);                   // tu AddAuth parcial
         services.AddAuthorization();         // política general de authorization
-        //AddHangfire(services);               // Hangfire
+        AddHangfire(services);               // Hangfire
         AddCorsPolicy(services);             // CORS
     }
 
@@ -51,6 +53,10 @@ public partial class Startup
 
         app.UseAuthorization();
 
+        if (_configuration.GetValue<bool>("Hangfire:DashboardEnabled"))
+        {
+            UseHangfireDashboard(app);
+        }
 
         app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
     }
