@@ -1,6 +1,6 @@
 ﻿#nullable enable
-using SIGREF.API.Dtos.Common;
 using System.Text.Json.Serialization;
+using SIGREF.API.Dtos.Common;
 
 namespace SIGREF.API.Dtos.Healthcare
 {

@@ -1,11 +1,11 @@
-﻿using Hl7.Fhir.Rest;
-using SIGREF.API.Dtos.Patient;
-using FhirPatient = Hl7.Fhir.Model.Patient;
-using SIGREF.API.Extensions;
-using Task = System.Threading.Tasks.Task;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
+using Hl7.Fhir.Rest;
 using SIGREF.API.Dtos.Common;
+using SIGREF.API.Dtos.Patient;
+using SIGREF.API.Extensions;
 using SIGREF.API.Helpers;
+using FhirPatient = Hl7.Fhir.Model.Patient;
+using Task = System.Threading.Tasks.Task;
 namespace SIGREF.API.Services.Patient;
 
 /// <summary>

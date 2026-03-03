@@ -2,9 +2,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Constants;
-using SIGREF.API.Services.Auth;
 using SIGREF.API.Dtos.Auth;
 using SIGREF.API.Dtos.Common;
+using SIGREF.API.Services.Auth;
 
 namespace SIGREF.API.Controllers.Auth;
 

@@ -2,10 +2,9 @@
 using Hl7.Fhir.Rest;
 using Microsoft.Extensions.Caching.Memory;
 using SIGREF.API.Services.Common;
-
+using FhirHealthcareService = Hl7.Fhir.Model.HealthcareService;
 using FhirLocation = Hl7.Fhir.Model.Location;
 using FhirOrganization = Hl7.Fhir.Model.Organization;
-using FhirHealthcareService = Hl7.Fhir.Model.HealthcareService;
 
 namespace SIGREF.API.Services.FhirUtils;
 

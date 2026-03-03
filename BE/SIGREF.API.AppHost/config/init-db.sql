@@ -1,14 +1,12 @@
 -- =============================================================
--- Inicialización de Bases de Datos del Sistema SIGREF
+-- Inicializacion de Bases de Datos del Sistema SIGREF
 -- =============================================================
 
--- Base de datos clínica (FHIR)
-CREATE DATABASE hapi;
+-- Usamos esta tecnica para que el script no falle si las dbs ya existen
+SELECT 'CREATE DATABASE hapi' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'hapi')\gexec
+SELECT 'CREATE DATABASE keycloak' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'keycloak')\gexec
+SELECT 'CREATE DATABASE sigref' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'sigref')\gexec
+SELECT 'CREATE DATABASE hangfire' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'hangfire')\gexec
 
--- Base de datos de autenticación (Keycloak)
-CREATE DATABASE keycloak;
-
--- Base de datos interna SIGREF (finanzas, recibos, transacciones, etc.)
-CREATE DATABASE sigref;
-
-
+-- Opcional: Asignar privilegios si usas un usuario especifico
+-- ALTER DATABASE hapi OWNER TO mi_usuario_sigref;

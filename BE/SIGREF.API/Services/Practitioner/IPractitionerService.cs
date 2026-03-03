@@ -1,7 +1,7 @@
 ﻿#nullable enable
-using FhirPractitioner = Hl7.Fhir.Model.Practitioner;
-using SIGREF.API.Dtos.Practitioner;
 using SIGREF.API.Dtos.Common;
+using SIGREF.API.Dtos.Practitioner;
+using FhirPractitioner = Hl7.Fhir.Model.Practitioner;
 
 namespace SIGREF.API.Services.Practitioner;
 public interface IPractitionerService

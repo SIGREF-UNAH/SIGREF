@@ -1,12 +1,29 @@
+# ============================================================================
+# MÓDULO: Orquestación de Servicios SIGREF
+# PROYECTO: SIGREF (Aspire Orchestration)
+# ----------------------------------------------------------------------------
+# AUTORES (GitHub): 
+#   - @erickArita (Erick Marley Arita)
+#   - @TETvega (Héctor Rene Martínez Vega)
+# CO-AUTOR DE OPTIMIZACIÓN: 
+#   - Gemini 3 Flash (Google AI)
+# ----------------------------------------------------------------------------
+# PROPÓSITO: Definición de red, volúmenes y variables de entorno para 
+#            el despliegue integrado de la arquitectura SIGREF.
+# ============================================================================
+
 services:
+  # DASHBOARD DE ASPIRE: Centraliza logs y telemetría (OpenTelemetry)
   env-dashboard:
     image: "mcr.microsoft.com/dotnet/nightly/aspire-dashboard:latest"
     expose:
-      - "18888"
-      - "18889"
+      - "18888" # Dashboard UI
+      - "18889" # OTLP Ingest
     networks:
       - "aspire"
     restart: "always"
+
+  # BASE DE DATOS PRINCIPAL: Postgres 17 sobre Alpine (Ligero)
   postgres:
     image: "docker.io/postgres:17-alpine"
     environment:
@@ -15,15 +32,21 @@ services:
       POSTGRES_USER: "${POSTGRES_USERNAME}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
       POSTGRES_DB: "postgres"
+    healthcheck: # OPTIMIZACIÓN: Permite que otros servicios esperen a que la DB esté lista de verdad
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USERNAME} -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     expose:
       - "5432"
     volumes:
       - type: "volume"
-        target: "/var/lib/postgresql/data"
         source: "data-postgres"
-        read_only: false
+        target: "/var/lib/postgresql/data"
     networks:
       - "aspire"
+
+  # BASE DE DATOS DE LOGS: MongoDB 8.2
   mongo-sigref-logs:
     image: "docker.io/library/mongo:8.2"
     environment:
@@ -33,137 +56,89 @@ services:
       - "27017"
     volumes:
       - type: "volume"
-        target: "/data/db"
         source: "data-mongo-sigref-logs"
-        read_only: false
+        target: "/data/db"
     networks:
       - "aspire"
+
+  # IDENTITY SERVER: Keycloak (Usa la imagen optimizada que creamos)
   keycloak:
     image: "${KEYCLOAK_IMAGE}"
-    command:
-      - "start"
-      - "--import-realm"
+    command: ["start", "--optimized", "--import-realm"]
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: "${KEYCLOAK_USER}"
       KC_BOOTSTRAP_ADMIN_PASSWORD: "${KEYCLOAK_PASS}"
-      KC_HEALTH_ENABLED: "true"
-      ConnectionStrings__keycloakDb: "Host=postgres;Port=5432;Username=${POSTGRES_USERNAME};Password=${POSTGRES_PASSWORD};Database=keycloak"
-      KEYCLOAKDB_HOST: "postgres"
-      KEYCLOAKDB_PORT: "5432"
-      KEYCLOAKDB_USERNAME: "${POSTGRES_USERNAME}"
-      KEYCLOAKDB_PASSWORD: "${POSTGRES_PASSWORD}"
-      KEYCLOAKDB_URI: "postgresql://${POSTGRES_USERNAME}:${POSTGRES_PASSWORD}@postgres:5432/keycloak"
-      KEYCLOAKDB_JDBCCONNECTIONSTRING: "jdbc:postgresql://postgres:5432/keycloak"
-      KEYCLOAKDB_DATABASE: "keycloak"
-      KC_HTTP_ENABLED: "true"
-      KC_PROXY_HEADERS: "xforwarded"
-      KC_HOSTNAME_STRICT: "false"
       KC_DB: "postgres"
       KC_DB_URL: "jdbc:postgresql://postgres:5432/keycloak"
       KC_DB_USERNAME: "${POSTGRES_USERNAME}"
       KC_DB_PASSWORD: "${POSTGRES_PASSWORD}"
-      KC_HOSTNAME: "localhost"
-    expose:
-      - "8080"
-      - "9000"
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: "xforwarded"
     depends_on:
       postgres:
-        condition: "service_started"
+        condition: "service_healthy" # Espera a que la DB pase el healthcheck
     networks:
       - "aspire"
+
+  # SERVIDOR FHIR: Datos clínicos interoperables
   hapifhir:
     image: "hapiproject/hapi:latest"
     environment:
-      ConnectionStrings__postgres: "Host=postgres;Port=5432;Username=${POSTGRES_USERNAME};Password=${POSTGRES_PASSWORD}"
-      POSTGRES_HOST: "postgres"
-      POSTGRES_PORT: "5432"
-      POSTGRES_USERNAME: "${POSTGRES_USERNAME}"
-      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
-      POSTGRES_URI: "postgresql://${POSTGRES_USERNAME}:${POSTGRES_PASSWORD}@postgres:5432"
-      POSTGRES_JDBCCONNECTIONSTRING: "jdbc:postgresql://postgres:5432"
-      ConnectionStrings__hapi: "Host=postgres;Port=5432;Username=${POSTGRES_USERNAME};Password=${POSTGRES_PASSWORD};Database=hapi"
-      HAPI_HOST: "postgres"
-      HAPI_PORT: "5432"
-      HAPI_USERNAME: "${POSTGRES_USERNAME}"
-      HAPI_PASSWORD: "${POSTGRES_PASSWORD}"
-      HAPI_URI: "postgresql://${POSTGRES_USERNAME}:${POSTGRES_PASSWORD}@postgres:5432/hapi"
-      HAPI_JDBCCONNECTIONSTRING: "jdbc:postgresql://postgres:5432/hapi"
-      HAPI_DATABASE: "hapi"
       SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/hapi"
       SPRING_DATASOURCE_USERNAME: "${POSTGRES_USERNAME}"
       SPRING_DATASOURCE_PASSWORD: "${POSTGRES_PASSWORD}"
-      SPRING_DATASOURCE_DRIVER_CLASS_NAME: "org.postgresql.Driver"
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: "ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect"
-    expose:
-      - "8080"
     depends_on:
       postgres:
-        condition: "service_started"
+        condition: "service_healthy"
     networks:
       - "aspire"
+
+  # API PRINCIPAL: .NET 9 con OpenTelemetry
   sigref-api:
     image: "${SIGREF_API_IMAGE}"
     environment:
-      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
-      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
-      OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
       HTTP_PORTS: "${SIGREF_API_PORT}"
-      ConnectionStrings__sigref: "Host=postgres;Port=5432;Username=${POSTGRES_USERNAME};Password=${POSTGRES_PASSWORD};Database=sigref"
-      SIGREF_HOST: "postgres"
-      SIGREF_PORT: "5432"
-      SIGREF_USERNAME: "${POSTGRES_USERNAME}"
-      SIGREF_PASSWORD: "${POSTGRES_PASSWORD}"
-      SIGREF_URI: "postgresql://${POSTGRES_USERNAME}:${POSTGRES_PASSWORD}@postgres:5432/sigref"
-      SIGREF_JDBCCONNECTIONSTRING: "jdbc:postgresql://postgres:5432/sigref"
-      SIGREF_DATABASE: "sigref"
-      ConnectionStrings__sigref-logs: "mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@mongo-sigref-logs:27017/sigref-logs?authSource=admin&authMechanism=SCRAM-SHA-256"
-      SIGREF-LOGS_HOST: "mongo-sigref-logs"
-      SIGREF-LOGS_PORT: "27017"
-      SIGREF-LOGS_USERNAME: "${MONGODB_USER}"
-      SIGREF-LOGS_PASSWORD: "${MONGODB_PASSWORD}"
-      SIGREF-LOGS_AUTHENTICATIONDATABASE: "admin"
-      SIGREF-LOGS_AUTHENTICATIONMECHANISM: "SCRAM-SHA-256"
-      SIGREF-LOGS_URI: "mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@mongo-sigref-logs:27017/sigref-logs?authSource=admin&authMechanism=SCRAM-SHA-256"
-      SIGREF-LOGS_DATABASE: "sigref-logs"
-      KEYCLOAK_HTTP: "http://keycloak:8080"
-      services__keycloak__http__0: "http://keycloak:8080"
-      KEYCLOAK_MANAGEMENT: "http://keycloak:9000"
-      services__keycloak__management__0: "http://keycloak:9000"
-      HAPIFHIR_HTTP: "http://hapifhir:8080"
-      services__hapifhir__http__0: "http://hapifhir:8080"
+      # Inyección de Connection Strings para .NET
+      ConnectionStrings__sigref: "Host=postgres;Database=sigref;Username=${POSTGRES_USERNAME};Password=${POSTGRES_PASSWORD}"
+      ConnectionStrings__sigref-logs: "mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@mongo-sigref-logs:27017/sigref-logs?authSource=admin"
+      # Configuración de Telemetría hacia el Dashboard de Aspire
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://env-dashboard:18889"
-      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
       OTEL_SERVICE_NAME: "sigref-api"
+      KEYCLOAK_HTTP: "http://keycloak:8080"
+      HAPIFHIR_HTTP: "http://hapifhir:8080"
     ports:
-      - "${SIGREF_API_PORT}"
+      - "${SIGREF_API_PORT}:${SIGREF_API_PORT}"
     depends_on:
-      postgres:
-        condition: "service_started"
-      mongo-sigref-logs:
-        condition: "service_started"
-      hapifhir:
-        condition: "service_started"
-      keycloak:
-        condition: "service_started"
+      postgres: { condition: "service_healthy" }
+      mongo-sigref-logs: { condition: "service_started" }
+      hapifhir: { condition: "service_started" }
+      keycloak: { condition: "service_started" }
     networks:
       - "aspire"
+
+  # FRONTEND: Aplicación de usuario final
   frontend:
     image: "${FRONTEND_IMAGE}"
     ports:
       - "5173:80"
     depends_on:
-      sigref-api:
-        condition: "service_started"
-      keycloak:
-        condition: "service_started"
+      sigref-api: { condition: "service_started" }
     networks:
       - "aspire"
+
 networks:
   aspire:
     driver: "bridge"
+
 volumes:
   data-postgres:
-    driver: "local"
   data-mongo-sigref-logs:
-    driver: "local"
+
+# ----------------------------------------------------------------------------
+# REFERENCIAS:
+# - Docker Compose Specification: https://docs.docker.com/compose/compose-file/
+# - .NET Aspire Deployment: https://learn.microsoft.com/en-us/dotnet/aspire/deployment/overview
+# ============================================================================

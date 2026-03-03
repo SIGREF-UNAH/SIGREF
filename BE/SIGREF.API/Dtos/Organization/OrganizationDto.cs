@@ -1,6 +1,6 @@
+using System.ComponentModel.DataAnnotations;
 using Hl7.Fhir.Model;
 using SIGREF.API.Dtos.Common;
-using System.ComponentModel.DataAnnotations;
 
 namespace SIGREF.API.Dtos;
 public class OrganizationDto

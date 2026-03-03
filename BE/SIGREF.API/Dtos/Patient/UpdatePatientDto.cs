@@ -1,9 +1,9 @@
 ﻿#nullable enable
-using SIGREF.API.Dtos.Common;
-using SIGREF.API.Dtos.Common.ValidationAtributes;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using Hl7.Fhir.Model;
+using SIGREF.API.Dtos.Common;
+using SIGREF.API.Dtos.Common.ValidationAtributes;
 
 namespace SIGREF.API.Dtos.Patient;
 public class UpdatePatientDto

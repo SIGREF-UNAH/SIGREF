@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Hl7.Fhir.Model;
 using System.Text.Json.Serialization;
+using Hl7.Fhir.Model;
 using SIGREF.API.Dtos.Common;
 #nullable enable
 namespace SIGREF.API.Dtos.PractitionerRole;

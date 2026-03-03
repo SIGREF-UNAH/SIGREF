@@ -26,6 +26,8 @@
     <PackageReference Include="Aspire.Keycloak.Authentication" Version="13.0.1-preview.1.25575.3" />
     <PackageReference Include="Aspire.MongoDB.Driver" Version="13.0.1" />
     <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="13.0.1" />
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.23" />
+    <PackageReference Include="Hangfire.PostgreSql" Version="1.21.1" />
     <PackageReference Include="Hl7.Fhir.R4" Version="5.12.2" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="9.0.11" />
@@ -46,6 +48,20 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SIGREF.API.ServiceDefaults\SIGREF.API.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\SIGREF.Infrastructure.Reporting\SIGREF.Infrastructure.Reporting.csproj" />
+  </ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="Assets/Fonts/DejaVuSans.ttf" />
+		<EmbeddedResource Include="Assets/Fonts/DejaVuSans-Bold.ttf" />
+		<EmbeddedResource Include="Assets/Fonts/DejaVuSans-Oblique.ttf" />
+		<EmbeddedResource Include="Assets/Fonts/DejaVuSans-BoldOblique.ttf" />
+		<EmbeddedResource Include="Assets/Images/Hospital_Occidente_Logo.png" />
+		<EmbeddedResource Include="Assets/Images/Logo_de_SESAL.png" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+    <Folder Include="media\outputDir\" />
   </ItemGroup>
 
 </Project>

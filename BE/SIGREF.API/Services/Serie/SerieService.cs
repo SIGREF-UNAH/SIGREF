@@ -1,10 +1,10 @@
-﻿using SIGREF.API.Database;
+﻿using Microsoft.EntityFrameworkCore;
+using SIGREF.API.Constants;
+using SIGREF.API.Database;
 using SIGREF.API.Database.Entity.Billing;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Series;
 using SIGREF.API.Services.Auth;
-using Microsoft.EntityFrameworkCore;
-using SIGREF.API.Constants;
 
 namespace SIGREF.API.Services.Serie;
 

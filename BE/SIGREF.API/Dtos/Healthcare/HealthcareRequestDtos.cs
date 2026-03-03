@@ -1,7 +1,7 @@
 ﻿#nullable enable
-using SIGREF.API.Dtos.Common;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Healthcare;
 
 public class CreateHealthcareDto
