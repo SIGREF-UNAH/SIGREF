@@ -18,6 +18,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SIGREF.API\SIGREF.API.csproj" />
+    <ProjectReference Include="..\SIGREF.Hangfire.Worker\SIGREF.Hangfire.Worker.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="config\**" CopyToOutputDirectory="PreserveNewest" />

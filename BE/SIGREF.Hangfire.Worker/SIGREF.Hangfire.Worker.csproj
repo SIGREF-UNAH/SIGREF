@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-SIGREF.Hangfire.Worker-ce3d8f0b-8742-4261-80e1-110e68320440</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Npgsql" Version="13.1.2" />
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.23" />
+    <PackageReference Include="Hangfire.PostgreSql" Version="1.21.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="11.0.0-preview.1.26104.118" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SIGREF.Infrastructure.Reporting\SIGREF.Infrastructure.Reporting.csproj" />
+  </ItemGroup>
+</Project>
