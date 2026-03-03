@@ -14,12 +14,13 @@ using SIGREF.API.Services.Reports;
 using SIGREF.API.Services.Serie;
 using SIGREF.API.Services.ServiceGroup;
 using SIGREF.API.Services.ValueSet;
+using SIGREF.Infrastructure.Reporting;
 
 namespace SIGREF.API;
 
 public partial class Startup
 {
-    private void AddDomainServices(IServiceCollection services)
+    private void AddDomainServices(IServiceCollection services, WebApplicationBuilder applicationBuilder)
     {
         // ================= HEALTH =================
         services.AddScoped<LocationService>();
@@ -47,7 +48,9 @@ public partial class Startup
         services.AddScoped<IReportQueryService, ReportQueryService>();
         services.AddScoped<IReportExportService, ReportExportService>();
 
+        
+        //   LIBRERIAS INTERNAS
         // ================= PDFs =====================
-        services.AddScoped<ITestPdfService, TestPdfService>();
+        applicationBuilder.AddReportingInfrastructure();
     }
 }

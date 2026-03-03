@@ -43,12 +43,12 @@
     <PackageReference Include="MongoDB.Driver" Version="3.5.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
-    <PackageReference Include="QuestPDF" Version="2026.2.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.4" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\SIGREF.API.ServiceDefaults\SIGREF.API.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\SIGREF.Infrastructure.Reporting\SIGREF.Infrastructure.Reporting.csproj" />
   </ItemGroup>
 	<ItemGroup>
 		<EmbeddedResource Include="Assets/Fonts/DejaVuSans.ttf" />
