@@ -1,110 +1,119 @@
-﻿using System.Net.Http.Json;
+﻿using System.Net;
+using System.Net.Http.Json;
 using System.Text.Json;
 using SIGREF.Infrastructure.Keycloak.Dtos.Auth;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
 
 namespace SIGREF.Infrastructure.Keycloak.Services.Auth.Keycloak;
 
-public partial class KeycloakClient: IKeycloakClient
+public partial class KeycloakClient : IKeycloakClient
 {
-     // ======================================================
-    // SEARCH — optimizado
     // ======================================================
+    // SEARCH
+    // ======================================================
+
     public async Task<List<JsonElement>> SearchUsersAsync(string search, CancellationToken ct)
     {
-        var url = $"{_baseUrl}/admin/realms/{_realm}/users?search={Uri.EscapeDataString(search)}";
+        var url = $"{_settings.BaseUrl}/admin/realms/{_settings.RealmName}/users" +
+                  $"?search={Uri.EscapeDataString(search)}";
+
         var response = await SendAuthenticatedAsync(HttpMethod.Get, url, ct: ct);
         response.EnsureSuccessStatusCode();
-        var list = await response.Content.ReadFromJsonAsync<List<JsonElement>>(ct);
 
-        return list ?? new List<JsonElement>();
+        return await response.Content.ReadFromJsonAsync<List<JsonElement>>(ct)
+               ?? [];
     }
 
     public async Task<List<string>> SearchUsernamesAsync(string username, CancellationToken ct)
     {
-        // Keycloak buscará en username, email, firstName, lastName… 
-        // pero vamos a filtrar SOLO username en el backend.
-        var url =
-            $"{_baseUrl}/admin/realms/{_realm}/users?" +
-            $"search={Uri.EscapeDataString(username)}&first=0&max=20";
+        var url = $"{_settings.BaseUrl}/admin/realms/{_settings.RealmName}/users" +
+                  $"?search={Uri.EscapeDataString(username)}&first=0&max=20";
 
         var response = await SendAuthenticatedAsync(HttpMethod.Get, url, ct: ct);
         response.EnsureSuccessStatusCode();
-        var list = await response.Content.ReadFromJsonAsync<List<JsonElement>>(ct)
-                   ?? new List<JsonElement>();
 
-        // Convertir solo a lista de usernames
-        var usernames = list
-            .Select(u =>
-            {
-                if (u.TryGetProperty("username", out var un))
-                    return un.GetString();
-                return null;
-            })
+        var list = await response.Content.ReadFromJsonAsync<List<JsonElement>>(ct) ?? [];
+
+        return list
+            .Select(u => u.TryGetProperty("username", out var un) ? un.GetString() : null)
             .Where(u => !string.IsNullOrWhiteSpace(u))
             .Select(u => u!)
             .ToList();
-
-        return usernames;
     }
-
-
 
     public async Task<JsonElement?> SearchUserByEmailAsync(string email, CancellationToken ct)
     {
-        var url = $"{_baseUrl}/admin/realms/{_realm}/users?email={Uri.EscapeDataString(email)}";
+        var url = $"{_settings.BaseUrl}/admin/realms/{_settings.RealmName}/users" +
+                  $"?email={Uri.EscapeDataString(email)}&exact=true";
+
         var response = await SendAuthenticatedAsync(HttpMethod.Get, url, ct: ct);
         response.EnsureSuccessStatusCode();
-        var list = await response.Content.ReadFromJsonAsync<List<JsonElement>>(ct);
 
+        var list = await response.Content.ReadFromJsonAsync<List<JsonElement>>(ct);
         return list?.FirstOrDefault();
     }
-    
+
+    // ======================================================
+    // GET BY ID 
+    // ======================================================
 
     public async Task<JsonElement?> GetUserByIdAsync(string userId, CancellationToken ct)
     {
-        var url = $"{_baseUrl}/admin/realms/{_realm}/users/{userId}";
+        var url = $"{_settings.BaseUrl}/admin/realms/{_settings.RealmName}/users/{userId}";
 
-        try
-        {
-            var response = await SendAuthenticatedAsync(HttpMethod.Get, url, ct: ct);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<JsonElement>(ct);
-        }
-        catch
-        {
+        var response = await SendAuthenticatedAsync(HttpMethod.Get, url, ct: ct);
+
+        // Único caso silencioso: el usuario simplemente no existe
+        if (response.StatusCode == HttpStatusCode.NotFound)
             return null;
-        }
+
+        // Cualquier otro error HTTP se propaga al caller
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<JsonElement>(ct);
     }
-    
+
+    // ======================================================
+    // CREATE
+    // ======================================================
 
     public async Task<string?> CreateUserAsync(object kcUser, CancellationToken ct)
     {
-        var url = $"{_baseUrl}/admin/realms/{_realm}/users";
+        var url = $"{_settings.BaseUrl}/admin/realms/{_settings.RealmName}/users";
+
         var response = await SendAuthenticatedAsync(HttpMethod.Post, url, kcUser, ct);
 
         if (!response.IsSuccessStatusCode)
             return null;
 
-        var location = response.Headers.Location?.ToString();
-        return location?.Split('/').Last();
+        return response.Headers.Location?.ToString().Split('/').Last();
     }
+
+    // ======================================================
+    // ROLES
+    // ======================================================
 
     public async Task<bool> AssignRoleAsync(string userId, string roleName, CancellationToken ct)
     {
-        var roleUrl = $"{_baseUrl}/admin/realms/{_realm}/roles/{roleName}";
+        var roleUrl = $"{_settings.BaseUrl}/admin/realms/{_settings.RealmName}/roles/{roleName}";
+
         var roleResponse = await SendAuthenticatedAsync(HttpMethod.Get, roleUrl, ct: ct);
         roleResponse.EnsureSuccessStatusCode();
+
         var role = await roleResponse.Content.ReadFromJsonAsync<JsonElement>(ct);
 
-        var mappingUrl =
-            $"{_baseUrl}/admin/realms/{_realm}/users/{userId}/role-mappings/realm";
+        var mappingUrl = $"{_settings.BaseUrl}/admin/realms/{_settings.RealmName}" +
+                         $"/users/{userId}/role-mappings/realm";
 
-        var res = await SendAuthenticatedAsync(HttpMethod.Post, mappingUrl, new[] { role }, ct);
+        var response = await SendAuthenticatedAsync(HttpMethod.Post, mappingUrl, new[] { role }, ct);
 
-        return res.IsSuccessStatusCode;
+        return response.IsSuccessStatusCode;
     }
-    
+
+    // ======================================================
+    // FILTERED LIST
+    // ======================================================
+
     public async Task<List<KeycloakUserDto>> GetUsersFilteredAsync(
         int first,
         int max,
@@ -120,19 +129,17 @@ public partial class KeycloakClient: IKeycloakClient
         if (!string.IsNullOrWhiteSpace(usernameFilter))
             query.Add($"search={Uri.EscapeDataString(usernameFilter)}");
 
-        var url = $"{_baseUrl}/admin/realms/{_realm}/users?{string.Join("&", query)}";
+        var url = $"{_settings.BaseUrl}/admin/realms/{_settings.RealmName}/users" +
+                  $"?{string.Join("&", query)}";
 
         var response = await SendAuthenticatedAsync(HttpMethod.Get, url, ct: ct);
         response.EnsureSuccessStatusCode();
-        var rawUsers = await response.Content.ReadFromJsonAsync<List<JsonElement>>(ct)
-                       ?? new List<JsonElement>();
+
+        var rawUsers = await response.Content.ReadFromJsonAsync<List<JsonElement>>(ct) ?? [];
 
         return rawUsers
             .Select(KeycloakUserMapper.ToDto)
-            .Where(dto => dto != null)
+            .Where(dto => dto is not null)
             .ToList()!;
     }
-
-    
-    
 }
