@@ -14,8 +14,10 @@ if (string.IsNullOrWhiteSpace(hangfireConn))
     throw new InvalidOperationException(
         "Error Crítico: Connection string 'hangfire' no inyectada por el AppHost.");
 }
+// TODO verificar conexiones y formas de trabajo
 builder.Services.AddScoped<Npgsql.NpgsqlConnection>(sp => 
     sp.GetRequiredService<Npgsql.NpgsqlDataSource>().OpenConnection());
+
 
 // 2. Configurar el Storage (Igual que en la API para mantener compatibilidad)
 builder.Services.AddHangfire((sp, cfg) =>
