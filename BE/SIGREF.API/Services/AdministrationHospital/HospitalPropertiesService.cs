@@ -4,6 +4,7 @@ using SIGREF.API.Database.Entity.Administration;
 using SIGREF.API.Dtos.Administration;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Extensions;
+using SIGREF.Common.Dtos;
 
 namespace SIGREF.API.Services.AdministrationHospital;
 

@@ -6,7 +6,7 @@ using SIGREF.API.Dtos.PractitionerRole;
 using SIGREF.API.Extensions;
 using SIGREF.API.Helpers;
 using SIGREF.API.Services.Common;
-
+using SIGREF.Common.Dtos;
 using FhirPractitionerRole = Hl7.Fhir.Model.PractitionerRole;
 
 namespace SIGREF.API.Services.PractitionerRole;

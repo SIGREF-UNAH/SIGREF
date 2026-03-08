@@ -4,6 +4,7 @@ using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Patient;
 using SIGREF.API.Extensions;
 using SIGREF.API.Helpers;
+using SIGREF.Common.Dtos;
 using FhirPatient = Hl7.Fhir.Model.Patient;
 using Task = System.Threading.Tasks.Task;
 namespace SIGREF.API.Services.Patient;

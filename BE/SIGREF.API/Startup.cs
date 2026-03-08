@@ -19,7 +19,7 @@ public partial class Startup
         AddFhir(services);                   // FhirService + FhirClient
         AddSeeders(services);                // Seeders
         AddDomainServices(services, applicationBuilder);         // Health + SIGREF + Reportes + PDFs
-        AddKeycloakAdmin(services);          // HttpClient + KeycloakClient + AdminService
+        //AddKeycloakAdmin(services);          // HttpClient + KeycloakClient + AdminService Configuracion mediante la libreria
         AddControllersAndSwagger(services);  // MVC + Swagger + filters
         AddAuditAndReadiness(services);      // Audit + HostedService + readiness
         AddAuth(services);                   // tu AddAuth parcial

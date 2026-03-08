@@ -2,10 +2,12 @@
 using SIGREF.API.Database;
 using SIGREF.API.Database.Entity.Billing;
 using SIGREF.API.Database.Entity.common;
-using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Report;
-using SIGREF.API.Services.Auth;
 using SIGREF.API.Services.Reports;
+using SIGREF.Common.Dtos;
+using SIGREF.Common.Types;
+using SIGREF.Infrastructure.Keycloak.Interfaces;
+using SIGREF.Infrastructure.Keycloak.Services.Auth;
 
 namespace SIGREF.API.Services.Reports;
 

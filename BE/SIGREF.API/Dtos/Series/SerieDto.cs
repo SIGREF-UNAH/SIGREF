@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using SIGREF.API.Dtos.Common;
+using SIGREF.Common.Dtos;
 
 namespace SIGREF.API.Dtos.Series;
 

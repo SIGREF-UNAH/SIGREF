@@ -1,5 +1,6 @@
 ﻿using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Dashboard;
+using SIGREF.Common.Dtos;
 
 namespace SIGREF.API.Services.Dashboard;
 

@@ -5,7 +5,9 @@ using SIGREF.API.Dtos.Practitioner;
 using SIGREF.API.Dtos.PractitionerRole;
 using SIGREF.API.Extensions;
 using SIGREF.API.Helpers;
+using SIGREF.API.Services.Patient;
 using SIGREF.API.Services.PractitionerRole;
+using SIGREF.Common.Dtos;
 using FhirPractitioner = Hl7.Fhir.Model.Practitioner;
 using Task = System.Threading.Tasks.Task;
 

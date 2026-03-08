@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Practitioner;
+using SIGREF.Common.Dtos;
 using FhirPractitioner = Hl7.Fhir.Model.Practitioner;
 
 namespace SIGREF.API.Services.Practitioner;

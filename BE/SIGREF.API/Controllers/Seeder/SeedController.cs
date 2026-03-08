@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SIGREF.API.Constants;
+using SIGREF.Common.Constants;
 
 namespace SIGREF.API.Controllers.Seeder;
 

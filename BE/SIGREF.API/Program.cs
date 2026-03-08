@@ -71,6 +71,8 @@ builder.AddServiceDefaults();
 // PostgreSQL + Context Factory
 builder.AddNpgsqlDbContext<SIGREF.API.Database.SIGREFContext>("sigref");
 builder.Services.AddDbContextFactory<SIGREF.API.Database.SIGREFContext>();
+builder.Services.AddScoped<Npgsql.NpgsqlConnection>(sp => 
+    sp.GetRequiredService<Npgsql.NpgsqlDataSource>().OpenConnection());
 
 // MongoDB
 builder.AddMongoDBClient("MongoDb");

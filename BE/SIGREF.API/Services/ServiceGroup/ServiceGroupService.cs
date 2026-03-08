@@ -7,6 +7,7 @@ using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.ServiceGroup;
 using SIGREF.API.Extensions;
 using SIGREF.API.Helpers;
+using SIGREF.Common.Dtos;
 using FhirList = Hl7.Fhir.Model.List;
 using Task = System.Threading.Tasks.Task;
 

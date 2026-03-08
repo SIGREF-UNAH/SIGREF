@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using SIGREF.API.Database.Entity.common;
+using SIGREF.Common.Types;
 
 namespace SIGREF.API.Dtos.Invoice;
 

@@ -1,10 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SIGREF.API.Constants;
-using SIGREF.API.Dtos.Auth;
-using SIGREF.API.Dtos.Common;
-using SIGREF.API.Services.Auth;
+using SIGREF.Common.Constants;
+using SIGREF.Common.Dtos;
+using SIGREF.Infrastructure.Keycloak.Dtos.Auth;
+using SIGREF.Infrastructure.Keycloak.Interfaces;
+using SIGREF.Infrastructure.Keycloak.Services.Auth;
 
 namespace SIGREF.API.Controllers.Auth;
 

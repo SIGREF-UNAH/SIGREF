@@ -1,8 +1,8 @@
 ﻿#nullable enable
 using Hl7.Fhir.Model;
-using SIGREF.API.Constants;
 using SIGREF.API.Dtos.Healthcare;
 using SIGREF.API.Extensions.Common;
+using SIGREF.Common.Constants;
 
 namespace SIGREF.API.Extensions;
 

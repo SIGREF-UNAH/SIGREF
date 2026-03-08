@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SIGREF.API.Constants;
-using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Healthcare;
 using SIGREF.API.Services.Healthcare;
+using SIGREF.Common.Dtos;
 
 namespace SIGREF.API.Controllers.Healthcare;
 

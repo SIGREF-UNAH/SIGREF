@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SIGREF.API.Constants;
 using SIGREF.API.Dtos.Cashier;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Services.Cashier;
+using SIGREF.Common.Constants;
+using SIGREF.Common.Dtos;
 
 namespace SIGREF.API.Controllers.Cashier;
 

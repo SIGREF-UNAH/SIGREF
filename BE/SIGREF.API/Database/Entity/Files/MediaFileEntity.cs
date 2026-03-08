@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using SIGREF.API.Database.Entity.common;
+using SIGREF.Common.Types;
 
 namespace SIGREF.API.Database.Entity.Files;
 [Table("media_files")]
