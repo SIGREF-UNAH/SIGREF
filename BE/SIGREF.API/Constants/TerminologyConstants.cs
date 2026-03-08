@@ -1,4 +1,6 @@
-﻿namespace SIGREF.API.Constants;
+﻿using SIGREF.Common.Constants;
+
+namespace SIGREF.API.Constants;
 
 public static class TerminologyConstants
 {

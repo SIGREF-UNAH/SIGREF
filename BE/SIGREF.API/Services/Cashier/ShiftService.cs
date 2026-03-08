@@ -8,7 +8,10 @@ using SIGREF.API.Dtos.Cashier;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Extensions;
 using SIGREF.API.Helpers;
-using SIGREF.API.Services.Auth;
+using SIGREF.Common.Dtos;
+using SIGREF.Common.Helpers;
+using SIGREF.Infrastructure.Keycloak.Interfaces;
+using SIGREF.Infrastructure.Keycloak.Services.Auth;
 using FhirLocation = Hl7.Fhir.Model.Location;
 
 namespace SIGREF.API.Services.Cashier;

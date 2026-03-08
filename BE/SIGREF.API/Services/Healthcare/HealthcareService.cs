@@ -4,6 +4,7 @@ using SIGREF.API.Database.Entity.Catalogs;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Healthcare;
 using SIGREF.API.Extensions;
+using SIGREF.Common.Dtos;
 
 namespace SIGREF.API.Services.Healthcare;
 

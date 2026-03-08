@@ -1,6 +1,8 @@
 ﻿using SIGREF.API.Database.Entity.common;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Invoice;
+using SIGREF.Common.Dtos;
+using SIGREF.Common.Types;
 
 
 namespace SIGREF.API.Services.Billing;

@@ -2,7 +2,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using SIGREF.API.Constants;
+using SIGREF.Common.Constants;
 
 namespace SIGREF.API;
 

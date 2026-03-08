@@ -1,5 +1,6 @@
 using SIGREF.API.Dtos;
 using SIGREF.API.Dtos.Common;
+using SIGREF.Common.Dtos;
 
 namespace SIGREF.API.Services.Organization
 {

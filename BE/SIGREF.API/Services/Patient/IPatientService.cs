@@ -1,5 +1,6 @@
 ﻿using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Patient;
+using SIGREF.Common.Dtos;
 
 namespace SIGREF.API.Services.Patient
 {

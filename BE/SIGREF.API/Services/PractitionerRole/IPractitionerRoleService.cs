@@ -2,6 +2,7 @@
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.PractitionerRole;
 using SIGREF.API.Services.Common;
+using SIGREF.Common.Dtos;
 
 namespace SIGREF.API.Services.PractitionerRole;
 public interface IPractitionerRoleService

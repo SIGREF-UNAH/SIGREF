@@ -6,6 +6,7 @@ using SIGREF.API.Dtos.Common;
 using SIGREF.API.Extensions;
 using SIGREF.API.Helpers;
 using SIGREF.API.Services.Organization;
+using SIGREF.Common.Dtos;
 
 namespace SIGREF.API.Services.Organizations
 {

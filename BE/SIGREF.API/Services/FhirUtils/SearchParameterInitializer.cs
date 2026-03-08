@@ -2,6 +2,7 @@
 using Hl7.Fhir.Rest;
 using SIGREF.API.Constants;
 using SIGREF.API.Services.Common;
+using SIGREF.Common.Constants;
 using Task = System.Threading.Tasks.Task;
 
 namespace SIGREF.API.Services.FhirUtils;

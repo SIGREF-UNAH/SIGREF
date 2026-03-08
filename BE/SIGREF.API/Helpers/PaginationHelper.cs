@@ -1,6 +1,5 @@
 using Hl7.Fhir.Model;
-using Hl7.Fhir.Rest;
-using SIGREF.API.Dtos.Common;
+using SIGREF.Common.Dtos;
 
 namespace SIGREF.API.Helpers
 {

@@ -3,6 +3,7 @@ using Hl7.Fhir.Rest;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Healthcare;
 using SIGREF.API.Helpers;
+using SIGREF.Common.Dtos;
 using FhirHealthcare = Hl7.Fhir.Model.HealthcareService;
 using Task = System.Threading.Tasks.Task;
 

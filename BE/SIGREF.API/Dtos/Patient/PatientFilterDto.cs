@@ -1,7 +1,7 @@
 #nullable enable
 using System;
 using Hl7.Fhir.Model;
-using SIGREF.API.Dtos.Common;
+using SIGREF.Common.Dtos;
 
 namespace SIGREF.API.Dtos.Patient
 {

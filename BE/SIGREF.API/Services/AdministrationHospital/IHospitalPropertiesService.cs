@@ -1,5 +1,6 @@
 ﻿using SIGREF.API.Dtos.Administration;
 using SIGREF.API.Dtos.Common;
+using SIGREF.Common.Dtos;
 
 namespace SIGREF.API.Services.AdministrationHospital;
 

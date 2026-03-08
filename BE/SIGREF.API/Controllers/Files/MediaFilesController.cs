@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SIGREF.API.Constants;
-using SIGREF.API.Database.Entity.common;
 using SIGREF.API.Dtos.Files;
 using SIGREF.API.Services.Files;
+using SIGREF.Common.Constants;
+using SIGREF.Common.Types;
 
 namespace SIGREF.API.Controllers.Files;
 

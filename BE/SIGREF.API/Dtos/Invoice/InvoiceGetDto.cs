@@ -1,4 +1,5 @@
 ﻿using SIGREF.API.Database.Entity.common;
+using SIGREF.Common.Types;
 
 namespace SIGREF.API.Dtos.Invoice;
 

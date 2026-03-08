@@ -1,6 +1,5 @@
 #nullable enable
-using Newtonsoft.Json;
-using SIGREF.API.Dtos.Common;
+using SIGREF.Common.Dtos;
 
 namespace SIGREF.API.Dtos.Healthcare
 {

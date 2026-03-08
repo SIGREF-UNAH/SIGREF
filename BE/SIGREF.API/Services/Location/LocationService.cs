@@ -5,6 +5,7 @@ using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Location;
 using SIGREF.API.Helpers;
 using SIGREF.API.Services.Common;
+using SIGREF.Common.Dtos;
 using FhirLocation = Hl7.Fhir.Model.Location;
 using Task = System.Threading.Tasks.Task;
 namespace SIGREF.API.Services.Location;

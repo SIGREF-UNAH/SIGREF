@@ -48,6 +48,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SIGREF.API.ServiceDefaults\SIGREF.API.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\SIGREF.Common\SIGREF.Common.csproj" />
+    <ProjectReference Include="..\SIGREF.Infrastructure.Keycloak\SIGREF.Infrastructure.Keycloak.csproj" />
     <ProjectReference Include="..\SIGREF.Infrastructure.Reporting\SIGREF.Infrastructure.Reporting.csproj" />
   </ItemGroup>
 	<ItemGroup>

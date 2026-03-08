@@ -4,6 +4,8 @@ using SIGREF.API.Constants;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Patient;
 using SIGREF.API.Services.Patient;
+using SIGREF.Common.Constants;
+using SIGREF.Common.Dtos;
 
 namespace SIGREF.API.Controllers.PatientC;
 

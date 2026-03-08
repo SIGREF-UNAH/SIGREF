@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using SIGREF.API.Database.Entity.Cashier;
 using SIGREF.API.Database.Entity.common;
+using SIGREF.Common.Types;
 
 namespace SIGREF.API.Database.Entity.Billing;
 
