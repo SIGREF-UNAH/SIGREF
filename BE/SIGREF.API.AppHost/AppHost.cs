@@ -12,7 +12,7 @@ using Microsoft.Extensions.Configuration;
 //
 // CO-AUTORES DE OPTIMIZACIÓN:
 //   - Gemini 3 Flash (Google AI)           → Estrategia de Despliegue Evolutivo (Worker/API)
-//   - Claude Sonnet 4.6 (Anthropic AI)     → Resolución de Bug Issues #456
+//   - Claude Sonnet 4.6 (Anthropic AI)     → Resolución de Bug 
 //                                            (KC_DB_URL null-ref, WithChildRelationship,
 //                                             rutas relativas CI/CD, WithHostPort en prod,
 //                                             ParameterResource en env-vars, WaitFor
@@ -23,11 +23,6 @@ using Microsoft.Extensions.Configuration;
 //   Punto central de control para microservicios, bases de datos y servicios
 //   de soporte (Keycloak, HAPI FHIR, Hangfire). Gestiona la orquestación
 //   completa del entorno en modo desarrollo (RunMode) y publicación (PublishMode).
-// ----------------------------------------------------------------------------
-// HISTORIAL DE CAMBIOS:
-//   - Bug Issue #456 → Corrección de 8 problemas críticos detectados en revisión
-//                      de código. Ver comentarios inline para detalle por sección.
-// ============================================================================
 
 var builder = DistributedApplication.CreateBuilder(args);
 builder.AddDockerComposeEnvironment("env");
@@ -53,7 +48,7 @@ var postgres = builder.AddPostgres("postgres", postgresUsername, postgresPasswor
     .WithEnvironment("POSTGRES_DB", builder.Configuration["Parameters:postgres-db"] ?? "postgres")
     .WithDataVolume("data-postgres", isReadOnly: false);
 
-// FIX Bug #456-4 → WithHostPort expone el puerto al host en TODOS los modos,
+// WithHostPort expone el puerto al host en TODOS los modos,
 // incluyendo publicación, lo cual es un riesgo de seguridad y un error de
 // configuración en producción. Se limita exclusivamente al modo desarrollo.
 if (builder.ExecutionContext.IsRunMode)
@@ -106,38 +101,13 @@ if (builder.ExecutionContext.IsRunMode)
 var keyCloakUser = builder.AddParameter("keycloak-user");
 var keyCloakPass = builder.AddParameter("keycloak-pass", secret: true);
 
-// FIX Bug #456-1 / #456-5 → La versión original usaba JdbcConnectionString
-//   (null en tiempo de orquestación) y pasaba ParameterResource directamente
-//   como string a WithEnvironment (conversión implícita incorrecta).
-//
-// FIX Bug #456-Runtime → Al eliminar KC_DB_* en la iteración anterior,
-//   Keycloak intentaba conectarse a localhost:5432 desde DENTRO de su
-//   contenedor. El problema es que localhost dentro de un contenedor Docker
-//   apunta a sí mismo, no al host ni a otros contenedores de la red.
-//
-//   DIAGNÓSTICO DEL LOG:
-//     "Connection to localhost:5432 refused" → Keycloak no puede alcanzar
-//     PostgreSQL porque ambos son contenedores separados en la red Docker.
-//
-//   SOLUCIÓN: Se construye KC_DB_URL usando ReferenceExpression con el
-//   endpoint TCP interno de postgres. Aspire resuelve Host y Port a la IP
-//   real del contenedor postgres dentro de aspire-container-network en
-//   runtime, garantizando conectividad contenedor-a-contenedor correcta.
-//
-//   DIAGRAMA DE RED:
-//     ┌──────────────────────────────────────────────┐
-//     │          aspire-container-network            │
-//     │  ┌──────────────┐      ┌──────────────────┐  │
-//     │  │   postgres   │◄─────│    keycloak      │  │
-//     │  │  172.x.x.x  │      │  KC_DB_URL =     │  │
-//     │  │    :5432     │      │  jdbc:postgresql  │  │
-//     │  └──────────────┘      │  ://172.x.x.x:   │  │
-//     │                        │  5432/keycloak   │  │
-//     │                        └──────────────────┘  │
-//     └──────────────────────────────────────────────┘
-//
-// FIX Bug #456-2 → Se eliminan las llamadas a .WithChildRelationship() que no
-//   forman parte de la API pública de Aspire 8.x/9.x.
+// ----------------------------------------------------------------------------
+// RUTA BASE de la carpeta config/ (relativa al directorio de ejecución).
+// AppContext.BaseDirectory es determinista en cualquier entorno (dev, CI/CD).
+// ----------------------------------------------------------------------------
+var keycloakConfigPath = Path.Combine(AppContext.BaseDirectory, "config");
+
+
 var keycloak = builder.AddKeycloak("keycloak", 8080, keyCloakUser, keyCloakPass)
     .WithReference(keycloakDb)
     .WithEnvironment("KC_HTTP_ENABLED",    "true")
@@ -161,9 +131,7 @@ var keycloak = builder.AddKeycloak("keycloak", 8080, keyCloakUser, keyCloakPass)
 
     .WaitFor(keycloakDb);
 
-// FIX Bug #456-3 → Las rutas relativas ("./config") se resuelven desde el
-//   directorio de trabajo del proceso, que varía en entornos CI/CD o Docker.
-//   SOLUCIÓN: Se usa Path.Combine(AppContext.BaseDirectory, ...) para obtener
+//   Se usa Path.Combine(AppContext.BaseDirectory, ...) para obtener
 //   una ruta absoluta y determinista en cualquier entorno de ejecución.
 if (builder.ExecutionContext.IsPublishMode)
 {
@@ -174,11 +142,44 @@ if (builder.ExecutionContext.IsPublishMode)
 }
 else
 {
-    // En desarrollo se monta el directorio de temas directamente para
-    // permitir hot-reload de cambios de UI sin reconstruir la imagen.
-    keycloak.WithBindMount(
-        Path.Combine(AppContext.BaseDirectory, "config", "themes"),
-        "/opt/keycloak/themes");
+    // MODO DESARROLLO
+    // Se usa la imagen oficial con versión fija para evitar pulls inesperados
+    // de :latest en cada arranque. Cambiar la versión aquí de forma coordinada
+    // con el ARG KEYCLOAK_VERSION del Dockerfile al actualizar.
+    //
+    //  WithImagePullPolicy(ImagePullPolicy.Missing):
+    //   Docker descarga la imagen SOLO si no existe en el daemon local.
+    //   Evita el comportamiento por defecto de verificar el registry en cada
+    //   arranque cuando se usa una tag mutable. Esto es equivalente a
+    //   imagePullPolicy: IfNotPresent en Kubernetes.
+    keycloak
+        .WithImage("keycloak/keycloak", "26.5.5-0")
+        .WithImagePullPolicy(ImagePullPolicy.Missing)
+
+        // Temas: bind-mount para hot-reload en desarrollo sin reconstruir imagen.
+        .WithBindMount(
+            Path.Combine(keycloakConfigPath, "themes"),
+            "/opt/keycloak/themes")
+
+        // --------------------------------------------------------------------
+        // REALM — Importación en desarrollo
+        // --------------------------------------------------------------------
+        // Se monta el mismo JSON que usa el Dockerfile de producción para que
+        // el comportamiento sea equivalente en ambos modos.
+        //
+        // Aspire's AddKeycloak ya incluye internamente "start-dev --import-realm"
+        // en su entrypoint. Solo necesitamos montar el archivo en la ruta correcta
+        // y Keycloak lo detectará al arrancar.
+        //
+        // --import-realm es idempotente: importa el realm SOLO si no existe en
+        // la BD. Reinicios posteriores no sobreescriben usuarios ni configuración.
+        //
+        // Para RE-IMPORTAR (reset): borra el volumen de Postgres o elimina el
+        // realm manualmente desde la UI de Keycloak Admin.
+        // --------------------------------------------------------------------
+        .WithBindMount(
+            Path.Combine(keycloakConfigPath, "realm-full-export.json"),
+            "/opt/keycloak/data/import/sigref-realm.json");
 }
 
 // Marca Keycloak como recurso contenedor publicable en el manifiesto de Aspire.
@@ -237,9 +238,7 @@ if (useSeparateWorker)
 // PublishMode → Imagen de producción construida con Dockerfile y Nginx.
 // ============================================================================
 
-// FIX Bug #456-7 → Se inicializa la variable con null y se asigna
-//   obligatoriamente en ambas ramas, garantizando que el compilador valide
-//   que el recurso siempre queda definido antes de ser usado.
+
 IResourceBuilder<ContainerResource>? frontend = null;
 
 if (builder.ExecutionContext.IsRunMode)
@@ -249,9 +248,7 @@ if (builder.ExecutionContext.IsRunMode)
         .WithEntrypoint("/bin/sh")
         .WithArgs("-c", "cd /app && if [ ! -d 'node_modules' ]; then npm install; fi; npm run dev -- --host 0.0.0.0")
 
-        // FIX Bug #456-6 (env vars) → Se reemplaza ReferenceExpression con
-        // interpolación manual de puerto por GetEndpoint() directo.
-        //
+        
         // IMPORTANTE — contexto de ejecución de estas variables:
         // Las variables VITE_* son consumidas por el BROWSER del desarrollador,
         // NO por el contenedor Node. El browser corre en la máquina host y
@@ -272,7 +269,7 @@ if (builder.ExecutionContext.IsRunMode)
             ReferenceExpression.Create($"http://localhost:{sigrefApi.GetEndpoint("http-dev").Property(EndpointProperty.Port)}"))
 
         .WithHttpEndpoint(targetPort: 5173, port: 5173, name: "http")
-        // FIX Bug #456-6 → El frontend ahora espera tanto a la API como a
+        // El frontend ahora espera tanto a la API como a
         // Keycloak antes de arrancar, evitando errores OIDC por IdP no listo.
         // En la versión anterior solo esperaba a sigrefApi (inconsistencia
         // respecto a PublishMode donde sí esperaba a ambos).
