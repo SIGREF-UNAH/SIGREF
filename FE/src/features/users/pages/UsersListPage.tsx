@@ -1,17 +1,13 @@
-import { Card, Col, Row, Spin, Statistic, Table, Tag, Input, Button, Drawer, Descriptions } from "antd";
+import { Col, Row, Spin, Statistic, Table, Tag, Input, Button, Drawer, Descriptions } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import { useGetApiKeycloakSeederList } from "../../../api/keycloak-seeder/keycloak-seeder";
 import { PageHeaderTabs } from "../../../shared/components";
 import { useAbility } from "../../../config";
 
-
-// --------------------
-// Página principal
-// --------------------
 export const UsersListPage = () => {
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
+  const [pageNumber, setPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
 
   const ability = useAbility();
@@ -19,9 +15,8 @@ export const UsersListPage = () => {
   const pageSize = 5;
 
   const { data, isLoading } = useGetApiKeycloakSeederList({
-    pageNumber: page,
-    pageSize,
-    search: search || undefined,
+    PageNumber: pageNumber,
+    PageSize: pageSize,
   });
 
   console.log(data);
@@ -102,47 +97,47 @@ export const UsersListPage = () => {
       {/* Resumen */}
       <Row gutter={16} className="mb-4">
         <Col span={8}>
-          <Card bordered={false} className="primary-card">
+          <div className="primary-card">
             <Statistic title="Total Usuarios" value={totalUsers} />
-          </Card>
+          </div>
         </Col>
         <Col span={8}>
-          <Card bordered={false} className="primary-card">
+          <div className="primary-card">
             <Statistic
               title="Usuarios Activos"
               value={activeUsers}
               valueStyle={{ color: "#52c41a" }}
             />
-          </Card>
+          </div>
         </Col>
         <Col span={8}>
-          <Card bordered={false} className="primary-card">
+          <div className="primary-card">
             <Statistic
               title="Usuarios Inactivos"
               value={inactiveUsers}
               valueStyle={{ color: "#faad14" }}
             />
-          </Card>
+          </div>
         </Col>
       </Row>
 
-      {/* Búsqueda */}
-      <Card className="primary-card mb-4">
-        <Input
-          placeholder="Buscar por nombre o email"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-        />
-      </Card>
-
       {/* Tabla */}
-      <Card className="primary-card">
+      <div className="primary-card">
         <div className="flex items-center gap-2 mb-3">
           <UserOutlined />
           <span className="text-lg">Lista de Usuarios</span>
+        </div>
+
+        {/* Búsqueda */}
+        <div className="mb-4">
+          <Input
+            placeholder="Buscar por nombre o email"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+          />
         </div>
 
         <Table
@@ -173,7 +168,7 @@ export const UsersListPage = () => {
             Página siguiente
           </Button>
         </div>
-      </Card>
+      </div>
 
       {/* Drawer */}
       <Drawer

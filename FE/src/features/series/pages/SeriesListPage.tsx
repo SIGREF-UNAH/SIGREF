@@ -270,34 +270,34 @@ export const SeriesListPage = () => {
 
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col span={8}>
-          <Card>
+          <div className="primary-card">
             <Statistic
               title="Series Activas"
               value={stats.active}
               valueStyle={{ color: "#52c41a" }}
               prefix={<CheckCircleOutlined />}
             />
-          </Card>
+          </div>
         </Col>
         <Col span={8}>
-          <Card>
+          <div className="primary-card">
             <Statistic
               title="Series Inactivas"
               value={stats.inactive}
               valueStyle={{ color: "#ff4d4f" }}
               prefix={<CloseCircleOutlined />}
             />
-          </Card>
+          </div>
         </Col>
         <Col span={8}>
-          <Card>
+          <div className="primary-card">
             <Statistic
               title="Total de Series"
               value={stats.total}
               valueStyle={{ color: "#1890ff" }}
               prefix={<BarChartOutlined />}
             />
-          </Card>
+          </div>
         </Col>
       </Row>
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using SIGREF.API.Constants;
 using SIGREF.API.Database;
 using SIGREF.API.Database.Entity.Billing;
@@ -11,6 +12,7 @@ using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
 using SIGREF.Infrastructure.Keycloak.Services.Auth;
+using SIGREF.Infrastructure.Keycloak.Services.Auth.Keycloak;
 
 namespace SIGREF.API.Services.Cashier;
 
@@ -21,10 +23,12 @@ public class CashierSessionService : ICashierSessionService
 {
     private readonly SIGREFContext _db;
     private readonly IUserContextService _userContext;
+    private readonly IKeycloakAdminService _keycloakClient;
 
-    public CashierSessionService(SIGREFContext db, IUserContextService userContext)
+    public CashierSessionService(SIGREFContext db, IUserContextService userContext, IKeycloakAdminService keycloakClient)
     {
         _userContext = userContext;
+        this._keycloakClient = keycloakClient;
         _db = db;
     }
 
@@ -189,7 +193,6 @@ public class CashierSessionService : ICashierSessionService
         };
     }
 
-
     public async Task<ResponseDto<CashierSessionDto>> RequestCorrectionAsync(Guid sessionId, RequestCorrectionDto dto)
     {
         var userId = _userContext.GetUserId();
@@ -250,7 +253,6 @@ public class CashierSessionService : ICashierSessionService
             Data = session.ToDto()
         };
     }
-
 
     public async Task<ResponseDto<CashierSessionDto>> ResolveCorrectionAsync(Guid sessionId, ResolveCorrectionDto dto)
     {
@@ -316,19 +318,16 @@ public class CashierSessionService : ICashierSessionService
         };
     }
 
-    public async Task<ResponseDto<PagedResultDto<CashierSessionDto>>> GetFilteredSessionsAsync(
-        CashierSessionFilterDto filter)
+    public async Task<ResponseDto<PagedResultDto<CashierSessionDto>>> GetFilteredSessionsAsync(CashierSessionFilterDto filter)
     {
         // Paginacion
         int pageNumber = filter.PageNumber <= 0 ? 1 : filter.PageNumber;
         int pageSize = filter.PageSize <= 0 ? 10 : Math.Clamp(filter.PageSize, 1, 50);
-
         pageNumber = Math.Clamp(pageNumber, 1, int.MaxValue);
 
         // Obtener usuario y roles
         var userId = _userContext.GetUserId();
         var roles = _userContext.GetUserRoles();
-
         bool isAdmin = roles.Contains(RolesConstants.admin);
         bool isAuditor = roles.Contains(RolesConstants.auditor);
         bool canViewAll = isAdmin || isAuditor;
@@ -337,13 +336,10 @@ public class CashierSessionService : ICashierSessionService
         var query = _db.CashierSessions.AsQueryable().AsNoTracking();
 
         // Rol: solo Admin/Auditor pueden ver todo
-        // si es otro tipo de usuario, solo pueden ver sus cierres 
         if (!canViewAll)
-        {
             query = query.Where(x => x.UserId == userId);
-        }
 
-        // Filtro: IsOpen = turno sige corriendo o en pie
+        // Filtro: IsOpen
         if (filter.IsOpen.HasValue)
             query = query.Where(x => x.IsOpen == filter.IsOpen.Value);
 
@@ -359,7 +355,6 @@ public class CashierSessionService : ICashierSessionService
         // Filtro: fechas
         if (filter.FromDate.HasValue)
             query = query.Where(x => x.OpenAt >= filter.FromDate.Value);
-
         if (filter.ToDate.HasValue)
             query = query.Where(x => x.OpenAt <= filter.ToDate.Value);
 
@@ -373,7 +368,7 @@ public class CashierSessionService : ICashierSessionService
         // Paginacion
         int skip = (pageNumber - 1) * pageSize;
 
-        // Mapeo directo en la BD para no cargar en Memoeeria
+        // Mapeo directo en la BD
         var sessionDtos = await query
             .OrderByDescending(x => x.OpenAt)
             .Skip(skip)
@@ -395,6 +390,39 @@ public class CashierSessionService : ICashierSessionService
             })
             .ToListAsync();
 
+        // ============= Nombres de usuario desde Keycloak ===============
+
+        var uniqueUserIds = sessionDtos
+            .Select(s => s.UserId)
+            .Where(id => !string.IsNullOrWhiteSpace(id.ToString()))
+            .Distinct()
+            .ToList();
+
+        var userNameTasks = uniqueUserIds.ToDictionary(
+            id => id,
+            id => _keycloakClient.GetUserByIdAsync(id.ToString(), CancellationToken.None)
+        );
+
+        await Task.WhenAll(userNameTasks.Values);
+
+        // Construir diccionario userId -> username para lookup O(1)
+        var userNameMap = userNameTasks.ToDictionary(
+            kvp => kvp.Key,
+            kvp =>
+            {
+                var kcUser = kvp.Value.Result;
+                if (kcUser is null) return null;
+
+                // Prioridad: DisplayName (atributo custom) → Username
+                if (!string.IsNullOrWhiteSpace(kcUser.Data.DisplayName))
+                    return kcUser.Data.DisplayName;
+
+                return kcUser.Data.Username;
+            }
+        );
+
+        foreach (var session in sessionDtos)
+            session.UserName = userNameMap.GetValueOrDefault(session.UserId);
 
         // Respuesta final
         return new ResponseDto<PagedResultDto<CashierSessionDto>>
@@ -417,7 +445,6 @@ public class CashierSessionService : ICashierSessionService
             }
         };
     }
-
 
     public async Task<ResponseDto<CashierSessionDto>> GetByIdAsync(Guid sessionId)
     {
