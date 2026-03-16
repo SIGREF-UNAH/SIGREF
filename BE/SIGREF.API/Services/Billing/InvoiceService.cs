@@ -1,14 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SIGREF.API.Database;
-using SIGREF.API.Database.Entity.Billing;
-using SIGREF.API.Database.Entity.common;
 using SIGREF.API.Dtos.Invoice;
 using SIGREF.API.Services.Cashier;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
 using SIGREF.Common.Helpers;
 using SIGREF.Common.Types;
+using SIGREF.Core.Entity.Billing;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
+using SIGREF.Infrastructure.Persistence;
 
 namespace SIGREF.API.Services.Billing;
 

@@ -1,18 +1,16 @@
-﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using SIGREF.API.Constants;
 using SIGREF.API.Database;
-using SIGREF.API.Database.Entity.Billing;
-using SIGREF.API.Database.Entity.Cashier;
-using SIGREF.API.Database.Entity.common;
 using SIGREF.API.Dtos.Cashier;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Extensions;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
+using SIGREF.Common.Types;
+using SIGREF.Core.Entity.Cashier;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
 using SIGREF.Infrastructure.Keycloak.Services.Auth;
 using SIGREF.Infrastructure.Keycloak.Services.Auth.Keycloak;
+using SIGREF.Infrastructure.Persistence;
 
 namespace SIGREF.API.Services.Cashier;
 
@@ -193,6 +191,7 @@ public class CashierSessionService : ICashierSessionService
         };
     }
 
+
     public async Task<ResponseDto<CashierSessionDto>> RequestCorrectionAsync(Guid sessionId, RequestCorrectionDto dto)
     {
         var userId = _userContext.GetUserId();
@@ -355,6 +354,7 @@ public class CashierSessionService : ICashierSessionService
         // Filtro: fechas
         if (filter.FromDate.HasValue)
             query = query.Where(x => x.OpenAt >= filter.FromDate.Value);
+
         if (filter.ToDate.HasValue)
             query = query.Where(x => x.OpenAt <= filter.ToDate.Value);
 
@@ -368,7 +368,7 @@ public class CashierSessionService : ICashierSessionService
         // Paginacion
         int skip = (pageNumber - 1) * pageSize;
 
-        // Mapeo directo en la BD
+        // Mapeo directo en la BD para no cargar en Memoeeria
         var sessionDtos = await query
             .OrderByDescending(x => x.OpenAt)
             .Skip(skip)

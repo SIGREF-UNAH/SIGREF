@@ -1,6 +1,5 @@
-﻿using SIGREF.API.Dtos.Common;
-using SIGREF.API.Dtos.Report;
-using SIGREF.Common.Dtos;
+﻿using SIGREF.Common.Dtos;
+using SIGREF.Common.Dtos.Report;
 
 namespace SIGREF.API.Services.Reports;
 

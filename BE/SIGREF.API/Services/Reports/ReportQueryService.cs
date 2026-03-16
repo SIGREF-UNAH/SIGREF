@@ -1,13 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SIGREF.API.Database;
-using SIGREF.API.Database.Entity.Billing;
-using SIGREF.API.Database.Entity.common;
-using SIGREF.API.Dtos.Report;
+
 using SIGREF.API.Services.Reports;
 using SIGREF.Common.Dtos;
+using SIGREF.Common.Dtos.Report;
+using SIGREF.Common.Dtos.Reports;
 using SIGREF.Common.Types;
+using SIGREF.Core.Entity.Billing;
+using SIGREF.Core.Extensions;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
-using SIGREF.Infrastructure.Keycloak.Services.Auth;
+using SIGREF.Infrastructure.Persistence;
 
 namespace SIGREF.API.Services.Reports;
 
@@ -31,8 +33,8 @@ public class ReportQueryService : IReportQueryService
         _dbFactory = dbFactory;
     }
     
-    private IQueryable<InvoiceEntity> BaseQuery(ReportFilterDto filter)
-        => BaseQuery(_context, filter);
+    //private IQueryable<InvoiceEntity> BaseQuery(ReportFilterDto filter)
+    //    => BaseQuery(_context, filter);
 
     public async Task<ResponseDto<ReportSummaryResponseDto>> GetReportSummaryAsync(ReportFilterDto filter)
     {
@@ -49,8 +51,9 @@ public class ReportQueryService : IReportQueryService
         await using var db1 = await _dbFactory.CreateDbContextAsync();
         await using var db2 = await _dbFactory.CreateDbContextAsync();
 
-        var query1 = BaseQuery(db1, filter);
-        var query2 = BaseQuery(db2, filter);
+        
+        var query1 = db1.Invoices.ApplyBaseFilters(filter);
+        var query2 = db2.Invoices.ApplyBaseFilters(filter);
 
         var summaryTask = query1
             .GroupBy(_ => 1)
@@ -140,7 +143,9 @@ public class ReportQueryService : IReportQueryService
         var pageSize = Math.Clamp(filter.PageSize, 50, 500);
 
       
-        var baseQuery = BaseQuery(_context, filter).AsNoTracking();
+        var baseQuery = _context.Invoices
+            .ApplyBaseFilters(filter) 
+            .AsNoTracking();
 
         // Total (solo filtros)
         var totalItems = await baseQuery.LongCountAsync();
@@ -211,60 +216,7 @@ public class ReportQueryService : IReportQueryService
             }
         };
     }
-
-
-    // =====================================================
-    // Helpers
-    // =====================================================
-
-    private IQueryable<InvoiceEntity> BaseQuery(SIGREFContext db, ReportFilterDto filter)
-    {
-        // Si Start/End vienen con Z (UTC), perfecto.
-        // Si en algún momento te llegan Unspecified, esto los "marca" como UTC para evitar Npgsql timestamptz error.
-        var start = filter.StartDate!.Value;
-        var end = filter.EndDate!.Value;
-
-        if (start.Kind == DateTimeKind.Unspecified)
-            start = DateTime.SpecifyKind(start, DateTimeKind.Utc);
-
-        if (end.Kind == DateTimeKind.Unspecified)
-            end = DateTime.SpecifyKind(end, DateTimeKind.Utc);
-
-        // No hacemos Include() aquí para evitar duplicar filas cuando hay
-        // relaciones coleccion (Items) o sesiones. Las propiedades de navegación
-        // necesarias se usarán en proyecciones y EF Core las traducirá a JOINs
-        // sólo cuando sea necesario, reduciendo la carga de datos transferidos.
-        var query = db.Invoices
-            .AsNoTracking()
-            .Where(x => x.CreatedDate >= start && x.CreatedDate <= end);
-
-        // Filtrar por SeriesIds si se especifica
-        if (filter.SeriesIds != null && filter.SeriesIds.Any())
-        {
-            query = query.Where(x => filter.SeriesIds.Contains(x.SerieId));
-        }
-
-        // Filtrar por CashiersKeycloakIds si se especifica
-        if (filter.CashiersKeycloakIds != null && filter.CashiersKeycloakIds.Any())
-        {
-            var cashierUserIds = filter.CashiersKeycloakIds
-                .Select(id => Guid.TryParse(id, out var guid) ? guid : (Guid?)null)
-                .Where(g => g.HasValue)
-                .Select(g => g!.Value)
-                .ToList();
-
-            if (cashierUserIds.Any())
-            {
-                query = query.Where(x =>
-                    x.CashierSession != null &&
-                    cashierUserIds.Contains(x.CashierSession.UserId));
-            }
-        }
-
-        return query;
-    }
-
-
+    
     private static string? ValidateFilter(ReportFilterDto filter)
     {
         if (!filter.StartDate.HasValue || !filter.EndDate.HasValue)

@@ -69,8 +69,8 @@ if (builder.Environment.IsDevelopment())
 builder.AddServiceDefaults();
 
 // PostgreSQL + Context Factory
-builder.AddNpgsqlDbContext<SIGREF.API.Database.SIGREFContext>("sigref");
-builder.Services.AddDbContextFactory<SIGREF.API.Database.SIGREFContext>();
+builder.AddNpgsqlDbContext<SIGREF.Infrastructure.Persistence.SIGREFContext>("sigref");
+builder.Services.AddDbContextFactory<SIGREF.Infrastructure.Persistence.SIGREFContext>();
 builder.Services.AddScoped<Npgsql.NpgsqlConnection>(sp => 
     sp.GetRequiredService<Npgsql.NpgsqlDataSource>().OpenConnection());
 // MongoDB
@@ -95,7 +95,7 @@ startup.Configure(app, app.Environment);
 // =============================================================
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<SIGREF.API.Database.SIGREFContext>();
+    var context = scope.ServiceProvider.GetRequiredService<SIGREF.Infrastructure.Persistence.SIGREFContext>();
     try
     {
         // Verificación rapida de conexion

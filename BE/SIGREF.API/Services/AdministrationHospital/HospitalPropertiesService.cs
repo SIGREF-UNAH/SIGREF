@@ -1,10 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SIGREF.API.Database;
-using SIGREF.API.Database.Entity.Administration;
 using SIGREF.API.Dtos.Administration;
-using SIGREF.API.Dtos.Common;
 using SIGREF.API.Extensions;
 using SIGREF.Common.Dtos;
+using SIGREF.Core.Entity.Administration;
+using SIGREF.Infrastructure.Persistence;
 
 namespace SIGREF.API.Services.AdministrationHospital;
 

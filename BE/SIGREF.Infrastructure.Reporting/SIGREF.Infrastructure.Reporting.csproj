@@ -7,14 +7,17 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.2" />
+      <PackageReference Include="Hangfire.Core" Version="1.8.23" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.11" />
       <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.2" />
       <PackageReference Include="Npgsql" Version="10.0.1" />
       <PackageReference Include="QuestPDF" Version="2026.2.2" />
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Services\Reports\" />
+      <ProjectReference Include="..\SIGREF.Common\SIGREF.Common.csproj" />
+      <ProjectReference Include="..\SIGREF.Infrastructure.Keycloak\SIGREF.Infrastructure.Keycloak.csproj" />
+      <ProjectReference Include="..\SIGREF.Infrastructure.Persistence\SIGREF.Infrastructure.Persistence.csproj" />
     </ItemGroup>
 
 </Project>

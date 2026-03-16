@@ -1,10 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SIGREF.API.Database;
-using SIGREF.API.Database.Entity.Dashboard;
-using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Dashboard;
 using SIGREF.API.Services.FhirUtils;
 using SIGREF.Common.Dtos;
+using SIGREF.Core.Entity.Dashboard;
+using SIGREF.Infrastructure.Persistence;
 
 namespace SIGREF.API.Services.Dashboard;
 
