@@ -143,7 +143,7 @@ public class ReportDataCollector : IReportDataCollector
  
         if (uncachedIds.Count > 0)
         {
-            var semaphore      = new SemaphoreSlim(KeycloakMaxConcurrency, KeycloakMaxConcurrency);
+            using var semaphore = new SemaphoreSlim(KeycloakMaxConcurrency, KeycloakMaxConcurrency);
             var freshlyFetched = new ConcurrentDictionary<string, string>();
  
             var tasks = uncachedIds.Select(async id =>
@@ -183,11 +183,8 @@ public class ReportDataCollector : IReportDataCollector
         }
  
         // Aplicar caché a todas las líneas del lote actual
-        foreach (var dto in batch)
-        {
-            if (cashierCache.TryGetValue(dto.CashierIdentity, out var name))
-                dto.CashierName = name;
-        }
+        foreach (var dto in batch.Where(d => cashierCache.ContainsKey(d.CashierIdentity)))
+                dto.CashierName = cashierCache[dto.CashierIdentity];
     }
     
     // FASE B — PACIENTES (FHIR)

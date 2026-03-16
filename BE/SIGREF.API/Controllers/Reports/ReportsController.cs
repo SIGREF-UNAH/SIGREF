@@ -112,8 +112,8 @@ public class ReportsController : ControllerBase
         if (status.Status != "Completed")
             return BadRequest($"El reporte no está listo. Estado actual: {status.Status}");
  
-        var stream = await _storage.OpenAsync(
-            Path.Combine("reportes", $"{jobId}.pdf"), cancellationToken);
+         var stream = await _storage.OpenAsync(
+            Path.Combine("reportes", Path.GetFileName($"{jobId}.pdf")), cancellationToken);
  
         if (stream is null)
             return NotFound("Archivo no encontrado en el servidor.");

@@ -31,8 +31,10 @@ public class LocalReportStorageService : IReportStorageService
     public async Task<string> SaveAsync(Guid jobId, Stream pdfStream, CancellationToken cancellationToken = default)
     {
         // Estructura: /basePath/reportes/{jobId}.pdf
+        // Segmentos explícitamente relativos: el analizador puede verificar que
+        // ninguno descarta silenciosamente _basePath.
         var relativePath = Path.Combine("reportes", $"{jobId}.pdf");
-        var fullPath     = Path.Combine(_basePath, relativePath);
+        var fullPath     = Path.Combine(_basePath, "reportes", $"{jobId}.pdf");
  
         Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
  
@@ -45,21 +47,68 @@ public class LocalReportStorageService : IReportStorageService
     }
  
     /// <summary>
-    /// Abre el PDF para que el Controller lo devuelva como FileStreamResult.
-    /// Devuelve null si el archivo no existe (job eliminado o ruta incorrecta).
-    /// </summary>
-    public Task<Stream?> OpenAsync(string outputPath, CancellationToken cancellationToken = default)
+/// Abre un archivo PDF de forma segura y devuelve su flujo de datos (Stream).
+/// Diseñado para ser devuelto como un FileStreamResult desde un Controller.
+/// </summary>
+/// <param name="outputPath">
+/// La ruta relativa del archivo a abrir (típicamente la generada por SaveAsync).
+/// </param>
+/// <param name="cancellationToken">
+/// Token para monitorear solicitudes de cancelación (no utilizado internamente en esta implementación síncrona, pero requerido por la interfaz).
+/// </param>
+/// <returns>
+/// Un <see cref="Stream"/> de lectura del archivo, o <c>null</c> si la ruta es inválida, es absoluta, o si el archivo no existe.
+/// </returns>
+/// <remarks>
+/// <para>
+/// El llamador (caller) es el propietario exclusivo del <see cref="Stream"/> retornado y es responsable de llamar a su método <c>Dispose</c>.
+/// </para>
+/// 
+/// TODO: [SEGURIDAD - VULNERABILIDAD DE DIRECTORY TRAVERSAL (CWE-22)]
+/// Actualmente, el método rechaza rutas absolutas ("C:\..." o "/etc/..."). Sin embargo, 
+/// NO valida secuencias de escape de directorios relativas como "../". 
+/// Un atacante podría inyectar un outputPath como "../../Windows/System32/cmd.exe" o "../../etc/passwd".
+/// Path.Combine resolverá esto exitosamente fuera de '_basePath', exponiendo archivos sensibles del servidor.
+/// 
+/// Corrección recomendada: 
+/// Validar que 'Path.GetFullPath(fullPath)' comience exactamente con 'Path.GetFullPath(_basePath)'.
+/// </remarks>
+public Task<Stream?> OpenAsync(string outputPath, CancellationToken cancellationToken = default)
+{
+    // 1. Prevención básica: Rechazamos rutas absolutas/rooted.
+    // Evita que Path.Combine descarte silenciosamente _basePath.
+    if (Path.IsPathRooted(outputPath))
+        return Task.FromResult<Stream?>(null);
+
+    var fullPath = Path.Combine(_basePath, outputPath);
+
+    // 2. Validación de existencia física. 
+    // Falla de forma silenciosa (retorna null) en lugar de lanzar una costosa FileNotFoundException.
+    if (!File.Exists(fullPath))
+        return Task.FromResult<Stream?>(null);
+
+    // 3. Creación segura del recurso.
+    // El try/catch garantiza el dispose si ocurre una excepción de memoria/SO 
+    // durante la creación, previniendo Resource Leaks (fugas de memoria) y satisfaciendo analizadores como CodeQL o CA2000.
+    FileStream? stream = null;
+    try
     {
-        var fullPath = Path.Combine(_basePath, outputPath);
- 
-        if (!File.Exists(fullPath))
-            return Task.FromResult<Stream?>(null);
- 
-        Stream stream = new FileStream(
-            fullPath, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 81920, useAsync: true);
- 
+        stream = new FileStream(
+            fullPath, 
+            FileMode.Open, 
+            FileAccess.Read, 
+            FileShare.Read, 
+            bufferSize: 81920, 
+            useAsync: true);
+
         return Task.FromResult<Stream?>(stream);
     }
+    catch
+    {
+        stream?.Dispose();
+        throw;
+    }
+}
 }
  
 /// <summary>
@@ -72,5 +121,6 @@ public class ReportStorageOptions
  
     public string BasePath { get; set; } = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "SIGREF", "Reports");
+        "SIGREF",
+        "Reports");
 }
