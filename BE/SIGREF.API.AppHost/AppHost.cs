@@ -198,7 +198,8 @@ var hapi = builder.AddHapiFhir("hapifhir")
 const string sharedVolumeName   = "sigref-storage";
 const string containerStoragePath = "/app/storage";
 
-var storagePath = Path.GetFullPath(Path.Combine(builder.AppHostDirectory, "../../sigref_storage"));
+var storagePath = Path.GetFullPath(
+    Path.Combine(builder.AppHostDirectory, "..", "..", "sigref_storage"));
 if (!Directory.Exists(storagePath))
     Directory.CreateDirectory(storagePath);
 
