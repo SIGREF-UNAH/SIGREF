@@ -12,6 +12,7 @@
 .vscode/
 .idea/
 
+*.pdf
 # Build outputs
 **/bin/
 **/obj/

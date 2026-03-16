@@ -1,6 +1,4 @@
-﻿using SIGREF.API.Database.Entity.common;
-using SIGREF.API.Dtos.Common;
-using SIGREF.API.Dtos.Files;
+﻿using SIGREF.API.Dtos.Files;
 using SIGREF.Common.Dtos;
 using SIGREF.Common.Types;
 

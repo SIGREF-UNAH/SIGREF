@@ -1,5 +1,5 @@
-﻿using SIGREF.API.Database.Entity.Cashier;
-using SIGREF.API.Dtos.Cashier;
+﻿using SIGREF.API.Dtos.Cashier;
+using SIGREF.Core.Entity.Cashier;
 
 namespace SIGREF.API.Extensions;
 

@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SIGREF.API.Database.Entity.common;
-using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Invoice;
 using SIGREF.API.Services.Billing;
 using SIGREF.Common.Constants;

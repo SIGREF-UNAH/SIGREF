@@ -1,7 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection; 
 using Microsoft.Extensions.Hosting;            
 using QuestPDF.Infrastructure;
-using SIGREF.Infrastructure.Reporting.Services.Reports;                  // Requerido para LicenseType
+using SIGREF.Infrastructure.Reporting.Interfaces;
+using SIGREF.Infrastructure.Reporting.Services;
 
 namespace SIGREF.Infrastructure.Reporting;
 
@@ -9,12 +10,21 @@ public static class DependencyInjection
 {
     public static IHostApplicationBuilder AddReportingInfrastructure(this IHostApplicationBuilder builder)
     {
-        // Registramos el servicio para que Hangfire lo pueda encontrar
-        builder.Services.AddScoped<IReportingService, ReportingService>();
+        //Servicios principales 
+        builder.Services.AddScoped<IReportDataCollector, ReportDataCollector>();
+        builder.Services.AddScoped<IReportPdfBuilder,    QuestPdfBuilder>();
+        builder.Services.AddScoped<IReportQueueService,  ReportQueueService>();
+ 
+        // ─ Almacenamiento de PDFs
+        // Configurable desde appsettings.json → "ReportStorage": { "BasePath": "/ruta" }
+        builder.Services.Configure<ReportStorageOptions>(
+            builder.Configuration.GetSection(ReportStorageOptions.SectionName));
+        builder.Services.AddSingleton<IReportStorageService, LocalReportStorageService>();
+ 
 
-        // Configuración global de QuestPDF (Licencia)
+        // QuestPDF 
         QuestPDF.Settings.License = LicenseType.Community;
-
+ 
         return builder;
     }
 }

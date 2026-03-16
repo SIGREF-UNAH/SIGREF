@@ -1,6 +1,4 @@
 ﻿using System.Text.Json.Serialization;
-using SIGREF.API.Database.Entity.common;
-using SIGREF.API.Dtos.Common;
 using SIGREF.Common.Dtos;
 using SIGREF.Common.Types;
 

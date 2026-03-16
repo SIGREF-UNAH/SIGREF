@@ -1,10 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SIGREF.API.Database;
-using SIGREF.API.Database.Entity.Catalogs;
-using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Healthcare;
 using SIGREF.API.Extensions;
 using SIGREF.Common.Dtos;
+using SIGREF.Core.Entity.Catalogs;
+using SIGREF.Infrastructure.Persistence;
 
 namespace SIGREF.API.Services.Healthcare;
 

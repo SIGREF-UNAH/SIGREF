@@ -3,15 +3,16 @@ using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 using Microsoft.EntityFrameworkCore;
 using SIGREF.API.Database;
-using SIGREF.API.Database.Entity.Cashier;
 using SIGREF.API.Dtos.Cashier;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Extensions;
 using SIGREF.API.Helpers;
 using SIGREF.Common.Dtos;
 using SIGREF.Common.Helpers;
+using SIGREF.Core.Entity.Cashier;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
 using SIGREF.Infrastructure.Keycloak.Services.Auth;
+using SIGREF.Infrastructure.Persistence;
 using FhirLocation = Hl7.Fhir.Model.Location;
 
 namespace SIGREF.API.Services.Cashier;

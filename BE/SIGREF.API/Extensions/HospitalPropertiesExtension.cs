@@ -1,5 +1,5 @@
-﻿using SIGREF.API.Database.Entity.Administration;
-using SIGREF.API.Dtos.Administration;
+﻿using SIGREF.API.Dtos.Administration;
+using SIGREF.Core.Entity.Administration;
 
 namespace SIGREF.API.Extensions;
 

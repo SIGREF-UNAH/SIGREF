@@ -1,11 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SIGREF.API.Database;
-using SIGREF.API.Database.Entity.Billing;
 using SIGREF.API.Dtos.Series;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
+using SIGREF.Core.Entity.Billing;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
-using SIGREF.Infrastructure.Keycloak.Services.Auth;
+using SIGREF.Infrastructure.Persistence;
 
 namespace SIGREF.API.Services.Serie;
 

@@ -1,5 +1,5 @@
-﻿using SIGREF.API.Database.Entity.Billing;
-using SIGREF.API.Dtos.Invoice;
+﻿using SIGREF.API.Dtos.Invoice;
+using SIGREF.Core.Entity.Billing;
 
 namespace SIGREF.API.Services.Billing;
 
