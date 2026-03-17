@@ -150,7 +150,7 @@ public class AuditService : IAuditService
                 StatusCode = 200
             };
         }
-        catch (Exception ex)
+        catch (MongoException ex)
         {
             _logger.LogError(ex, "Error al obtener logs de auditoría");
             return new ResponseDto<PagedResultDto<AuditLogDto>>
