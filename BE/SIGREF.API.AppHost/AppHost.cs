@@ -195,7 +195,7 @@ var hapi = builder.AddHapiFhir("hapifhir")
 // ============================================================================
 // ALMACENAMIENTO COMPARTIDO — PDFs e Imágenes
 // ============================================================================
-const string sharedVolumeName   = "sigref-storage";
+const string sharedVolumeName     = "sigref-storage";
 const string containerStoragePath = "/app/storage";
 
 var storagePath = Path.GetFullPath(
@@ -203,25 +203,10 @@ var storagePath = Path.GetFullPath(
 if (!Directory.Exists(storagePath))
     Directory.CreateDirectory(storagePath);
 
-// Anotación para contenedores en RunMode → carpeta física del host (BindMount)
-var devMount = new ContainerMountAnnotation(
-    source: storagePath,
-    target: containerStoragePath,
-    type: ContainerMountType.BindMount,
-    isReadOnly: false);
-
-// Anotación para PublishMode → volumen Docker nombrado (persiste entre reinicios)
-var prodMount = new ContainerMountAnnotation(
-    source: sharedVolumeName,
-    target: containerStoragePath,
-    type: ContainerMountType.Volume,
-    isReadOnly: false);
-
 
 // ============================================================================
 // SIGREF.API — Núcleo del Sistema
 // ============================================================================
-
 var sigrefApi = builder.AddProject<Projects.SIGREF_API>("sigref-api")
     .WithReference(sigrefDb)
     .WithReference(mongoDb)
@@ -229,10 +214,7 @@ var sigrefApi = builder.AddProject<Projects.SIGREF_API>("sigref-api")
     .WithReference(hapi)
     .WithReference(hangfireDb)
     .WithEnvironment("Hangfire__EnableDashboard", enableHangfireDashboard.ToString())
-    // IsEmbedded = true cuando NO se usa worker separado, indicando a la API
-    // que debe registrar los servidores de Hangfire internamente.
     .WithEnvironment("Hangfire__IsEmbedded", (!useSeparateWorker).ToString())
-    // Configuración del Storage para la API (Para lectura y descarga)
     .WithEnvironment("ReportStorage__BasePath",
         builder.ExecutionContext.IsRunMode ? storagePath : containerStoragePath)
     .WaitFor(sigrefDb)
@@ -241,47 +223,73 @@ var sigrefApi = builder.AddProject<Projects.SIGREF_API>("sigref-api")
     .WaitFor(hangfireDb)
     .WithHttpEndpoint(port: 5000, name: "http-dev");
 
-// En PublishMode la API se publica como contenedor → necesita el volumen montado
+// FIX: instancia propia, no compartida con el Worker
 if (builder.ExecutionContext.IsPublishMode)
-    sigrefApi.WithAnnotation(prodMount);
+    sigrefApi.WithAnnotation(new ContainerMountAnnotation(
+        source: sharedVolumeName,
+        target: containerStoragePath,
+        type: ContainerMountType.Volume,
+        isReadOnly: false));
+
 
 // ============================================================================
 // HANGFIRE WORKER — Procesador de Tareas Asincrónicas (Opcional / Externo)
+// ============================================================================
 // Activado solo cuando Hangfire:UseSeparateWorker = true en la configuración.
 // Útil en ambientes de alta carga donde se requiere escalar el procesamiento
 // de jobs de forma independiente a la API principal.
 // ============================================================================
-// ============================================================================
-// HANGFIRE WORKER
-// ============================================================================
+
 if (useSeparateWorker)
 {
-    // Contexto de build = raíz del BE (carpeta padre del AppHost)
-    // El Dockerfile hace COPY de múltiples proyectos, necesita ver toda la solución BE
-    var workerContextDir = Path.GetFullPath(Path.Combine(builder.AppHostDirectory, ".."));
+    if (builder.ExecutionContext.IsRunMode)
+    {
+        // RunMode  Aspire lanza el proceso directamente, sin Docker.
+        // Storage accedido por ruta física del host (compartida con la API en proceso).
+        builder.AddProject<Projects.SIGREF_Hangfire_Worker>("sigref-worker")
+            .WithEnvironment("HAPIFHIR_HTTP", hapi.GetEndpoint("http"))
+            .WithEnvironment("Hangfire__IsWorkerOnly", "true")
+            // FIX: ruta física del host, no la ruta del contenedor
+            .WithEnvironment("ReportStorage__BasePath", storagePath)
+            .WithReference(sigrefDb)
+            .WithReference(hangfireDb)
+            .WithReference(keycloak)
+            .WaitFor(hangfireDb)
+            .WaitFor(sigrefDb)
+            .WaitFor(hapi)
+            // FIX: WaitFor keycloak que faltaba
+            .WaitFor(keycloak);
+    }
+    else
+    {
+        // PublishMode construye la imagen con el Dockerfile.
+        // Contexto = raíz BE/ para acceder a todos los proyectos de la solución.
+        var workerContextDir = Path.GetFullPath(
+            Path.Combine(builder.AppHostDirectory, ".."));
 
-    var worker = builder.AddDockerfile(
-            "sigref-worker",
-            workerContextDir,
-            // Ruta del Dockerfile relativa al contexto de build
-            "SIGREF.Hangfire.Worker/Worker.Dockerfile")
-        .WithEnvironment("HAPIFHIR_HTTP", hapi.GetEndpoint("http"))
-        .WithEnvironment("Hangfire__IsWorkerOnly", "true")
-        .WithEnvironment("ReportStorage__BasePath", containerStoragePath)
-        .WithReference(sigrefDb)
-        .WithReference(hangfireDb)
-        .WithReference(hangfireDb)
-        .WithReference(keycloak)
-        .WaitFor(hangfireDb)
-        .WaitFor(sigrefDb)
-        .WaitFor(hapi);
-
-    // RunMode  → BindMount a carpeta física del host (compartida con la API proceso)
-    // PublishMode → Volumen Docker nombrado (compartido con el contenedor de la API)
-    worker.WithAnnotation(builder.ExecutionContext.IsRunMode ? devMount : prodMount);
-
-    if (builder.ExecutionContext.IsPublishMode)
-        worker.PublishAsContainer();
+        builder.AddDockerfile(
+                "sigref-worker",
+                workerContextDir,
+                "SIGREF.Hangfire.Worker/Worker.Dockerfile")
+            .WithEnvironment("HAPIFHIR_HTTP", hapi.GetEndpoint("http"))
+            .WithEnvironment("Hangfire__IsWorkerOnly", "true")
+            .WithEnvironment("ReportStorage__BasePath", containerStoragePath)
+            .WithReference(sigrefDb)
+            .WithReference(hangfireDb)
+            .WithReference(keycloak)
+            .WaitFor(hangfireDb)
+            .WaitFor(sigrefDb)
+            .WaitFor(hapi)
+            // FIX: WaitFor keycloak que faltaba
+            .WaitFor(keycloak)
+            // FIX: instancia propia de mount, no compartida con la API
+            .WithAnnotation(new ContainerMountAnnotation(
+                source: sharedVolumeName,
+                target: containerStoragePath,
+                type: ContainerMountType.Volume,
+                isReadOnly: false))
+            .PublishAsContainer();
+    }
 }
 
 // ============================================================================

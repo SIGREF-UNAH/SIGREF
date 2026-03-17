@@ -1,4 +1,4 @@
-﻿using SIGREF.Common.Dtos.Reports;
+﻿using SIGREF.Common.Dtos.Report;
 using SIGREF.Core.Entity.Billing;
 
 namespace SIGREF.Core.Extensions;

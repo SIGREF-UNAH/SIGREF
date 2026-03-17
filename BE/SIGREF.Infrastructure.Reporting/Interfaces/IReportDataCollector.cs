@@ -1,5 +1,4 @@
 ﻿using SIGREF.Common.Dtos.Report;
-using SIGREF.Common.Dtos.Reports;
 
 namespace SIGREF.Infrastructure.Reporting.Interfaces;
 

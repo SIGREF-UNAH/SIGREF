@@ -2,11 +2,11 @@
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using SIGREF.Common.Dtos.Report;
-using SIGREF.Common.Dtos.Reports;
 using SIGREF.Common.Types;
 using SIGREF.Core.Entity.Reports;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
 using SIGREF.Infrastructure.Persistence;
+using SIGREF.Infrastructure.Reporting.Extensions;
 using SIGREF.Infrastructure.Reporting.Interfaces;
 
 namespace SIGREF.Infrastructure.Reporting.Services;
@@ -16,28 +16,24 @@ public class ReportQueueService : IReportQueueService
 {
     private readonly SIGREFContext        _context;
     private readonly IBackgroundJobClient _hangfire;
-    private readonly IUserContextService _auth;
  
-    public ReportQueueService(SIGREFContext context, IBackgroundJobClient hangfire, IUserContextService auth)
+    public ReportQueueService(SIGREFContext context, IBackgroundJobClient hangfire)
     {
         _context  = context;
         _hangfire = hangfire;
-        _auth = auth;
+
 
     }
  
     public async Task<EnqueueReportResponseDto> EnqueueAsync(
         ReportFilterDto filter,
+        Guid userId,
         CancellationToken cancellationToken = default)
     {
         // 1. Obtenemos el usuario actual del contexto de seguridad
         //var userId = _auth.GetUserId();
-        Guid userId;
         try
         {
-            // Intenta obtener el usuario real si enviaste el token en Swagger
-            userId = _auth.GetUserId();
-    
             // Si por alguna razón tu servicio devuelve Empty en vez de fallar
             if (userId == Guid.Empty) 
             {
@@ -75,6 +71,7 @@ public class ReportQueueService : IReportQueueService
         // 4. ACTUALIZAMOS EL ID DE HANGFIRE EN NUESTRA ENTIDAD
         // Esto es vital para poder cancelar el reporte después.
         history.HangfireJobId = hangfireJobId;
+        
         await _context.SaveChangesAsync(cancellationToken);
 
         return new EnqueueReportResponseDto { JobId = history.Id };
@@ -86,38 +83,25 @@ public class ReportQueueService : IReportQueueService
             .AsNoTracking()
             .FirstOrDefaultAsync(j => j.Id == jobId, cancellationToken);
  
-        return job is null ? null : MapToDto(job);
+        return job is null ? null :   ReportJobStatusDtoExtensions.MapToDto(job);
     }
  
     public async Task<IReadOnlyList<ReportJobStatusDto>> GetHistoryAsync(
+        Guid userId,
         int page = 1,
         int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
-        var userId = _auth.GetUserId().ToString();
         var jobs = await _context.ReportHistory
             .AsNoTracking()
-            .Where(j => j.RequestedByUserId == userId)
+            .Where(j => j.RequestedByUserId == userId.ToString())
             .OrderByDescending(j => j.CreatedDate)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
  
-        return jobs.Select(MapToDto).ToList();
+        return jobs.Select(ReportJobStatusDtoExtensions.MapToDto).ToList();
     }
- 
-    private static ReportJobStatusDto MapToDto(ReportHistoryEntity job) => new()
-    {
-        JobId        = job.Id,
-        Status       = job.Status.ToString(),
-        PeriodLabel  = job.PeriodLabel,
-        //TotalRows    = job.,
-        ErrorMessage = job.ErrorMessage,
-        CreatedAt    = job.CreatedDate,
-       // CompletedAt  = job.CompletedAt,
-        DownloadUrl  = job.Status == ReportStatus.Completed
-            ? $"/api/reports/{job.Id}/download"
-            : null
-    };
+    
 }
  

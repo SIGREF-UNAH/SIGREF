@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 using SIGREF.Common.Dtos.Report;
-using SIGREF.Common.Dtos.Reports;
 using SIGREF.Core.Extensions;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
 using SIGREF.Infrastructure.Reporting.Interfaces;

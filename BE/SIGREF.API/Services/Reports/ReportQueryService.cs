@@ -1,12 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SIGREF.API.Database;
-
-using SIGREF.API.Services.Reports;
 using SIGREF.Common.Dtos;
 using SIGREF.Common.Dtos.Report;
-using SIGREF.Common.Dtos.Reports;
 using SIGREF.Common.Types;
-using SIGREF.Core.Entity.Billing;
 using SIGREF.Core.Extensions;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
 using SIGREF.Infrastructure.Persistence;

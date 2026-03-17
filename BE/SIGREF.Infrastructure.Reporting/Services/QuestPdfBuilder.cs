@@ -7,7 +7,7 @@ namespace SIGREF.Infrastructure.Reporting.Services;
 
 public class QuestPdfBuilder : IReportPdfBuilder
 {
-    public async Task<Stream> BuildAsync(IAsyncEnumerable<ReportLineDto> data, string hospitalSnapshot, CancellationToken ct)
+    public async Task<Stream> BuildAsync(IAsyncEnumerable<ReportLineDto> data, string hospitalSnapshot, ReportMetaDto meta, CancellationToken ct)
     {
         var allLines = new List<ReportLineDto>();
         
@@ -40,7 +40,7 @@ public class QuestPdfBuilder : IReportPdfBuilder
                 Address = "Santa Rosa de Copán"
             };
         }
-        var document = new InvoiceReportDocument(allLines, hospitalInfo);
+        var document = new InvoiceReportDocument(allLines, hospitalInfo, meta );
         
         // Generamos el PDF en un MemoryStream
         var ms = new MemoryStream();
