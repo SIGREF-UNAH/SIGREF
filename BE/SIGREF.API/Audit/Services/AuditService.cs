@@ -1,5 +1,7 @@
- using MongoDB.Driver;
- using SIGREF.API.Audit.Models;
+using MongoDB.Driver;
+using SIGREF.API.Audit.Models;
+using SIGREF.API.Dtos.Audit;
+using SIGREF.Common.Dtos;
 
 namespace SIGREF.API.Audit.Services;
 
@@ -8,10 +10,10 @@ public class AuditService : IAuditService
     private readonly IMongoCollection<AuditLog> _auditCollection;
     private readonly ILogger<AuditService> _logger;
 
-    public AuditService( ILogger<AuditService> logger,IMongoClient client)
+    public AuditService(ILogger<AuditService> logger, IMongoClient client)
     {
         var database = client.GetDatabase("MongoDb");
-         _auditCollection = database.GetCollection<AuditLog>("audit_logs");
+        _auditCollection = database.GetCollection<AuditLog>("audit_logs");
         _logger = logger;
 
         // Crear índices para mejorar el rendimiento de las consultas
@@ -61,101 +63,6 @@ public class AuditService : IAuditService
         return await _auditCollection.Find(filter).FirstOrDefaultAsync();
     }
 
-    public async Task<(List<AuditLog> logs, int totalCount)> GetAllLogsAsync(int page = 1, int pageSize = 50)
-    {
-        // Validar parámetros
-        if (page < 1) page = 1;
-        if (pageSize < 1) pageSize = 50;
-        if (pageSize > 100) pageSize = 100;
-
-        var skip = (page - 1) * pageSize;
-
-        // Obtener el total de documentos
-        var totalCount = await _auditCollection.CountDocumentsAsync(Builders<AuditLog>.Filter.Empty);
-
-        // Obtener solo la página solicitada
-        var logs = await _auditCollection
-            .Find(Builders<AuditLog>.Filter.Empty)
-            .SortByDescending(x => x.Timestamp)
-            .Skip(skip)
-            .Limit(pageSize)
-            .ToListAsync();
-
-        return (logs, (int)totalCount);
-    }
-
-    public async Task<List<AuditLog>> GetLogsByResourceAsync(string resourceType, string resourceId)
-    {
-        var filter = Builders<AuditLog>.Filter.And(
-            Builders<AuditLog>.Filter.Eq(x => x.ResourceType, resourceType),
-            Builders<AuditLog>.Filter.Eq(x => x.ResourceId, resourceId)
-        );
-
-        return await _auditCollection
-            .Find(filter)
-            .SortByDescending(x => x.Timestamp)
-            .ToListAsync();
-    }
-
-    public async Task<(List<AuditLog> logs, int totalCount)> GetLogsByUserAsync(string userId, DateTime? from = null, DateTime? to = null)
-    {
-        var filterBuilder = Builders<AuditLog>.Filter;
-        var filter = filterBuilder.Eq(x => x.UserId, userId);
-
-        if (from.HasValue)
-            filter &= filterBuilder.Gte(x => x.Timestamp, from.Value);
-
-        if (to.HasValue)
-            filter &= filterBuilder.Lte(x => x.Timestamp, to.Value);
-
-        var totalCount = await _auditCollection.CountDocumentsAsync(filter);
-
-        var logs = await _auditCollection
-            .Find(filter)
-            .SortByDescending(x => x.Timestamp)
-            .ToListAsync();
-
-        return (logs, (int)totalCount);
-    }
-
-    public async Task<(List<AuditLog> logs, int totalCount)> GetLogsByActionAsync(string action, DateTime? from = null, DateTime? to = null)
-    {
-        var filterBuilder = Builders<AuditLog>.Filter;
-        var filter = filterBuilder.Eq(x => x.Action, action);
-
-        if (from.HasValue)
-            filter &= filterBuilder.Gte(x => x.Timestamp, from.Value);
-
-        if (to.HasValue)
-            filter &= filterBuilder.Lte(x => x.Timestamp, to.Value);
-
-        var totalCount = await _auditCollection.CountDocumentsAsync(filter);
-
-        var logs = await _auditCollection
-            .Find(filter)
-            .SortByDescending(x => x.Timestamp)
-            .ToListAsync();
-
-        return (logs, (int)totalCount);
-    }
-
-    public async Task<List<AuditLog>> GetLogsByStatusCodeAsync(int statusCode, DateTime? from = null, DateTime? to = null)
-    {
-        var filterBuilder = Builders<AuditLog>.Filter;
-        var filter = filterBuilder.Eq(x => x.StatusCode, statusCode);
-
-        if (from.HasValue)
-            filter &= filterBuilder.Gte(x => x.Timestamp, from.Value);
-
-        if (to.HasValue)
-            filter &= filterBuilder.Lte(x => x.Timestamp, to.Value);
-
-        return await _auditCollection
-            .Find(filter)
-            .SortByDescending(x => x.Timestamp)
-            .ToListAsync();
-    }
-
     public async Task LogLoginAsync(string userId, string userName, List<string> roles, string clientIp, bool success, string errorMessage = null)
     {
         var auditLog = new AuditLog
@@ -179,26 +86,80 @@ public class AuditService : IAuditService
 
         await LogAsync(auditLog);
     }
-
-    public async Task<(List<AuditLog> logs, int totalCount)> GetLogsByUserNameAsync(string userName, DateTime? from = null, DateTime? to = null)
+    public async Task<ResponseDto<PagedResultDto<AuditLogDto>>> GetAuditLogsAsync(AuditLogQueryDto query)
     {
-        var filterBuilder = Builders<AuditLog>.Filter;
-        var filter = filterBuilder.Eq(x => x.UserName, userName);
+        try
+        {
+            var filterBuilder = Builders<AuditLog>.Filter;
+            var filter = filterBuilder.Empty;
 
-        if (from.HasValue)
-            filter &= filterBuilder.Gte(x => x.Timestamp, from.Value);
+            // Aplicar filtros según los parámetros de búsqueda
+            if (!string.IsNullOrEmpty(query.Action))
+                filter &= filterBuilder.Eq(x => x.Action, query.Action);
 
-        if (to.HasValue)
-            filter &= filterBuilder.Lte(x => x.Timestamp, to.Value);
+            if (!string.IsNullOrEmpty(query.UserId))
+                filter &= filterBuilder.Eq(x => x.UserId, query.UserId);
 
-        var totalCount = await _auditCollection.CountDocumentsAsync(filter);
+            if (!string.IsNullOrEmpty(query.UserName))
+                filter &= filterBuilder.Eq(x => x.UserName, query.UserName);
 
-        var logs = await _auditCollection
-            .Find(filter)
-            .SortByDescending(x => x.Timestamp)
-            .ToListAsync();
+            if (query.From.HasValue)
+                filter &= filterBuilder.Gte(x => x.Timestamp, query.From.Value);
 
-        return (logs, (int)totalCount);
+            if (query.To.HasValue)
+                filter &= filterBuilder.Lte(x => x.Timestamp, query.To.Value);
+
+            // Contar total de documentos que coinciden con el filtro
+            var totalCount = await _auditCollection.CountDocumentsAsync(filter);
+
+            // Calcular paginación
+            var skip = (query.Page - 1) * query.PageSize;
+            var totalPages = (int)Math.Ceiling((double)totalCount / query.PageSize);
+
+            // Obtener los documentos paginados
+            var logs = await _auditCollection
+                .Find(filter)
+                .SortByDescending(x => x.Timestamp)
+                .Skip(skip)
+                .Limit(query.PageSize)
+                .ToListAsync();
+
+            // Convertir a DTOs
+            var auditLogDtos = logs.Select(log => AuditLogDto.FromAuditLog(log)).ToList();
+
+            // Crear objeto de respuesta paginada
+            var pagedResult = new PagedResultDto<AuditLogDto>
+            {
+                Items = auditLogDtos,
+                Pagination = new PaginationDto
+                {
+                    CurrentPage = query.Page,
+                    PageSize = query.PageSize,
+                    TotalItems = totalCount,
+                    TotalPages = totalPages,
+                    HasPrevious = query.Page > 1,
+                    HasNext = query.Page < totalPages
+                }
+            };
+
+            return new ResponseDto<PagedResultDto<AuditLogDto>>
+            {
+                Data = pagedResult,
+                Message = "Registros de auditoría obtenidos exitosamente",
+                Status = true,
+                StatusCode = 200
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener logs de auditoría");
+            return new ResponseDto<PagedResultDto<AuditLogDto>>
+            {
+                Status = false,
+                Message = $"Error al obtener logs de auditoría: {ex.Message}",
+                StatusCode = 500
+            };
+        }
     }
 
     public async Task ClearAllLogsAsync()

@@ -10,15 +10,19 @@
   <ItemGroup>
     <Compile Remove="Database\Configuration\**" />
     <Compile Remove="Database\Entities\**" />
+    <Compile Remove="media\**" />
     <Compile Remove="SeedData\**" />
     <Content Remove="Database\Configuration\**" />
     <Content Remove="Database\Entities\**" />
+    <Content Remove="media\**" />
     <Content Remove="SeedData\**" />
     <EmbeddedResource Remove="Database\Configuration\**" />
     <EmbeddedResource Remove="Database\Entities\**" />
+    <EmbeddedResource Remove="media\**" />
     <EmbeddedResource Remove="SeedData\**" />
     <None Remove="Database\Configuration\**" />
     <None Remove="Database\Entities\**" />
+    <None Remove="media\**" />
     <None Remove="SeedData\**" />
   </ItemGroup>
 
@@ -63,10 +67,5 @@
 		<EmbeddedResource Include="Assets/Images/Hospital_Occidente_Logo.png" />
 		<EmbeddedResource Include="Assets/Images/Logo_de_SESAL.png" />
 	</ItemGroup>
-
-
-	<ItemGroup>
-    <Folder Include="media\outputDir\" />
-  </ItemGroup>
 
 </Project>
