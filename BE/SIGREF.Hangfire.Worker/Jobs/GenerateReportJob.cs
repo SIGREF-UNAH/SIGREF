@@ -2,7 +2,7 @@
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using SIGREF.Common.Dtos.Reports;
+using SIGREF.Common.Dtos.Report;
 using SIGREF.Common.Types;
 using SIGREF.Infrastructure.Persistence;
 using SIGREF.Infrastructure.Reporting.Interfaces;
@@ -50,7 +50,7 @@ public class GenerateReportJob : IGenerateReportJob
         // 1. Buscar la entidad en la base de datos
         var history = await _context.ReportHistory
             .FirstOrDefaultAsync(x => x.Id == historyId, cancellationToken);
-
+        var meta = new ReportMetaDto();
         if (history == null)
         {
             _logger.LogError("[Job {JobId}] No se encontró el registro de historial {HistoryId}", historyId, historyId);
@@ -73,8 +73,9 @@ public class GenerateReportJob : IGenerateReportJob
             // 4. Streaming de Datos (DataCollector)
             
             var dataStream = _dataCollector.StreamReportLinesAsync(filters, cancellationToken);
+            
             // 5. TODO: Generación del PDF con QuestPDF
-            using var pdfStream = await _pdfBuilder.BuildAsync(dataStream, history.HospitalPropertiesSnapshot, cancellationToken);
+            using var pdfStream = await _pdfBuilder.BuildAsync(dataStream, history.HospitalPropertiesSnapshot, meta,cancellationToken);
 
             var downloadUrl = await _storage.SaveAsync(historyId, pdfStream,   cancellationToken);
             history.DownloadUrl = downloadUrl;
@@ -89,6 +90,7 @@ public class GenerateReportJob : IGenerateReportJob
             history.Progress = 100;
             // history.DownloadUrl = downloadPath;
             await _context.SaveChangesAsync(cancellationToken);
+            history.UpdatedDate = DateTime.UtcNow;
 
             _logger.LogInformation("[Job] Reporte {HistoryId} completado exitosamente", historyId);
         }

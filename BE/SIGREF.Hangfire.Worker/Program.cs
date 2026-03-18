@@ -27,7 +27,7 @@ builder.Services.AddFhirClientShared(builder.Configuration);
 // 3. Configuración de Hangfire y Servicios de Reportes (Encapsulado)
 builder.AddWorkerHangfire(); 
 builder.AddReportingInfrastructure();
-
+builder.Services.AddHttpContextAccessor();
 // 4. Servicio en segundo plano
 builder.Services.AddHostedService<Worker>();
 

@@ -2,7 +2,7 @@
 using SIGREF.API.Services.Reports;
 using SIGREF.Common.Dtos;
 using SIGREF.Common.Dtos.Report;
-using SIGREF.Common.Dtos.Reports;
+using SIGREF.Infrastructure.Keycloak.Interfaces;
 using SIGREF.Infrastructure.Reporting.Interfaces;
 
 namespace SIGREF.API.Controllers.Reports;
@@ -16,12 +16,15 @@ public class ReportsController : ControllerBase
     private readonly IReportQueryService _reportQueryService;
     private readonly IReportQueueService _queue;
     private readonly IReportStorageService _storage;
+    private readonly IUserContextService _userContextService;
 
-    public ReportsController(IReportQueryService reportQueryService, IReportQueueService reportQueue, IReportStorageService storage)
+    public ReportsController(IReportQueryService reportQueryService, IReportQueueService reportQueue, IReportStorageService storage, IUserContextService userContextService)
     {
         _reportQueryService = reportQueryService;
         _queue = reportQueue;
         _storage = storage;
+        _userContextService = userContextService;
+        
 
     }
     /// <summary>
@@ -60,15 +63,15 @@ public class ReportsController : ControllerBase
     /// </summary>
     [HttpPost("generate")]
     [ProducesResponseType(typeof(EnqueueReportResponseDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ResponseDto<EnqueueReportResponseDto>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(EnqueueReportResponseDto), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     
     public async Task<IActionResult> Enqueue(
         [FromBody] ReportFilterDto filter,
         CancellationToken cancellationToken)
     {
-        //var userId   = User.FindFirst("sub")?.Value ?? "anonymous";
-        var response = await _queue.EnqueueAsync(filter, cancellationToken);
+        var userId =  Guid.NewGuid(); // _userContextService.GetUserId();
+        var response = await _queue.EnqueueAsync(filter,userId, cancellationToken);
  
         // 202 Accepted: solicitud recibida, resultado no disponible aún
         return Accepted(response);
@@ -94,7 +97,8 @@ public class ReportsController : ControllerBase
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
-        var history = await _queue.GetHistoryAsync( page, pageSize, cancellationToken);
+        var userId = _userContextService.GetUserId();
+        var history = await _queue.GetHistoryAsync(userId, page, pageSize, cancellationToken);
         return Ok(history);
     }
  
@@ -112,7 +116,7 @@ public class ReportsController : ControllerBase
         if (status.Status != "Completed")
             return BadRequest($"El reporte no está listo. Estado actual: {status.Status}");
  
-         var stream = await _storage.OpenAsync(
+        var stream = await _storage.OpenAsync(
             Path.Combine("reportes", Path.GetFileName($"{jobId}.pdf")), cancellationToken);
  
         if (stream is null)
