@@ -34,4 +34,5 @@ public class KeycloakFilter
     public int PageNumber { get; set; }
     public int PageSize { get; set; }
     public string? UserName { get; set; }
+    public string? Search { get; set; } // Para buscar por nombre, email o username
 }

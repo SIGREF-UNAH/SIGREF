@@ -302,10 +302,15 @@ public class KeycloakAdminService : IKeycloakAdminService
         int first = (page - 1) * pageSize;
         int max = pageSize + 1; 
 
+        // Priorizar el parámetro Search sobre UserName para compatibilidad
+        string? searchFilter = !string.IsNullOrWhiteSpace(filter.Search) 
+            ? filter.UserName 
+            : filter.Search;
+
         var users = await _kc.GetUsersFilteredAsync(
             first,
             max,
-            filter.UserName, 
+            searchFilter, 
             CancellationToken.None
         );
 
