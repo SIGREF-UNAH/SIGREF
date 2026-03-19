@@ -25,7 +25,7 @@ jobs:
           node-version: '20'
 
       - name: 📦 Instalar SDK de Gemini
-        run: npm install @google/generative-ai
+        run: npm install --no-save @google/generative-ai
 
       - name: 🚀 Ejecutar Script de IA
         env:
