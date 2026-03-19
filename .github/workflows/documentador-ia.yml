@@ -1,0 +1,44 @@
+name: Generar Docs con Gemini
+
+# Se ejecuta SOLO cuando se abre o edita un Issue
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  contents: write # Necesario para crear la rama y los commits
+  pull-requests: write # Necesario para crear el PR
+
+jobs:
+  documentar-codigo:
+    # Solo corre si el issue tiene la etiqueta "generar-docs"
+    if: contains(github.event.issue.labels.*.name, 'generar-docs')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Clonar el repositorio
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📦 Instalar SDK de Gemini
+        run: npm install @google/generative-ai
+
+      - name: 🚀 Ejecutar Script de IA
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: node .github/scripts/generar-docs.js
+
+      - name: 🔀 Crear Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "docs: agregar documentación generada por Gemini IA"
+          title: "🤖 Documentación para el Issue #${{ github.event.issue.number }}"
+          body: "Pull Request generado automáticamente por Gemini. \n\nRevisa los cambios sugeridos para los archivos solicitados en el issue #${{ github.event.issue.number }} para asegurarte de que la lógica de negocio se mantuvo intacta."
+          branch: docs/ia-issue-${{ github.event.issue.number }}
+          base: main # 
