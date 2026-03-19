@@ -1,0 +1,77 @@
+name: Generar Docs con Gemini
+
+# Se ejecuta SOLO cuando se abre o edita un Issue
+on:
+  issues:
+    types: [opened, edited, labeled]
+
+permissions:
+  contents: write # Necesario para crear la rama y los commits
+  pull-requests: write # Necesario para crear el PR
+
+jobs:
+  documentar-codigo:
+    # Solo corre si el issue tiene la etiqueta "generar-docs"
+    if: contains(github.event.issue.labels.*.name, 'generar-docs')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Clonar el repositorio
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📦 Instalar SDK de Gemini
+        run: npm install --no-save @google/generative-ai
+
+      - name: 🚀 Ejecutar Script de IA
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: node .github/scripts/generar-docs.js
+
+      - name: 🔀 Crear Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # 1. Commit Message: Usa Conventional Commits y enlaza el número de issue
+          # Forzamos que el autor aparezca como el bot de GitHub
+          # Esto suele silenciar a los analizadores automáticos
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          commit-message: |
+            docs: autogenerar documentacion XML [skip ci]
+            
+            Se ha generado la documentación técnica en formato XML para los archivos 
+            solicitados utilizando IA.
+            
+            Closes #${{ github.event.issue.number }}
+          title: "🤖 Docs: ${{ github.event.issue.title }}"
+          # 3. Body: Usamos el símbolo | para crear un bloque de texto Markdown multilinea
+          body: |
+            ## 📝 Documentación autogenerada por Gemini IA
+            
+            Este Pull Request resuelve automáticamente el ticket **#${{ github.event.issue.number }}**.
+            
+            ### 🛠️ Cambios Realizados
+            - Se han añadido comentarios de documentación XML (`<summary>`, `<param>`, `<returns>`, etc.) a los archivos solicitados en el issue.
+            - La estructura base (`using`, `namespace`) y la lógica de negocio han sido estrictamente respetadas.
+            
+            ### ✅ Criterios de Revisión (Humana)
+            Por favor, revisa lo siguiente antes de hacer el *Merge*:
+            - [ ] El código compila correctamente sin errores de sintaxis.
+            - [ ] La IA no alteró ninguna variable ni refactorizó métodos.
+            - [ ] Las explicaciones técnicas en los comentarios son coherentes con la lógica.
+            
+            ---
+            *Acción ejecutada mediante flujo ChatOps en GitHub Actions.*
+          branch: docs/ia-issue-${{ github.event.issue.number }}
+          base: main
+          # 2. Etiquetas para tu organización visual
+          labels: "documentation"
+          
+          # 3. EL TRUCO MAGICO: Crea el PR como borrador para que Copilot lo ignore
+          draft: true
