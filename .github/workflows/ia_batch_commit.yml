@@ -1,0 +1,100 @@
+name: "Actor 3: Batch Commit & PR"
+
+on:
+  # 1. El "Reloj": Se ejecuta cada 6 horas automáticamente
+  schedule:
+    - cron: '0 */6 * * *'
+  
+  # 2. El "Botón": Permite ejecutarlo manualmente desde la pestaña Actions
+  workflow_dispatch:
+
+jobs:
+  apply-and-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: 📥 Clonar repositorio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ⚙️ Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🚀 Instalar SDK y Procesar Lote (Actor 2)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          npm install --no-save @google/generative-ai
+          node .github/scripts/batch_processor.js
+
+      - name: 🛠️ Parsear Respuesta y Restaurar Archivos
+        run: |
+          node -e "
+          const fs = require('fs');
+          const path = '.github/ai_queue/raw_response.txt';
+          if (!fs.existsSync(path)) {
+              console.log('No hay respuesta de IA para procesar.');
+              process.exit(0);
+          }
+          const raw = fs.readFileSync(path, 'utf-8');
+          const regex = /FILE_PATH:\s*(.*?)\nFIXED_CONTENT_START\n([\s\S]*?)\nFIXED_CONTENT_END/g;
+          let match;
+          while ((match = regex.exec(raw)) !== null) {
+              const filePath = match[1].trim();
+              const code = match[2].trim();
+              if (fs.existsSync(filePath)) {
+                  fs.writeFileSync(filePath, code, 'utf-8');
+                  console.log('✅ Restaurado: ' + filePath);
+              }
+          }
+          "
+
+      - name: 🔀 Crear Pull Request (Bypass Activado)
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          committer: "GeneriDocs-bot <41898282+github-actions[bot]@users.noreply.github.com>"
+          author: "GeneriDocs-bot <41898282+github-actions[bot]@users.noreply.github.com>"
+          commit-message: "docs: batch documentation updates [ia-documentation] [IGNORE-BOT]"
+          title: "🤖 Docs: Batch Update [ia-documentation] [IGNORE-BOT]"
+          body: |
+            ## 📝 Documentación técnica autogenerada
+            
+            Este PR ha sido generado mediante **Gemini 2.0 Flash-Lite**.
+            
+            > **Bypass Info:** Omitiendo revisión de Copilot via `[ia-documentation]` e `[IGNORE-BOT]`.
+            
+            ### 🛠️ Cambios
+            - Documentación XML aplicada.
+          branch: "docs/ia-batch-${{ github.run_id }}"
+          base: main
+          labels: "documentation, ia-documentation"
+          delete-branch: true
+          draft: true
+      
+      - name: 🧹 Limpieza Quirúrgica de Cola
+        if: success()
+        run: |
+          # 1. Leer la lista de archivos que realmente se procesaron
+          if [ -f .github/ai_queue/processed_list.csv ]; then
+              IFS=',' read -ra ADDR <<< "$(cat .github/ai_queue/processed_list.csv)"
+              for file in "${ADDR[@]}"; do
+              rm -f ".github/ai_queue/$file"
+              echo "Eliminado de la cola: $file"
+              done
+              # 2. Eliminar los archivos temporales de trabajo
+              rm -f .github/ai_queue/raw_response.txt
+              rm -f .github/ai_queue/processed_list.csv
+          fi
+          # 3. Sincronizar con Git
+          git config user.name "Enque-got"
+          git config user.email "actions@github.com"
+          git add .github/ai_queue/
+          git commit -m "clean: partial queue cleanup [IGNORE-BOT]" || echo "Nada que limpiar"
+          git push

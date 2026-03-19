@@ -12,7 +12,7 @@ permissions:
 jobs:
   documentar-codigo:
     # Solo corre si el issue tiene la etiqueta "generar-docs"
-    if: contains(github.event.issue.labels.*.name, 'generar-docs')
+    if: contains(github.event.issue.labels.*.name, 'DOW-ACTION')
     runs-on: ubuntu-latest
     
     steps:
@@ -40,38 +40,39 @@ jobs:
           # 1. Commit Message: Usa Conventional Commits y enlaza el número de issue
           # Forzamos que el autor aparezca como el bot de GitHub
           # Esto suele silenciar a los analizadores automáticos
-          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          committer: GeneriDocs-bot <41898282+github-actions[bot]@users.noreply.github.com>
+          author: GeneriDocs-bot <41898282+github-actions[bot]@users.noreply.github.com>
+          
+          # 2. Añadimos la etiqueta ia-documentation al mensaje del commit
           commit-message: |
-            docs: autogenerar documentacion XML [skip ci]
+            docs: autogenerar documentacion XML ia-documentation [IGNORE-BOT]
             
-            Se ha generado la documentación técnica en formato XML para los archivos 
+            Se ha generado la documentacion tecnica en formato XML para los archivos 
             solicitados utilizando IA.
             
             Closes #${{ github.event.issue.number }}
-          title: "🤖 Docs: ${{ github.event.issue.title }}"
-          # 3. Body: Usamos el símbolo | para crear un bloque de texto Markdown multilinea
+          
+          # 3. Añadimos la etiqueta al título para que sea visible
+          title: "🤖 Docs: ${{ github.event.issue.title }} [ia-documentation] [IGNORE-BOT]"
+          
+          # 4. Incluimos la etiqueta en el cuerpo del PR por seguridad
           body: |
             ## 📝 Documentación autogenerada por Gemini IA
             
-            Este Pull Request resuelve automáticamente el ticket **#${{ github.event.issue.number }}**.
+            > **Nota:** Este PR incluye la etiqueta `ia-documentation` para omitir la revisión automática de Copilot.
+            
+            Este Pull Request resuelve automáticament el ticket **#${{ github.event.issue.number }}**.
             
             ### 🛠️ Cambios Realizados
-            - Se han añadido comentarios de documentación XML (`<summary>`, `<param>`, `<returns>`, etc.) a los archivos solicitados en el issue.
-            - La estructura base (`using`, `namespace`) y la lógica de negocio han sido estrictamente respetadas.
-            
-            ### ✅ Criterios de Revisión (Humana)
-            Por favor, revisa lo siguiente antes de hacer el *Merge*:
-            - [ ] El código compila correctamente sin errores de sintaxis.
-            - [ ] La IA no alteró ninguna variable ni refactorizó métodos.
-            - [ ] Las explicaciones técnicas en los comentarios son coherentes con la lógica.
+            - Documentación XML autogenerada.
             
             ---
-            *Acción ejecutada mediante flujo ChatOps en GitHub Actions.*
+            *Accion ejecutada mediante flujo ChatOps en GitHub Actions.*
+          
           branch: docs/ia-issue-${{ github.event.issue.number }}
           base: main
-          # 2. Etiquetas para tu organización visual
-          labels: "documentation"
+          # 5. Mantenemos las etiquetas de GitHub para filtrado visual
+          labels: "documentation, ia-documentation"
           
-          # 3. EL TRUCO MAGICO: Crea el PR como borrador para que Copilot lo ignore
+          # 6. El PR se crea como borrador (doble protección)
           draft: true
