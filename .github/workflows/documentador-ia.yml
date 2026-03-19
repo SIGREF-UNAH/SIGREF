@@ -37,8 +37,31 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "docs: agregar documentación generada por Gemini IA"
-          title: "🤖 Documentación para el Issue #${{ github.event.issue.number }}"
-          body: "Pull Request generado automáticamente por Gemini. \n\nRevisa los cambios sugeridos para los archivos solicitados en el issue #${{ github.event.issue.number }} para asegurarte de que la lógica de negocio se mantuvo intacta."
+          # 1. Commit Message: Usa Conventional Commits y enlaza el número de issue
+          commit-message: "docs: autogenerar documentación XML [skip ci] (Closed #${{ github.event.issue.number }})"
+          title: "🤖 Docs: ${{ github.event.issue.title }}"
+          # 3. Body: Usamos el símbolo | para crear un bloque de texto Markdown multilinea
+          body: |
+            ## 📝 Documentación autogenerada por Gemini IA
+            
+            Este Pull Request resuelve automáticamente el ticket **#${{ github.event.issue.number }}**.
+            
+            ### 🛠️ Cambios Realizados
+            - Se han añadido comentarios de documentación XML (`<summary>`, `<param>`, `<returns>`, etc.) a los archivos solicitados en el issue.
+            - La estructura base (`using`, `namespace`) y la lógica de negocio han sido estrictamente respetadas.
+            
+            ### ✅ Criterios de Revisión (Humana)
+            Por favor, revisa lo siguiente antes de hacer el *Merge*:
+            - [ ] El código compila correctamente sin errores de sintaxis.
+            - [ ] La IA no alteró ninguna variable ni refactorizó métodos.
+            - [ ] Las explicaciones técnicas en los comentarios son coherentes con la lógica.
+            
+            ---
+            *Acción ejecutada mediante flujo ChatOps en GitHub Actions.*
           branch: docs/ia-issue-${{ github.event.issue.number }}
-          base: main # 
+          base: main
+          # 2. Etiquetas para tu organización visual
+          labels: "documentation"
+          
+          # 3. EL TRUCO MAGICO: Crea el PR como borrador para que Copilot lo ignore
+          draft: true

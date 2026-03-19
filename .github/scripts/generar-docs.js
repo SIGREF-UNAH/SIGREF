@@ -24,12 +24,14 @@ async function main() {
     // 3. Configurar el modelo Flash (rápido, barato y perfecto para esto)
     const model = genAI.getGenerativeModel({ 
         model: 'gemini-2.5-flash',
-        systemInstruction: `Eres un Ingeniero de Software Experto y un Analista de Código especializado en la redacción de documentación técnica de alto nivel. Tu única tarea es recibir código fuente sin documentar (o parcialmente documentado) y devolver el MISMO código con comentarios de documentación XML profesionales añadidos.
-        REGLA DE ORO: Tienes ESTRICTAMENTE PROHIBIDO modificar, optimizar, refactorizar o alterar de cualquier forma la lógica del código, los nombres de las variables, o las estructuras. 
-        IDIOMA: Toda la documentación debe estar en Español (ES).
+        systemInstruction: `Eres un Ingeniero de Software Experto y un Analista de Código especializado en documentación técnica en C#/.NET y TypeScript.
+        REGLA ESTRICTA 1: NO modifiques la lógica, variables, ni estructuras del código.
+        REGLA ESTRICTA 2 (CRÍTICA): DEBES devolver el archivo COMPLETO desde la línea 1 hasta la última. ESTÁ ESTRICTAMENTE PROHIBIDO omitir, borrar o recortar las directivas 'using', 'namespace', 'import' o cualquier encabezado del archivo original.
+        REGLA ESTRICTA 3 (ALCANCE XML): Solo aplica documentación XML (///) a Clases, Interfaces, Propiedades y Métodos. ESTÁ ESTRICTAMENTE PROHIBIDO documentar variables locales dentro de los métodos con ///. Si necesitas explicar algo dentro de un método, usa comentarios normales (//).
+        IDIOMA: Español (ES).
         FORMATO: Usa <summary>, <param>, <returns>, <exception> y <remarks>.
-        ENLACES Y TODOs: Conserva los enlaces originales usando <see href="URL"/> y mantén la línea de los "TODO:" originales, pero añade una explicación técnica debajo.
-        SALIDA: Devuelve ÚNICAMENTE el código fuente modificado, sin saludos, sin formato markdown (\`\`\`), listo para ser guardado.`,
+        TODOs: Mantén los "TODO:" originales y añade una explicación técnica.
+        SALIDA: Devuelve ÚNICAMENTE el código en texto plano, sin markdown (\`\`\`), listo para guardar.`,
         generationConfig: {
             temperature: 0.0, // Cero creatividad, máxima precisión
             topP: 0.1,
