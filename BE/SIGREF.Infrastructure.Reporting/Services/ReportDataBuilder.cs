@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
 using Hl7.Fhir.Model;
@@ -12,6 +12,16 @@ using SYTASK = System.Threading.Tasks.Task;
  
 namespace SIGREF.Infrastructure.Reporting.Services;
  
+/// <summary>
+/// Proporciona servicios para recolectar y procesar datos de diversas fuentes (base de datos, FHIR, Keycloak)
+/// para la generación de reportes. Implementa un enfoque de streaming y procesamiento por lotes
+/// para optimizar el rendimiento y el uso de recursos en reportes masivos.
+/// </summary>
+/// <remarks>
+/// Este colector de datos está diseñado para manejar grandes volúmenes de información,
+/// resolviendo identidades de cajeros y detalles de pacientes de sistemas externos
+/// de manera eficiente, utilizando paralelismo controlado y caché.
+/// </remarks>
 public class ReportDataCollector : IReportDataCollector
 {
     private readonly SIGREFContext _context;
@@ -23,9 +33,13 @@ public class ReportDataCollector : IReportDataCollector
     // FHIR (HAPI, Azure FHIR, etc.) con el parámetro _id.
     private const int FhirBatchSize = 100;
     
-    // TODO :
-    // aun no esta integrado en nuestra practica en Infrastruture.keycloak por lo tanto se usa un semaforo por el momento
-    // Tampoco puedo asegurar si funciona o no correctamente https://github.com/keycloak/keycloak/issues/42479
+    // TODO: La integración de un cliente Keycloak con soporte nativo para operaciones por lotes (batch)
+    // o un mecanismo de paralelismo más robusto y configurable aún no está completamente establecida
+    // en nuestra práctica en Infrastructure.Keycloak. Por lo tanto, se utiliza un SemaphoreSlim
+    // para controlar la concurrencia de las llamadas individuales a Keycloak.
+    // Además, la funcionalidad de un endpoint batch en Keycloak para la recuperación de usuarios por ID
+    // no está garantizada o es inexistente (ver https://github.com/keycloak/keycloak/issues/42479),
+    // lo que refuerza la necesidad de un enfoque de paralelismo controlado para evitar la saturación del servidor.
     
     
     // Keycloak NO tiene endpoint batch por IDs.
@@ -34,6 +48,12 @@ public class ReportDataCollector : IReportDataCollector
     // Ajustar según los rate-limits de tu instalación.
     private const int KeycloakMaxConcurrency = 5;
  
+    /// <summary>
+    /// Inicializa una nueva instancia de la clase <see cref="ReportDataCollector"/>.
+    /// </summary>
+    /// <param name="context">El contexto de la base de datos SIGREF para acceder a los datos de facturas.</param>
+    /// <param name="fhirClient">El cliente FHIR para interactuar con el servidor FHIR y obtener detalles de pacientes.</param>
+    /// <param name="keycloakClient">El cliente de administración de Keycloak para obtener detalles de los cajeros.</param>
     public ReportDataCollector(
         SIGREFContext context,
         FhirClient fhirClient,
@@ -44,14 +64,29 @@ public class ReportDataCollector : IReportDataCollector
         _keycloakClient = keycloakClient;
     }
     
-    // STREAM PRINCIPAL
-    //
-    // Por cada lote de FhirBatchSize líneas se ejecutan dos fases:
-    //   Fase A — Keycloak: resuelve todos los cajeros del lote en
-    //            paralelo (hasta KeycloakMaxConcurrency a la vez),
-    //            aprovechando la caché global entre lotes.
-    //   Fase B — FHIR: una sola consulta con _elements=id,name,birthDate
-    //            para traer solo los campos necesarios del Patient.
+    /// <summary>
+    /// Genera un flujo asíncrono de líneas de reporte, procesando los datos por lotes
+    /// y resolviendo información adicional de sistemas externos (Keycloak y FHIR).
+    /// </summary>
+    /// <param name="filter">Los criterios de filtro para seleccionar las facturas.</param>
+    /// <param name="cancellationToken">Un token para cancelar la operación.</param>
+    /// <returns>Un <see cref="IAsyncEnumerable{T}"/> de <see cref="ReportLineDto"/> que representa las líneas del reporte.</returns>
+    /// <remarks>
+    /// Este método opera en un modelo de streaming, donde las facturas se recuperan de la base de datos
+    /// en lotes. Por cada lote, se realizan dos fases de resolución:
+    /// <list type="bullet">
+    ///     <item>
+    ///         <term>Fase A — Keycloak:</term>
+    ///         <description>Resuelve los nombres de los cajeros en paralelo, utilizando una caché global para evitar consultas repetidas.</description>
+    ///     </item>
+    ///     <item>
+    ///         <term>Fase B — FHIR:</term>
+    ///         <description>Consulta el servidor FHIR para obtener detalles de los pacientes (nombre y fecha de nacimiento),
+    ///         optimizando la consulta para traer solo los campos necesarios.</description>
+    ///     </item>
+    /// </list>
+    /// Las líneas de reporte se emiten una vez que ambas fases de resolución se han completado para el lote actual.
+    /// </remarks>
     public async IAsyncEnumerable<ReportLineDto> StreamReportLinesAsync(
         ReportFilterDto filter,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -109,8 +144,13 @@ public class ReportDataCollector : IReportDataCollector
         }
     }
     
-    // Orquestador por lote: Keycloak primero, FHIR después.
-    // Ambas fases se completan antes de emitir cualquier línea del lote.
+    /// <summary>
+    /// Orquesta la resolución de un lote de líneas de reporte, ejecutando primero la fase de Keycloak
+    /// y luego la fase de FHIR.
+    /// </summary>
+    /// <param name="batch">La lista de <see cref="ReportLineDto"/> que conforman el lote actual.</param>
+    /// <param name="cashierCache">La caché global de nombres de cajeros para evitar consultas repetidas a Keycloak.</param>
+    /// <param name="cancellationToken">Un token para cancelar la operación.</param>
     private async SYTASK ResolveBatchAsync(
         List<ReportLineDto> batch,
         Dictionary<string, string> cashierCache,
@@ -120,15 +160,25 @@ public class ReportDataCollector : IReportDataCollector
         await ResolveFhirBatchAsync(batch, cancellationToken);
     }
     
-    // FASE A — CAJEROS (Keycloak)
-    // La mejor optimización posible es disparar las llamadas pendientes
-    // en paralelo con un SemaphoreSlim que controla la concurrencia.
-    //
-    // Flujo:
-    //   1. Filtrar IDs del lote que NO están en la caché global.
-    //   2. Disparar esas llamadas en paralelo (máx. KeycloakMaxConcurrency).
-    //   3. Volcar resultados a la caché global.
-    //   4. Aplicar la caché a todas las líneas del lote.
+    /// <summary>
+    /// Resuelve los nombres de los cajeros para un lote de líneas de reporte, consultando Keycloak.
+    /// </summary>
+    /// <param name="batch">La lista de <see cref="ReportLineDto"/> que conforman el lote actual.</param>
+    /// <param name="cashierCache">La caché global de nombres de cajeros. Los resultados de las nuevas consultas se añadirán aquí.</param>
+    /// <param name="cancellationToken">Un token para cancelar la operación.</param>
+    /// <returns>Una tarea que representa la operación asíncrona.</returns>
+    /// <remarks>
+    /// Este método optimiza las llamadas a Keycloak:
+    /// <list type="number">
+    ///     <item>Filtra los IDs de cajeros del lote que aún no están en la caché global.</item>
+    ///     <item>Dispara llamadas paralelas a Keycloak para los IDs no cacheados, controlando la concurrencia
+    ///     mediante un <see cref="SemaphoreSlim"/> para no saturar el servidor.</item>
+    ///     <item>Almacena los resultados obtenidos en un <see cref="ConcurrentDictionary{TKey, TValue}"/>
+    ///     y luego los vuelca a la caché global.</item>
+    ///     <item>Aplica los nombres de cajeros resueltos (desde la caché o recién obtenidos) a todas las líneas del lote.</item>
+    /// </list>
+    /// </remarks>
+    /// <exception cref="OperationCanceledException">Se lanza si la operación es cancelada.</exception>
     private async SYTASK ResolveKeycloakBatchAsync(
         List<ReportLineDto> batch,
         Dictionary<string, string> cashierCache,
@@ -186,14 +236,19 @@ public class ReportDataCollector : IReportDataCollector
                 dto.CashierName = cashierCache[dto.CashierIdentity];
     }
     
-    // FASE B — PACIENTES (FHIR)
-    // Solo procesamos líneas cuyo PatientName todavía es el ID crudo
-    // (es decir, invoice.PatientDisplay no estaba disponible en BD).
-    //
-    // La consulta usa _elements=id,name,birthDate para pedir al servidor
-    // FHIR únicamente los campos que necesitamos. Esto puede reducir el
-    // payload entre un 60-80% respecto a traer el Patient completo
-    // (telecom, address, photo, extensiones, etc. quedan excluidos).
+    /// <summary>
+    /// Resuelve los detalles de los pacientes (nombre y fecha de nacimiento) para un lote de líneas de reporte,
+    /// consultando el servidor FHIR.
+    /// </summary>
+    /// <param name="batch">La lista de <see cref="ReportLineDto"/> que conforman el lote actual.</param>
+    /// <param name="cancellationToken">Un token para cancelar la operación.</param>
+    /// <returns>Una tarea que representa la operación asíncrona.</returns>
+    /// <remarks>
+    /// Este método solo procesa las líneas cuyo <see cref="ReportLineDto.PatientName"/> aún contiene el ID crudo
+    /// (indicando que el nombre del paciente no estaba disponible en la base de datos).
+    /// La consulta FHIR se optimiza utilizando el parámetro <c>_elements=id,name,birthDate</c> para solicitar
+    /// únicamente los campos necesarios, reduciendo el tamaño del payload y mejorando el rendimiento.
+    /// </remarks>
     private async SYTASK ResolveFhirBatchAsync(
         List<ReportLineDto> batch,
         CancellationToken cancellationToken = default)
@@ -234,17 +289,31 @@ public class ReportDataCollector : IReportDataCollector
         }
     }
     
-    // Consulta FHIR optimizada con _elements
-    // ELIGE EL MODO según lo que contiene PatientIdentity:    
-    //                                                             
-    // MODO A (activo): PatientIdentity = ID interno del recurso
-    //     Ejemplo: "a3f9c1b2-4d67-4e88-bcd3-9e1234567890"
-    //     Parámetro FHIR: _id
-    //                                                              
-    //   MODO B (comentado): PatientIdentity = identificador de
-    //    negocio (DNI, MRN, número de expediente, etc.
-    //     Parámetro FHIR: identifier
-    // 
+    /// <summary>
+    /// Realiza una consulta optimizada al servidor FHIR para obtener detalles de pacientes por lotes.
+    /// </summary>
+    /// <param name="patientIds">Una lista de IDs de pacientes (ya sean IDs internos de recursos o identificadores de negocio).</param>
+    /// <returns>
+    /// Un diccionario donde la clave es el ID del paciente y el valor es un objeto <see cref="FhirPatientDetails"/>
+    /// que contiene el nombre completo y la fecha de nacimiento del paciente.
+    /// </returns>
+    /// <remarks>
+    /// Este método soporta dos modos de búsqueda:
+    /// <list type="bullet">
+    ///     <item>
+    ///         <term>MODO A (activo por defecto):</term>
+    ///         <description>Busca pacientes por su ID interno de recurso FHIR utilizando el parámetro <c>_id</c>.</description>
+    ///     </item>
+    ///     <item>
+    ///         <term>MODO B (comentado):</term>
+    ///         <description>Busca pacientes por un identificador de negocio (ej. DNI, MRN) utilizando el parámetro <c>identifier</c>.
+    ///         Requiere especificar el sistema de identificación (IdentifierSystem).</description>
+    ///     </item>
+    /// </list>
+    /// La consulta se optimiza con <c>_elements=id,name,birthDate</c> para reducir el tamaño de la respuesta del servidor FHIR.
+    /// </remarks>
+    /// <exception cref="Exception">Captura cualquier excepción durante la conexión o consulta FHIR y devuelve
+    /// un diccionario con mensajes de error para los IDs de pacientes.</exception>
     private async Task<Dictionary<string, FhirPatientDetails>> FetchFhirPatientDetailsBatchAsync(
         List<string> patientIds)
     {
@@ -311,10 +380,18 @@ public class ReportDataCollector : IReportDataCollector
         }
     }
  
-    //  Tipo auxiliar interno 
+    /// <summary>
+    /// Clase auxiliar interna para encapsular los detalles de un paciente obtenidos de FHIR.
+    /// </summary>
     private sealed class FhirPatientDetails
     {
+        /// <summary>
+        /// Obtiene el nombre completo del paciente.
+        /// </summary>
         public string  FullName  { get; init; } = string.Empty;
+        /// <summary>
+        /// Obtiene la fecha de nacimiento del paciente en formato FHIR (string).
+        /// </summary>
         public string? BirthDate { get; init; }
     }
 }
