@@ -41,7 +41,7 @@ async function main() {
 
     // 3. Configurar el modelo con tus REGLAS ESTRICTAS
     const model = genAI.getGenerativeModel({ 
-        model: "gemini-2.0-flash-lite", 
+        model: "gemini-flash-lite-latest", 
         systemInstruction: `Eres un Ingeniero de Software Experto y un Analista de Código especializado en documentación técnica en C#/.NET y TypeScript.
         
         ESTÁS PROCESANDO UN LOTE DE ARCHIVOS. Por cada archivo en el input, debes generar una respuesta siguiendo estas reglas:
