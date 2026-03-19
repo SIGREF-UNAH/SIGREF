@@ -14,8 +14,17 @@ using Task = System.Threading.Tasks.Task;
 
 namespace SIGREF.API.Services.ServiceGroup;
 
+/// <summary>
+/// Servicio para gestionar la lógica de negocio relacionada con los Grupos de Servicios (Service Groups),
+/// interactuando con el servidor FHIR (para List, HealthcareService, Location) y PostgreSQL (para precios).
+/// </summary>
 public class ServiceGroupService(FhirClient fhirService, SIGREFContext dbContext)
 {
+    /// <summary>
+    /// Obtiene una lista paginada y filtrada de Grupos de Servicios desde FHIR.
+    /// </summary>
+    /// <param name="filter">Objeto que contiene los criterios de filtrado y paginación.</param>
+    /// <returns>Una tupla que contiene la lista de DTOs de Grupos de Servicios y la información de paginación.</returns>
     public async Task<(List<ServiceGroupDto>, PaginationDto)> GetFilteredServiceGroupsAsync(ServiceGroupFilterDto filter)
     {
         var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
@@ -103,6 +112,11 @@ public class ServiceGroupService(FhirClient fhirService, SIGREFContext dbContext
         return (dtos, pagination);
     }
 
+    /// <summary>
+    /// Obtiene un Grupo de Servicios específico por su ID de FHIR List.
+    /// </summary>
+    /// <param name="id">El ID del recurso List en FHIR.</param>
+    /// <returns>El DTO del Grupo de Servicios o null si no se encuentra.</returns>
     public async Task<ServiceGroupDto?> GetServiceGroupByIdAsync(string id)
     {
         // 1. Query única: Busca la lista por ID e incluye TODOS los items (HealthcareService y Location) en la misma respuesta
@@ -161,6 +175,11 @@ public class ServiceGroupService(FhirClient fhirService, SIGREFContext dbContext
         return dto;
     }
 
+    /// <summary>
+    /// Crea un nuevo Grupo de Servicios en el servidor FHIR.
+    /// </summary>
+    /// <param name="list">El recurso FHIR List a crear.</param>
+    /// <returns>El recurso FHIR List creado, incluyendo metadatos actualizados.</returns>
     public async Task<FhirList> CreateServiceGroupAsync(FhirList list)
     {
         list.Meta = new Meta
@@ -171,6 +190,11 @@ public class ServiceGroupService(FhirClient fhirService, SIGREFContext dbContext
         return await fhirService.CreateAsync(list);
     }
 
+    /// <summary>
+    /// Actualiza un Grupo de Servicios existente en el servidor FHIR, incrementando la versión.
+    /// </summary>
+    /// <param name="list">El recurso FHIR List con los datos actualizados.</param>
+    /// <returns>El recurso FHIR List actualizado.</returns>
     public async Task<FhirList> UpdateServiceGroupAsync(FhirList list)
     {
         if (list.Meta == null) list.Meta = new Meta();
@@ -184,12 +208,20 @@ public class ServiceGroupService(FhirClient fhirService, SIGREFContext dbContext
         return await fhirService.UpdateAsync(list);
     }
 
+    /// <summary>
+    /// Elimina un Grupo de Servicios por su ID en FHIR.
+    /// </summary>
+    /// <param name="id">El ID del recurso List a eliminar.</param>
     public async Task DeleteServiceGroupAsync(string id)
     {
         await fhirService.DeleteAsync($"List/{id}");
     }
 
-    // Helper to get raw FhirList for update
+    /// <summary>
+    /// Obtiene el recurso FHIR List crudo por ID. Útil para obtener la versión actual antes de una actualización.
+    /// </summary>
+    /// <param name="id">El ID del recurso List.</param>
+    /// <returns>El recurso FHIR List o null si no se encuentra.</returns>
     public async Task<FhirList?> GetFhirListByIdAsync(string id)
     {
         try
@@ -205,6 +237,7 @@ public class ServiceGroupService(FhirClient fhirService, SIGREFContext dbContext
     /// <summary>
     /// Obtiene los precios de los servicios desde la base de datos PostgreSQL y los asigna a los DTOs
     /// </summary>
+    /// <param name="serviceDtos">Lista de DTOs de servicios de salud a enriquecer.</param>
     private async Task EnrichServicesWithPricesAsync(List<ServiceGroupHealthcareDto> serviceDtos)
     {
         if (serviceDtos == null || serviceDtos.Count == 0) return;
