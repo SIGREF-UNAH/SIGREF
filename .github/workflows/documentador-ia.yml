@@ -2,7 +2,6 @@ name: Generar Docs con Gemini
 
 # Se ejecuta SOLO cuando se abre o edita un Issue
 on:
-  on:
   issues:
     types: [opened, edited, labeled]
 
