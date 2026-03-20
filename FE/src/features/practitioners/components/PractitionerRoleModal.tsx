@@ -63,6 +63,7 @@ export default function PractitionerRoleModal({
         placeholder="Seleccionar"
         allowClear
         options={orgOptions}
+        rules={[{ required: true, message: "Seleccione la organización" }]}
       />
 
       <ProFormSelect
@@ -71,6 +72,7 @@ export default function PractitionerRoleModal({
         placeholder="Seleccionar"
         allowClear
         options={locationOptions}
+        rules={[{ required: true, message: "Seleccione la ubicación" }]}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
