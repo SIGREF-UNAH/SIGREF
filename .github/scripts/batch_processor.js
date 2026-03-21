@@ -2,46 +2,40 @@ const fs = require('fs');
 const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-/**
- * CONFIGURACIÓN DE IA - ARQUITECTURA FINOPS
- * Modelo: Gemini 2.0 Flash-Lite (El más económico del catálogo)
- */
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const queueDir = '.github/ai_queue';
+const queueFile = '.github/ai_queue/docs_queue.json';
+// GUARDAR FUERA DEL REPOSITORIO PARA EVITAR BASURA
+const rawResponsePath = '/tmp/raw_response.txt'; 
 
 async function main() {
-    // 1. Leer la cola de archivos pendientes
-    if (!fs.existsSync(queueDir)) {
-        console.log("Directorio de cola no encontrado.");
+    if (!fs.existsSync(queueFile)) {
+        console.log("Cola no encontrada. Nada que procesar.");
         return;
     }
 
-    const filesInQueue = fs.readdirSync(queueDir).filter(f => f.endsWith('.json') && f.startsWith('req_'));
+    const tasks = JSON.parse(fs.readFileSync(queueFile, 'utf-8'));
     
-    if (filesInQueue.length === 0) {
-        console.log("Cola vacia. Nada que procesar.");
+    if (tasks.length === 0) {
+        console.log("Cola vacía. Nada que procesar.");
         return;
     }
 
     let batchContext = "TAREA: DOCUMENTAR EL SIGUIENTE LOTE DE ARCHIVOS.\n\n";
-    const pendingTasks = [];
+    const validTasks = [];
 
-    // 2. Construir el contexto del lote (Batch)
-    for (const jsonFile of filesInQueue) {
-        const filePath = path.join(queueDir, jsonFile);
-        const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-        
+    for (const data of tasks) {
         if (fs.existsSync(data.file)) {
             const code = fs.readFileSync(data.file, 'utf-8');
-            // Delimitadores de entrada claros para evitar confusiones en la IA
             batchContext += `---INPUT_FILE:${data.file}---\n${code}\n---END_INPUT---\n\n`;
-            pendingTasks.push(data);
+            validTasks.push(data);
         }
     }
 
+    if (validTasks.length === 0) return;
+
     // 3. Configurar el modelo con tus REGLAS ESTRICTAS
     const model = genAI.getGenerativeModel({ 
-        model: "gemini-2.0-flash-lite", 
+        model: "gemini-flash-lite-latest", 
         systemInstruction: `Eres un Ingeniero de Software Experto y un Analista de Código especializado en documentación técnica en C#/.NET y TypeScript.
         
         ESTÁS PROCESANDO UN LOTE DE ARCHIVOS. Por cada archivo en el input, debes generar una respuesta siguiendo estas reglas:
@@ -72,19 +66,16 @@ async function main() {
 
     // 4. Ejecutar la llamada a la IA
     try {
-        console.log(`🚀 Procesando lote de ${pendingTasks.length} archivos con Gemini 2.0 Flash-Lite...`);
+        console.log(`🚀 Procesando lote de ${validTasks.length} archivos...`);
         const result = await model.generateContent(batchContext);
         const responseText = result.response.text();
 
-        // 5. Guardar respuesta cruda para que el Actor 3 la procese
-        fs.writeFileSync(path.join(queueDir, 'raw_response.txt'), responseText);
-        // GUARDAR MANIFIESTO PARA LIMPIEZA QUIRÚRGICA
-        const processedFilesList = filesInQueue.join(',');
-        fs.writeFileSync(path.join(queueDir, 'processed_list.csv'), processedFilesList);
-        console.log("✅ Lote procesado exitosamente.");
+        // Guardar la respuesta cruda en la carpeta temporal (FUERA DEL REPO)
+        fs.writeFileSync(rawResponsePath, responseText);
+        console.log("✅ Lote procesado. Respuesta guardada en memoria temporal.");
 
     } catch (error) {
-        console.error("❌ Error crítico en la comunicación con la IA:", error);
+        console.error("❌ Error en la comunicación con la IA:", error);
         process.exit(1);
     }
 }

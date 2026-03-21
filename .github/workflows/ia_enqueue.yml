@@ -1,11 +1,8 @@
 name: "Actor 1: Enqueue Documentation"
 
 on:
-  # 1. Disparador Automático: Al poner la etiqueta en una Issue
   issues:
     types: [labeled]
-  
-  # 2. Disparador Manual: Botón "Run workflow" en la pestaña Actions
   workflow_dispatch:
     inputs:
       issue_number:
@@ -18,21 +15,28 @@ on:
 
 jobs:
   enqueue:
-    # Se ejecuta si la etiqueta es la correcta O si se activa manualmente
     if: github.event.label.name == 'generar-docs' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: read
       
     steps:
       - name: 📥 Clonar repositorio
         uses: actions/checkout@v4
 
-      - name: 📝 Registrar en Cola (ai_queue)
+      - name: 📝 Registrar en Cola Única (docs_queue.json)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p .github/ai_queue
+          QUEUE_FILE=".github/ai_queue/docs_queue.json"
           
-          # Lógica para seleccionar la fuente de datos (Manual vs Etiqueta)
+          # Inicializar el array JSON si no existe
+          if [ ! -f "$QUEUE_FILE" ]; then
+            echo "[]" > "$QUEUE_FILE"
+          fi
+
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             BODY="${{ github.event.inputs.issue_body }}"
             ISSUE_NUM="${{ github.event.inputs.issue_number }}"
@@ -41,29 +45,40 @@ jobs:
             ISSUE_NUM="${{ github.event.issue.number }}"
           fi
 
-          # Extracción de rutas mediante el patrón "Archivo: "[cite: 4]
           FILES=$(echo "$BODY" | grep -oP 'Archivo:\s*\K.+')
           
           if [ -z "$FILES" ]; then
-            echo "❌ No se encontraron rutas válidas en el cuerpo."
+            echo "❌ No se encontraron rutas válidas."
             exit 1
           fi
 
+          # Revisar si hay un PR abierto de la rama estática para extraer qué archivos ya están en proceso
+          PR_FILES=$(gh pr view docs/ia-batch-updates --json files -q '.files[].path' 2>/dev/null || echo "")
+
           for FILE in $FILES; do
-            CLEAN_FILE=$(echo $FILE | tr -d '\r')[cite: 4]
-            # Generación de ID único para evitar colisiones[cite: 4]
-            ID="${ISSUE_NUM}_$(echo $CLEAN_FILE | md5sum | cut -c1-8)"[cite: 4]
+            CLEAN_FILE=$(echo "$FILE" | tr -d '\r')
             
-            # Creación del JSON de estado pendiente[cite: 4]
-            echo "{\"file\": \"$CLEAN_FILE\", \"issue\": $ISSUE_NUM, \"status\": \"pending\"}" > ".github/ai_queue/req_$ID.json"[cite: 4]
-            echo "✅ Encolado correctamente: $CLEAN_FILE"
+            # Condición 1: ¿Ya está en el PR abierto?
+            if echo "$PR_FILES" | grep -q "^$CLEAN_FILE$"; then
+              echo "⏭️ Omitiendo: $CLEAN_FILE ya está en un PR pendiente."
+              continue
+            fi
+            
+            # Condición 2: ¿Ya está en la cola actual?
+            if grep -q "\"file\": \"$CLEAN_FILE\"" "$QUEUE_FILE"; then
+              echo "⏭️ Omitiendo: $CLEAN_FILE ya está en la cola."
+              continue
+            fi
+
+            # Agregar al array JSON usando jq
+            jq ". += [{\"file\": \"$CLEAN_FILE\", \"issue\": $ISSUE_NUM}]" "$QUEUE_FILE" > tmp.json && mv tmp.json "$QUEUE_FILE"
+            echo "✅ Encolado: $CLEAN_FILE"
           done
 
-      - name: 🚀 Push a la Cola
+      - name: 🚀 Push de la Cola Actualizada
         run: |
-          git config user.name "Enque-got"[cite: 4]
-          git config user.email "actions@github.com"[cite: 4]
-          git add .github/ai_queue/[cite: 4]
-          # Commit con tag de bypass para Copilot[cite: 4]
-          git commit -m "queue: register documentation task [IGNORE-BOT]" || echo "Sin cambios"[cite: 4]
-          git push[cite: 4]
+          git config user.name "GeneriDocs-bot"
+          git config user.email "actions@github.com"
+          git add .github/ai_queue/docs_queue.json
+          git commit -m "queue: update documentation queue [IGNORE-BOT]" || echo "Sin cambios nuevos para encolar"
+          git push
