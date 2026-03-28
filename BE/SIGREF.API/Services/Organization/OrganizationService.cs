@@ -112,7 +112,7 @@ namespace SIGREF.API.Services.Organizations
 
             // Filtros
             if (!string.IsNullOrWhiteSpace(filter.Name))
-                searchParams.Add("name", filter.Name);
+                searchParams.Add("name:contains", filter.Name);
 
             if (filter.Active.HasValue)
                 searchParams.Add("active", filter.Active.Value.ToString().ToLowerInvariant());
