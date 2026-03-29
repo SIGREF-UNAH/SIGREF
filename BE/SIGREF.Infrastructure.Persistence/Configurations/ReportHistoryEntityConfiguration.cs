@@ -4,10 +4,11 @@ using SIGREF.Core.Entity.Reports;
 
 namespace SIGREF.Infrastructure.Persistence.Configurations;
 
-public class ReportHistoryEntityConfiguration : IEntityTypeConfiguration<ReportHistoryEntity>
+public class ReportHistoryEntityConfiguration : BaseEntityConfiguration<ReportHistoryEntity>
 {
-    public void Configure(EntityTypeBuilder<ReportHistoryEntity> builder)
+    public override void Configure(EntityTypeBuilder<ReportHistoryEntity> builder)
     {
+        base.Configure(builder);
         // ===============================
         //           TABLE
         // ===============================
@@ -17,11 +18,7 @@ public class ReportHistoryEntityConfiguration : IEntityTypeConfiguration<ReportH
                 t.HasComment(
                     "Historial de reportes ejecutados en SIGREF. Guarda SQL generado, tipo de reporte, usuario ejecutor, formato y snapshot del hospital.");
             });
-
-        // ===============================
-        //           PRIMARY KEY
-        // ===============================
-        builder.HasKey(e => e.Id);
+        
 
 
         // ===============================
@@ -37,50 +34,54 @@ public class ReportHistoryEntityConfiguration : IEntityTypeConfiguration<ReportH
         
         builder.Property(x => x.Status)
             .IsRequired()
-            .HasConversion<int>();
+            .HasConversion<string>()
+            .HasMaxLength(10)
+            .HasColumnName("status")
+            .HasComment("Estado del Reporte : Pending | Processing | Completed | Failed ");
 
         builder.Property(e => e.SqlQuery)
             .IsRequired()
             .HasColumnName("sql_query");
 
         builder.Property(x => x.DownloadUrl)
-            .HasMaxLength(500);
+            .HasMaxLength(500)
+            .HasColumnName("download_url");
 
         builder.Property(x => x.PeriodLabel)
-            .HasMaxLength(200);
+            .HasMaxLength(200)
+            .IsRequired()
+            .HasColumnName("period_label");
 
         builder.Property(x => x.HospitalPropertiesSnapshot)
             .IsRequired()
-            .HasColumnType("jsonb"); // ¡Punto de Senior! PSQL maneja JSONB de forma eficiente para búsquedas.
+            .HasColumnType("jsonb")
+            .HasColumnName("hospital_properties_configuration");
 
         builder.Property(x => x.ErrorMessage)
-            .HasColumnType("text");
+            .HasColumnType("text")
+            .HasColumnName("error_message");
         
-        // ============================
-        //          AUDITORÍA
-        // ============================
-        builder.Property(x => x.CreatedById)
-            .HasColumnName("created_by_id")
-            .IsRequired()
-            .HasComment("ID del usuario que creó el registro.");
-
-        builder.Property(x => x.UpdatedById)
-            .HasColumnName("updated_by_id")
-            .HasComment("ID del usuario que realizó la última actualización.");
-
-        builder.Property(x => x.CreatedDate)
-            .HasColumnName("created_date")
-            .IsRequired()
-            .HasComment("Fecha de creación del turno (UTC).");
-
-        builder.Property(x => x.UpdatedDate)
-            .HasColumnName("updated_date")
-            .HasComment("Fecha de última actualización (UTC).");
 
         builder.Property(x => x.FilterJson)
             .HasColumnName("filter_json")
             .HasColumnType("jsonb")
+            .HasColumnName("filter")
             .HasComment("JSON Filter del reporte del hospital.");
+        
+        
+        // OTRHERS
+        // TODO : Verificar si es de Tipo Required
+        builder.Property(e => e.RequestedByUserId)
+            .HasColumnName("requested_by_user_id");
+        
+        builder.Property(e => e.HangfireJobId)
+            .HasMaxLength(50)
+            .HasColumnName("hangfire_job_id");
+        
+        builder.Property(e => e.Progress)
+            .HasMaxLength(3)
+            .HasColumnName("progress");
+        
 
 
         // ===============================

@@ -13,7 +13,7 @@ public class HospitalDetailsDto : HospitalPublicDto
 {
     public string? Director { get; set; }
     public string? Subdirector { get; set; }
-    public string? Ubication { get; set; }
+    public string? Location { get; set; }
     public string? PhoneNumber { get; set; }
     public string? Email { get; set; }
     public string? HospitalCode { get; set; }

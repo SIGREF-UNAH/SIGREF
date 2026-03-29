@@ -4,22 +4,19 @@ using SIGREF.Core.Entity.Catalogs;
 
 namespace SIGREF.Infrastructure.Persistence.Configurations;
 
-public class HealthServicesConfiguration : IEntityTypeConfiguration<HealthService>
+public class HealthServicesConfiguration : BaseEntityConfiguration<HealthService>
 {
-    public void Configure(EntityTypeBuilder<HealthService> builder)
+    public override void Configure(EntityTypeBuilder<HealthService> builder)
     {
+        
+        base.Configure(builder);
         builder.ToTable("health_services",
             t =>
             {
                 t.HasComment(
                     "Catálogo de servicios de salud registrados en SIGREF. Sincronizado parcialmente con FHIR HealthcareService.");
             });
-
-        // ============================
-        //       PRIMARY KEY
-        // ============================
-        builder.HasKey(x => x.Id);
-
+        
         // ============================
         //       COLUMN MAPPINGS
         // ============================
@@ -38,8 +35,10 @@ public class HealthServicesConfiguration : IEntityTypeConfiguration<HealthServic
         builder.Property(x => x.HealthServiceFhirId)
             .HasColumnName("health_service_id_fhir")
             .HasMaxLength(64)
+            // https://fhir.hl7.org/fhir/datatypes.html#:~:text=JSON%20Definition-,id,Regex%3A%20%5BA%2DZa%2Dz0%2D9%5C%2D%5C.%5D%7B1%2C64%7D,-XML%20Definition
+            .IsUnicode(false)
             .IsRequired()
-            .HasComment("ID del recurso HealthcareService en FHIR.");
+            .HasComment("ID lógico del recurso HealthcareService según estándar FHIR R4 (max 64 chars).");
         //
         // builder.Property(x => x.Abbreviation)
         //     .HasColumnName("abbreviation")
@@ -54,39 +53,15 @@ public class HealthServicesConfiguration : IEntityTypeConfiguration<HealthServic
         builder.Property(x => x.Price)
             .HasColumnName("price")
             .IsRequired()
-            .HasComment("Precio asignado al servicio para facturación.");
-
-        // ============================
-        //       AUDITORÍA
-        // ============================
-
-        builder.Property(x => x.CreatedById)
-            .HasColumnName("created_by_id")
-            .IsRequired()
-            .HasComment("Usuario que creó el registro.");
- 
-
-        builder.Property(x => x.CreatedDate)
-            .HasColumnName("created_date")
-            .IsRequired()
-            .HasComment("Fecha de creación (UTC).");
-
-        builder.Property(x => x.UpdatedDate)
-            .HasColumnName("updated_date")
-            .HasComment("Fecha de última actualización (UTC).");
+            .HasPrecision(18, 2) 
+            .HasComment("Precio asignado al servicio para facturación (máximo 18 dígitos, 2 decimales).");
+        
 
         // builder.Property(x => x.LastSync)
         //     .HasColumnName("last_sync")
         //     .HasComment("Fecha de última sincronización con FHIR o procesos automáticos.");
 
-        // ============================
-        //          RELACIONES
-        // ============================
-
         
-
-
-
         // ============================
         //          ÍNDICES
         // ============================

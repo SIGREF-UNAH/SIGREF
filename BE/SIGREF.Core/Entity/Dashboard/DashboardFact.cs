@@ -11,7 +11,7 @@ public class DashboardFact
     // ===============================
     // DIMENSIÓN DE TIEMPO
     // ===============================
-    public DateTime CreatedDate { get; set; }
+    public DateTimeOffset CreatedDate { get; set; }
 
     // ===============================
     // INGRESOS Y MONTO REAL (OPTIMIZADO)
@@ -55,7 +55,7 @@ public class DashboardFact
     // ===============================
     // DIMENSIÓN DE PACIENTE
     // ===============================
-    public string PatientIdFhir { get; set; }
+    public string? PatientIdFhir { get; set; }
 
     // ===============================
     // DIMENSIÓN DE ITEMS / SERVICIOS TOTALES

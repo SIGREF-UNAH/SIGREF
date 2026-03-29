@@ -557,10 +557,7 @@ public class DashboardReportingService : IDashboardReportingService
         var grouped = rows
             .Select(r =>
             {
-                var local = TimeZoneInfo.ConvertTimeFromUtc(
-                    DateTime.SpecifyKind(r.CreatedDate, DateTimeKind.Utc),
-                    tz
-                );
+                var local = TimeZoneInfo.ConvertTime(r.CreatedDate, tz);
 
                 var localDate = local.Date;
 

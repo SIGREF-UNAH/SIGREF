@@ -10,7 +10,7 @@ public class HospitalPropertiesEntity : BaseEntity
     public string Name { get; set; } = null!;
     public string? Director { get; set; }
     public string? Subdirector { get; set; }
-    public string? Ubication { get; set; }
+    public string? Location { get; set; }
 
     // ===============================
     //       IMEGES / LOGOS

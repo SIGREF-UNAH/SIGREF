@@ -4,20 +4,17 @@ using SIGREF.Core.Entity.Cashier;
 
 namespace SIGREF.Infrastructure.Persistence.Configurations;
 
-public class ShiftConfiguration : IEntityTypeConfiguration<ShiftEntity>
+public class ShiftConfiguration : BaseEntityConfiguration<ShiftEntity>
 {
-    public void Configure(EntityTypeBuilder<ShiftEntity> builder)
+    public override void Configure(EntityTypeBuilder<ShiftEntity> builder)
     {
+        base.Configure(builder);
         // ============================
         //        TABLE
         // ============================
         builder.ToTable("shifts",
             t => { t.HasComment("Catálogo de turnos asignados a ubicaciones del hospital (Location - FHIR)."); });
 
-        // ============================
-        //        PRIMARY KEY
-        // ============================
-        builder.HasKey(x => x.Id);
 
         // ============================
         //     PROPIEDADES PRINCIPALES
@@ -53,27 +50,9 @@ public class ShiftConfiguration : IEntityTypeConfiguration<ShiftEntity>
             .IsRequired()
             .HasComment("Indica si el turno está activo.");
 
-        // ============================
-        //          AUDITORÍA
-        // ============================
-        builder.Property(x => x.CreatedById)
-            .HasColumnName("created_by_id")
-            .IsRequired()
-            .HasComment("ID del usuario que creó el registro.");
-
-        builder.Property(x => x.UpdatedById)
-            .HasColumnName("updated_by_id")
-            .HasComment("ID del usuario que realizó la última actualización.");
-
-        builder.Property(x => x.CreatedDate)
-            .HasColumnName("created_date")
-            .IsRequired()
-            .HasComment("Fecha de creación del turno (UTC).");
-
-        builder.Property(x => x.UpdatedDate)
-            .HasColumnName("updated_date")
-            .HasComment("Fecha de última actualización (UTC).");
-
+        builder.Property(x => x.CorrectionClosure)
+            .HasColumnName("correction_closure");
+        
         // ============================
         //          ÍNDICES
         // ============================

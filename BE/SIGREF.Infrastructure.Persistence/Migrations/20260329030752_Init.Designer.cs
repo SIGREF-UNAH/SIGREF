@@ -12,8 +12,8 @@ using SIGREF.Infrastructure.Persistence;
 namespace SIGREF.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(SIGREFContext))]
-    [Migration("20260130212307_nw_partial_idx_cashier_sesions")]
-    partial class nw_partial_idx_cashier_sesions
+    [Migration("20260329030752_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("SIGREF.API.Database.Entity.Administration.HospitalPropertiesEntity", b =>
+            modelBuilder.Entity("SIGREF.Core.Entity.Administration.HospitalPropertiesEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -34,15 +34,14 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("CreatedById")
                         .HasColumnType("uuid")
-                        .HasColumnName("created_by_id")
-                        .HasComment("ID del usuario que creó el registro.");
+                        .HasColumnName("created_by_id");
 
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date")
-                        .HasComment("Fecha de creación del turno (UTC).");
+                        .HasColumnName("created_date");
 
                     b.Property<string>("Currency")
+                        .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)")
                         .HasColumnName("currency");
@@ -67,12 +66,19 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnName("hospital_code");
 
                     b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(true)
                         .HasColumnName("is_active");
 
                     b.Property<bool>("IsSingleton")
                         .HasColumnType("boolean")
                         .HasColumnName("is_singleton");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("location");
 
                     b.Property<Guid?>("LogoMediaId")
                         .HasColumnType("uuid")
@@ -82,7 +88,8 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
-                        .HasColumnName("name");
+                        .HasColumnName("name")
+                        .HasComment("Nombre oficial del hospital");
 
                     b.Property<string>("PhoneNumber")
                         .HasMaxLength(20)
@@ -99,20 +106,13 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(150)")
                         .HasColumnName("subdirector");
 
-                    b.Property<string>("Ubication")
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)")
-                        .HasColumnName("location");
-
                     b.Property<Guid?>("UpdatedById")
                         .HasColumnType("uuid")
-                        .HasColumnName("updated_by_id")
-                        .HasComment("ID del usuario que realizó la última actualización.");
+                        .HasColumnName("updated_by_id");
 
-                    b.Property<DateTime?>("UpdatedDate")
+                    b.Property<DateTimeOffset?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_date")
-                        .HasComment("Fecha de última actualización (UTC).");
+                        .HasColumnName("updated_date");
 
                     b.Property<string>("UrlLogo")
                         .HasMaxLength(300)
@@ -141,7 +141,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         });
                 });
 
-            modelBuilder.Entity("SIGREF.API.Database.Entity.Billing.InvoiceEntity", b =>
+            modelBuilder.Entity("SIGREF.Core.Entity.Billing.InvoiceEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -151,46 +151,56 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                     b.Property<decimal>("AdjustmentTotal")
                         .HasPrecision(14, 2)
                         .HasColumnType("numeric(14,2)")
-                        .HasColumnName("adjustment_total");
+                        .HasColumnName("adjustment_total")
+                        .HasComment("Suma neta de ajustes por notas de crédito/débito.");
 
                     b.Property<decimal>("AmountDue")
                         .HasPrecision(14, 2)
                         .HasColumnType("numeric(14,2)")
-                        .HasColumnName("amount_due");
+                        .HasColumnName("amount_due")
+                        .HasComment("Monto pendiente de cobro.");
 
                     b.Property<decimal>("AmountPaid")
                         .HasPrecision(14, 2)
                         .HasColumnType("numeric(14,2)")
-                        .HasColumnName("amount_paid");
+                        .HasColumnName("amount_paid")
+                        .HasComment("Monto efectivamente cobrado.");
 
-                    b.Property<Guid?>("CashierSessionId")
+                    b.Property<Guid>("CashierSessionId")
                         .HasColumnType("uuid")
                         .HasColumnName("cashier_session_id");
 
                     b.Property<Guid>("CreatedById")
                         .HasColumnType("uuid")
-                        .HasColumnName("created_by_id")
-                        .HasComment("ID del usuario que creó el registro.");
+                        .HasColumnName("created_by_id");
 
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date")
-                        .HasComment("Fecha de creación del turno (UTC).");
+                        .HasColumnName("created_date");
 
                     b.Property<decimal>("FinalTotal")
                         .HasPrecision(14, 2)
                         .HasColumnType("numeric(14,2)")
-                        .HasColumnName("final_total");
+                        .HasColumnName("final_total")
+                        .HasComment("Total exigible (TotalOriginal - Discount + Adjustment).");
+
+                    b.Property<decimal>("InvoiceDiscount")
+                        .HasPrecision(14, 2)
+                        .HasColumnType("numeric(14,2)")
+                        .HasColumnName("invoice_discount")
+                        .HasComment("Descuento total aplicado a la factura en su creación.");
 
                     b.Property<string>("InvoiceType")
                         .IsRequired()
                         .HasMaxLength(30)
-                        .HasColumnType("varchar(30)")
+                        .HasColumnType("character varying(30)")
                         .HasColumnName("invoice_type")
-                        .HasComment("Normal: Todos Datos | Emergency: Se reconoce Servicio Dado Datos pueden quedar pendientes | Exempt: Descuento del 100% | Refunded: reembolsada | CreditNote: Devolucion de Dinero | DebitNote: Ingreso de Dinero");
+                        .HasComment("Tipo legal: Normal, Emergency, Exempt, CreditNote, DebitNote.");
 
                     b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(true)
                         .HasColumnName("is_active");
 
                     b.Property<long>("Number")
@@ -204,30 +214,34 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                     b.Property<string>("PatientDisplay")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
-                        .HasColumnName("patient_display");
+                        .HasColumnName("patient_display")
+                        .HasComment("Nombre o alias del paciente al momento de facturar.");
 
                     b.Property<string>("PatientIdFhir")
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)")
-                        .HasColumnName("patient_id_fhir");
+                        .HasColumnName("patient_id_fhir")
+                        .HasComment("ID único del paciente en el servidor externo FHIR.");
 
                     b.Property<string>("PatientSystem")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("patient_system");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("patient_system")
+                        .HasComment("Namespace del sistema de identificación (ej: URL de identidad).");
 
                     b.Property<string>("PatientValue")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("patient_value");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("patient_value")
+                        .HasComment("Valor del documento de identidad (DNI/Pasaporte).");
 
                     b.Property<string>("PaymentMethod")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasColumnName("payment_method")
-                        .HasComment("Método de pago: Cash, Card, Transfer, Mixed");
+                        .HasComment("Método de pago: Cash, Card, Transfer, Mixed.");
 
                     b.Property<Guid>("SerieId")
                         .HasColumnType("uuid")
@@ -245,24 +259,23 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(30)
-                        .HasColumnType("varchar(30)")
+                        .HasColumnType("character varying(30)")
                         .HasColumnName("status")
-                        .HasComment("Created: Creada | Paid: pagada | Cancelled: anulada | Refunded: reembolsada");
+                        .HasComment("Created: Creada | Paid: Pagada | Cancelled: Anulada | Refunded: Reembolsada");
 
                     b.Property<decimal>("TotalOriginal")
                         .HasPrecision(14, 2)
                         .HasColumnType("numeric(14,2)")
-                        .HasColumnName("total_original");
+                        .HasColumnName("total_original")
+                        .HasComment("Monto bruto total (Suma de items).");
 
                     b.Property<Guid?>("UpdatedById")
                         .HasColumnType("uuid")
-                        .HasColumnName("updated_by_id")
-                        .HasComment("ID del usuario que realizó la última actualización.");
+                        .HasColumnName("updated_by_id");
 
-                    b.Property<DateTime?>("UpdatedDate")
+                    b.Property<DateTimeOffset?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_date")
-                        .HasComment("Fecha de última actualización (UTC).");
+                        .HasColumnName("updated_date");
 
                     b.HasKey("Id");
 
@@ -302,7 +315,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         });
                 });
 
-            modelBuilder.Entity("SIGREF.API.Database.Entity.Billing.InvoiceItemEntity", b =>
+            modelBuilder.Entity("SIGREF.Core.Entity.Billing.InvoiceItemEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -311,39 +324,33 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("CreatedById")
                         .HasColumnType("uuid")
-                        .HasColumnName("created_by_id")
-                        .HasComment("Usuario que creó el item.");
+                        .HasColumnName("created_by_id");
 
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date")
-                        .HasComment("Fecha de creación del item (UTC).");
+                        .HasColumnName("created_date");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
                         .HasColumnName("description")
-                        .HasComment("Nombre del servicio copiado al momento de facturar (histórico).");
-
-                    b.Property<decimal?>("Discount")
-                        .HasPrecision(14, 2)
-                        .HasColumnType("numeric(14,2)")
-                        .HasColumnName("discount")
-                        .HasComment("Descuento aplicado al item (si aplica).");
+                        .HasComment("Nombre del servicio copiado al momento de facturar (congelado).");
 
                     b.Property<Guid>("InvoiceId")
                         .HasColumnType("uuid")
                         .HasColumnName("invoice_id");
 
                     b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(true)
                         .HasColumnName("is_active");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("integer")
                         .HasColumnName("quantity")
-                        .HasComment("Cantidad facturada del servicio.");
+                        .HasComment("Cantidad facturada de este ítem.");
 
                     b.Property<Guid>("ServiceId")
                         .HasColumnType("uuid")
@@ -353,23 +360,24 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasPrecision(14, 2)
                         .HasColumnType("numeric(14,2)")
                         .HasColumnName("total_amount")
-                        .HasComment("Total del item: (quantity * unit_price) - discount (congelado).");
+                        .HasComment("Total de la línea: (Quantity * UnitPrice). No incluye descuentos.");
 
                     b.Property<decimal>("UnitPrice")
                         .HasPrecision(14, 2)
                         .HasColumnType("numeric(14,2)")
                         .HasColumnName("unit_price")
-                        .HasComment("Precio unitario histórico del servicio facturado.");
+                        .HasComment("Precio unitario histórico del servicio al momento de la venta.");
 
                     b.Property<Guid?>("UpdatedById")
                         .HasColumnType("uuid")
-                        .HasColumnName("updated_by_id")
-                        .HasComment("Usuario que actualizó el item (si aplica).");
+                        .HasColumnName("updated_by_id");
 
-                    b.Property<DateTime?>("UpdatedDate")
+                    b.Property<DateTimeOffset?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_date")
-                        .HasComment("Fecha de última actualización del item (UTC).");
+                        .HasColumnName("updated_date");
+
+                    b.Property<Guid>("fk_invoice_items_invoice")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -381,6 +389,8 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ServiceId")
                         .HasDatabaseName("idx_invoiceitems_serviceid");
+
+                    b.HasIndex("fk_invoice_items_invoice");
 
                     b.HasIndex("InvoiceId", "ServiceId")
                         .HasDatabaseName("idx_invoiceitems_invoiceid_serviceid");
@@ -394,7 +404,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         });
                 });
 
-            modelBuilder.Entity("SIGREF.API.Database.Entity.Billing.InvoiceSerieEntity", b =>
+            modelBuilder.Entity("SIGREF.Core.Entity.Billing.InvoiceSerieEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -405,96 +415,115 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("created_by_id");
 
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
                     b.Property<long>("CurrentNumber")
                         .HasColumnType("bigint")
-                        .HasColumnName("current_number");
+                        .HasColumnName("current_number")
+                        .HasComment("Último número de factura emitido en esta serie");
 
                     b.Property<long>("EndNumber")
                         .HasColumnType("bigint")
-                        .HasColumnName("end_number");
+                        .HasColumnName("end_number")
+                        .HasComment("Número final autorizado para esta serie");
 
                     b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(true)
                         .HasColumnName("is_active");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)")
-                        .HasColumnName("name");
+                        .HasColumnName("name")
+                        .HasComment("Nombre descriptivo de la serie (ej: Serie A - Principal)");
 
                     b.Property<string>("Prefix")
                         .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)")
-                        .HasColumnName("prefix");
+                        .HasColumnName("prefix")
+                        .HasComment("Prefijo de la factura (ej: F001, A)");
 
                     b.Property<long>("StartNumber")
                         .HasColumnType("bigint")
-                        .HasColumnName("start_number");
+                        .HasColumnName("start_number")
+                        .HasComment("Número inicial autorizado para esta serie");
 
                     b.Property<Guid?>("UpdatedById")
                         .HasColumnType("uuid")
                         .HasColumnName("updated_by_id");
 
-                    b.Property<DateTime?>("UpdatedDate")
+                    b.Property<DateTimeOffset?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_date");
 
                     b.HasKey("Id");
 
-                    b.ToTable("invoice_serie");
+                    b.HasIndex("Name")
+                        .HasDatabaseName("idx_invoice_serie_name");
+
+                    b.HasIndex("Prefix")
+                        .IsUnique()
+                        .HasDatabaseName("idx_invoice_serie_prefix");
+
+                    b.ToTable("invoice_serie", null, t =>
+                        {
+                            t.HasComment("Tabla para gestionar las series de facturación y el control de su correlativo actual.");
+                        });
                 });
 
-            modelBuilder.Entity("SIGREF.API.Database.Entity.Cashier.CashierSessionEntity", b =>
+            modelBuilder.Entity("SIGREF.Core.Entity.Cashier.CashierSessionEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<DateTime?>("ClosedAt")
+                    b.Property<DateTimeOffset?>("ClosedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("closed_at")
                         .HasComment("Fecha y hora en la que se cerró la sesión de caja.");
 
-                    b.Property<DateTime?>("CorrectionDate")
+                    b.Property<DateTimeOffset?>("CorrectionDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("correction_date")
                         .HasComment("Fecha en la que la sesión fue revisada/corregida por un administrador o auditor.");
 
                     b.Property<Guid>("CreatedById")
                         .HasColumnType("uuid")
-                        .HasColumnName("created_by_id")
-                        .HasComment("ID del usuario que creó el registro.");
+                        .HasColumnName("created_by_id");
 
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date")
-                        .HasComment("Fecha de creación del turno (UTC).");
+                        .HasColumnName("created_date");
 
                     b.Property<decimal?>("DeclaredAmount")
-                        .HasPrecision(14, 2)
-                        .HasColumnType("numeric(14,2)")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("declared_amount")
                         .HasComment("Monto declarado por el cajero al momento del cierre.");
 
                     b.Property<decimal?>("Difference")
-                        .HasPrecision(14, 2)
-                        .HasColumnType("numeric(14,2)")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("difference")
                         .HasComment("Diferencia entre el monto declarado por el cajero y el monto calculado por el sistema.");
 
                     b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(true)
                         .HasColumnName("is_active");
 
                     b.Property<bool>("IsOpen")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(true)
                         .HasColumnName("is_open")
                         .HasComment("Indica si la sesión está activa (abierta).");
 
@@ -504,7 +533,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnName("notes")
                         .HasComment("Notas o comentarios del cajero o administrador sobre discrepancias o correcciones.");
 
-                    b.Property<DateTime>("OpenAt")
+                    b.Property<DateTimeOffset>("OpenAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("open_at")
                         .HasComment("Fecha y hora exacta en la que el cajero abrió la sesión de caja.");
@@ -520,20 +549,18 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasComment("Turno asignado a esta sesión de caja.");
 
                     b.Property<decimal?>("SystemAmount")
-                        .HasPrecision(14, 2)
-                        .HasColumnType("numeric(14,2)")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("system_amount")
                         .HasComment("Monto calculado automáticamente por el sistema según los recibos generados.");
 
                     b.Property<Guid?>("UpdatedById")
                         .HasColumnType("uuid")
-                        .HasColumnName("updated_by_id")
-                        .HasComment("ID del usuario que realizó la última actualización.");
+                        .HasColumnName("updated_by_id");
 
-                    b.Property<DateTime?>("UpdatedDate")
+                    b.Property<DateTimeOffset?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_date")
-                        .HasComment("Fecha de última actualización (UTC).");
+                        .HasColumnName("updated_date");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
@@ -568,26 +595,24 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         });
                 });
 
-            modelBuilder.Entity("SIGREF.API.Database.Entity.Cashier.ShiftEntity", b =>
+            modelBuilder.Entity("SIGREF.Core.Entity.Cashier.ShiftEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<DateTime>("CorrectionClosure")
+                    b.Property<DateTimeOffset>("CorrectionClosure")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("correction_closure");
 
                     b.Property<Guid>("CreatedById")
                         .HasColumnType("uuid")
-                        .HasColumnName("created_by_id")
-                        .HasComment("ID del usuario que creó el registro.");
+                        .HasColumnName("created_by_id");
 
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date")
-                        .HasComment("Fecha de creación del turno (UTC).");
+                        .HasColumnName("created_date");
 
                     b.Property<TimeOnly>("EndTime")
                         .HasColumnType("time without time zone")
@@ -595,7 +620,9 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasComment("Hora de finalización del turno (TimeOnly).");
 
                     b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(true)
                         .HasColumnName("is_active")
                         .HasComment("Indica si el turno está activo.");
 
@@ -620,13 +647,11 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("UpdatedById")
                         .HasColumnType("uuid")
-                        .HasColumnName("updated_by_id")
-                        .HasComment("ID del usuario que realizó la última actualización.");
+                        .HasColumnName("updated_by_id");
 
-                    b.Property<DateTime?>("UpdatedDate")
+                    b.Property<DateTimeOffset?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_date")
-                        .HasComment("Fecha de última actualización (UTC).");
+                        .HasColumnName("updated_date");
 
                     b.HasKey("Id");
 
@@ -645,7 +670,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         });
                 });
 
-            modelBuilder.Entity("SIGREF.API.Database.Entity.Catalogs.HealthService", b =>
+            modelBuilder.Entity("SIGREF.Core.Entity.Catalogs.HealthService", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -654,38 +679,39 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("CreatedById")
                         .HasColumnType("uuid")
-                        .HasColumnName("created_by_id")
-                        .HasComment("Usuario que creó el registro.");
+                        .HasColumnName("created_by_id");
 
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date")
-                        .HasComment("Fecha de creación (UTC).");
+                        .HasColumnName("created_date");
 
                     b.Property<string>("HealthServiceFhirId")
                         .IsRequired()
                         .HasMaxLength(64)
+                        .IsUnicode(false)
                         .HasColumnType("character varying(64)")
                         .HasColumnName("health_service_id_fhir")
-                        .HasComment("ID del recurso HealthcareService en FHIR.");
+                        .HasComment("ID lógico del recurso HealthcareService según estándar FHIR R4 (max 64 chars).");
 
                     b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(true)
                         .HasColumnName("is_active");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("numeric")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("price")
-                        .HasComment("Precio asignado al servicio para facturación.");
+                        .HasComment("Precio asignado al servicio para facturación (máximo 18 dígitos, 2 decimales).");
 
                     b.Property<Guid?>("UpdatedById")
                         .HasColumnType("uuid")
                         .HasColumnName("updated_by_id");
 
-                    b.Property<DateTime?>("UpdatedDate")
+                    b.Property<DateTimeOffset?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_date")
-                        .HasComment("Fecha de última actualización (UTC).");
+                        .HasColumnName("updated_date");
 
                     b.HasKey("Id");
 
@@ -699,62 +725,139 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         });
                 });
 
-            modelBuilder.Entity("SIGREF.API.Database.Entity.Dashboard.DashboardFact", b =>
+            modelBuilder.Entity("SIGREF.Core.Entity.Dashboard.DashboardFact", b =>
                 {
                     b.Property<Guid?>("CashierSessionId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("cashier_session_id");
 
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<DateTimeOffset>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
 
                     b.Property<string>("FhirServiceId")
-                        .HasColumnType("text");
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("fhir_service_id");
 
                     b.Property<decimal>("FinalTotal")
-                        .HasColumnType("numeric");
+                        .HasColumnType("numeric")
+                        .HasColumnName("final_total");
 
                     b.Property<Guid>("InvoiceId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("invoice_id");
 
                     b.Property<string>("InvoiceType")
-                        .HasColumnType("text");
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("invoice_type");
 
                     b.Property<Guid?>("ItemId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("item_id");
 
                     b.Property<string>("LocationId")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("location_id");
 
                     b.Property<string>("PackageId")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("package_id");
 
                     b.Property<string>("PatientIdFhir")
-                        .HasColumnType("text");
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("patient_id_fhir");
 
                     b.Property<decimal>("RealIncome")
-                        .HasColumnType("numeric");
+                        .HasColumnType("numeric")
+                        .HasColumnName("real_income");
 
                     b.Property<Guid?>("ServiceId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("service_id");
 
                     b.Property<Guid?>("ShiftId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("shift_id");
 
                     b.Property<string>("ShiftName")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("shift_name");
 
                     b.Property<string>("Status")
-                        .HasColumnType("text");
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
 
                     b.Property<int>("TotalItems")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("total_items");
 
                     b.ToTable((string)null);
 
                     b.ToView("mv_dashboard_facts", (string)null);
                 });
 
-            modelBuilder.Entity("SIGREF.API.Database.Entity.Files.MediaFileEntity", b =>
+            modelBuilder.Entity("SIGREF.Core.Entity.Dashboard.LocationIncomeRow", b =>
+                {
+                    b.Property<string>("LocationId")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("TotalIncome")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("TotalInvoices")
+                        .HasColumnType("integer");
+
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
+                });
+
+            modelBuilder.Entity("SIGREF.Core.Entity.Dashboard.ServiceUsageRow", b =>
+                {
+                    b.Property<long>("Count")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("FhirServiceId")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ServiceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("TotalGenerated")
+                        .HasColumnType("numeric");
+
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
+                });
+
+            modelBuilder.Entity("SIGREF.Core.Entity.Dashboard.ShiftIncomeRow", b =>
+                {
+                    b.Property<string>("LocationId")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ShiftId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ShiftName")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("TotalIncome")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("TotalInvoices")
+                        .HasColumnType("integer");
+
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
+                });
+
+            modelBuilder.Entity("SIGREF.Core.Entity.Files.MediaFileEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -770,13 +873,11 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("CreatedById")
                         .HasColumnType("uuid")
-                        .HasColumnName("created_by_id")
-                        .HasComment("ID del usuario que creó el registro.");
+                        .HasColumnName("created_by_id");
 
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date")
-                        .HasComment("Fecha de creación del turno (UTC).");
+                        .HasColumnName("created_date");
 
                     b.Property<string>("Description")
                         .HasMaxLength(255)
@@ -792,7 +893,9 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasComment("Nombre original del archivo subido.");
 
                     b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(true)
                         .HasColumnName("is_active");
 
                     b.Property<string>("RelativePath")
@@ -813,20 +916,19 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnName("system_description")
                         .HasComment("Descripción del archivo generada por el sistema.");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer")
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("media_type")
                         .HasComment("Tipo lógico del archivo (AppHospital, HealthGuilt).");
 
                     b.Property<Guid?>("UpdatedById")
                         .HasColumnType("uuid")
-                        .HasColumnName("updated_by_id")
-                        .HasComment("ID del usuario que realizó la última actualización.");
+                        .HasColumnName("updated_by_id");
 
-                    b.Property<DateTime?>("UpdatedDate")
+                    b.Property<DateTimeOffset?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_date")
-                        .HasComment("Fecha de última actualización (UTC).");
+                        .HasColumnName("updated_date");
 
                     b.HasKey("Id");
 
@@ -845,7 +947,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         });
                 });
 
-            modelBuilder.Entity("SIGREF.API.Database.Entity.Reports.ReportHistoryEntity", b =>
+            modelBuilder.Entity("SIGREF.Core.Entity.Reports.ReportHistoryEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -854,42 +956,52 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("CreatedById")
                         .HasColumnType("uuid")
-                        .HasColumnName("created_by_id")
-                        .HasComment("ID del usuario que creó el registro.");
+                        .HasColumnName("created_by_id");
 
-                    b.Property<Guid>("CreatedByUserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by_user_id");
-
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date")
-                        .HasComment("Fecha de creación del turno (UTC).");
+                        .HasColumnName("created_date");
 
-                    b.Property<string>("Display")
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)")
-                        .HasColumnName("display");
+                    b.Property<string>("DownloadUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("download_url");
 
-                    b.Property<string>("DisplaySystem")
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)")
-                        .HasColumnName("system_display");
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("text")
+                        .HasColumnName("error_message");
 
-                    b.Property<string>("Format")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("format");
+                    b.Property<string>("FilterJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("filter")
+                        .HasComment("JSON Filter del reporte del hospital.");
+
+                    b.Property<string>("HangfireJobId")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("hangfire_job_id");
 
                     b.Property<string>("HospitalPropertiesSnapshot")
                         .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("hospital_properties_snapshot");
+                        .HasColumnType("jsonb")
+                        .HasColumnName("hospital_properties_configuration");
 
                     b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(true)
                         .HasColumnName("is_active");
+
+                    b.Property<string>("PeriodLabel")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("period_label");
+
+                    b.Property<int>("Progress")
+                        .HasMaxLength(3)
+                        .HasColumnType("integer")
+                        .HasColumnName("progress");
 
                     b.Property<string>("ReportType")
                         .IsRequired()
@@ -897,24 +1009,33 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("report_type");
 
+                    b.Property<Guid>("RequestedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("requested_by_user_id");
+
                     b.Property<string>("SqlQuery")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("sql_query");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("status")
+                        .HasComment("Estado del Reporte : Pending | Processing | Completed | Failed ");
+
                     b.Property<Guid?>("UpdatedById")
                         .HasColumnType("uuid")
-                        .HasColumnName("updated_by_id")
-                        .HasComment("ID del usuario que realizó la última actualización.");
+                        .HasColumnName("updated_by_id");
 
-                    b.Property<DateTime?>("UpdatedDate")
+                    b.Property<DateTimeOffset?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_date")
-                        .HasComment("Fecha de última actualización (UTC).");
+                        .HasColumnName("updated_date");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedByUserId")
+                    b.HasIndex("CreatedById")
                         .HasDatabaseName("idx_report_history_user");
 
                     b.HasIndex("ReportType")
@@ -926,23 +1047,27 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         });
                 });
 
-            modelBuilder.Entity("SIGREF.API.Database.Entity.Billing.InvoiceEntity", b =>
+            modelBuilder.Entity("SIGREF.Core.Entity.Billing.InvoiceEntity", b =>
                 {
-                    b.HasOne("SIGREF.API.Database.Entity.Cashier.CashierSessionEntity", "CashierSession")
+                    b.HasOne("SIGREF.Core.Entity.Cashier.CashierSessionEntity", "CashierSession")
                         .WithMany()
                         .HasForeignKey("CashierSessionId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_cashier_session_id");
 
-                    b.HasOne("SIGREF.API.Database.Entity.Billing.InvoiceEntity", "ParentInvoice")
+                    b.HasOne("SIGREF.Core.Entity.Billing.InvoiceEntity", "ParentInvoice")
                         .WithMany()
                         .HasForeignKey("ParentInvoiceId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_parent_invoice_id");
 
-                    b.HasOne("SIGREF.API.Database.Entity.Billing.InvoiceSerieEntity", "Serie")
+                    b.HasOne("SIGREF.Core.Entity.Billing.InvoiceSerieEntity", "Serie")
                         .WithMany()
                         .HasForeignKey("SerieId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_invoice_serie_id");
 
                     b.Navigation("CashierSession");
 
@@ -951,37 +1076,40 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                     b.Navigation("Serie");
                 });
 
-            modelBuilder.Entity("SIGREF.API.Database.Entity.Billing.InvoiceItemEntity", b =>
+            modelBuilder.Entity("SIGREF.Core.Entity.Billing.InvoiceItemEntity", b =>
                 {
-                    b.HasOne("SIGREF.API.Database.Entity.Billing.InvoiceEntity", "Invoice")
-                        .WithMany("Items")
-                        .HasForeignKey("InvoiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SIGREF.API.Database.Entity.Catalogs.HealthService", "Service")
+                    b.HasOne("SIGREF.Core.Entity.Catalogs.HealthService", "Service")
                         .WithMany()
                         .HasForeignKey("ServiceId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_invoice_items_service");
+
+                    b.HasOne("SIGREF.Core.Entity.Billing.InvoiceEntity", "Invoice")
+                        .WithMany("Items")
+                        .HasForeignKey("fk_invoice_items_invoice")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_invoice_items_id");
 
                     b.Navigation("Invoice");
 
                     b.Navigation("Service");
                 });
 
-            modelBuilder.Entity("SIGREF.API.Database.Entity.Cashier.CashierSessionEntity", b =>
+            modelBuilder.Entity("SIGREF.Core.Entity.Cashier.CashierSessionEntity", b =>
                 {
-                    b.HasOne("SIGREF.API.Database.Entity.Cashier.ShiftEntity", "Shift")
+                    b.HasOne("SIGREF.Core.Entity.Cashier.ShiftEntity", "Shift")
                         .WithMany()
                         .HasForeignKey("ShiftId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_shift_id");
 
                     b.Navigation("Shift");
                 });
 
-            modelBuilder.Entity("SIGREF.API.Database.Entity.Billing.InvoiceEntity", b =>
+            modelBuilder.Entity("SIGREF.Core.Entity.Billing.InvoiceEntity", b =>
                 {
                     b.Navigation("Items");
                 });

@@ -1,66 +1,47 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using SIGREF.Core.Entity.Catalogs;
+﻿using SIGREF.Core.Entity.Catalogs;
 using SIGREF.Core.Entity.common;
 
 namespace SIGREF.Core.Entity.Billing;
 
-[Table("invoice_items")]
+/// <summary>
+/// Representa una línea de detalle dentro de una factura. 
+/// Almacena un "snapshot" o captura del servicio al momento de la venta 
+/// para garantizar la integridad histórica frente a cambios en el catálogo.
+/// </summary>
 public class InvoiceItemEntity : BaseEntity
 {
-    // ===============================
-    //            FK FACTURA
-    // ===============================
-
-    [Required]
-    [Column("invoice_id")]
+    #region Relaciones (Foreign Keys)
+    /// <summary> Identificador de la factura a la que pertenece este ítem. </summary>
     public Guid InvoiceId { get; set; }
+    
+    /// <summary> Referencia de navegación a la factura padre. </summary>
+    public InvoiceEntity Invoice { get; set; } = null!;
 
-    [ForeignKey(nameof(InvoiceId))]
-    public InvoiceEntity Invoice { get; set; }
-
-    // ===============================
-    //     FK SERVICIO / PAQUETE
-    // ===============================
-
-    // Servicio individual facturado
-    [Column("service_id")]
+    /// <summary> Identificador del servicio de salud original en el catálogo. </summary>
     public Guid ServiceId { get; set; }
 
-    [ForeignKey(nameof(ServiceId))]
-    public HealthService Service { get; set; }
+    /// <summary> Referencia al servicio del catálogo (HealthService). </summary>
+    public HealthService Service { get; set; } = null!;
+    #endregion
 
-
-    // ===============================
-    //        DATOS DEL ÍTEM
-    // ===============================
-
-    /// <summary>
-    /// Nombre del servicio copiado al momento de facturar.
-    /// Esto congela la información histórica.
+    #region Datos Congelados (Snapshot Histórico)
+    /// <summary> 
+    /// Nombre del servicio capturado en el momento de la facturación. 
+    /// Si el nombre del servicio cambia en el catálogo, este campo no se verá afectado.
     /// </summary>
-    [Required]
-    [Column("description")]
-    [StringLength(200)]
     public string Description { get; set; } = string.Empty;
 
-    [Required]
-    [Column("quantity")]
+    /// <summary> Cantidad de unidades facturadas de este servicio. </summary>
     public int Quantity { get; set; }
 
-    [Required]
-    [Column("unit_price")]
+    /// <summary> Precio unitario del servicio al momento de la venta. </summary>
     public decimal UnitPrice { get; set; }
 
-    [Column("discount")]
-    public decimal? Discount { get; set; }
-
-    /// <summary>
-    /// Total del ítem:
-    /// (quantity * unit_price) - discount
-    /// Congelado al momento de facturar y hacer los llamados mas facil
+    /// <summary> 
+    /// Monto total de la línea (Quantity * UnitPrice). 
+    /// Nota: Los descuentos comerciales se aplican a nivel de cabecera (InvoiceDiscount) 
+    /// y no restan valor a este campo para mantener la trazabilidad bruta.
     /// </summary>
-    [Required]
-    [Column("total_amount")]
     public decimal TotalAmount { get; set; }
+    #endregion
 }

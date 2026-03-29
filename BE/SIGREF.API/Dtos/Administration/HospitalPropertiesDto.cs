@@ -10,7 +10,7 @@ public class CreateHospitalPropertiesDto
     [Required]
     public string Director { get; set; }
     public string? Subdirector { get; set; }
-    public string? Ubication { get; set; }
+    public string? Location { get; set; }
     [Required]
     public string PhoneNumber { get; set; }
     public string? Email { get; set; }
@@ -24,7 +24,7 @@ public class UpdateHospitalPropertiesDto
     public string? Name { get; set; }
     public string? Director { get; set; }
     public string? Subdirector { get; set; }
-    public string? Ubication { get; set; }
+    public string? Location { get; set; }
     public string? PhoneNumber { get; set; }
     public string? Email { get; set; }
     public string? HospitalCode { get; set; }

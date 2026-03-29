@@ -93,7 +93,7 @@ public class ReportQueryService : IReportQueryService
                 {
                     PhoneNumber = h.PhoneNumber ?? string.Empty,
                     Email = h.Email ?? string.Empty,
-                    Address = h.Ubication ?? string.Empty
+                    Address = h.Location ?? string.Empty
                 }
             })
             .FirstOrDefaultAsync();

@@ -12,7 +12,7 @@ public static class HospitalPropertiesExtension
             Name = h.Name,
             Director = h.Director,
             Subdirector = h.Subdirector,
-            Ubication = h.Ubication,
+            Location = h.Location,
             PhoneNumber = h.PhoneNumber,
             Email = h.Email,
             HospitalCode = h.HospitalCode,
@@ -30,7 +30,7 @@ public static class HospitalPropertiesExtension
         if (dto.Name != null) h.Name = dto.Name;
         if (dto.Director != null) h.Director = dto.Director;
         if (dto.Subdirector != null) h.Subdirector = dto.Subdirector;
-        if (dto.Ubication != null) h.Ubication = dto.Ubication;
+        if (dto.Location != null) h.Location = dto.Location;
         if (dto.PhoneNumber != null) h.PhoneNumber = dto.PhoneNumber;
         if (dto.Email != null) h.Email = dto.Email;
         if (dto.HospitalCode != null) h.HospitalCode = dto.HospitalCode;

@@ -24,5 +24,12 @@ public class InvoiceGetDto
 
     public long Number { get; set; }
 
-    public DateTime CreatedDate { get; set; }
+    public DateTimeOffset CreatedDate { get; set; }
+}
+
+public class GetInvoiceParameters
+{
+    public bool IncludeNotes { get; set; } = true;
+    public int NotesPage { get; set; } = 1;
+    public int NotesPageSize { get; set; } = 10;
 }
