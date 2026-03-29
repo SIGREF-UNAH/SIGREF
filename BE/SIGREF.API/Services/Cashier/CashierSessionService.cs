@@ -138,7 +138,7 @@ public class CashierSessionService : ICashierSessionService
         // Calcular el monto real del sistema sumando las facturas pagadas de esta sesión
         var systemAmount = await _db.Invoices
             .Where(i => i.CashierSessionId == sessionId && i.Status == InvoiceStatus.Paid)
-            .SumAsync(i => (decimal?)i.AmountPaid) ?? 0;
+            .SumAsync(i => (decimal?)i.FinalTotal) ?? 0;
 
         // Validar que no se cierre con monto 0 si se espera recaudación (opcional pero recomendado)
         if (systemAmount == 0)

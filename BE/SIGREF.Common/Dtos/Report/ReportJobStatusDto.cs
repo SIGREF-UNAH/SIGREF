@@ -9,6 +9,6 @@ public class ReportJobStatusDto
     public int      TotalRows    { get; set; }
     public string?  DownloadUrl  { get; set; }   // Non-null solo cuando Status = "Completed"
     public string?  ErrorMessage { get; set; }   // Non-null solo cuando Status = "Failed"
-    public DateTime CreatedAt    { get; set; }
-    public DateTime? CompletedAt { get; set; }
+    public DateTimeOffset CreatedAt    { get; set; }
+    public DateTimeOffset? CompletedAt { get; set; }
 }

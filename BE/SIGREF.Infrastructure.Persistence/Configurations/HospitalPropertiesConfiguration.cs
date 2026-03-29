@@ -4,10 +4,11 @@ using SIGREF.Core.Entity.Administration;
 
 namespace SIGREF.Infrastructure.Persistence.Configurations;
 
-public class HospitalPropertiesConfiguration : IEntityTypeConfiguration<HospitalPropertiesEntity>
+public class HospitalPropertiesConfiguration : BaseEntityConfiguration<HospitalPropertiesEntity>
 {
-    public void Configure(EntityTypeBuilder<HospitalPropertiesEntity> builder)
+    public override void Configure(EntityTypeBuilder<HospitalPropertiesEntity> builder)
     {
+        base.Configure(builder);
         // ===============================
         //           TABLE
         // ===============================
@@ -15,20 +16,16 @@ public class HospitalPropertiesConfiguration : IEntityTypeConfiguration<Hospital
         {
             t.HasComment("Propiedades generales del hospital: datos administrativos, logos, contacto y configuración base. Tabla singleton.");
         });
-
-        // ===============================
-        //           PRIMARY KEY
-        // ===============================
-        builder.HasKey(e => e.Id);
-
+        
         // ===============================
         //           PROPIEDADES
         // ===============================
 
         builder.Property(e => e.Name)
             .IsRequired()
+            .HasColumnName("name")
             .HasMaxLength(200)
-            .HasColumnName("name");
+            .HasComment("Nombre oficial del hospital");
 
         builder.Property(e => e.Director)
             .HasMaxLength(150)
@@ -38,9 +35,9 @@ public class HospitalPropertiesConfiguration : IEntityTypeConfiguration<Hospital
             .HasMaxLength(150)
             .HasColumnName("subdirector");
 
-        builder.Property(e => e.Ubication)
-            .HasMaxLength(300)
-            .HasColumnName("location");
+        builder.Property(e => e.Location) 
+            .HasColumnName("location")
+            .HasMaxLength(300);
 
         builder.Property(e => e.UrlLogo)
             .HasMaxLength(300)
@@ -73,6 +70,11 @@ public class HospitalPropertiesConfiguration : IEntityTypeConfiguration<Hospital
         builder.Property(e => e.Currency)
             .HasMaxLength(10)
             .HasColumnName("currency");
+        
+        builder.Property(e => e.LogoMediaId)
+            .HasColumnName("logo_media_id");
+        builder.Property(e => e.HealthLogoMediaId)
+            .HasColumnName("health_logo_media_id");
 
         //builder.Property(e => e.ExchangeVersion)
         //    .HasMaxLength(10)
@@ -80,26 +82,6 @@ public class HospitalPropertiesConfiguration : IEntityTypeConfiguration<Hospital
 
         builder.Property(e => e.IsSingleton)
             .HasColumnName("is_singleton");
-        // ============================
-        //          AUDITORÍA
-        // ============================
-        builder.Property(x => x.CreatedById)
-            .HasColumnName("created_by_id")
-            .IsRequired()
-            .HasComment("ID del usuario que creó el registro.");
-
-        builder.Property(x => x.UpdatedById)
-            .HasColumnName("updated_by_id")
-            .HasComment("ID del usuario que realizó la última actualización.");
-
-        builder.Property(x => x.CreatedDate)
-            .HasColumnName("created_date")
-            .IsRequired()
-            .HasComment("Fecha de creación del turno (UTC).");
-
-        builder.Property(x => x.UpdatedDate)
-            .HasColumnName("updated_date")
-            .HasComment("Fecha de última actualización (UTC).");
         // ===============================
         //         ÍNDICE ÚNICO REAL
         // ===============================

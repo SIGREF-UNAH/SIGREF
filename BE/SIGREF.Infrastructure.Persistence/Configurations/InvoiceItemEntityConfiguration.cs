@@ -4,36 +4,31 @@ using SIGREF.Core.Entity.Billing;
 
 namespace SIGREF.Infrastructure.Persistence.Configurations;
 
-public class InvoiceItemEntityConfiguration : IEntityTypeConfiguration<InvoiceItemEntity>
+public class InvoiceItemEntityConfiguration : BaseEntityConfiguration<InvoiceItemEntity>
 {
-    public void Configure(EntityTypeBuilder<InvoiceItemEntity> builder)
+    public override void Configure(EntityTypeBuilder<InvoiceItemEntity> builder)
     {
+        base.Configure(builder);
         builder.ToTable(
             "invoice_items",
             t => t.HasComment("Items facturados: cada servicio congelado con precio histórico.")
         );
+        
 
         // ============================
-        // PRIMARY KEY
+        //          RELACIONES
         // ============================
-        builder.HasKey(i => i.Id);
-
-        // ============================
-        // RELACIÓN: Invoice - Items
-        // ============================
-        builder
-            .HasOne(i => i.Invoice)
+        builder.HasOne(i => i.Invoice)
             .WithMany(inv => inv.Items)
             .HasForeignKey(i => i.InvoiceId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        // Index FK obligatorio
-        builder.HasIndex(i => i.InvoiceId)
-            .HasDatabaseName("idx_invoiceitems_invoiceid");
-
-        // Index compuesto opcional 
-        builder.HasIndex(i => new { i.InvoiceId, i.ServiceId })
-            .HasDatabaseName("idx_invoiceitems_invoiceid_serviceid");
+            .IsRequired()
+            .HasForeignKey("fk_invoice_items_invoice")
+            .OnDelete(DeleteBehavior.Restrict);
+        
+        builder.Property(i => i.InvoiceId)
+            .HasColumnName("invoice_id") 
+            .IsRequired();
+        
 
         // ============================
         // RELACIÓN: Service - Items
@@ -42,63 +37,56 @@ public class InvoiceItemEntityConfiguration : IEntityTypeConfiguration<InvoiceIt
             .HasOne(i => i.Service)
             .WithMany()
             .HasForeignKey(i => i.ServiceId)
+            .HasConstraintName("fk_invoice_items_service")
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Index FK del servicio
-        builder.HasIndex(i => i.ServiceId)
-            .HasDatabaseName("idx_invoiceitems_serviceid");
+        builder.Property(i => i.ServiceId)
+            .HasColumnName("service_id") 
+            .IsRequired();
 
         // ============================
-        // PROPIEDADES
+        //         PROPIEDADES
         // ============================
         builder.Property(i => i.Description)
+            .HasColumnName("description")
             .HasMaxLength(200)
             .IsRequired()
-            .HasComment("Nombre del servicio copiado al momento de facturar (histórico).");
+            .HasComment("Nombre del servicio copiado al momento de facturar (congelado).");
 
         builder.Property(i => i.Quantity)
+            .HasColumnName("quantity")
             .IsRequired()
-            .HasComment("Cantidad facturada del servicio.");
+            .HasComment("Cantidad facturada de este ítem.");
 
         builder.Property(i => i.UnitPrice)
+            .HasColumnName("unit_price")
             .IsRequired()
             .HasPrecision(14, 2)
-            .HasComment("Precio unitario histórico del servicio facturado.");
-
-        builder.Property(i => i.Discount)
-            .HasPrecision(14, 2)
-            .HasComment("Descuento aplicado al item (si aplica).");
+            .HasComment("Precio unitario histórico del servicio al momento de la venta.");
 
         builder.Property(i => i.TotalAmount)
+            .HasColumnName("total_amount")
             .IsRequired()
             .HasPrecision(14, 2)
-            .HasComment("Total del item: (quantity * unit_price) - discount (congelado).");
+            .HasComment("Total de la línea: (Quantity * UnitPrice). No incluye descuentos.");
 
-        // ============================
-        // AUDITORÍA
-        // ============================
-        builder.Property(x => x.CreatedById)
-            .HasColumnName("created_by_id")
-            .IsRequired()
-            .HasComment("Usuario que creó el item.");
-
-        builder.Property(x => x.UpdatedById)
-            .HasColumnName("updated_by_id")
-            .HasComment("Usuario que actualizó el item (si aplica).");
-
-        builder.Property(x => x.CreatedDate)
-            .HasColumnName("created_date")
-            .IsRequired()
-            .HasComment("Fecha de creación del item (UTC).");
-
-        builder.Property(x => x.UpdatedDate)
-            .HasColumnName("updated_date")
-            .HasComment("Fecha de última actualización del item (UTC).");
         
         builder.HasIndex(i => i.CreatedDate)
             .HasDatabaseName("idx_invoiceitems_created_date");
         builder.HasIndex(i => new { i.ServiceId, i.CreatedDate })
             .HasDatabaseName("idx_invoiceitems_serviceid_created");
+        
+        // Index FK obligatorio
+        builder.HasIndex(i => i.InvoiceId)
+            .HasDatabaseName("idx_invoiceitems_invoiceid");
+
+        // Index compuesto opcional 
+        builder.HasIndex(i => new { i.InvoiceId, i.ServiceId })
+            .HasDatabaseName("idx_invoiceitems_invoiceid_serviceid");
+
+        // Index FK del servicio
+        builder.HasIndex(i => i.ServiceId)
+            .HasDatabaseName("idx_invoiceitems_serviceid");
 
     }
 }

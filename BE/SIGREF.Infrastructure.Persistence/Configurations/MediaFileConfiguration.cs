@@ -4,10 +4,11 @@ using SIGREF.Core.Entity.Files;
 
 namespace SIGREF.Infrastructure.Persistence.Configurations;
 
-public class MediaFileConfiguration : IEntityTypeConfiguration<MediaFileEntity>
+public class MediaFileConfiguration : BaseEntityConfiguration<MediaFileEntity>
 {
-    public void Configure(EntityTypeBuilder<MediaFileEntity> builder)
+    public override void Configure(EntityTypeBuilder<MediaFileEntity> builder)
     {
+        base.Configure(builder);
         // ============================
         // Información general
         // ============================
@@ -18,17 +19,7 @@ public class MediaFileConfiguration : IEntityTypeConfiguration<MediaFileEntity>
                 t.HasComment(
                     "Archivos multimedia almacenados en el sistema (logos, imágenes varias).");
             });
-
-
-        // ============================
-        // Primary Key
-        // ============================
-
-        builder.HasKey(x => x.Id);
-
-        // BaseEntity 
-
-
+        
         // ============================
         // Campos principales
         // ============================
@@ -63,32 +54,13 @@ public class MediaFileConfiguration : IEntityTypeConfiguration<MediaFileEntity>
 
         builder.Property(x => x.Type)
             .IsRequired()
+            .HasConversion<string>()
             .HasColumnName("media_type")
             .HasComment("Tipo lógico del archivo (AppHospital, HealthGuilt).");
 
         builder.Property(x => x.SizeBytes)
             .HasColumnName("size_bytes")
             .HasComment("Tamaño del archivo en bytes.");
-        // ============================
-        //          AUDITORÍA
-        // ============================
-        builder.Property(x => x.CreatedById)
-            .HasColumnName("created_by_id")
-            .IsRequired()
-            .HasComment("ID del usuario que creó el registro.");
-
-        builder.Property(x => x.UpdatedById)
-            .HasColumnName("updated_by_id")
-            .HasComment("ID del usuario que realizó la última actualización.");
-
-        builder.Property(x => x.CreatedDate)
-            .HasColumnName("created_date")
-            .IsRequired()
-            .HasComment("Fecha de creación del turno (UTC).");
-
-        builder.Property(x => x.UpdatedDate)
-            .HasColumnName("updated_date")
-            .HasComment("Fecha de última actualización (UTC).");
 
         // ============================
         // Índices

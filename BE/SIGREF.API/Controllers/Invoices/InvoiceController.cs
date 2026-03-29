@@ -50,11 +50,9 @@ public class InvoiceController : ControllerBase
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
     public async Task<IActionResult> GetInvoiceById(
         Guid id,
-        [FromQuery] bool includeNotes = true,
-        [FromQuery] int notesPage = 1,
-        [FromQuery] int notesPageSize = 10)
+        [FromQuery] GetInvoiceParameters parameters)
     {
-        var result = await _service.GetInvoiceByIdAsync(id, includeNotes, notesPage, notesPageSize);
+        var result = await _service.GetInvoiceByIdAsync(id, parameters);
         return StatusCode(result.StatusCode, result);
     }
 

@@ -16,8 +16,8 @@ public class SerieDto
         public long StartNumber { get; set; }
         public long EndNumber { get; set; }
         public long CurrentNumber { get; set; }
-        public DateTime? CreatedDate { get; set; }
-        public DateTime? ModifiedDate { get; set; }
+        public DateTimeOffset? CreatedDate { get; set; }
+        public DateTimeOffset? ModifiedDate { get; set; }
         public bool IsActive { get; set; }
 }
 

@@ -4,19 +4,16 @@ using SIGREF.Core.Entity.Billing;
 
 namespace SIGREF.Infrastructure.Persistence.Configurations;
 
-public class InvoiceSerieEntityConfiguration : IEntityTypeConfiguration<InvoiceSerieEntity>
+public class InvoiceSerieEntityConfiguration : BaseEntityConfiguration<InvoiceSerieEntity>
 {
-    public void Configure(EntityTypeBuilder<InvoiceSerieEntity> builder)
+    public override void Configure(EntityTypeBuilder<InvoiceSerieEntity> builder)
     {
+        base.Configure(builder);
         builder.ToTable(
             "invoice_serie",
             t => t.HasComment("Tabla para gestionar las series de facturación y el control de su correlativo actual.")
         );
 
-        // ============================
-        // PRIMARY KEY
-        // ============================
-        builder.HasKey(i => i.Id);
 
         // ============================
         // PROPERTIES
@@ -48,27 +45,6 @@ public class InvoiceSerieEntityConfiguration : IEntityTypeConfiguration<InvoiceS
             .HasColumnName("current_number")
             .HasComment("Último número de factura emitido en esta serie");
         
-        // ============================
-        //          AUDITORÍA
-        // ============================
-        builder.Property(x => x.CreatedById)
-            .HasColumnName("created_by_id")
-            .IsRequired()
-            .HasComment("ID del usuario que creó el registro.");
-
-        builder.Property(x => x.UpdatedById)
-            .HasColumnName("updated_by_id")
-            .HasComment("ID del usuario que realizó la última actualización.");
-
-        builder.Property(x => x.CreatedDate)
-            .HasColumnName("created_date")
-            .IsRequired()
-            .HasComment("Fecha de creación del turno (UTC).");
-
-        builder.Property(x => x.UpdatedDate)
-            .HasColumnName("updated_date")
-            .HasComment("Fecha de última actualización (UTC).");
-
         // ============================
         // INDICES
         // ============================

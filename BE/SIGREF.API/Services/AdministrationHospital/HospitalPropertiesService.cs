@@ -103,7 +103,7 @@ public class HospitalPropertiesService : IHospitalPropertiesService
             Name = dto.Name,
             Director = dto.Director,
             Subdirector = dto.Subdirector,
-            Ubication = dto.Ubication,
+            Location = dto.Location,
             PhoneNumber = dto.PhoneNumber,
             Email = dto.Email,
             HospitalCode = dto.HospitalCode,

@@ -2,18 +2,19 @@
 
 public class InvoiceItemCreateDto
 {
-    public string ServiceId { get; set; }
+    public string ServiceId { get; set; } = null!;
 
-    // el nombre del Servicio Ofrecido
+    /// <summary>
+    /// Nombre del servicio tal como lo ve el usuario en pantalla.
+    /// Se congela en el historial de la factura.
+    /// </summary>
     public string NameService { get; set; } = string.Empty;
 
     public int Quantity { get; set; }
 
     public decimal UnitPrice { get; set; }
 
-    public decimal? Discount { get; set; }
-
-    public decimal TotalAmount { get; set; }
-    
-
+    // TotalAmount se elimina del DTO.
+    // El servidor lo calcula como: Quantity * UnitPrice
+    // Así evitamos que el cliente manipule totales.
 }

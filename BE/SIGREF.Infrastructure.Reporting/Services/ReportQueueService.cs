@@ -51,7 +51,7 @@ public class ReportQueueService : IReportQueueService
         {
             ReportType = "Prueba", // Asegúrate de que el DTO traiga esto
             CreatedById = userId,
-            RequestedByUserId = userId.ToString(),
+            RequestedByUserId = userId,
             PeriodLabel = $"{filter.StartDate:dd/MM/yyyy} – {filter.EndDate:dd/MM/yyyy}",
             Status = ReportStatus.Pending,
             // Aquí podrías serializar el filtro a JSON para el Snapshot si fuera necesario
@@ -94,7 +94,7 @@ public class ReportQueueService : IReportQueueService
     {
         var jobs = await _context.ReportHistory
             .AsNoTracking()
-            .Where(j => j.RequestedByUserId == userId.ToString())
+            .Where(j => j.RequestedByUserId == userId)
             .OrderByDescending(j => j.CreatedDate)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)

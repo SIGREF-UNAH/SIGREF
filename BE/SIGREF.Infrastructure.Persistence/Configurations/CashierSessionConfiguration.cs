@@ -4,10 +4,12 @@ using SIGREF.Core.Entity.Cashier;
 
 namespace SIGREF.Infrastructure.Persistence.Configurations;
 
-public class CashierSessionConfiguration : IEntityTypeConfiguration<CashierSessionEntity>
+public class CashierSessionConfiguration : BaseEntityConfiguration<CashierSessionEntity>
 {
-    public void Configure(EntityTypeBuilder<CashierSessionEntity> builder)
+    public override void Configure(EntityTypeBuilder<CashierSessionEntity> builder)
     {
+        // Llama a la configuración base
+        base.Configure(builder);
         // ============================
         //            TABLE
         // ============================
@@ -17,12 +19,7 @@ public class CashierSessionConfiguration : IEntityTypeConfiguration<CashierSessi
                 t.HasComment(
                     "Tabla que almacena las sesiones de caja por usuario, incluyendo montos, diferencias y estado del arqueo.");
             });
-
-        // ============================
-        //          PRIMARY KEY
-        // ============================
-        builder.HasKey(x => x.Id);
-
+        
         // ============================
         //          RELACIONES
         // ============================
@@ -37,6 +34,7 @@ public class CashierSessionConfiguration : IEntityTypeConfiguration<CashierSessi
         builder.HasOne(x => x.Shift)
             .WithMany()
             .HasForeignKey(x => x.ShiftId)
+            .HasConstraintName("fk_shift_id")
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(x => x.ShiftId)
@@ -59,27 +57,28 @@ public class CashierSessionConfiguration : IEntityTypeConfiguration<CashierSessi
 
         builder.Property(x => x.DeclaredAmount)
             .HasColumnName("declared_amount")
-            .HasPrecision(14, 2)
+            .HasPrecision(18, 2)
             .HasComment("Monto declarado por el cajero al momento del cierre.");
 
         builder.Property(x => x.SystemAmount)
             .HasColumnName("system_amount")
-            .HasPrecision(14, 2)
+            .HasPrecision(18, 2)
             .HasComment("Monto calculado automáticamente por el sistema según los recibos generados.");
 
         builder.Property(x => x.Difference)
             .HasColumnName("difference")
-            .HasPrecision(14, 2)
+            .HasPrecision(18, 2)
             .HasComment("Diferencia entre el monto declarado por el cajero y el monto calculado por el sistema.");
 
         builder.Property(x => x.IsOpen)
-            .HasColumnName("is_open")
             .IsRequired()
-            .HasComment("Indica si la sesión está activa (abierta).");
+            .HasColumnName("is_open")
+            .HasComment("Indica si la sesión está activa (abierta).")
+            .HasDefaultValue(true);
 
         builder.Property(x => x.RequiresCorrection)
-            .HasColumnName("requires_correction")
             .IsRequired()
+            .HasColumnName("requires_correction")
             .HasComment("Indica si la sesión requiere corrección debido a una diferencia detectada.");
 
         builder.Property(x => x.CorrectionDate)
@@ -90,34 +89,11 @@ public class CashierSessionConfiguration : IEntityTypeConfiguration<CashierSessi
             .HasColumnName("notes")
             .HasMaxLength(500)
             .HasComment("Notas o comentarios del cajero o administrador sobre discrepancias o correcciones.");
-
-        // ============================
-        //          AUDITORÍA
-        // ============================
-        builder.Property(x => x.CreatedById)
-            .HasColumnName("created_by_id")
-            .IsRequired()
-            .HasComment("ID del usuario que creó el registro.");
-
-        builder.Property(x => x.UpdatedById)
-            .HasColumnName("updated_by_id")
-            .HasComment("ID del usuario que realizó la última actualización.");
-
-        builder.Property(x => x.CreatedDate)
-            .HasColumnName("created_date")
-            .IsRequired()
-            .HasComment("Fecha de creación del turno (UTC).");
-
-        builder.Property(x => x.UpdatedDate)
-            .HasColumnName("updated_date")
-            .HasComment("Fecha de última actualización (UTC).");
-
+        
         // ============================
         //            INDEXES
         // ============================
-
         
-
         builder.HasIndex(x => x.ShiftId)
             .HasDatabaseName("idx_cashier_sessions_shift");
 

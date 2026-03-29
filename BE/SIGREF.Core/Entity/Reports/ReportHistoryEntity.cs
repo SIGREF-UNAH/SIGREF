@@ -14,9 +14,32 @@ public class ReportHistoryEntity : BaseEntity
     public string ReportType { get; set; } = null!;
 
     /// <summary>ID del usuario que solicitó el reporte para efectos de visualización/auditoría.</summary>
-    public string RequestedByUserId { get; set; } = string.Empty;
+    public Guid RequestedByUserId { get; set; } = Guid.Empty;
 
-    /// <summary>Identificador único del Job en Hangfire. Permite monitorear o cancelar la tarea técnica.</summary>
+    /// <summary>
+    /// Identificador único del trabajo (Job) generado por el motor de Hangfire.
+    /// </summary>
+    /// <remarks>
+    /// <b>Arquitectura y Persistencia:</b>
+    /// Aunque la API de Hangfire expone este ID como <see cref="string"/> para mantener la abstracción del almacenamiento 
+    /// (Storage Agnostic), su origen en SQL Server es un contador autoincremental <c>IDENTITY</c>.
+    /// 
+    /// <b>Consideraciones de Longitud:</b>
+    /// - En esquemas estándar de SQL Server, el tipo subyacente es <c>INT</c> (hasta 10 dígitos).
+    /// - En implementaciones de alto volumen o esquemas actualizados, se utiliza <c>BIGINT</c> (hasta 20 dígitos).
+    /// - Se recomienda definir la columna en tablas de auditoría/históricos como <c>NVARCHAR(50)</c> 
+    ///   para absorber cambios futuros hacia GUIDs o UUIDs sin afectar el esquema de negocio.
+    /// 
+    /// <b>Riesgo de Colisión:</b>
+    /// Si el almacenamiento de Hangfire es reseteado o truncado, los IDs podrían volver a comenzar desde 1. 
+    /// Se sugiere no utilizar este campo como Llave Primaria única en tablas históricas.
+    /// </remarks>
+    /// <seealso href="https://github.com/HangfireIO/Hangfire/blob/333bd8eb228402abcee3f261cf32412e844f32c0/src/Hangfire.SqlServer/Install.sql#L82-L89">
+    /// Referencia de Esquema Oficial (Hangfire.SqlServer)
+    /// </seealso>
+    /// <seealso href="https://github.com/hangfire-postgres/Hangfire.PostgreSql/issues/100">
+    /// Discusión sobre la transición de INT a BIGINT/UUID
+    /// </seealso>
     public string? HangfireJobId { get; set; }
 
     /// <summary>Estado actual del reporte (Pending, Processing, Completed, Failed).</summary>

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SIGREF.API.Dtos.Invoice;
+using SIGREF.API.Extensions;
 using SIGREF.API.Services.Cashier;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
@@ -20,31 +21,42 @@ public class InvoiceService : IInvoiceService
     private readonly IUserContextService _userContextService;
     private readonly ICashierSessionService _cashierSessionService;
 
-    public InvoiceService(SIGREFContext dbContext, IUserContextService userContextService , ICashierSessionService  cashierSessionService)
+    public InvoiceService(SIGREFContext dbContext, IUserContextService userContextService,
+        ICashierSessionService cashierSessionService)
     {
         _dbContext = dbContext;
         _userContextService = userContextService;
         _cashierSessionService = cashierSessionService;
     }
 
+    
+    // =====================================================================
+    // HELPERS PRIVADOS
+    // =====================================================================
+ 
+    /// <summary>
+    /// Aplica el comportamiento de pago/estado según el tipo de factura.
+    /// Se llama DESPUÉS de haber calculado FinalTotal.
+    /// </summary>
     private void ApplyInvoiceTypeBehavior(InvoiceEntity invoice, InvoiceCreateDto dto)
     {
         // =======================
         // PAGO INICIAL (si existe)
         // =======================
-        var initialPayment = dto.InitialPayment ?? 0;
+        
 
         switch (dto.InvoiceType)
         {
             case InvoiceType.Normal:
-                // Normal SIEMPRE se crea pagada
+                // Normal siempre se crea pagada al 100%.
                 invoice.AmountPaid = invoice.FinalTotal;
                 invoice.AmountDue = 0;
                 invoice.Status = InvoiceStatus.Paid;
                 break;
 
             case InvoiceType.Emergency:
-                // Puede o no tener pago inicial
+                // Puede tener pago inicial (parcial o total).
+                var initialPayment = dto.InitialPayment ?? 0;
                 invoice.AmountPaid = initialPayment;
                 invoice.AmountDue = invoice.FinalTotal - initialPayment;
 
@@ -55,6 +67,7 @@ public class InvoiceService : IInvoiceService
                 break;
 
             case InvoiceType.Exempt:
+                // Exento: el descuento cubre todo; FinalTotal queda en 0.
                 invoice.FinalTotal = 0;
                 invoice.AmountPaid = 0;
                 invoice.AmountDue = 0;
@@ -63,210 +76,183 @@ public class InvoiceService : IInvoiceService
         }
     }
 
+
+    // =====================================================================
+    // CREAR FACTURA
+    // =====================================================================
+
     public async Task<ResponseDto<InvoiceDetailDto>> CreateInvoiceAsync(InvoiceCreateDto dto)
     {
         // ============================
-        // VALIDACIONES
+        // VALIDACIONES GENERALES
         // ============================
-        
-        
-        // No permite crear FACTURAS HIJAS usando este método
+ 
         if (dto.ParentInvoiceId != null)
             return ResponseHelper.Fail<InvoiceDetailDto>(400,
-                "Para notas de crédito o débito debe usar los métodos específicos.");
-
+                "Para notas de crédito o débito use los métodos específicos.");
+ 
         var userId = _userContextService.GetUserId();
-        var roles = _userContextService.GetUserRoles();
+        var roles  = _userContextService.GetUserRoles();
         Guid? activeSessionId = null;
-
-        // Intentar obtener sesión activa para cualquier usuario
-        var sessionResponse = await _cashierSessionService.GetActiveSessionByUserAsync(userId);
         
-        if (sessionResponse != null && sessionResponse.Status && sessionResponse.Data != null)
-        {
+        var sessionResponse   = await _cashierSessionService.GetActiveSessionByUserAsync(userId);
+        if (sessionResponse?.Status == true && sessionResponse.Data != null)
             activeSessionId = sessionResponse.Data.Id;
-        }
-
-        if (roles.Contains(RolesConstants.cashier))
-        {
-            if (activeSessionId == null)
-            {
-                return ResponseHelper.Fail<InvoiceDetailDto>(
-                    400,
-                    "No se ha aperturado un turno. Registrar la factura fuera del horario es imposible."
-                );
-            }
-        }
-        // Realizo las validaciones por la Congelacion Historica de los DATOS
+ 
+        if (roles.Contains(RolesConstants.cashier) && activeSessionId == null)
+            return ResponseHelper.Fail<InvoiceDetailDto>(400,
+                "No se ha aperturado un turno. No es posible registrar la factura fuera de horario.");
+ 
         if (dto.Items == null || dto.Items.Count == 0)
-            return ResponseHelper.Fail<InvoiceDetailDto>(400, "La factura debe tener al menos un item.");
-        
+            return ResponseHelper.Fail<InvoiceDetailDto>(400,
+                "La factura debe tener al menos un ítem.");
 
+        // ============================
+        // VALIDAR SERIE
+        // ============================
+ 
         var serie = _dbContext.InvoiceSeries.FirstOrDefault(x => x.Id == dto.SerieId && x.IsActive);
         if (serie == null)
-            return ResponseHelper.Fail<InvoiceDetailDto>(400, "La serie no existe o no esta activa");
+            return ResponseHelper.Fail<InvoiceDetailDto>(400, "La serie no existe o no está activa.");
+ 
         if (dto.SerieNumber < serie.StartNumber || dto.SerieNumber > serie.EndNumber)
-            return ResponseHelper.Fail<InvoiceDetailDto>(400, "La serie no pertenece al rango");
+            return ResponseHelper.Fail<InvoiceDetailDto>(400, "El número no pertenece al rango de la serie.");
 
 
         foreach (var item in dto.Items)
         {
             if (item.Quantity <= 0)
-                return ResponseHelper.Fail<InvoiceDetailDto>(400, "La cantidad de un item no puede ser 0 o negativa.");
-
+                return ResponseHelper.Fail<InvoiceDetailDto>(400,
+                    $"La cantidad del ítem '{item.NameService}' debe ser mayor a 0.");
+ 
             if (item.UnitPrice < 0)
-                return ResponseHelper.Fail<InvoiceDetailDto>(400, "El precio unitario no puede ser negativo.");
-            if (item.Discount < 0)
-                return ResponseHelper.Fail<InvoiceDetailDto>(400, "El precio Descuento no puede ser negativo.");
-
-
-            //if (item.TotalAmount <= 0 && dto.InvoiceType != InvoiceType.Exempt)
-            //    return ResponseHelper.Fail<InvoiceDetailDto>(400, "El total de un item debe ser mayor a 0.");
+                return ResponseHelper.Fail<InvoiceDetailDto>(400,
+                    $"El precio unitario del ítem '{item.NameService}' no puede ser negativo.");
         }
-
+        
         // ============================
-        // CREAR LA FACTURA
+        // VALIDAR DESCUENTO GLOBAL
         // ============================
+ 
+        var invoiceDiscount = dto.InvoiceDiscount ?? Decimal.Zero;
+        if (invoiceDiscount < 0)
+            return ResponseHelper.Fail<InvoiceDetailDto>(400, "El descuento no puede ser negativo.");
+        
+        // ============================
+        // RESOLVER SERVICIOS FHIR - SIGREF
+        // ============================
+ 
+        var fhirIds = new HashSet<string>(dto.Items.Select(i => i.ServiceId));
+        if (!string.IsNullOrEmpty(dto.SingleServiceFhirId))
+            fhirIds.Add(dto.SingleServiceFhirId);
+ 
+        var services = await _dbContext.HealthServices
+            .AsNoTracking()
+            .Where(s => fhirIds.Contains(s.HealthServiceFhirId))
+            .ToListAsync();
+ 
+        if (services.Count != fhirIds.Count)
+            return ResponseHelper.Fail<InvoiceDetailDto>(400,
+                "Uno o más servicios no existen en SIGREF.");
+ 
+        var serviceMap = services.ToDictionary(s => s.HealthServiceFhirId, s => s);
+        // ============================
+        // CONSTRUIR ENTIDAD
+        // ============================
+ 
+        var invoice = new InvoiceEntity
+        {
+            PatientIdFhir  = dto.PatientIdFhir,
+            PatientDisplay = dto.PatientDisplay,
+            PatientSystem  = dto.PatientSystem,
+            PatientValue   = dto.PatientValue,
+ 
+            ServiceGroupFhirId = dto.ServiceGroupFhirId,
+            SingleServiceId    = !string.IsNullOrEmpty(dto.SingleServiceFhirId)
+                ? serviceMap[dto.SingleServiceFhirId].Id
+                : null,
+ 
+            InvoiceType    = dto.InvoiceType,
+            PaymentMethod  = dto.PaymentMethod,
+            SerieId        = dto.SerieId,
+            Number         = dto.SerieNumber,
+            CashierSessionId = activeSessionId,
+            InvoiceDiscount = dto.InvoiceDiscount?? decimal.Zero,
+ 
+            CreatedById  = userId,
+            CreatedDate  = DateTimeOffset.UtcNow
+        };
 
         // TODO : EN UN FUTURO VERIFICAR EL SERIE NUMBER QUE NOS DAN
         // = APLICAR SERIE NUMBER AUTOMATICO EN FACTURAS
 
-        var serviceFhirIds = new HashSet<string>();
-
-        if (!string.IsNullOrEmpty(dto.SingleServiceFhirId))
-            serviceFhirIds.Add(dto.SingleServiceFhirId);
-
+        // ============================
+        // AGREGAR ITEMS Y CALCULAR TOTALES
+        // El servidor calcula TotalAmount; el cliente NO puede manipularlo.
+        // ============================
+ 
         foreach (var item in dto.Items)
         {
-            serviceFhirIds.Add(item.ServiceId);
-        }
-        
-        var services = await _dbContext.HealthServices
-            .AsNoTracking()
-            .Where(s => serviceFhirIds.Contains(s.HealthServiceFhirId))
-            .ToListAsync();
-        
-        if (services.Count != serviceFhirIds.Count)
-        {
-            return ResponseHelper.Fail<InvoiceDetailDto>(
-                400, "Uno o más servicios no existen en SIGREF.");
-        }
-        var serviceMap = services.ToDictionary(
-            x => x.HealthServiceFhirId,
-            x => x
-        );
-
-
-        var invoice = new InvoiceEntity
-        {
-            PatientIdFhir = dto.PatientIdFhir,
-            PatientDisplay = dto.PatientDisplay,
-            PatientSystem = dto.PatientSystem,
-            PatientValue = dto.PatientValue,
-
-            ServiceGroupFhirId = dto.ServiceGroupFhirId,
-            SingleServiceId = !string.IsNullOrEmpty(dto.SingleServiceFhirId)
-                ? serviceMap[dto.SingleServiceFhirId].Id
-                : null,
-
-            InvoiceType = dto.InvoiceType,
-            PaymentMethod = dto.PaymentMethod,
-            SerieId = dto.SerieId,
-            ParentInvoiceId = dto.ParentInvoiceId,
-            CashierSessionId = activeSessionId,
-
-            CreatedById = _userContextService.GetUserId(),
-            CreatedDate = DateTime.UtcNow
-        };
-
-        // ============================
-        // AGREGAR ITEMS
-        // ============================
-        foreach (var item in dto.Items)
-        {
-            var service = serviceMap[item.ServiceId];
+            var service   = serviceMap[item.ServiceId];
+            var lineTotal = item.Quantity * item.UnitPrice;  // calculado aqui
+ 
             invoice.Items.Add(new InvoiceItemEntity
             {
-                ServiceId = service.Id,
+                ServiceId   = service.Id,
                 Description = item.NameService,
-                Quantity = item.Quantity,
-                UnitPrice = item.UnitPrice,
-                Discount = item.Discount,
-                TotalAmount = item.TotalAmount,
-
-                CreatedById = invoice.CreatedById,
+                Quantity    = item.Quantity,
+                UnitPrice   = item.UnitPrice,
+                TotalAmount = lineTotal,            // servidor calcula
+ 
+                CreatedById = userId,
                 CreatedDate = DateTime.UtcNow
             });
         }
-
         // ============================
-        // CALCULAR TOTALES
+        // CALCULAR TOTALES DE LA FACTURA
+        //
+        //   TotalOriginal   = Σ(Qty × UnitPrice)  — bruto, sin descuento
+        //   InvoiceDiscount = descuento global ingresado (se valida abajo)
+        //   AdjustmentTotal = 0 al crear (se actualiza cuando llegan notas C/D)
+        //   FinalTotal      = TotalOriginal - InvoiceDiscount
         // ============================
-
+ 
         invoice.TotalOriginal = invoice.Items.Sum(i => i.TotalAmount);
+ 
+        // Descuento no puede superar el total bruto
+        if (dto.InvoiceDiscount > invoice.TotalOriginal)
+            return ResponseHelper.Fail<InvoiceDetailDto>(400,
+                $"El descuento ({dto.InvoiceDiscount}) no puede superar el total ({invoice.TotalOriginal}).");
+ 
+        invoice.InvoiceDiscount = invoiceDiscount;
         invoice.AdjustmentTotal = 0;
-        invoice.FinalTotal = invoice.TotalOriginal;
-
+        invoice.FinalTotal      = invoice.TotalOriginal - invoice.InvoiceDiscount;
+ 
         // ============================
-        // APLICAR COMPORTAMIENTO SEGÚN TIPO
+        // COMPORTAMIENTO POR TIPO
+        // (puede sobrescribir FinalTotal en el caso Exempt)
         // ============================
+ 
         ApplyInvoiceTypeBehavior(invoice, dto);
-
-
+ 
         // ============================
         // GUARDAR
         // ============================
+ 
         _dbContext.Invoices.Add(invoice);
         await _dbContext.SaveChangesAsync();
-
-        // ============================
-        // MAPEAR DTO (manual)
-        // ============================
-        var detail = new InvoiceDetailDto
-        {
-            Id = invoice.Id,
-            PatientIdFhir = invoice.PatientIdFhir,
-            PatientDisplay = invoice.PatientDisplay,
-
-            TotalOriginal = invoice.TotalOriginal,
-            AdjustmentTotal = invoice.AdjustmentTotal,
-            FinalTotal = invoice.FinalTotal,
-            AmountPaid = invoice.AmountPaid,
-            AmountDue = invoice.AmountDue,
-
-            Status = invoice.Status,
-            InvoiceType = invoice.InvoiceType,
-            PaymentMethod = invoice.PaymentMethod,
-
-            SerieId = invoice.SerieId,
-            Number = invoice.Number,
-            CreatedDate = invoice.CreatedDate,
-            CreatedById = invoice.CreatedById,
-
-            Items = invoice.Items.Select(x => new InvoiceItemDetailDto
-            {
-                Id = x.Id,
-                Description = x.Description,
-                Quantity = x.Quantity,
-                UnitPrice = x.UnitPrice,
-                Discount = x.Discount,
-                TotalAmount = x.TotalAmount
-            }).ToList()
-        };
-
-        return ResponseHelper.Success(201, "Factura creada correctamente.", detail);
+ 
+        return ResponseHelper.Success(201, "Factura creada correctamente.", InvoiceExtensions.MapToDetail(invoice));
     }
 
-    public async Task<ResponseDto<InvoiceDetailDto>> GetInvoiceByIdAsync(
+        
+    public async Task<ResponseDto<InvoiceDetailDto?>> GetInvoiceByIdAsync(
         Guid id,
-        bool includeNotes = true,
-        int notesPage = 1,
-        int notesPageSize = 10)
+        GetInvoiceParameters parameters)
     {
-        // Validaciones
-        if (notesPage < 1) notesPage = 1;
-        if (notesPageSize < 1) notesPageSize = 20;
-        if (notesPageSize > 100) notesPageSize = 100;
+        if (parameters.NotesPage < 1)     parameters.NotesPage     = 1;
+        if (parameters.NotesPageSize < 1) parameters.NotesPageSize = 20;
+        if (parameters.NotesPageSize > 100) parameters.NotesPageSize = 100;
 
         // Query 1: Factura principal
         var invoice = await _dbContext.Invoices
@@ -274,40 +260,40 @@ public class InvoiceService : IInvoiceService
             .Where(i => i.Id == id)
             .Select(i => new InvoiceDetailDto
             {
-                Id = i.Id,
-                PatientIdFhir = i.PatientIdFhir,
-                PatientDisplay = i.PatientDisplay,
-                TotalOriginal = i.TotalOriginal,
+                Id              = i.Id,
+                PatientIdFhir   = i.PatientIdFhir,
+                PatientDisplay  = i.PatientDisplay,
+                TotalOriginal   = i.TotalOriginal,
+                InvoiceDiscount = i.InvoiceDiscount,
                 AdjustmentTotal = i.AdjustmentTotal,
-                FinalTotal = i.FinalTotal,
-                AmountPaid = i.AmountPaid,
-                AmountDue = i.AmountDue,
-                Status = i.Status,
-                InvoiceType = i.InvoiceType,
-                PaymentMethod = i.PaymentMethod,
-                SerieId = i.SerieId,
-                SerieName = i.Serie.Name,
-                Number = i.Number,
-                CreatedDate = i.CreatedDate,
-                CreatedById = i.CreatedById,
+                FinalTotal      = i.FinalTotal,
+                AmountPaid      = i.AmountPaid,
+                AmountDue       = i.AmountDue,
+                Status          = i.Status,
+                InvoiceType     = i.InvoiceType,
+                PaymentMethod   = i.PaymentMethod,
+                SerieId         = i.SerieId,
+                SerieName       = i.Serie!.Name,
+                Number          = i.Number,
+                CreatedDate     = i.CreatedDate,
+                CreatedById     = i.CreatedById,
                 ParentInvoiceId = i.ParentInvoiceId,
                 ParentInvoiceNumber = i.ParentInvoice != null ? i.ParentInvoice.Number.ToString() : null,
                 Items = i.Items.Select(x => new InvoiceItemDetailDto
                 {
-                    Id = x.Id,
+                    Id          = x.Id,
                     Description = x.Description,
-                    Quantity = x.Quantity,
-                    UnitPrice = x.UnitPrice,
-                    Discount = x.Discount,
+                    Quantity    = x.Quantity,
+                    UnitPrice   = x.UnitPrice,
                     TotalAmount = x.TotalAmount
                 }).ToList()
             })
             .FirstOrDefaultAsync();
 
         if (invoice == null)
-            return ResponseHelper.Fail<InvoiceDetailDto>(404, "La factura no existe.");
-
-        if (!includeNotes || invoice.ParentInvoiceId != null)
+            return ResponseHelper.Fail<InvoiceDetailDto?>(404, "La factura no existe.");
+ 
+        if (!parameters.IncludeNotes || invoice.ParentInvoiceId != null)
             return ResponseHelper.Success(200, "Factura encontrada.", invoice);
 
         // Query 2: Summary (SIEMPRE completo)
@@ -317,15 +303,11 @@ public class InvoiceService : IInvoiceService
             .GroupBy(n => 1)
             .Select(g => new
             {
-                TotalCredit = g
-                    .Where(n => n.InvoiceType == InvoiceType.CreditNote)
-                    .Sum(n => (decimal?)n.FinalTotal) ?? 0,
-                TotalDebit = g
-                    .Where(n => n.InvoiceType == InvoiceType.DebitNote)
-                    .Sum(n => (decimal?)n.FinalTotal) ?? 0,
-                CountCredit = g.Count(n => n.InvoiceType == InvoiceType.CreditNote),
-                CountDebit = g.Count(n => n.InvoiceType == InvoiceType.DebitNote),
-                TotalCount = g.Count()
+                TotalCredit  = g.Where(n => n.InvoiceType == InvoiceType.CreditNote).Sum(n => (decimal?)n.FinalTotal) ?? 0,
+                TotalDebit   = g.Where(n => n.InvoiceType == InvoiceType.DebitNote).Sum(n => (decimal?)n.FinalTotal) ?? 0,
+                CountCredit  = g.Count(n => n.InvoiceType == InvoiceType.CreditNote),
+                CountDebit   = g.Count(n => n.InvoiceType == InvoiceType.DebitNote),
+                TotalCount   = g.Count()
             })
             .FirstOrDefaultAsync();
 
@@ -334,22 +316,22 @@ public class InvoiceService : IInvoiceService
             return ResponseHelper.Success(200, "Factura encontrada.", invoice);
 
         // Query 3: Children paginados
-        var skip = (notesPage - 1) * notesPageSize;
+        var skip = (parameters.NotesPage - 1) * parameters.NotesPageSize;
         invoice.Children = await _dbContext.Invoices
             .AsNoTracking()
             .Where(n => n.ParentInvoiceId == id)
             .OrderByDescending(n => n.CreatedDate)
             .Skip(skip)
-            .Take(notesPageSize)
+            .Take(parameters.NotesPageSize)
             .Select(n => new InvoiceChildDto
             {
-                Id = n.Id,
+                Id          = n.Id,
                 InvoiceType = n.InvoiceType,
-                Status = n.Status,
-                FinalTotal = n.FinalTotal,
+                Status      = n.Status,
+                FinalTotal  = n.FinalTotal,
                 CreatedDate = n.CreatedDate,
-                Number = n.Number,
-                SerieId = n.SerieId
+                Number      = n.Number,
+                SerieId     = n.SerieId
             })
             .ToListAsync();
 
@@ -357,21 +339,21 @@ public class InvoiceService : IInvoiceService
         invoice.NotesSummary = new InvoiceNotesSummaryDto
         {
             TotalCreditNotes = summary.TotalCredit,
-            TotalDebitNotes = summary.TotalDebit,
-            CountCredit = summary.CountCredit,
-            CountDebit = summary.CountDebit,
-            TotalNotes = summary.TotalCount,
-            CurrentPage = notesPage,
-            PageSize = notesPageSize,
-            TotalPages = (int)Math.Ceiling(summary.TotalCount / (double)notesPageSize)
+            TotalDebitNotes  = summary.TotalDebit,
+            CountCredit      = summary.CountCredit,
+            CountDebit       = summary.CountDebit,
+            TotalNotes       = summary.TotalCount,
+            CurrentPage      = parameters.NotesPage,
+            PageSize         = parameters.NotesPageSize,
+            TotalPages       = (int)Math.Ceiling(summary.TotalCount / (double)parameters.NotesPageSize)
         };
-
+ 
         return ResponseHelper.Success(200, "Factura encontrada.", invoice);
     }
 
 
     // =====================================================================
-    // InvoiceService.cs - Método GetInvoicesAsync
+    // LISTAR FACTURAS
     // =====================================================================
     public async Task<ResponseDto<PagedResultDto<InvoiceGetDto>>> GetInvoicesAsync(InvoiceFilterDto filter)
     {
@@ -388,31 +370,29 @@ public class InvoiceService : IInvoiceService
         if (filter.OnlyInvoices == true && filter.OnlyNotes == true)
             return ResponseHelper.Fail<PagedResultDto<InvoiceGetDto>>(400,
                 "No se puede filtrar por facturas y notas al mismo tiempo.");
-
-        if (filter.DateFrom is not null && filter.DateTo is not null &&
-            filter.DateFrom > filter.DateTo)
+ 
+        if (filter.DateFrom is not null && filter.DateTo is not null && filter.DateFrom > filter.DateTo)
             return ResponseHelper.Fail<PagedResultDto<InvoiceGetDto>>(400,
                 "La fecha inicial no puede ser mayor a la fecha final.");
-
-        if (filter.MinTotal is not null && filter.MaxTotal is not null &&
-            filter.MinTotal > filter.MaxTotal)
+ 
+        if (filter.MinTotal is not null && filter.MaxTotal is not null && filter.MinTotal > filter.MaxTotal)
             return ResponseHelper.Fail<PagedResultDto<InvoiceGetDto>>(400,
                 "El total mínimo no puede ser mayor al total máximo.");
 
         // ================================
         // QUERY BASE
         // ================================
-        var query = _dbContext.Invoices
-            .AsNoTracking()
-            .AsQueryable();
+        var query = _dbContext.Invoices.AsNoTracking().AsQueryable();
+ 
+       
 
         // ================================
         // APLICAR FILTROS
         // ================================
         // Facturas reales
         if (filter.OnlyInvoices == true)
-            query = query.Where(i =>
-                i.InvoiceType != InvoiceType.CreditNote &&
+            query = query.Where(i => 
+                i.InvoiceType != InvoiceType.CreditNote && 
                 i.InvoiceType != InvoiceType.DebitNote);
 
         // Notas
@@ -559,6 +539,10 @@ public class InvoiceService : IInvoiceService
                 }
             });
     }
+    
+    // =====================================================================
+    // CANCELAR FACTURA
+    // =====================================================================
 
 
     public async Task<ResponseDto<InvoiceDetailDto>> CancelInvoiceAsync(Guid id)
@@ -585,73 +569,40 @@ public class InvoiceService : IInvoiceService
         var hasNotes = await _dbContext.Invoices
             .AsNoTracking()
             .AnyAsync(x => x.ParentInvoiceId == id);
-
+        
         if (hasNotes)
-        {
             return ResponseHelper.Fail<InvoiceDetailDto>(400,
-                "No se puede cancelar esta factura, tiene notas de crédito o débito asociadas.");
-        }
-
+                "No se puede cancelar: la factura tiene notas de crédito o débito asociadas.");
         // Factura hija (nota) no debe cancelarse aquí
         if (invoice.ParentInvoiceId != null)
-        {
             return ResponseHelper.Fail<InvoiceDetailDto>(400,
-                "Esta factura es una nota de ajuste. Use el proceso correspondiente para anular notas.");
-        }
-
-        // Si está pagada no puede cancelarse directamente
+                "Esta factura es una nota de ajuste. Use el proceso de anulación de notas.");
+        
         if (invoice.Status == InvoiceStatus.Paid && invoice.InvoiceType != InvoiceType.Exempt)
-        {
             return ResponseHelper.Fail<InvoiceDetailDto>(400,
                 "La factura ya fue pagada. Requiere nota de crédito para revertirla.");
-        }
-
         // ================================
         // Aplicar cancelación
         // ================================
-        invoice.Status = InvoiceStatus.Cancelled;
-
-        // Limpieza operativa (no histórica)
-        invoice.AmountPaid = 0;
-        invoice.AmountDue = 0;
-
-        invoice.UpdatedById = _userContextService.GetUserId();
-        invoice.UpdatedDate = DateTime.UtcNow;
-
+        
+        invoice.Status        = InvoiceStatus.Cancelled;
+        
+        // Limpieza operativa 
+        invoice.AmountPaid    = 0;
+        invoice.AmountDue     = 0;
+        invoice.UpdatedById   = _userContextService.GetUserId();
+        invoice.UpdatedDate   = DateTime.UtcNow;
+ 
         await _dbContext.SaveChangesAsync();
-
-        var detail = new InvoiceDetailDto
-        {
-            Id = invoice.Id,
-            PatientIdFhir = invoice.PatientIdFhir,
-            PatientDisplay = invoice.PatientDisplay,
-            TotalOriginal = invoice.TotalOriginal,
-            AdjustmentTotal = invoice.AdjustmentTotal,
-            FinalTotal = invoice.FinalTotal,
-            AmountPaid = invoice.AmountPaid,
-            AmountDue = invoice.AmountDue,
-            Status = invoice.Status,
-            InvoiceType = invoice.InvoiceType,
-            PaymentMethod = invoice.PaymentMethod,
-            SerieId = invoice.SerieId,
-            Number = invoice.Number,
-            CreatedDate = invoice.CreatedDate,
-            CreatedById = invoice.CreatedById,
-            Items = invoice.Items.Select(x => new InvoiceItemDetailDto
-            {
-                Id = x.Id,
-                Description = x.Description,
-                Quantity = x.Quantity,
-                UnitPrice = x.UnitPrice,
-                Discount = x.Discount,
-                TotalAmount = x.TotalAmount
-            }).ToList()
-        };
-
-        return ResponseHelper.Success(200, "Factura cancelada correctamente.", detail);
+        
+        return ResponseHelper.Success(200, "Factura cancelada correctamente.", InvoiceExtensions.MapToDetail(invoice));
     }
 
-
+    // =====================================================================
+    // MARCAR COMO PAGADA
+    // =====================================================================
+    // TODO :  REVISAR SI EXISTE ALGUN PROBLEMA AL INTENTAR PAGAR CON DESCUENTOS APLICADOS DESDE EL INICIO.
+    
     public async Task<ResponseDto<InvoiceDetailDto>> MarkAsPaidAsync(Guid id, decimal amountPaid)
     {
         // ================================
@@ -691,7 +642,7 @@ public class InvoiceService : IInvoiceService
         if (amountPaid > invoice.AmountDue)
         {
             return ResponseHelper.Fail<InvoiceDetailDto>(400,
-                $"El pago excede el saldo pendiente. Saldo actual: {invoice.AmountDue}.");
+                $"El pago {amountPaid} excede el saldo pendiente. Saldo actual: {invoice.AmountDue}.");
         }
 
         // ================================
@@ -708,45 +659,17 @@ public class InvoiceService : IInvoiceService
         invoice.UpdatedDate = DateTime.UtcNow;
 
         await _dbContext.SaveChangesAsync();
-
-        var detail = new InvoiceDetailDto
-        {
-            Id = invoice.Id,
-            PatientIdFhir = invoice.PatientIdFhir,
-            PatientDisplay = invoice.PatientDisplay,
-
-            TotalOriginal = invoice.TotalOriginal,
-            AdjustmentTotal = invoice.AdjustmentTotal,
-            FinalTotal = invoice.FinalTotal,
-            AmountPaid = invoice.AmountPaid,
-            AmountDue = invoice.AmountDue,
-
-            Status = invoice.Status,
-            InvoiceType = invoice.InvoiceType,
-            PaymentMethod = invoice.PaymentMethod,
-
-            SerieId = invoice.SerieId,
-            Number = invoice.Number,
-
-            CreatedDate = invoice.CreatedDate,
-            CreatedById = invoice.CreatedById,
-
-            ParentInvoiceId = invoice.ParentInvoiceId,
-
-            Items = invoice.Items.Select(x => new InvoiceItemDetailDto
-            {
-                Id = x.Id,
-                Description = x.Description,
-                Quantity = x.Quantity,
-                UnitPrice = x.UnitPrice,
-                Discount = x.Discount,
-                TotalAmount = x.TotalAmount
-            }).ToList()
-        };
-
-        return ResponseHelper.Success(200, "Factura pagada correctamente.", detail);
+        return ResponseHelper.Success(200, "Factura pagada correctamente.",InvoiceExtensions.MapToDetail(invoice));
     }
 
+    
+    // =====================================================================
+    // CREAR NOTA DE CRÉDITO / DÉBITO
+    // =====================================================================
+    // TODO :
+    // Rrvisar y explicar el funcionamiento de las notas, por que tendria que tener items???
+    // El credito o debito, debe tener una razon del por que, pero no necesaria mente exigir items hijos. Esto a menos que se le agregen por que no se agrego el servicio y se cobro
+    // Sin embargo se maneja solo 1 factura pro servicio asi que no deveria [por el monento]
 
     public async Task<ResponseDto<InvoiceDetailDto>> CreateNoteAsync(
         Guid parentInvoiceId,
@@ -779,7 +702,7 @@ public class InvoiceService : IInvoiceService
             return ResponseHelper.Fail<InvoiceDetailDto>(400,
                 "No se pueden generar notas sobre una nota.");
 
-        // No permitir notas sobre fcaturas canceladas
+        // No permitir notas sobre facturas canceladas
         if (parent.Status == InvoiceStatus.Cancelled)
             return ResponseHelper.Fail<InvoiceDetailDto>(400,
                 "No se pueden generar notas de una factura cancelada.");
@@ -796,136 +719,98 @@ public class InvoiceService : IInvoiceService
         foreach (var item in dto.Items)
         {
             if (item.Quantity <= 0)
-                return ResponseHelper.Fail<InvoiceDetailDto>(400, "Cantidad inválida.");
-
+                return ResponseHelper.Fail<InvoiceDetailDto>(400, "La cantidad de cada ítem debe ser mayor a 0.");
+ 
             if (item.UnitPrice < 0)
-                return ResponseHelper.Fail<InvoiceDetailDto>(400, "Precio inválido.");
-
-            if (item.TotalAmount <= 0)
-                return ResponseHelper.Fail<InvoiceDetailDto>(400, "El total debe ser mayor que 0.");
+                return ResponseHelper.Fail<InvoiceDetailDto>(400, "El precio unitario no puede ser negativo.");
         }
         // ============================
-        // RESOLVER SERVICIOS (FHIR → SIGREF)
+        // RESOLVER SERVICIOS
         // ============================
-
-        var serviceFhirIds = dto.Items
-            .Select(i => i.ServiceId)
-            .Distinct()
-            .ToList();
-
+ 
+        var fhirIds = dto.Items.Select(i => i.ServiceId).Distinct().ToList();
         var services = await _dbContext.HealthServices
             .AsNoTracking()
-            .Where(s => serviceFhirIds.Contains(s.HealthServiceFhirId))
+            .Where(s => fhirIds.Contains(s.HealthServiceFhirId))
             .ToListAsync();
-
-        if (services.Count != serviceFhirIds.Count)
-            return ResponseHelper.Fail<InvoiceDetailDto>(
-                400, "Uno o más servicios no existen en SIGREF.");
-
-        var serviceMap = services.ToDictionary(
-            s => s.HealthServiceFhirId,
-            s => s
-        );
+ 
+        if (services.Count != fhirIds.Count)
+            return ResponseHelper.Fail<InvoiceDetailDto>(400, "Uno o más servicios no existen en SIGREF.");
+ 
+        var serviceMap = services.ToDictionary(s => s.HealthServiceFhirId, s => s);
         // ============================
-        // CREAR NOTA (factura hija)
+        // CONSTRUIR NOTA
+        // Las notas NO tienen InvoiceDiscount (descuento global).
+        // Su FinalTotal es SIEMPRE POSITIVO — el signo lo determina InvoiceType.
+        // El padre luego ajusta su AdjustmentTotal con el signo correcto.
         // ============================
+        var userId = _userContextService.GetUserId();
+ 
         var note = new InvoiceEntity
         {
             ParentInvoiceId = parentInvoiceId,
-            PatientIdFhir = parent.PatientIdFhir,
-            PatientDisplay = parent.PatientDisplay,
-
-            InvoiceType = noteType, // CREDITO o DEBITO
-            PaymentMethod = PaymentMethodType.Cash,
-
-            SerieId = dto.SerieId,
-            CreatedById = _userContextService.GetUserId(),
-            CreatedDate = DateTime.UtcNow
+            PatientIdFhir   = parent.PatientIdFhir,
+            PatientDisplay  = parent.PatientDisplay,
+ 
+            InvoiceType    = noteType,
+            PaymentMethod  = PaymentMethodType.Cash,
+ 
+            SerieId        = dto.SerieId,
+            Number         = dto.SerieNumber,
+ 
+            InvoiceDiscount = 0,    // las notas no tienen descuento global
+            AdjustmentTotal = 0,
+ 
+            CreatedById  = userId,
+            CreatedDate  = DateTime.UtcNow
         };
 
         // Items
-        note.Items = dto.Items.Select(i =>
+        // El servidor calcula TotalAmount por ítem
+        foreach (var item in dto.Items)
         {
-            var service = serviceMap[i.ServiceId];
-
-            return new InvoiceItemEntity
+            var service   = serviceMap[item.ServiceId];
+            var lineTotal = item.Quantity * item.UnitPrice;
+ 
+            note.Items.Add(new InvoiceItemEntity
             {
-                ServiceId = service.Id, // ID INTERNO SIGREF
-                Description = i.NameService,
-                Quantity = i.Quantity,
-                UnitPrice = i.UnitPrice,
-                Discount = i.Discount,
-                TotalAmount = i.TotalAmount,
-                CreatedById = note.CreatedById,
+                ServiceId   = service.Id,
+                Description = item.NameService,
+                Quantity    = item.Quantity,
+                UnitPrice   = item.UnitPrice,
+                TotalAmount = lineTotal,
+ 
+                CreatedById = userId,
                 CreatedDate = DateTime.UtcNow
-            };
-        }).ToList();
+            });
+        }
 
         // Totales de la nota
+        // TotalOriginal y FinalTotal son SIEMPRE positivos en la nota.
+        // RecalculateInvoiceTotalsAsync aplica el signo en el padre.
         note.TotalOriginal = note.Items.Sum(x => x.TotalAmount);
-
-        // NOTA DE CREDITO: monto negativo
-        if (noteType == InvoiceType.CreditNote)
-            note.TotalOriginal *= -1;
-
-        // NOTA DE DÉBITO: monto positivo por defecto
-
-        note.AdjustmentTotal = 0;
-        note.FinalTotal = note.TotalOriginal;
+        note.FinalTotal    = note.TotalOriginal;
+ 
+        // Notas siempre "pagadas" (no tienen saldo pendiente propio)
         note.AmountPaid = 0;
-        note.AmountDue = 0;
-        note.Status = InvoiceStatus.Paid; // Notas siempre pagadas 
-
-        // TODO : 
-        // VERIFICAR METODO Y FUNCIONAMIENTO
+        note.AmountDue  = 0;
+        note.Status     = InvoiceStatus.Paid;
 
         // ============================
-        // AUMENTAR EL NUMBERO DE LA SERIE
+        // GUARDAR NOTA Y RECALCULAR PADRE
         // ============================
-        //note.Number = await _dbContext.Invoices
-        //    .Where(x => x.SerieId == note.SerieId)
-        //    .Select(x => x.Number)
-        //    .DefaultIfEmpty(0)
-        //    .MaxAsync() + 1;
-
-        // ============================
-        // GUARDAR NOTA
-        // ============================
+ 
         _dbContext.Invoices.Add(note);
         await _dbContext.SaveChangesAsync();
-
-        // ============================
-        // RECALCULAR PADRE
-        // ============================
+ 
         await RecalculateInvoiceTotalsAsync(parentInvoiceId);
-
-        // ============================
-        // MAPEAR DTO
-        // ============================
-        var detail = new InvoiceDetailDto
-        {
-            Id = note.Id,
-            PatientIdFhir = note.PatientIdFhir,
-            PatientDisplay = note.PatientDisplay,
-            TotalOriginal = note.TotalOriginal,
-            AdjustmentTotal = note.AdjustmentTotal,
-            FinalTotal = note.FinalTotal,
-            AmountPaid = note.AmountPaid,
-            AmountDue = note.AmountDue,
-            Status = note.Status,
-            InvoiceType = note.InvoiceType,
-            PaymentMethod = note.PaymentMethod,
-            SerieId = note.SerieId,
-            Number = note.Number,
-            CreatedDate = note.CreatedDate,
-            CreatedById = note.CreatedById,
-            ParentInvoiceId = parentInvoiceId
-        };
-
-        return ResponseHelper.Success(201, "Nota creada correctamente.", detail);
+ 
+        return ResponseHelper.Success(201, "Nota creada correctamente.", InvoiceExtensions.MapToDetail(note));
     }
 
-
+    // =====================================================================
+    // HAS CHILD NOTES
+    // =====================================================================
     public async Task<ResponseDto<List<MinimalInvoiceDto>>> HasChildNotesAsync(Guid invoiceId)
     {
         // ================================
@@ -962,11 +847,11 @@ public class InvoiceService : IInvoiceService
             .Where(x => x.ParentInvoiceId == invoiceId)
             .Select(x => new MinimalInvoiceDto
             {
-                Id = x.Id,
-                Number = x.Number,
-                SerieId = x.SerieId,
-                SerieName = x.Serie!.Name,
-                Status = x.Status,
+                Id          = x.Id,
+                Number      = x.Number,
+                SerieId     = x.SerieId,
+                SerieName   = x.Serie!.Name,
+                Status      = x.Status,
                 InvoiceType = x.InvoiceType
             })
             .OrderByDescending(x => x.Number)
@@ -975,10 +860,9 @@ public class InvoiceService : IInvoiceService
         // ================================
         //  Respuestas limpias
         // ================================
-        if (childNotes.Count == 0)
-            return ResponseHelper.Success(200, "La factura no tiene notas asociadas.", new List<MinimalInvoiceDto>());
-
-        return ResponseHelper.Success(200, "La factura tiene notas asociadas.", childNotes);
+        return childNotes.Count == 0
+            ? ResponseHelper.Success(200, "La factura no tiene notas asociadas.", new List<MinimalInvoiceDto>())
+            : ResponseHelper.Success(200, "La factura tiene notas asociadas.", childNotes);
     }
 
 

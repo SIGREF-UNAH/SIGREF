@@ -17,9 +17,7 @@ public interface IInvoiceService
     // ================================
     Task<ResponseDto<InvoiceDetailDto?>> GetInvoiceByIdAsync(
         Guid id,
-        bool includeNotes = true,
-        int notesPage = 1,
-        int notesPageSize = 10);
+        GetInvoiceParameters parameters);
 
 
     // ================================

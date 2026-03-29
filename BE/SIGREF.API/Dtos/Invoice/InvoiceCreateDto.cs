@@ -5,13 +5,16 @@ using SIGREF.Common.Types;
 namespace SIGREF.API.Dtos.Invoice;
 
 /// <summary>
-/// La rezon de pedir los Datos, es por que una orden de compra se realiza con los datos que EL USUARIO ESTA VISUALIZANDO EN EL MOMENTO
-/// Dado esto, se necesita cargar la lista de Items de los servicios
-/// Incluyendo si es un paquete - Los servicios contenidos por ese paquete como susprecios y sus IDS
+/// DTO para crear una factura o nota de crédito/débito.
+///
+/// MODELO DE DESCUENTO:
+/// El descuento aplica a TODA la factura, no a ítems individuales.
+/// Se guarda en InvoiceEntity.InvoiceDiscount y se resta al FinalTotal.
+/// FinalTotal = TotalOriginal - InvoiceDiscount + AdjustmentTotal
 /// </summary>
 public class InvoiceCreateDto
 {
-    // ======== DATA DEL PACIENTE ========
+    // ======== DATOS DEL PACIENTE ========
     [Required]
     public string PatientIdFhir { get; set; } = null!;
 
@@ -20,12 +23,21 @@ public class InvoiceCreateDto
     public string? PatientValue { get; set; }
 
     // ======== SERVICIO O GRUPO ========
+    // Solo uno de los dos debe venir informado.
     public string? ServiceGroupFhirId { get; set; }
     public string? SingleServiceFhirId { get; set; }
 
     // ======== ÍTEMS ========
     [Required]
     public List<InvoiceItemCreateDto> Items { get; set; } = new();
+
+    // ======== DESCUENTO GLOBAL ========
+    /// <summary>
+    /// Descuento aplicado a toda la factura (monto absoluto, no porcentaje).
+    /// Null o 0 = sin descuento.
+    /// No puede superar el TotalOriginal; el servidor valida esto.
+    /// </summary>
+    public decimal? InvoiceDiscount { get; set; } 
 
     // ======== METADATOS ========
     [Required]
@@ -42,13 +54,12 @@ public class InvoiceCreateDto
     public long SerieNumber { get; set; }
 
     public Guid? ParentInvoiceId { get; set; }   // para notas de crédito/débito
-    
+
     /// <summary>
     /// Pago inicial al momento de crear la factura.
     /// Null o 0 = NO pagaron nada.
-    /// > 0 = pagaron parcialmente o totalmente.
+    /// > 0  = pago parcial o total al crear.
     /// Solo aplica para Emergency; Normal y Exempt lo ignoran.
     /// </summary>
     public decimal? InitialPayment { get; set; }
-
 }

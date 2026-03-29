@@ -1,157 +1,107 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using SIGREF.Common.Types;
+﻿using SIGREF.Common.Types;
 using SIGREF.Core.Entity.Cashier;
 using SIGREF.Core.Entity.common;
 
 namespace SIGREF.Core.Entity.Billing;
 
-[Table("invoices")]
+/// <summary>
+/// Representa el documento legal de facturación (Factura, Nota de Crédito/Débito).
+/// Esta entidad centraliza la deuda del paciente y la relación con la sesión de caja.
+/// </summary>
 public class InvoiceEntity : BaseEntity
 {
-    // ===============================
-    //        FHIR: PACIENTE
-    // ===============================
+    #region Datos del Paciente (Snapshot de FHIR)
+    /* IMPORTANTE: Se guardan estos datos por redundancia e integridad histórica. 
+       Si el servidor FHIR cambia el nombre o ID del paciente, la factura debe 
+       mantener los datos originales con los que se emitió.
+    */
 
-    [Required]
-    [StringLength(64)]
-    [Column("patient_id_fhir")]
-    public string PatientIdFhir { get; set; } = null!;
+    /// <summary> Identificador técnico del recurso 'Patient' en el servidor FHIR. </summary>
+    public string? PatientIdFhir { get; set; }
 
-    [StringLength(200)]
-    [Column("patient_display")]
+    /// <summary> Nombre completo del paciente tal como aparecía al momento de la venta. </summary>
     public string? PatientDisplay { get; set; }
 
-    [StringLength(50)]
-    [Column("patient_system")]
+    /// <summary> 
+    /// El sistema de identificación (Namespace). 
+    /// Ej: 'http://hl7.org/fhir/sid/dni' para Honduras.
+    /// </summary>
     public string? PatientSystem { get; set; }
 
-    [StringLength(200)]
-    [Column("patient_value")]
+    /// <summary> El número de identidad real (DNI, Pasaporte, etc). </summary>
     public string? PatientValue { get; set; }
+    #endregion
 
+    #region Origen del Servicio
+    /// <summary> Referencia al grupo de servicios/paquete si la venta fue por paquete. </summary>
+    public string? ServiceGroupFhirId { get; set; }
 
-    // ======================================================
-    //  MODELO DE FACTURACIÓN: SERVICIO / GRUPO / MULTIPLE
-    // ======================================================
+    /// <summary> ID del servicio individual (si no es paquete). </summary>
+    public Guid? SingleServiceId { get; set; }
 
-    // Si se factura un grupo entero desde FHIR (solo referencia)
-    [Column("service_group_fhir_id")] public string? ServiceGroupFhirId { get; set; }
-
-    // Si se factura únicamente un servicio individual
-    [Column("single_service_id")] public Guid? SingleServiceId { get; set; }
-
-    // Relación con items (siempre se usan para congelar historial)
-    public ICollection<InvoiceItemEntity> Items { get; set; } = new List<InvoiceItemEntity>();
-
-
-    // ===============================
-    //      SERIE DE FACTURACIÓN
-    // ===============================
-
-    [Required][Column("serie_id")] public Guid SerieId { get; set; }
-
-    [ForeignKey(nameof(SerieId))] public InvoiceSerieEntity? Serie { get; set; }
-
-    [Required][Column("number")] public long Number { get; set; }
-
-
-    // ===========================================================
-    //      TOTALES PRECALCULADOS (Optimización para 1–3M + registros)
-    // ===========================================================
-
-    /// <summary>
-    /// Total original basado en invoice_items. Congelado al crear.
+    /// <summary> Colección de ítems detallados que componen la factura.
+    /// <remarks> Solo cuando este es un paquete de servicios</remarks>
     /// </summary>
-    [Required]
-    [Column("total_original")]
+    public ICollection<InvoiceItemEntity> Items { get; set; } = new List<InvoiceItemEntity>();
+    #endregion
+
+    #region Numeración y Control
+    /// <summary> ID de la serie de facturación (resolución de la entidad tributaria). </summary>
+    public Guid SerieId { get; set; }
+    public InvoiceSerieEntity? Serie { get; set; }
+
+    /// <summary> Número secuencial único de la factura dentro de su serie. </summary>
+    public long Number { get; set; }
+    #endregion
+
+    #region Totales y Finanzas
+    /// <summary> Suma bruta de los ítems (Precio * Cantidad) ANTES de cualquier descuento o ajuste. </summary>
     public decimal TotalOriginal { get; set; }
 
-    /// <summary>
-    /// Suma neta de notas de crédito/débito.
-    /// DebitNote = positivo.
-    /// CreditNote = negativo.
+    /// <summary> Descuento comercial aplicado al momento de la creación (500 -> 400 = 100 de descuento). </summary>
+    public decimal InvoiceDiscount { get; set; } 
+
+    /// <summary> 
+    /// Suma neta de ajustes posteriores (Notas de Crédito [-] o Débito [+]). 
+    /// No debe confundirse con el descuento inicial.
     /// </summary>
-    [Required]
-    [Column("adjustment_total")]
     public decimal AdjustmentTotal { get; set; }
 
-    /// <summary>
-    /// Total final luego de ajustes.
-    /// FinalTotal = TotalOriginal + AdjustmentTotal
+    /// <summary> 
+    /// Monto final exigible: (TotalOriginal - InvoiceDiscount) + AdjustmentTotal. 
+    /// Es el valor que el sistema espera que el cajero reciba.
     /// </summary>
-    [Required]
-    [Column("final_total")]
     public decimal FinalTotal { get; set; }
 
-    /// <summary>
-    /// Monto pagado hasta ahora.
+    /// <summary> Cantidad de dinero que el paciente ya ha pagado efectivamente.
+    /// <remarks> Esta posiblemente no se utilize, a menos se se permita el cobro a pagos</remarks>
     /// </summary>
-    [Required]
-    [Column("amount_paid")]
     public decimal AmountPaid { get; set; }
 
-    /// <summary>
-    /// Saldo pendiente: FinalTotal - AmountPaid.
-    /// </summary>
-    [Required]
-    [Column("amount_due")]
+    /// <summary> Saldo pendiente de pago: (FinalTotal - AmountPaid). </summary>
     public decimal AmountDue { get; set; }
+    #endregion
 
-
-    // ===============================
-    //        ESTADO DE FACTURA
-    // ===============================
-    [Required]
-    [Column("status", TypeName = "varchar(30)")]
-    [EnumDataType(typeof(InvoiceStatus))]
+    #region Estados y Clasificación
+    /// <summary> Estado actual del flujo (Created, Paid, Cancelled, Refunded). </summary>
     public InvoiceStatus Status { get; set; } = InvoiceStatus.Created;
 
-    /// Estados:
-    /// - Created   : Factura creada, pendiente de pago.
-    /// - Paid      : Factura pagada completamente.
-    /// - Cancelled : Factura anulada (sin efectos contables).
-    /// - Refunded  : Factura reembolsada parcial o totalmente.
-
-
-    // ===============================
-    //        TIPO DE FACTURA
-    //  (Normal, Emergency, Exempt, CreditNote, DebitNote)
-    // ===============================
-
-    [Required]
-    [Column("invoice_type", TypeName = "varchar(30)")]
-    [EnumDataType(typeof(InvoiceType))]
+    /// <summary> Clasificación tributaria (Normal, Emergencia, Exento, etc). </summary>
     public InvoiceType InvoiceType { get; set; } = InvoiceType.Normal;
 
-    // ===============================
-    //        MÉTODO DE PAGO
-    // ===============================
-
-    [Required]
-    [Column("payment_method")]
+    /// <summary> Forma principal en la que se pagó o pagará (Efectivo, Tarjeta, Mixto).
+    /// <remarks> Por defecto es cash a menos que se habiliten otro tipo de pagos</remarks>
+    /// </summary>
     public PaymentMethodType PaymentMethod { get; set; } = PaymentMethodType.Cash;
-    // Cash, Card, Transfer, Mixed
+    #endregion
 
-
-    // ===============================
-    //   RELACIÓN PADRE (AJUSTES)
-    // ===============================
-
-    [Column("parent_invoice_id")]
+    #region Auditoría y Sesión
+    /// <summary> Si esta es una Nota de Crédito/Débito, apunta a la factura original. </summary>
     public Guid? ParentInvoiceId { get; set; }
-
-    [ForeignKey(nameof(ParentInvoiceId))]
     public InvoiceEntity? ParentInvoice { get; set; }
 
-
-    // ===============================
-    //     SESIÓN DE CAJA
-    // ===============================
-
-    [Column("cashier_session_id")]
+    /// <summary> Sesión de caja en la que se creó o cobró esta factura. </summary>
     public Guid? CashierSessionId { get; set; }
-
-    [ForeignKey(nameof(CashierSessionId))]
     public CashierSessionEntity? CashierSession { get; set; }
+    #endregion
 }
