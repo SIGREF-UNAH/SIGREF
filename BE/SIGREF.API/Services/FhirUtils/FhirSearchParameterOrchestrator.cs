@@ -153,6 +153,11 @@ public class FhirSearchParameterOrchestrator
                 resourcesToReindex.Add(resourceType);
             }
         }
+        catch (OperationCanceledException)
+        {
+            // Respetar la semántica de cancelación: no ocultar cancelaciones cooperativas.
+            throw;
+        }
         catch (Exception ex)
         {
             // Captura defensiva: EnsureAsync ya maneja sus propios errores internamente.
