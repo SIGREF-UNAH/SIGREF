@@ -1,5 +1,6 @@
 ﻿using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
+using System.Linq;
 namespace SIGREF.API.Services.FhirUtils;
 
 
@@ -70,14 +71,15 @@ public abstract class BaseFhirSearchParameterInitializer
         int skipped = 0;
         int failed  = 0;
  
-        foreach (var definition in definitions)
+        var ensureTasks = definitions.Select(TryEnsureSearchParameter);
+        foreach (var ensureTask in ensureTasks)
         {
-            var result = await TryEnsureSearchParameter(definition);
+            var result = await ensureTask;
             switch (result)
             {
-                case EnsureResult.Created:      created++; break;
-                case EnsureResult.AlreadyExists: skipped++; break;
-                case EnsureResult.Failed:        failed++;  break;
+                case EnsureResult.Created:        created++;  break;
+                case EnsureResult.AlreadyExists: skipped++;  break;
+                case EnsureResult.Failed:         failed++;   break;
             }
         }
  
