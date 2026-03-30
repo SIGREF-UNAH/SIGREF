@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-
+﻿
 namespace SIGREF.API.Services.FhirUtils;
 
 public class HapiReadinessWaiter : BackgroundService
@@ -60,15 +59,19 @@ public class HapiReadinessWaiter : BackgroundService
                             $"{GREEN}[HAPI-READY] HAPI FHIR listo completamente (JPA y base de datos OK){RESET}");
 
                         using var scope = _scopeFactory.CreateScope();
-                        var initializer =
-                            scope.ServiceProvider.GetRequiredService<
-                                HealthcareServiceSearchParameterInitializer>();
-                        await initializer.EnsureAsync();
+ 
+                        // El orquestador corre todos los initializers y reindexar una sola vez
+                        var orchestrator =
+                            scope.ServiceProvider.GetRequiredService<FhirSearchParameterOrchestrator>();
+ 
+                        await orchestrator.EnsureAllAsync();
+ 
                         //var seeder =
                         //    scope.ServiceProvider.GetRequiredService<SIGREFSeeder>();
                         //await seeder.SeedAsync(stoppingToken);
+ 
                         _logger.LogInformation(
-                            $"{GREEN}[HAPI-READY] HAPI FHIR LISTO - Proceso de siembra Terminado{RESET}");
+                            $"{GREEN}[HAPI-READY] HAPI FHIR LISTO - Proceso de inicializacion terminado{RESET}");
                         break;
                     }
                 }
