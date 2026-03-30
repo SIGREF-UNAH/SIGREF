@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Text;
+using System.Runtime.InteropServices;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 using Hl7.Fhir.Serialization;
@@ -161,9 +162,15 @@ public class FhirSearchParameterOrchestrator
         }
         catch (Exception ex)
         {
+            if (IsFatalException(ex))
+            {
+                // No ocultar excepciones fatales que pueden comprometer la estabilidad del proceso.
+                throw;
+            }
+
             // Captura defensiva: EnsureAsync ya maneja sus propios errores internamente.
             // Este catch existe como red de seguridad ante cualquier fallo inesperado
-            // que escape del inicializador, para no romper Task.WhenAll.
+            // que escape del inicializador, para no romper Task.WhenAll con errores no fatales.
             _logger.LogError(
                 ex,
                 "[FHIR-ORCH] Error inesperado en {InitializerName}: {Message}",
@@ -175,6 +182,21 @@ public class FhirSearchParameterOrchestrator
             // Release se ejecuta UNA SOLA VEZ aquí, sea cual sea el resultado.
             semaphore.Release();
         }
+    }
+
+    /// <summary>
+    /// Determina si una excepción debe considerarse fatal y, por tanto, no debe ser
+    /// capturada y suprimida por el orquestador.
+    /// </summary>
+    /// <param name="ex">Excepción a evaluar.</param>
+    /// <returns><c>true</c> si la excepción es fatal; en caso contrario, <c>false</c>.</returns>
+    private static bool IsFatalException(Exception ex)
+    {
+        return ex is OutOfMemoryException
+            or StackOverflowException
+            or ThreadAbortException
+            or AccessViolationException
+            or SEHException;
     }
 
     /// <summary>
