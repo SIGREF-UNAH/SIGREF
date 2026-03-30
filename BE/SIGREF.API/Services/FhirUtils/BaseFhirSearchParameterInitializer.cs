@@ -200,7 +200,14 @@ public abstract class BaseFhirSearchParameterInitializer
                 $"{FhirAnsiColors.Red}[FHIR-SP] Error de red al procesar '{definition.Code}': {httpEx.Message}{FhirAnsiColors.Reset}");
             return EnsureResult.Failed;
         }
-        catch (Exception ex)
+        catch (OperationCanceledException oce)
+        {
+            // La operación fue cancelada (por ejemplo, por un token de cancelación); se propaga para que el llamador pueda manejarla.
+            Logger.LogInformation(
+                $"{FhirAnsiColors.Red}[FHIR-SP] Operación cancelada al procesar '{definition.Code}': {oce.Message}{FhirAnsiColors.Reset}");
+            throw;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             // Cualquier otro error inesperado
             Logger.LogError(ex, $"{FhirAnsiColors.Red}[FHIR-SP] Error inesperado en '{definition.Code}': {ex.Message}{FhirAnsiColors.Reset}");
