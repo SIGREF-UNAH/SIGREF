@@ -86,27 +86,17 @@ public class FhirSearchParameterOrchestrator
 
         // Limitamos a 5 inicializadores ejecutándose simultáneamente.
         // Protege la memoria y las conexiones HTTP al servidor FHIR.
-        var semaphore = new SemaphoreSlim(initialCount: 5, maxCount: 5);
+        using var semaphore = new SemaphoreSlim(initialCount: 5, maxCount: 5);
 
         var resourcesToReindex = new ConcurrentBag<string>();
 
-        try
-        {
-            // ToList() materializa TODAS las tareas antes de await,
-            // garantizando que el semáforo esté vivo durante toda la ejecución.
-            var tasks = initializerList
-                .Select(initializer => RunInitializerAsync(initializer, semaphore, resourcesToReindex))
-                .ToList();
+        // ToList() materializa TODAS las tareas antes de await,
+        // garantizando que el semáforo esté vivo durante toda la ejecución.
+        var tasks = initializerList
+            .Select(initializer => RunInitializerAsync(initializer, semaphore, resourcesToReindex))
+            .ToList();
 
-            await Task.WhenAll(tasks);
-        }
-        finally
-        {
-            // Dispose explícito en finally: se ejecuta siempre, incluso si
-            // Task.WhenAll lanza una excepción, y nunca antes de que
-            // todas las tareas hayan completado.
-            semaphore.Dispose();
-        }
+        await Task.WhenAll(tasks);
 
         _logger.LogInformation(
             "[FHIR-ORCH] ===================================================");
