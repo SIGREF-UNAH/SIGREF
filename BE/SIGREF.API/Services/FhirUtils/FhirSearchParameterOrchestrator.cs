@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Text;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
@@ -273,6 +274,12 @@ public class FhirSearchParameterOrchestrator
         }
         catch (Exception ex)
         {
+            // Re-lanzar excepciones críticas del runtime que no deben ser suprimidas.
+            if (ex is OutOfMemoryException || ex is StackOverflowException || ex is ThreadAbortException)
+            {
+                throw;
+            }
+
             _logger.LogError(ex, $"{FhirAnsiColors.Red}[FHIR-ORCH] Error inesperado en orquestación de reindex: {ex.Message}{FhirAnsiColors.Reset}");
         }
     }
