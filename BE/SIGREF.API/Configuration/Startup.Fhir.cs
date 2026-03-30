@@ -21,7 +21,11 @@ public partial class Startup
         services.AddScoped<IFhirLookupService, FhirLookupService>();
         services.AddScoped<IDashboardReportingService, DashboardReportingService>();
 
-        // inicializador
-        services.AddScoped<HealthcareServiceSearchParameterInitializer>();
+        // SearchParameter initializers  uno por recurso FHIR
+        services.AddScoped<BaseFhirSearchParameterInitializer, HealthcareServiceSearchParameterInitializer>();
+        services.AddScoped<BaseFhirSearchParameterInitializer, PatientSearchParameterInitializer>();
+ 
+        // Orquestador  recibe IEnumerable<BaseFhirSearchParameterInitializer> via DI
+        services.AddScoped<FhirSearchParameterOrchestrator>();
     }
 }

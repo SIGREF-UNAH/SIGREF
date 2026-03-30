@@ -16,6 +16,24 @@ public static class FhirNamespaces
         Base+ "/StructureDefinition/healthcareservice-scope";
     
     // =========================
+    // SearchParameters
+    // =========================
+ 
+    // HealthcareService
+    public const string SpHealthcareServiceAbbreviation =
+        Base + "/SearchParameter/abbreviation";
+ 
+    public const string SpHealthcareServiceScope =
+        Base + "/SearchParameter/scope";
+ 
+    // Patient
+    public const string SpPatientIdentifierValue =
+        Base + "/SearchParameter/identifier-value";
+ 
+    public const string SpPatientIdentifierType =
+        Base + "/SearchParameter/identifier-type";
+    
+    // =========================
     // CodeSystems
     // =========================
     public const string RolesAdminCodeSystem =
