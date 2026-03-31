@@ -10,8 +10,12 @@ import {
   getGetApiLocationsQueryKey,
 } from "../../../api/locations/locations";
 import { useGetApiOrganizations } from "../../../api/organizations/organizations";
-import ccsj from "countrycitystatejson";
 import { useMessage } from "../../../shared/hooks";
+import {
+  getCityOptionsByCountryAndState,
+  getCountryOptions,
+  getStateOptionsByCountry,
+} from "../../../shared/utils";
 
 type Mode = "create" | "edit";
 
@@ -33,10 +37,7 @@ export default function useLocationForm({ mode }: UseLocationFormProps) {
   >([{ id: "1", system: undefined, value: "" }]);
 
   const [countryOptions] = useState(() =>
-    ccsj.getCountries().map((c: any) => ({
-      label: c.name,
-      value: c.shortName,
-    }))
+    getCountryOptions()
   );
   const [stateOptions, setStateOptions] = useState<
     { label: string; value: string }[]
@@ -126,14 +127,15 @@ export default function useLocationForm({ mode }: UseLocationFormProps) {
       );
 
       if (location.address?.country) {
-        const states = ccsj.getStatesByShort(location.address.country) ?? [];
-        setStateOptions(states.map((s) => ({ label: s, value: s })));
+        setStateOptions(getStateOptionsByCountry(location.address.country));
 
         if (location.address?.state) {
-          const cities =
-            ccsj.getCities(location.address.country, location.address.state) ??
-            [];
-          setCityOptions(cities.map((c) => ({ label: c, value: c })));
+          setCityOptions(
+            getCityOptionsByCountryAndState(
+              location.address.country,
+              location.address.state
+            )
+          );
         }
       }
 
@@ -174,8 +176,7 @@ export default function useLocationForm({ mode }: UseLocationFormProps) {
       formRef.current?.setFieldValue(["address", "city"], null);
       return;
     }
-    const states = ccsj.getStatesByShort(countryShort) ?? [];
-    setStateOptions(states.map((s) => ({ label: s, value: s })));
+    setStateOptions(getStateOptionsByCountry(countryShort));
     setCityOptions([]);
     formRef.current?.setFieldValue(["address", "state"], null);
     formRef.current?.setFieldValue(["address", "city"], null);
@@ -188,8 +189,7 @@ export default function useLocationForm({ mode }: UseLocationFormProps) {
       formRef.current?.setFieldValue(["address", "city"], null);
       return;
     }
-    const cities = ccsj.getCities(countryShort, stateName) ?? [];
-    setCityOptions(cities.map((c) => ({ label: c, value: c })));
+    setCityOptions(getCityOptionsByCountryAndState(countryShort, stateName));
   };
 
   const addContact = () => {

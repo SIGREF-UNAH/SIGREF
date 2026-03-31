@@ -15,9 +15,13 @@ import type { CreateOrganizationDto } from "../../../api/models";
 import type { ProFormInstance } from "@ant-design/pro-components";
 import { Button, Form } from "antd";
 import { useRef, useState } from "react";
-import ccsj from "countrycitystatejson";
 import PhoneInput from "react-phone-number-input";
 import 'react-phone-number-input/style.css';
+import {
+  getCityOptionsByCountryAndState,
+  getCountryOptions,
+  getStateOptionsByCountry,
+} from "../../../shared/utils";
 
 type OrganizationFormValues = {
   name: string;
@@ -70,7 +74,7 @@ export default function OrganizationsForm({
   const formRef = useRef<ProFormInstance>(null);
 
   // Cargar países correctamente
-  const [countryOptions] = useState( ccsj.getCountries().map((c) => ({ label: c.name, value: c.shortName })));
+  const [countryOptions] = useState(() => getCountryOptions());
   const [stateOptions, setStateOptions] = useState<{ label: string; value: string }[]>([]);
   const [cityOptions, setCityOptions] = useState<{ label: string; value: string }[]>([]);
 
@@ -83,8 +87,7 @@ export default function OrganizationsForm({
       return;
     }
 
-    const states = ccsj.getStatesByShort(countryShort) ?? [];
-    setStateOptions(states.map((s: string) => ({ label: s, value: s })));
+    setStateOptions(getStateOptionsByCountry(countryShort));
     setCityOptions([]);
     formRef.current?.setFieldValue("state", null);
     formRef.current?.setFieldValue("city", null);
@@ -99,8 +102,7 @@ export default function OrganizationsForm({
       return;
     }
 
-    const cities = ccsj.getCities(countryShort, stateName) ?? [];
-    setCityOptions(cities.map((c: string) => ({ label: c, value: c })));
+    setCityOptions(getCityOptionsByCountryAndState(countryShort, stateName));
     formRef.current?.setFieldValue("city", null);
   };
 

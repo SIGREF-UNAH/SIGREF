@@ -1,7 +1,11 @@
 import type { ProFormInstance } from "@ant-design/pro-components";
 import { useRef, useState, useEffect } from "react";
 import { message } from "antd";
-import ccsj from "countrycitystatejson";
+import {
+  getCityOptionsByCountryAndState,
+  getCountryOptions,
+  getStateOptionsByCountry,
+} from "../../../shared/utils";
 
 export default function usePatientForm(
   onSubmit: any,
@@ -16,10 +20,7 @@ export default function usePatientForm(
 
   // Estados para los selectores de ubicación
   const [countryOptions] = useState(() =>
-    ccsj.getCountries().map((c: any) => ({
-      label: c.name,
-      value: c.shortName,
-    }))
+    getCountryOptions()
   );
 
   // Estado para guardar las opciones de estados y ciudades por cada dirección
@@ -69,12 +70,10 @@ export default function usePatientForm(
       return;
     }
 
-    const states = ccsj.getStatesByShort(countryShort) ?? [];
-
     setAddressLocations((prev) => ({
       ...prev,
       [index]: {
-        stateOptions: states.map((s) => ({ label: s, value: s })),
+        stateOptions: getStateOptionsByCountry(countryShort),
         cityOptions: [],
       },
     }));
@@ -107,12 +106,11 @@ export default function usePatientForm(
       return;
     }
 
-    const cities = ccsj.getCities(countryShort, stateName) ?? [];
     setAddressLocations((prev) => ({
       ...prev,
       [index]: {
         ...prev[index],
-        cityOptions: cities.map((c) => ({ label: c, value: c })),
+        cityOptions: getCityOptionsByCountryAndState(countryShort, stateName),
       },
     }));
 
@@ -127,13 +125,14 @@ export default function usePatientForm(
     if (mode === "edit" && initialValues?.address && formRef.current) {
       initialValues.address.forEach((addr: any, index: number) => {
         if (addr.country) {
-          const states = ccsj.getStatesByShort(addr.country) ?? [];
-          const stateOptions = states.map((s) => ({ label: s, value: s }));
+          const stateOptions = getStateOptionsByCountry(addr.country);
 
           let cityOptions: { label: string; value: string }[] = [];
           if (addr.state) {
-            const cities = ccsj.getCities(addr.country, addr.state) ?? [];
-            cityOptions = cities.map((c) => ({ label: c, value: c }));
+            cityOptions = getCityOptionsByCountryAndState(
+              addr.country,
+              addr.state
+            );
           }
 
           setAddressLocations((prev) => ({
