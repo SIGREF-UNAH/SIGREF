@@ -34,11 +34,6 @@ public class LocationsController(LocationService locationService) : ControllerBa
         return Ok(pagedLocationDtos);
     }
 
-    private static readonly HashSet<string> ValidStatuses = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "active", "suspended", "inactive"
-    };
-
     // GET api/locations/5
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]

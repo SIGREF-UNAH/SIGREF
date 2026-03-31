@@ -1,9 +1,9 @@
 #nullable enable
 using System.ComponentModel.DataAnnotations;
-using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Hl7.Fhir.Model;
 using SIGREF.API.Dtos.Common;
+using SIGREF.Common.Types;
 using FhirLocation = Hl7.Fhir.Model.Location;
 
 namespace SIGREF.API.Dtos.Location;
@@ -16,8 +16,9 @@ public class CreateLocationDto
 
     public string? Description { get; set; }
 
+    [Required]
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public FhirLocation.LocationStatus? Status { get; set; }
+    public LocationStatus? Status { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
 
@@ -40,7 +41,7 @@ public class UpdateLocationDto
     public string? Description { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public FhirLocation.LocationStatus? Status { get; set; }
+    public LocationStatus? Status { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
 

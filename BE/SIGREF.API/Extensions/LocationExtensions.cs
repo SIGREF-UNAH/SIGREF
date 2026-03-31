@@ -2,6 +2,7 @@
 using Hl7.Fhir.Model;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Location;
+using SIGREF.Common.Extensions;
 namespace SIGREF.API.Extensions;
 
 public static class LocationExtensions
@@ -34,7 +35,7 @@ public static class LocationExtensions
         {
             Name = createDto.Name,
             Description = createDto.Description,
-            Status = createDto.Status,
+            Status = createDto.Status!.Value.ToFhir(),
             Mode = createDto.Mode,
             Type = CreateCodeableConceptList(createDto.Type),
             Alias = createDto.Alias,
@@ -61,7 +62,7 @@ public static class LocationExtensions
             existingLocation.Description = updateDto.Description;
 
         if (updateDto.Status != null)
-            existingLocation.Status = updateDto.Status;
+            existingLocation.Status = updateDto.Status.Value.ToFhir();
 
         existingLocation.Mode = updateDto.Mode;
 

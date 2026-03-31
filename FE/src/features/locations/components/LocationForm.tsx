@@ -192,8 +192,8 @@ export default function LocationForm({ mode }: LocationFormProps) {
           name: "",
           alias: [],
           description: null,
-          status: LocationStatus.NUMBER_0,
-          mode: LocationMode.NUMBER_0,
+          status: LocationStatus.active,
+          mode: LocationMode.instance,
           address: {
             line: [""],
             city: null,
@@ -260,9 +260,9 @@ export default function LocationForm({ mode }: LocationFormProps) {
               name="status"
               label="Estado"
               options={[
-                { label: "Activo", value: LocationStatus.NUMBER_0 },
-                { label: "Suspendido", value: LocationStatus.NUMBER_1 },
-                { label: "Inactivo", value: LocationStatus.NUMBER_2 },
+                { label: "Activo", value: LocationStatus.active },
+                { label: "Suspendido", value: LocationStatus.suspended },
+                { label: "Inactivo", value: LocationStatus.inactive },
               ]}
               rules={[{ required: true }]}
               fieldProps={{
@@ -275,8 +275,8 @@ export default function LocationForm({ mode }: LocationFormProps) {
               name="mode"
               label="Modo"
               options={[
-                { label: "Instancia", value: LocationMode.NUMBER_0 },
-                { label: "Tipo", value: LocationMode.NUMBER_1 },
+                { label: "Instancia", value: LocationMode.instance },
+                { label: "Tipo", value: LocationMode.kind },
               ]}
               rules={[{ required: true }]}
               fieldProps={{

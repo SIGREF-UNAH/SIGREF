@@ -206,8 +206,8 @@ export const LocationList: React.FC = () => {
             value={searchMode}
             onChange={(value) => setSearchMode(value as LocationMode)}
           >
-            <Option value={LocationMode.NUMBER_0}>Tipo</Option>
-            <Option value={LocationMode.NUMBER_1}>Instancia</Option>
+            <Option value={LocationMode.kind}>Tipo</Option>
+            <Option value={LocationMode.instance}>Instancia</Option>
           </Select>
           <Select
             placeholder="Por estado"
@@ -217,9 +217,9 @@ export const LocationList: React.FC = () => {
             value={searchStatus}
             onChange={(value) => setSearchStatus(value as LocationStatus)}
           >
-            <Option value={LocationStatus.NUMBER_0}>Activo</Option>
-            <Option value={LocationStatus.NUMBER_1}>Suspendido</Option>
-            <Option value={LocationStatus.NUMBER_2}>Inactivo</Option>
+            <Option value={LocationStatus.active}>Activo</Option>
+            <Option value={LocationStatus.suspended}>Suspendido</Option>
+            <Option value={LocationStatus.inactive}>Inactivo</Option>
           </Select>
         </div>
         {/* Lista de ubicaciones */}
