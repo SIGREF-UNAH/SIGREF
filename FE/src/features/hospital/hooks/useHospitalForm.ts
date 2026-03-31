@@ -1,13 +1,17 @@
 import type { ProFormInstance } from "@ant-design/pro-components";
 import { useEffect, useRef, useState } from "react";
-import ccsj from "countrycitystatejson";
+import {
+  getCityOptionsByCountryAndState,
+  getCountryOptions,
+  getStateOptionsByCountry,
+} from "../../../shared/utils";
 
 export default function useHospitalForm(initialValues?: any) {
   // formRef para el componente PhoneInput
   const formRef = useRef<ProFormInstance>(null);
 
   // Variables y funciones para selectores de ubicación
-  const [countryOptions] = useState( ccsj.getCountries().map((c) => ({ label: c.name, value: c.shortName })));
+  const [countryOptions] = useState(() => getCountryOptions());
   const [stateOptions, setStateOptions] = useState<{ label: string; value: string }[]>([]);
   const [cityOptions, setCityOptions] = useState<{ label: string; value: string }[]>([]);
 
@@ -142,8 +146,7 @@ export default function useHospitalForm(initialValues?: any) {
     }
 
     setSelectedCountry(countryShort);
-    const states = ccsj.getStatesByShort(countryShort) ?? [];
-    setStateOptions(states.map((s: string) => ({ label: s, value: s })));
+    setStateOptions(getStateOptionsByCountry(countryShort));
     setCityOptions([]);
 
     if (!isInitializing) {
@@ -173,8 +176,7 @@ export default function useHospitalForm(initialValues?: any) {
       return;
     }
 
-    const cities = ccsj.getCities(countryShort, stateName) ?? [];
-    setCityOptions(cities.map((c: string) => ({ label: c, value: c })));
+    setCityOptions(getCityOptionsByCountryAndState(countryShort, stateName));
     setSelectedCity("");
     formRef.current?.setFieldValue("city", null);
   };
