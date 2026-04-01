@@ -12,7 +12,7 @@ using SIGREF.Infrastructure.Persistence;
 namespace SIGREF.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(SIGREFContext))]
-    [Migration("20260329030752_Init")]
+    [Migration("20260331182723_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -133,7 +133,8 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("IsSingleton")
                         .IsUnique()
-                        .HasDatabaseName("idx_singleton_enforcer");
+                        .HasDatabaseName("idx_singleton_enforcer")
+                        .HasFilter("is_singleton = true");
 
                     b.ToTable("hospital_properties", null, t =>
                         {
@@ -218,7 +219,6 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasComment("Nombre o alias del paciente al momento de facturar.");
 
                     b.Property<string>("PatientIdFhir")
-                        .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)")
                         .HasColumnName("patient_id_fhir")
@@ -766,7 +766,6 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnName("package_id");
 
                     b.Property<string>("PatientIdFhir")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("patient_id_fhir");
 

@@ -62,7 +62,7 @@ public class HospitalPropertiesService : IHospitalPropertiesService
             return new ResponseDto<HospitalDetailsDto>
             {
                 Status = false,
-                StatusCode = 404,
+                StatusCode = 200,
                 Message = "Hospital no configurado.",
                 Data = null
             };

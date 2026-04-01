@@ -35,17 +35,13 @@ public partial class Startup
             app.UseSwagger();
             app.UseSwaggerUI();
         }
-
-        app.UseHttpsRedirection();
-
-        app.UseCors("CorsPolicy");
-
+       
         app.UseRouting();
-
-        // Middleware de auditoría (después de routing, antes de auth)
+        app.UseCors("CorsPolicy");
+        app.UseHttpsRedirection();
         app.UseAuditMiddleware();
-
-            // Carpetas de Media
+        // Middleware de auditoría (después de routing, antes de auth)
+        // Carpetas de Media
         UseMediaStaticFiles(app, env);
 
 

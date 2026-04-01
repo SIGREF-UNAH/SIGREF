@@ -87,6 +87,7 @@ public class HospitalPropertiesConfiguration : BaseEntityConfiguration<HospitalP
         // ===============================
         builder.HasIndex(e => e.IsSingleton)
             .IsUnique()
+            .HasFilter("is_singleton = true")
             .HasDatabaseName("idx_singleton_enforcer");
     }
 }

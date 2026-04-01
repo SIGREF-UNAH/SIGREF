@@ -12,7 +12,8 @@ public partial class Startup
                     .WithOrigins(allowURLS)
                     .AllowAnyMethod()
                     .AllowAnyHeader()
-                    .AllowCredentials());
+                    .AllowCredentials()
+                    .SetPreflightMaxAge(TimeSpan.FromMinutes(10)));
             }
         });
 

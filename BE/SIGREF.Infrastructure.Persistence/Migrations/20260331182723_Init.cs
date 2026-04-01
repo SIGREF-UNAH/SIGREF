@@ -281,7 +281,6 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         onDelete: ReferentialAction.Restrict);
                 },
                 comment: "Items facturados: cada servicio congelado con precio histórico.");
-
             // [REF: Issue #259 | Commit a5a3f4e]
             // [FILE: BE/SIGREF.Infrastructure.Persistence/Configurations/CashierSessionConfiguration.cs]
             // ---------------------------------------------------------------------------------
@@ -338,7 +337,8 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                 name: "idx_singleton_enforcer",
                 table: "hospital_properties",
                 column: "is_singleton",
-                unique: true);
+                unique: true,
+                filter: "is_singleton = true");
 
             migrationBuilder.CreateIndex(
                 name: "idx_invoiceitems_created_date",
@@ -470,8 +470,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                 name: "idx_shifts_name_location",
                 table: "shifts",
                 columns: new[] { "name", "location_id" });
-            
-             // ============================================
+            // ============================================
             // 1. Crear la MATERIALIZED VIEW optimizada
             // ============================================
             migrationBuilder.Sql(@"
@@ -565,7 +564,6 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
 
             // Ingresos reales (para agregaciones rápidas)
             migrationBuilder.Sql(@"CREATE INDEX IF NOT EXISTS idx_mv_facts_real_income ON mv_dashboard_facts(real_income);");
-
         }
 
         /// <inheritdoc />
