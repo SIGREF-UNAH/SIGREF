@@ -509,7 +509,7 @@ export default function PatientsInformation() {
             {hasActiveFilters && (
               <Tag color="blue">
                 {Object.values(filters).filter(
-                  (v) => v && v !== "" && v !== null,
+                   (v) => v && v !== "",
                 ).length - 2}{" "}
                 activos
               </Tag>
