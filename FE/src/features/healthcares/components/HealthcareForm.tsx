@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
 import { Table, Input, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import type { CreateHealthcareDto, HealthcareDto, LocationDto, OrganizationDto } from "../../../api/models";
+import type {
+  CreateHealthcareDto,
+  HealthcareDto,
+  LocationDto,
+  OrganizationDto,
+} from "../../../api/models";
 import {
   ProForm,
   ProFormText,
@@ -40,11 +45,11 @@ export const HealthcareForm = ({
       const locationIds = initialValues.location
         .map((loc) => loc.reference?.split("/")[1])
         .filter((id): id is string => typeof id === "string");
-      
+
       setSelectedRowKeys(locationIds);
-      
+
       const selectedLocs = locations.filter((loc: LocationDto) =>
-        locationIds.includes(loc.id || "")
+        locationIds.includes(loc.id || ""),
       );
       setSelectedLocations(selectedLocs);
     }
@@ -52,7 +57,7 @@ export const HealthcareForm = ({
 
   // Filtro de búsqueda
   const filteredLocations = locations.filter((location) =>
-    location.name.toLowerCase().includes(searchText.toLowerCase())
+    location.name.toLowerCase().includes(searchText.toLowerCase()),
   );
 
   // Columnas de la tabla
@@ -69,8 +74,9 @@ export const HealthcareForm = ({
       render: (status) => {
         const normalized = status.toLowerCase();
         if (normalized === "active") return <Tag color="green">✓ Activo</Tag>;
-        if (normalized === "suspended") return <Tag color="orange">⚠︎ Suspendido</Tag>;
-        if (normalized === "inactive") return <Tag color="red">✗ Inactivo</Tag>; 
+        if (normalized === "suspended")
+          return <Tag color="orange">⚠︎ Suspendido</Tag>;
+        if (normalized === "inactive") return <Tag color="red">✗ Inactivo</Tag>;
         return "-";
       },
     },
@@ -79,7 +85,10 @@ export const HealthcareForm = ({
   // Selección de ubicaciones
   const rowSelection = {
     selectedRowKeys,
-    onChange: (newSelectedRowKeys: React.Key[], selectedRows: LocationDto[]) => {
+    onChange: (
+      newSelectedRowKeys: React.Key[],
+      selectedRows: LocationDto[],
+    ) => {
       setSelectedRowKeys(newSelectedRowKeys as string[]);
       setSelectedLocations(selectedRows);
     },
@@ -97,7 +106,9 @@ export const HealthcareForm = ({
       providedBy: values.providedBy
         ? {
             reference: `Organization/${values.providedBy}`,
-            display: organizations.find((org) => org.id === values.providedBy)?.name || "",
+            display:
+              organizations.find((org) => org.id === values.providedBy)?.name ||
+              "",
           }
         : undefined,
     };
@@ -186,7 +197,23 @@ export const HealthcareForm = ({
           <ProFormDigit
             name="cost"
             label="Costo"
+            tooltip={{
+              title: (
+                <>
+                  <b>Costo:</b> Si el costo es un numero negativo,
+                  automaticamente el sistema lo registra en 0.00.
+                  <br />
+                </>
+              ),
+              overlayInnerStyle: { width: 300 },
+            }}
             placeholder="Ej. 300.00"
+            rules={[{ required: true, message: false }]}
+            extra={
+              <span className="text-amber-600 text-sm mt-4">
+                ⚠️ El costo debe ser mayor a 0.00 para ser válido.
+              </span>
+            }
             min={0}
             fieldProps={{
               size: "large",
@@ -234,7 +261,7 @@ export const HealthcareForm = ({
                   <b>Externo:</b> Visible para facturación individual.
                 </>
               ),
-              overlayInnerStyle: { width: 300 }, 
+              overlayInnerStyle: { width: 300 },
             }}
             placeholder="Seleccione el tipo de servicio"
             options={[
