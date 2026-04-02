@@ -139,10 +139,7 @@ export default function PatientsInformation() {
       key: "nombre",
       width: 200,
       render: (_, record) => (
-        <Button
-          type="link"
-          onClick={() => handleSelectPatient(record.id)}
-        >
+        <Button type="link" onClick={() => handleSelectPatient(record.id)}>
           {record.nombre}
         </Button>
       ),
@@ -254,7 +251,9 @@ export default function PatientsInformation() {
                     okButtonProps={{
                       danger: true,
                     }}
-                    icon={<ExclamationCircleOutlined style={{ color: "red" }} />}
+                    icon={
+                      <ExclamationCircleOutlined style={{ color: "red" }} />
+                    }
                   >
                     <Button
                       type="primary"
@@ -332,18 +331,18 @@ export default function PatientsInformation() {
                       },
                     },
                     ...(selectedPatient.id
-                    ? [
-                        {
-                          title: "ID Maestro (FHIR)",
-                          dataIndex: "fhirId",
-                          key: "fhirId",
-                        },
-                      ]
-                    : []),
+                      ? [
+                          {
+                            title: "ID Maestro (FHIR)",
+                            dataIndex: "idMaestro",
+                            key: "idMaestro",
+                          },
+                        ]
+                      : []),
                   ]}
                 />
               </div>
-            
+
               {/* Segunda columna */}
               <div className="flex flex-col gap-6">
                 {/* Identificadores */}
@@ -368,15 +367,19 @@ export default function PatientsInformation() {
                           : [];
                         return (
                           <div className="">
-                            {lista.length > 0 && lista[0].tipo !== "Desconocido" ? (
+                            {lista.length > 0 &&
+                            lista[0].tipo !== "Desconocido" ? (
                               lista.map((id, idx) => (
-                                <div
-                                  key={idx}
-                                >
+                                <div key={idx}>
                                   <div className="font-medium text-sm">
-                                    <span className="text-neutral-500">{id.tipo}{id.emisor !== null && ` (${id.emisor})`}: </span>
+                                    <span className="text-neutral-500">
+                                      {id.tipo}
+                                      {id.emisor !== null && ` (${id.emisor})`}
+                                      :{" "}
+                                    </span>
                                     <span className="text-muted-foreground text-sm">
-                                      {" "}{id.valor}
+                                      {" "}
+                                      {id.valor}
                                     </span>
                                   </div>
                                 </div>
@@ -413,11 +416,11 @@ export default function PatientsInformation() {
                           <div className="grid grid-cols-1 gap-4">
                             {lista.length > 0 ? (
                               lista.map((contacto, idx) => (
-                                <div
-                                  key={idx}
-                                >
+                                <div key={idx}>
                                   <div className="font-medium text-sm">
-                                    <span className="text-neutral-500">{contacto.tipo} ({contacto.uso}):{" "}</span>
+                                    <span className="text-neutral-500">
+                                      {contacto.tipo} ({contacto.uso}):{" "}
+                                    </span>
                                     <span className="text-muted-foreground text-sm">
                                       {contacto.valor}
                                     </span>
@@ -451,16 +454,18 @@ export default function PatientsInformation() {
                       key: "direcciones",
                       span: 2,
                       render: (direcciones) => {
-                        const lista = Array.isArray(direcciones) ? direcciones : [];
+                        const lista = Array.isArray(direcciones)
+                          ? direcciones
+                          : [];
                         return (
                           <div className="grid grid-cols-1 gap-4">
                             {lista.length > 0 ? (
                               lista.map((direccion, idx) => (
-                                <div
-                                  key={idx}
-                                >
+                                <div key={idx}>
                                   <div className="font-medium text-sm capitalize">
-                                    <span className="text-neutral-500">{direccion.tipo}:{" "}</span>
+                                    <span className="text-neutral-500">
+                                      {direccion.tipo}:{" "}
+                                    </span>
                                     <span className="text-muted-foreground text-sm">
                                       {direccion.valor}
                                     </span>
@@ -504,7 +509,7 @@ export default function PatientsInformation() {
             {hasActiveFilters && (
               <Tag color="blue">
                 {Object.values(filters).filter(
-                  (v) => v && v !== "" && v !== null
+                  (v) => v && v !== "" && v !== null,
                 ).length - 2}{" "}
                 activos
               </Tag>
