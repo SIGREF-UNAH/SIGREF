@@ -1,8 +1,3 @@
-using System;
-using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.Postgres;
-
 namespace SIGREF.API.AppHost;
 
 /// <summary>
@@ -61,15 +56,26 @@ public static class HapiResourceExtensions
                 port: port,
                 targetPort: 8080,
                 name: HapiResource.PrimaryEndpointName)
+            // Monta el directorio de índices Lucene en el contenedor.
+            // La carpeta './hapi-lucene-data' se crea automáticamente si no existe.
+            // En producción, considerar usar un volumen persistente en lugar de bind mount.
+            //.WithBindMount("./hapi-lucene-data", "/tmp/lucenefiles")
             .PublishAsContainer();
     }
 
     /// <summary>
     /// Configura PostgreSQL como base de datos para HAPI FHIR.
     ///
-    /// Esta configuración:
-    /// - Inyecta las variables estándar de Spring Boot
-    /// - Usa el dialecto oficial de HAPI FHIR para PostgreSQL
+    /// REGLA DE ORO: Aquí solo van propiedades de INFRAESTRUCTURA dinámica,
+    /// es decir, valores que Aspire genera en tiempo de ejecución y que no
+    /// podemos conocer de antemano en el YAML (URL, usuario, contraseña).
+    ///
+    /// TODO lo que es configuración estática de Hibernate/Spring (dialecto,
+    /// Lucene, batching, etc.) vive en hapi.application.yaml, NO aquí.
+    ///
+    /// RAZÓN TÉCNICA: Mezclar variables de entorno UPPER_SNAKE_CASE de Aspire
+    /// con propiedades YAML anidadas bajo 'hibernate:' causa que Spring Boot
+    /// ignore el bloque anidado completo, rompiendo Hibernate Search 7.2.
     /// </summary>
     public static IResourceBuilder<HapiResource> WithPostgresDatabase(
         this IResourceBuilder<HapiResource> builder,
@@ -88,23 +94,24 @@ public static class HapiResourceExtensions
             .WithReference(postgresServer)
             .WithReference(database)
 
-            // Spring Boot datasource configuration
+            // URL dinámica: generada por Aspire en runtime según el nombre del contenedor Postgres.
+            // No puede estar en YAML porque el hostname cambia en cada ejecución.
             .WithEnvironment(
                 "SPRING_DATASOURCE_URL",
                 ReferenceExpression.Create(
                     $"jdbc:postgresql://{postgresServer.Resource.Name}:5432/{database.Resource.DatabaseName}"))
+
+            // Credenciales dinámicas: vienen de ParameterResource (secretos de Aspire).
+            // Tampoco pueden estar en YAML por razones de seguridad.
             .WithEnvironment("SPRING_DATASOURCE_USERNAME", username)
             .WithEnvironment("SPRING_DATASOURCE_PASSWORD", password)
-            .WithEnvironment(
-                "SPRING_DATASOURCE_DRIVER_CLASS_NAME",
-                "org.postgresql.Driver")
 
             // Dialecto propio de HAPI FHIR (OBLIGATORIO)
-            .WithEnvironment(
-                "SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT",
-                "ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect")
+            //.WithEnvironment(
+            //    "SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT",
+            //    "ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect")
 
-            // Espera a que PostgreSQL esté listo antes de iniciar HAPI
+            // Espera a que PostgreSQL esté listo antes de iniciar HAPI.
             .WaitFor(postgresServer);
     }
 
@@ -112,19 +119,22 @@ public static class HapiResourceExtensions
     /// Monta y ACTIVA el archivo application.yaml de HAPI FHIR.
     ///
     /// Spring Boot NO usa automáticamente archivos montados,
-    /// por lo que es obligatorio definir SPRING_CONFIG_LOCATION.
+    /// por lo que es obligatorio definir SPRING_CONFIG_ADDITIONAL_LOCATION.
+    ///
+    /// Se usa ADDITIONAL_LOCATION (no LOCATION) para FUSIONAR con el
+    /// application.yaml interno de la imagen, no reemplazarlo.
+    /// Nuestras propiedades tienen precedencia sobre las internas.
     /// </summary>
     public static IResourceBuilder<HapiResource> WithConfigurationFile(
         this IResourceBuilder<HapiResource> builder,
         string localConfigPath)
     {
         return builder
-            // Monta el YAML dentro del contenedor
+            // Monta el YAML dentro del contenedor.
             .WithBindMount(localConfigPath, "/configs/application.yaml")
-
-            // Indica explícitamente a Spring Boot que use ese archivo
+            // ADDITIONAL_LOCATION fusiona configuraciones; nuestro YAML tiene precedencia.
             .WithEnvironment(
-                "SPRING_CONFIG_LOCATION",
+                "SPRING_CONFIG_ADDITIONAL_LOCATION",
                 "file:///configs/application.yaml");
     }
 
