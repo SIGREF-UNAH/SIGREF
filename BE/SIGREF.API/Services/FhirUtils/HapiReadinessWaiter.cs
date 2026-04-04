@@ -1,4 +1,6 @@
 ﻿
+using SIGREF.API.Database;
+
 namespace SIGREF.API.Services.FhirUtils;
 
 public class HapiReadinessWaiter : BackgroundService
@@ -66,9 +68,9 @@ public class HapiReadinessWaiter : BackgroundService
  
                         await orchestrator.EnsureAllAsync();
  
-                        //var seeder =
-                        //    scope.ServiceProvider.GetRequiredService<SIGREFSeeder>();
-                        //await seeder.SeedAsync(stoppingToken);
+                        var seeder =
+                            scope.ServiceProvider.GetRequiredService<SIGREFSeeder>();
+                        await seeder.SeedAsync(stoppingToken);
  
                         _logger.LogInformation(
                             $"{GREEN}[HAPI-READY] HAPI FHIR LISTO - Proceso de inicializacion terminado{RESET}");

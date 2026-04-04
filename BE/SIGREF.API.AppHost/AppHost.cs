@@ -189,8 +189,10 @@ keycloak.PublishAsContainer();
 // HAPI FHIR — Servidor de Datos Clínicos (HL7 FHIR R4)
 // ============================================================================
 var hapi = builder.AddHapiFhir("hapifhir")
-    .WithPostgresDatabase(postgres, hapiDb, postgresUsername, postgresPassword);
-
+    .WithPostgresDatabase(postgres, hapiDb, postgresUsername, postgresPassword)
+    .WithConfigurationFile("config/hapi.application.yaml")  
+    //.WithCorsEnabled()                                  
+    .WithLogLevel("INFO");
 
 // ============================================================================
 // ALMACENAMIENTO COMPARTIDO — PDFs e Imágenes

@@ -3,24 +3,46 @@
 # PROYECTO: SIGREF
 # ----------------------------------------------------------------------------
 # AUTORES: 
-#   - @TETvega (Héctor Rene Martínez Vega) -> Arquitectura y lógica clínica
-#   - @erickArita (Erick Marley Arita) -> Base de infraestructura
+#   - @TETvega (Héctor Rene Martínez Vega)  Arquitectura y lógica clínica
+#   - @erickArita (Erick Marley Arita)  Base de infraestructura
 # CO-AUTOR DE OPTIMIZACIÓN: 
-#   - Gemini 3 Flash (Google AI) -> Ajustes de performance y batching
+#   - Gemini 3 Flash (Google AI)  Ajustes de performance y batching
 # ----------------------------------------------------------------------------
 # PROPÓSITO: Configuración optimizada de persistencia HL7 FHIR R4 para 
 #            entornos hospitalarios de alta disponibilidad.
 # ============================================================================
 
 spring:
+  # ============================================================
+  # CONFIGURACIÓN PRINCIPAL DE SPRING BOOT
+  # ============================================================
+  # CORRECCIÓN: 'main' debe estar aquí, bajo 'spring', NO bajo 'datasource'.
+  # allow-bean-definition-overriding: necesario en HAPI 8.x para evitar conflictos
+  # de beans entre el configurer de Lucene registrado por HAPI y el que
+  # pudiéramos declarar nosotros manualmente.
+  # allow-circular-references: requerido por la arquitectura interna de HAPI JPA.
+  main:
+    allow-bean-definition-overriding: false
+    allow-circular-references: true
+
+  # ============================================================
+  # EXCLUSIÓN DE AUTOCONFIGURATION DE ELASTICSEARCH
+  # ============================================================
+  # Requerido cuando se usa Lucene local en lugar de Elasticsearch.
+  # Sin esto, Spring Boot intenta conectarse a un cluster ES inexistente.
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration
+
   datasource:
     # ============================================================
     # CONFIGURACIÓN DE DATA SOURCE (SPRING BOOT)
     # ============================================================
     # Define cómo el servidor JPA gestiona el pool de conexiones a la DB.
     # Ref Oficial: https://docs.spring.io/spring-boot/reference/data/sql.html#data.sql.datasource.configuration
-    
+
     # Driver JDBC requerido para PostgreSQL. Crucial para inicializar el pool HikariCP.
+    # NOTA: La URL, usuario y contraseña los inyecta Aspire dinámicamente en runtime
+    # porque dependen del hostname del contenedor Postgres generado por Aspire.
     driverClassName: org.postgresql.Driver
 
   jpa:
@@ -35,34 +57,87 @@ spring:
 
     properties:
       # ============================================================
-      # DIALECTO HAPI FHIR PARA POSTGRESQL
+      # PROPIEDADES DE HIBERNATE — ESTRUCTURA ANIDADA (CRÍTICO)
       # ============================================================
-      # Utiliza un dialecto especializado para índices GIN/GIST y estructuras FHIR.
-      # Código: https://github.com/hapifhir/hapi-fhir/blob/master/hapi-fhir-jpa/src/main/java/ca/uhn/fhir/jpa/model/dialect/HapiFhirPostgresDialect.java
-      hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
+      # CORRECCIÓN: En HAPI 8.x con Spring Boot 3.x, las propiedades de Hibernate
+      # deben declararse con estructura YAML anidada bajo la clave 'hibernate:',
+      # NO en formato plano con puntos (ej: 'hibernate.search.backend.type').
+      # Spring Boot trata ambos formatos diferente al construir el EntityManagerFactory,
+      # y el formato plano puede causar que Hibernate Search 7.2 no se inicialice.
+      #
+      # REGLA: Ninguna propiedad de hibernate debe declararse como variable de
+      # entorno UPPER_SNAKE_CASE desde Aspire (ej: SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT).
+      # Mezclar ambos formatos rompe la inicialización de Hibernate Search.
+      # Ref: https://docs.spring.io/spring-boot/reference/data/sql.html
+      hibernate:
+        # ============================================================
+        # DIALECTO HAPI FHIR PARA POSTGRESQL
+        # ============================================================
+        # Utiliza un dialecto especializado para índices GIN/GIST y estructuras FHIR.
+        # MOVIDO AQUÍ desde Aspire (WithPostgresDatabase) para evitar conflictos
+        # con el bloque 'hibernate:' anidado que necesita Hibernate Search.
+        # Código: https://github.com/hapifhir/hapi-fhir/blob/master/hapi-fhir-jpa/src/main/java/ca/uhn/fhir/jpa/model/dialect/HapiFhirPostgresDialect.java
+        dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
 
-      # ============================================================
-      # LOGGING Y TRAZABILIDAD SQL
-      # ============================================================
-      # Desactivar en producción para proteger PHI (Protected Health Information)
-      # y ahorrar ciclos de CPU en el formateo de strings.
-      hibernate.format_sql: false
-      hibernate.show_sql: false
+        # ============================================================
+        # CONFIGURACIÓN DE HIBERNATE SEARCH (LUCENE)
+        # ============================================================
+        # Necesario para que $expand y búsquedas de texto funcionen.
+        # Ref: https://docs.jboss.org/hibernate/search/7.2/reference/en-US/html_single/
+        search:
+          enabled: true
 
-      # ============================================================
-      # OPTIMIZACIÓN DE BATCHING (RENDIMIENTO)
-      # ============================================================
-      # HAPI FHIR genera múltiples inserciones por cada recurso (tags, indices, string data).
-      # El batching reduce drásticamente los round-trips de red.
-      # Ref: https://docs.hibernate.org/orm/current/userguide/html_single/#batch
-      
-      hibernate.jdbc.batch_size: 50
-      hibernate.order_inserts: true
-      hibernate.order_updates: true
-      
-      # Optimización adicional para PostgreSQL: permite reescribir sentencias batch.
-      # Nota: Se debe asegurar que el parámetro 'reWriteBatchedInserts=true' esté en la URL JDBC.
-      hibernate.jdbc.lob.non_contextual_creation: true
+          # Fuerza la creación/validación del esquema de índices Lucene al arrancar.
+          # Sin esto, Hibernate Search puede omitir la inicialización del contexto
+          # y lanzar HSEARCH800001 al intentar hacer $expand.
+          schema_management:
+            strategy: CREATE
+
+          backend:
+            type: lucene
+
+            # Clase configurer que registra todos los analyzers médicos de HAPI:
+            # exactAnalyzer, standardAnalyzer, autocompleteEdgeAnalyzer,
+            # autocompletePhoneticAnalyzer, conceptParentPidsAnalyzer, etc.
+            # NOTA: El símbolo $ referencia la clase interna estática en Java.
+            # En YAML entre comillas dobles no se interpola, es seguro usarlo aquí.
+            # Código fuente: ca.uhn.fhir.jpa.search.HapiHSearchAnalysisConfigurers
+            analysis:
+              configurer: "ca.uhn.fhir.jpa.search.HapiHSearchAnalysisConfigurers$HapiLuceneAnalysisConfigurer"
+
+            directory:
+              # Almacenamiento local en disco (vs. 'local-heap' para desarrollo en memoria).
+              # Para persistencia real entre reinicios, montar este path como volumen en Docker/Aspire.
+              type: local-filesystem
+              # Carpeta montada desde Aspire con WithBindMount("./hapi-lucene-data", "/tmp/lucenefiles")
+              root: /tmp/lucenefiles
+
+            # Suprime el WARN de versión de Lucene en los logs.
+            # 'lucene_current' siempre usa la versión empaquetada con HAPI (actualmente 9.11.1).
+            lucene_version: lucene_current
+
+        # ============================================================
+        # LOGGING Y TRAZABILIDAD SQL
+        # ============================================================
+        # Desactivar en producción para proteger PHI (Protected Health Information)
+        # y ahorrar ciclos de CPU en el formateo de strings.
+        format_sql: false
+        show_sql: false
+
+        # ============================================================
+        # OPTIMIZACIÓN DE BATCHING (RENDIMIENTO)
+        # ============================================================
+        # HAPI FHIR genera múltiples inserciones por cada recurso (tags, indices, string data).
+        # El batching reduce drásticamente los round-trips de red.
+        # Ref: https://docs.hibernate.org/orm/current/userguide/html_single/#batch
+        jdbc:
+          batch_size: 50
+          # Optimización adicional para PostgreSQL: permite reescribir sentencias batch.
+          # Nota: Asegurarse de que 'reWriteBatchedInserts=true' esté en la URL JDBC.
+          lob.non_contextual_creation: true
+
+        order_inserts: true
+        order_updates: true
 
   transaction:
     # ============================================================
@@ -84,11 +159,22 @@ hapi:
     # R4 (R4B) es el estándar actual para interoperabilidad internacional.
     fhir_version: R4
 
+    terminology_server_enabled: true
+
+    # FLAG OBLIGATORIO: Le dice a HAPI que inicialice los beans de Lucene.
+    # Habilita operaciones como $expand, $lookup y búsquedas full-text avanzadas.
+    advanced_lucene_indexing: true
+
+    # FLAG ADICIONAL requerido en HAPI 8.x: expone los parámetros de búsqueda
+    # full-text (_content, _text) en el servidor FHIR. Sin este flag, el servidor
+    # no utiliza los índices de Lucene aunque estén correctamente construidos.
+    search_index_full_text_enabled: true
+
     # ============================================================
     # SEGURIDAD Y CONSISTENCIA DE REFERENCIAS
     # ============================================================
     # Garantiza que el servidor sea una fuente de verdad confiable y aislada.
-    
+
     # Bloquea referencias a servidores externos (Previene fugas de datos y dependencias externas).
     allow_external_references: false
     # Obliga a que cada referencia apunte a un recurso real en este servidor.
@@ -117,7 +203,16 @@ hapi:
     # Ref: https://hapifhir.io/hapi-fhir/docs/server_jpa/ui_and_tester.html
     tester:
       - enabled: false
-
+logging:
+  level:
+    root: INFO
+    # Muestra exactamente qué hace Hibernate Search al iniciar y al guardar recursos
+    org.hibernate.search: DEBUG
+    # Muestra el proceso de indexación de HAPI
+    ca.uhn.fhir.jpa.search: DEBUG
+    # Muestra los queries SQL reales y los inserts en batch
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 # ----------------------------------------------------------------------------
 # NOTAS ADICIONALES PARA POSTGRESQL:
 # - Asegurarse de que las extensiones 'pg_trgm' y 'unaccent' estén instaladas
