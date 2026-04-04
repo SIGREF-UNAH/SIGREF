@@ -10,8 +10,6 @@ import {
   Typography,
   Alert,
   Tabs,
-  Badge,
-  Card,
   Statistic,
   Row,
   Col,
@@ -208,34 +206,28 @@ export const SeriesListPage = () => {
     {
       key: "active",
       label: (
-        <Badge count={stats.active} offset={[10, 0]} showZero>
           <Space>
             <CheckCircleOutlined />
             Activas
           </Space>
-        </Badge>
       ),
     },
     {
       key: "inactive",
       label: (
-        <Badge count={stats.inactive} offset={[10, 0]} showZero>
           <Space>
             <CloseCircleOutlined />
             Inactivas
-          </Space>
-        </Badge>
+          </Space>  
       ),
     },
     {
       key: "all",
       label: (
-        <Badge count={stats.total} offset={[10, 0]} showZero>
           <Space>
             <BarChartOutlined />
             Todas
           </Space>
-        </Badge>
       ),
     },
   ];

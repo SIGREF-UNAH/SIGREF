@@ -75,11 +75,15 @@ export function usePatientsInformation() {
     // Género
     if (filters.genero) {
       params.gender =
-        filters.genero === "Masculino" ? 1 
-        : filters.genero === "Femenino" ? 2 
-          : filters.genero === "Otro" ? 3
-            : filters.genero === "Desconocido" ? 0
-              : undefined;
+        filters.genero === "Masculino"
+          ? 1
+          : filters.genero === "Femenino"
+            ? 2
+            : filters.genero === "Otro"
+              ? 3
+              : filters.genero === "Desconocido"
+                ? 0
+                : undefined;
     }
 
     // Estado vital
@@ -107,12 +111,18 @@ export function usePatientsInformation() {
       let dateString = filters.fechaNacimiento;
 
       // Si es string en formato DD/MM/YYYY, convertir a YYYY-MM-DD
-      if (typeof dateString === "string" && /^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+      if (
+        typeof dateString === "string" &&
+        /^\d{2}\/\d{2}\/\d{4}$/.test(dateString)
+      ) {
         const [day, month, year] = dateString.split("/");
         dateString = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
       }
       // Si ya está en formato YYYY-MM-DD, usar directamente
-      else if (typeof dateString === "string" && /^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      else if (
+        typeof dateString === "string" &&
+        /^\d{4}-\d{2}-\d{2}$/.test(dateString)
+      ) {
         // No hacer nada, ya está en el formato correcto
       }
 
@@ -127,21 +137,23 @@ export function usePatientsInformation() {
   }, [filters]);
 
   // Lista de pacientes con paginación
-  const { data: response, isLoading: loadingPatients, refetch } =
-    useGetApiPatients<PatientsResponse>(queryParams, {
-      query: {
-        placeholderData: (prev) => prev,
-      },
-    });
+  const {
+    data: response,
+    isLoading: loadingPatients,
+    refetch,
+  } = useGetApiPatients<PatientsResponse>(queryParams, {
+    query: {
+      placeholderData: (prev) => prev,
+    },
+  });
 
   const patient: PatientDto | undefined = Array.isArray(data) ? data[0] : data;
 
-  function formatAddress(a : any) {
+  function formatAddress(a: any) {
     return [a.line?.join(", "), a.city, a.state, a.country]
       .filter(Boolean)
       .join(", ");
   }
-
 
   // Datos del paciente seleccionado
   const selectedPatient = useMemo(() => {
@@ -160,17 +172,17 @@ export function usePatientsInformation() {
       edad: patient?.birthDate
         ? `${Math.floor(
             (Date.now() - new Date(patient.birthDate).getTime()) /
-              (365.25 * 24 * 60 * 60 * 1000)
+              (365.25 * 24 * 60 * 60 * 1000),
           )} años`
         : "No especificada",
       genero:
         patient?.gender === 1
-            ? "Masculino"
-            : patient?.gender === 2
-              ? "Femenino"
-              : patient?.gender === 3
-                ? "Otro"
-                : "Desconocido",         
+          ? "Masculino"
+          : patient?.gender === 2
+            ? "Femenino"
+            : patient?.gender === 3
+              ? "Otro"
+              : "Desconocido",
       estadoCivil:
         typeof patient?.maritalStatus?.text === "string"
           ? patient?.maritalStatus?.text === "U"
@@ -189,9 +201,10 @@ export function usePatientsInformation() {
           : patient?.maritalStatus?.coding?.[0]?.display || "Desconocido",
       nacionalidad:
         patient?.extension?.find(
-          (ext) => ext.url === PatientExtensionsUrls.nationality
+          (ext) => ext.url === PatientExtensionsUrls.nationality,
         )?.valueString || "Desconocido",
       estadoVital: patient?.active ? "Vivo" : "Fallecido",
+      idMaestro: patient?.id || "Desconocido",
       identificadores:
         patient?.identifier?.map((id) => ({
           tipo: id.type?.coding?.[0]?.display || id.type?.text || "Desconocido",
@@ -199,58 +212,60 @@ export function usePatientsInformation() {
           valor: id.value || "Desconocido",
           emisor: id.system || null,
         })) || [],
-      contactos: patient?.telecom?.map((t) => ({
-        tipo: 
-          typeof t.system === "string"
-            ? t.system === "Phone"
-              ? "Teléfono"
-              : t.system === "Email"
-                ? "Correo electrónico"
-                : t.system === "url"
-                  ? "Dirección web"
-                  : t.system === "Pager"
-                    ? "Pager"
-                    : t.system === "Fax"
-                      ? "Fax"
-                      : t.system === "SMS"
-                        ? "Mensaje de texto"
-                        : t.system === "Other"
-                          ? "Otro"
-                          : t.system === "Old"
-                            ? "Antiguo"
-                            : t.system
-            : t.system || "Desconocido",
-        uso: 
-          typeof t.use === "string"
-            ? t.use === "Mobile"
-              ? "Personal"
-              : t.use === "Home"
+      contactos:
+        patient?.telecom?.map((t) => ({
+          tipo:
+            typeof t.system === "string"
+              ? t.system === "Phone"
+                ? "Teléfono"
+                : t.system === "Email"
+                  ? "Correo electrónico"
+                  : t.system === "url"
+                    ? "Dirección web"
+                    : t.system === "Pager"
+                      ? "Pager"
+                      : t.system === "Fax"
+                        ? "Fax"
+                        : t.system === "SMS"
+                          ? "Mensaje de texto"
+                          : t.system === "Other"
+                            ? "Otro"
+                            : t.system === "Old"
+                              ? "Antiguo"
+                              : t.system
+              : t.system || "Desconocido",
+          uso:
+            typeof t.use === "string"
+              ? t.use === "Mobile"
+                ? "Personal"
+                : t.use === "Home"
+                  ? "Hogar"
+                  : t.use === "Work"
+                    ? "Trabajo"
+                    : t.use === "Temp"
+                      ? "Temporal"
+                      : t.use === "Old"
+                        ? "Antiguo"
+                        : t.use
+              : t.use || "Desconocido",
+          valor: t.value,
+        })) || [],
+      direcciones:
+        patient?.address?.map((a) => ({
+          tipo:
+            typeof a.use === "string"
+              ? a.use === "Home"
                 ? "Hogar"
-                : t.use === "Work"
+                : a.use === "Work"
                   ? "Trabajo"
-                  : t.use === "Temp"
+                  : a.use === "Temp"
                     ? "Temporal"
-                    : t.use === "Old"
+                    : a.use === "Old"
                       ? "Antiguo"
-                      : t.use
-            : t.use || "Desconocido",
-        valor: t.value,
-      })) || [],
-      direcciones: patient?.address?.map((a) => ({
-        tipo: 
-          typeof a.use === "string"
-            ? a.use === "Home"
-              ? "Hogar"
-              : a.use === "Work"
-                ? "Trabajo"
-                : a.use === "Temp"
-                  ? "Temporal"
-                  : a.use === "Old"
-                    ? "Antiguo"
-                    : a.use
-            : a.use || "Desconocido",
-        valor: formatAddress(a),
-      })) || [],
+                      : a.use
+              : a.use || "Desconocido",
+          valor: formatAddress(a),
+        })) || [],
     };
   }, [data]);
 
@@ -260,7 +275,9 @@ export function usePatientsInformation() {
     return items.map((p: PatientDto, index: number) => ({
       id: p.id || String(index),
       key: p.id || String(index),
-      nombre: `${p?.name?.[0]?.given?.join(" ") || ""} ${p?.name?.[0]?.family || ""}`.trim() || "Desconocido",
+      nombre:
+        `${p?.name?.[0]?.given?.join(" ") || ""} ${p?.name?.[0]?.family || ""}`.trim() ||
+        "Desconocido",
       identificadorTipo: (() => {
         const code =
           p.identifier?.[0]?.type?.coding?.[0]?.code?.toUpperCase() ?? "";
@@ -276,7 +293,7 @@ export function usePatientsInformation() {
         : "-",
       nacionalidad:
         p?.extension?.find(
-          (ext) => ext.url === PatientExtensionsUrls.nationality
+          (ext) => ext.url === PatientExtensionsUrls.nationality,
         )?.valueString || "-",
       genero:
         p.gender === 1
@@ -336,14 +353,14 @@ Nacionalidad: ${selectedPatient.nacionalidad}
 Estado Civil: ${selectedPatient.estadoCivil}
 Estado Vital: ${selectedPatient.estadoVital}
 ${selectedPatient.identificadores
-.map((id) => `${id.tipo}: ${id.valor} (${id.emisor})`)
-.join("\n")}
+  .map((id) => `${id.tipo}: ${id.valor} (${id.emisor})`)
+  .join("\n")}
 ${selectedPatient.contactos
-.map((c) => `${c.tipo}(${c.uso}): ${c.valor}`)
-.join("\n")}
+  .map((c) => `${c.tipo}(${c.uso}): ${c.valor}`)
+  .join("\n")}
 ${selectedPatient.direcciones
-.map((d) => `Dirección(${d.tipo}): ${d.valor}`)
-.join("\n")}
+  .map((d) => `Dirección(${d.tipo}): ${d.valor}`)
+  .join("\n")}
 `.trim();
 
     navigator.clipboard.writeText(info);
