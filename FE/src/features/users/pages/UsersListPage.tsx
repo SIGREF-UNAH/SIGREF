@@ -1,26 +1,46 @@
-import { Col, Row, Spin, Statistic, Table, Tag, Input, Button, Drawer, Descriptions } from "antd";
+import {
+  Col,
+  Row,
+  Spin,
+  Statistic,
+  Table,
+  Tag,
+  Input,
+  Button,
+  Drawer,
+  Descriptions,
+  Switch,
+  message,
+  Tooltip,
+} from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import { useState } from "react";
-import { useGetApiKeycloakSeederList } from "../../../api/keycloak-seeder/keycloak-seeder";
 import { PageHeaderTabs } from "../../../shared/components";
 import { useAbility } from "../../../config";
+import { useQueryClient } from "@tanstack/react-query";
+import { usePatchApiUsersIdToggleStatus } from "../../../api/users/users";
+import { useGetApiUsersList } from "../../../api/users/users";
+import { getGetApiUsersListQueryKey } from "../../../api/users/users";
 
 export const UsersListPage = () => {
   const [search, setSearch] = useState("");
   const [pageNumber, setPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
-
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const ability = useAbility();
 
   const pageSize = 5;
 
-  const { data, isLoading } = useGetApiKeycloakSeederList({
+  const { data, isLoading } = useGetApiUsersList({
     PageNumber: pageNumber,
     PageSize: pageSize,
   });
 
+  const { mutateAsync: toggleUserStatus } = usePatchApiUsersIdToggleStatus();
+
   console.log(data);
-  
+
   const users = data?.data?.items ?? [];
   const pagination = data?.data?.pagination;
 
@@ -31,6 +51,25 @@ export const UsersListPage = () => {
   const activeUsers = users.filter((u: any) => u.enabled).length;
   const inactiveUsers = totalUsers - activeUsers;
 
+  const handleToggleUserStatus = async (user: any) => {
+    setTogglingId(user.id);
+    try {
+      await toggleUserStatus({ id: user.id });
+      message.success(`Estado de ${user.firstName} actualizado correctamente`);
+
+      queryClient.invalidateQueries({
+        queryKey: getGetApiUsersListQueryKey({
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+        }),
+      });
+    } catch (error) {
+      message.error("No se pudo cambiar el estado");
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
   const columns = [
     { title: "Nombre", dataIndex: "firstName", key: "firstName" },
     { title: "Apellido", dataIndex: "lastName", key: "lastName" },
@@ -39,11 +78,23 @@ export const UsersListPage = () => {
       title: "Estado",
       dataIndex: "enabled",
       key: "enabled",
-      render: (enabled: boolean) => (
-        <Tag color={enabled ? "green" : "red"}>
-          {enabled ? "✓ Activo" : "✗ Inactivo"}
-        </Tag>
-      ),
+      align: "center",
+      render: (enabled: boolean, record: any) =>
+        ability.can("update", "users") ? (
+          <Tooltip title={enabled ? "Desactivar usuario" : "Activar usuario"}>
+            <Switch
+              checked={enabled}
+              loading={togglingId === record.id} // Estado de carga individual
+              checkedChildren="Activo"
+              unCheckedChildren="Inactivo"
+              onChange={() => handleToggleUserStatus(record)}
+            />
+          </Tooltip>
+        ) : (
+          <Tag color={enabled ? "green" : "red"}>
+            {enabled ? "✓ Activo" : "✗ Inactivo"}
+          </Tag>
+        ),
     },
     {
       title: "Acciones",
@@ -70,26 +121,42 @@ export const UsersListPage = () => {
       <PageHeaderTabs
         title="Gestión de Empleados"
         tabs={[
-          ...(ability.can("read", "practitioners") ? [{
-            key: "read-practitioners",
-            label: "Lista de Empleados",
-            path: "/practitioners/list",
-          }] : []),
-          ...(ability.can("create", "practitioners") ? [{
-            key: "create-practitioners",
-            label: "Crear Empleado",
-            path: "/practitioners/create",
-          }] : []),
-          ...(ability.can("read", "users") ? [{
-            key: "read-users",
-            label: "Lista de Usuarios",
-            path: "/users/list",
-          }] : []),
-            ...(ability.can("create", "users") ? [{
-              key: "create-users",
-              label: "Crear Usuario",
-              path: "/users/create",
-          }] : []),
+          ...(ability.can("read", "practitioners")
+            ? [
+                {
+                  key: "read-practitioners",
+                  label: "Lista de Empleados",
+                  path: "/practitioners/list",
+                },
+              ]
+            : []),
+          ...(ability.can("create", "practitioners")
+            ? [
+                {
+                  key: "create-practitioners",
+                  label: "Crear Empleado",
+                  path: "/practitioners/create",
+                },
+              ]
+            : []),
+          ...(ability.can("read", "users")
+            ? [
+                {
+                  key: "read-users",
+                  label: "Lista de Usuarios",
+                  path: "/users/list",
+                },
+              ]
+            : []),
+          ...(ability.can("create", "users")
+            ? [
+                {
+                  key: "create-users",
+                  label: "Crear Usuario",
+                  path: "/users/create",
+                },
+              ]
+            : []),
         ]}
         defaultActive="read-users"
       />
@@ -155,16 +222,10 @@ export const UsersListPage = () => {
         />
 
         <div className="flex justify-end gap-2 mt-4">
-          <Button
-            disabled={!hasPrevious}
-            onClick={() => setPage((p) => p - 1)}
-          >
+          <Button disabled={!hasPrevious} onClick={() => setPage((p) => p - 1)}>
             Página anterior
           </Button>
-          <Button
-            disabled={!hasNext}
-            onClick={() => setPage((p) => p + 1)}
-          >
+          <Button disabled={!hasNext} onClick={() => setPage((p) => p + 1)}>
             Página siguiente
           </Button>
         </div>
@@ -179,9 +240,7 @@ export const UsersListPage = () => {
       >
         {selectedUser && (
           <Descriptions column={1} bordered>
-            <Descriptions.Item label="ID">
-              {selectedUser.id}
-            </Descriptions.Item>
+            <Descriptions.Item label="ID">{selectedUser.id}</Descriptions.Item>
             <Descriptions.Item label="Username">
               {selectedUser.username}
             </Descriptions.Item>
@@ -192,7 +251,11 @@ export const UsersListPage = () => {
               {selectedUser.email}
             </Descriptions.Item>
             <Descriptions.Item label="Estado">
-              {selectedUser.active ? "Activo" : "Inactivo"}
+              {selectedUser.enabled ? (
+                <Tag color="green">Activo</Tag>
+              ) : (
+                <Tag color="red">Inactivo</Tag>
+              )}
             </Descriptions.Item>
           </Descriptions>
         )}
@@ -200,4 +263,3 @@ export const UsersListPage = () => {
     </div>
   );
 };
-

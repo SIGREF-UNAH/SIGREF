@@ -15,6 +15,7 @@ import {
   ProFormSelect,
   type ProFormInstance,
 } from "@ant-design/pro-components";
+import { usePostApiUsersCreate } from "../../../api/users/users";
 
 type Practitioner = {
   id: number;
@@ -58,7 +59,7 @@ export default function CreateUsersPage() {
   const { keycloak } = useKeycloak();
   const ability = useAbility();
 
-  const createUserMutation = usePostApiKeycloakSeederCreateUser();
+  const createUserMutation = usePostApiUsersCreate();
 
   const currentUserRole = keycloak.tokenParsed?.realm_access?.roles || [];
 
