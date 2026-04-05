@@ -344,12 +344,12 @@ public class KeycloakAdminService : IKeycloakAdminService
             return Fail<KeycloakUserDto>(403, "No tiene permisos para editar usuarios.");
  
         // 2. Si se solicita cambio de rol, verificar jerarquía
-        if (!string.IsNullOrWhiteSpace(updateDto.NewRoleName))
+        if (!string.IsNullOrWhiteSpace(updateDto.NewRoleName)
+            && (!RoleRules.TryGetValue(requestorRole, out var allowedRoles)
+                || !allowedRoles.Contains(updateDto.NewRoleName)))
         {
-            if (!RoleRules.TryGetValue(requestorRole, out var allowedRoles)
-                || !allowedRoles.Contains(updateDto.NewRoleName))
-                return Fail<KeycloakUserDto>(403,
-                    $"No tiene permisos para asignar el rol '{updateDto.NewRoleName}'.");
+            return Fail<KeycloakUserDto>(403, 
+                $"No tiene permisos para asignar el rol '{updateDto.NewRoleName}'.");
         }
  
         // 3. Ejecutar la actualización (lanza KeycloakUserNotFoundException si no existe)

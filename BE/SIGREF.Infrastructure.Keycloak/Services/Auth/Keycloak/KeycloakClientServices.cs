@@ -225,7 +225,7 @@ public partial class KeycloakClient : IKeycloakClient
     public async Task UpdateUserRoleAsync(string userId, string newRoleName, CancellationToken ct)
     {
         // Verificar que el usuario exista antes de cualquier operación
-        JsonElement _ = await GetUserByIdAsync(userId, ct)
+        _ = await GetUserByIdAsync(userId, ct)
             ?? throw new KeycloakUserNotFoundException(userId);
  
         var mappingUrl = $"{_settings.BaseUrl}/admin/realms/{_settings.RealmName}" +
