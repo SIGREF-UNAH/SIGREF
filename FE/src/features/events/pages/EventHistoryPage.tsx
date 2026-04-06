@@ -32,7 +32,6 @@ export const EventHistoryPage = () => {
     filters,
     selectedRecord,
     modalOpen,
-    pagination,
     isLoading,
     setFilters,
     handleSearch,
@@ -211,13 +210,13 @@ export const EventHistoryPage = () => {
           bordered
           rowKey="id"
           columns={columns}
-          dataSource={data}
+          dataSource={data.items || []}
           search={false}
           loading={isLoading}
           pagination={{
-            current: pagination?.currentPage || filters.page,
-            pageSize: pagination?.pageSize || filters.pageSize,
-            total: pagination?.totalItems || 0,
+            current: data.pagination?.currentPage || filters.page,
+            pageSize: data.pagination?.pageSize || filters.pageSize,
+            total: data.pagination?.totalItems || 0,
             showTotal: (total) => `Total ${total} registros`,
             showSizeChanger: true,
             pageSizeOptions: ["10", "20", "50", "100"],
