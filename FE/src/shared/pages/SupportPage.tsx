@@ -19,8 +19,8 @@ export const SupportPage = () => {
       const userData = await response.json();
       return userData.avatar_url;
     } catch (error) {
-      console.error(`Error fetching GitHub avatar for ${username}:`, error);
-      return ""; // Retorna string vacío en caso de error
+      console.error(`Error al cargar el avatar de ${username}:`, error);
+      return ""; 
     }
   };
 

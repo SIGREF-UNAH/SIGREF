@@ -147,9 +147,8 @@ export function usePractitionerForm() {
           
           if (dateObj && dateObj.isValid()) {
             formattedBirthDate = dateObj.toISOString();
-          } else {
-            console.warn('Fecha inválida:', values.birthDate);
           }
+          
         } catch (error) {
           console.error('Error al procesar fecha:', error);
         }

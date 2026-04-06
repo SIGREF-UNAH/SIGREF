@@ -80,9 +80,6 @@ export function useCreateOrganization() {
       values.type = "prov";
     }
 
-    //console.log("Tipo seleccionado:", values.type);
-    //console.log("Mapa de tipo:", typeMap[values.type]);
-
     const payload: CreateOrganizationDto & { type?: any } = {
       identifier: [
         {
