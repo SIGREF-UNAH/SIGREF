@@ -196,8 +196,6 @@ export function useUpdateOrganization() {
       ],
     };
 
-    console.log("Payload:", JSON.stringify(payload, null, 2));
-
     try {
       await updateOrganization({
         id,

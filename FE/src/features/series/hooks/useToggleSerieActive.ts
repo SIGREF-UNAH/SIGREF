@@ -69,11 +69,9 @@ export const useToggleSerieActive = () => {
 
       if (isCurrentlyActive) {
         // Está activa → desactivar
-        console.log("Desactivando serie:", id);
         await deactivateSerie({ id });
       } else {
         // Está inactiva → activar
-        console.log("Activando serie:", id);
         await activateSerie({
           id,
           data: {

@@ -39,8 +39,6 @@ export const UsersListPage = () => {
 
   const { mutateAsync: toggleUserStatus } = usePatchApiUsersIdToggleStatus();
 
-  console.log(data);
-
   const users = data?.data?.items ?? [];
   const pagination = data?.data?.pagination;
 

@@ -332,8 +332,6 @@ export default function CreateUsersPage() {
                 roles: [values.role],
               };
 
-              console.log("payload:", payload);
-
               try {
                 await createUserMutation.mutateAsync({ data: payload });
 
