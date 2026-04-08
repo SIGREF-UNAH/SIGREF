@@ -147,7 +147,7 @@ export const SeriesForm: React.FC<Props> = ({ mode, initialValues, onFinish, loa
             description="El número actual se incrementa automáticamente cada vez que se genera un nuevo documento con esta serie."
             type="warning"
             showIcon
-            style={{ marginTop: 16 }}
+            style={{ marginTop: 16, marginBottom: 24 }}
           />
         </>
       )}
