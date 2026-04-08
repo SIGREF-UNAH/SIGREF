@@ -1,17 +1,31 @@
 import {
+  AppstoreOutlined,
   DeleteOutlined,
   EditOutlined,
   ExclamationCircleOutlined,
   EyeOutlined,
   FilterOutlined,
+  ManOutlined,
+  QuestionCircleOutlined,
   UserOutlined,
+  WomanOutlined,
 } from "@ant-design/icons";
 import {
   ProForm,
   ProFormSelect,
   ProFormText,
 } from "@ant-design/pro-components";
-import { Alert, Button, message, Popconfirm, Space, Spin, Table, Tag } from "antd";
+import {
+  Alert,
+  Button,
+  message,
+  Popconfirm,
+  Space,
+  Spin,
+  Table,
+  Tag,
+  Tooltip,
+} from "antd";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
@@ -32,6 +46,7 @@ interface Practitioner {
   positionCode: string;
   area: string;
   status: string;
+  gender?: number; // 0: Desconocido, 1: Masculino, 2: Femenino, 3: Otro
 }
 
 export const PractitionersListForm = () => {
@@ -41,8 +56,15 @@ export const PractitionersListForm = () => {
   const [searchName, setSearchName] = useState("");
   const [searchRole, setSearchRole] = useState<string | undefined>(undefined);
   const [searchArea, setSearchArea] = useState<string | undefined>(undefined);
-  const [searchStatus, setSearchStatus] = useState<string | undefined>(undefined);
-  const handleNavigate = (id: string) => {navigate(`/practitioners/details/${id}`);};
+  const [searchGender, setSearchGender] = useState<number | undefined>(
+    undefined,
+  );
+  const [searchStatus, setSearchStatus] = useState<string | undefined>(
+    undefined,
+  );
+  const handleNavigate = (id: string) => {
+    navigate(`/practitioners/details/${id}`);
+  };
 
   const { data, isLoading, isError } = useGetApiPractitioner<{
     items: Practitioner[];
@@ -69,6 +91,32 @@ export const PractitionersListForm = () => {
     },
   });
 
+  const GENDER_CONFIG: Record<
+    number,
+    { text: string; icon: React.ReactNode; color: string }
+  > = {
+    1: {
+      text: "Masculino",
+      icon: <ManOutlined />,
+      color: "blue",
+    },
+    2: {
+      text: "Femenino",
+      icon: <WomanOutlined />,
+      color: "magenta",
+    },
+    3: {
+      text: "Otro",
+      icon: <AppstoreOutlined />,
+      color: "purple",
+    },
+    0: {
+      text: "Desconocido",
+      icon: <QuestionCircleOutlined />,
+      color: "default",
+    },
+  };
+
   const practitioners: Practitioner[] =
     data?.items?.map((p: any, index: number) => {
       const role = p.roles?.[0]; // Tomar el primer rol asignado
@@ -86,18 +134,31 @@ export const PractitionersListForm = () => {
         positionCode,
         area,
         status: p.active ? "Activo" : "Inactivo",
+        gender: p.gender,
       };
     }) ?? [];
 
-  if (isLoading) return <div className="flex items-center justify-center h-screen"><Spin size="large" /></div>;
-  if (isError) return <div className="flex items-center justify-center h-screen"><Alert message="Error al cargar empleados" type="error" showIcon /></div>;
+  if (isLoading)
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Spin size="large" />
+      </div>
+    );
+  if (isError)
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Alert message="Error al cargar empleados" type="error" showIcon />
+      </div>
+    );
 
   const filteredEmployees = practitioners.filter((e) => {
     const nameMatch = e.name.toLowerCase().includes(searchName.toLowerCase());
     const roleMatch = searchRole ? e.positionCode === searchRole : true;
     const areaMatch = searchArea ? e.area === searchArea : true;
     const statusMatch = searchStatus ? e.status === searchStatus : true;
-    return nameMatch && roleMatch && areaMatch && statusMatch;
+    const genderMatch =
+      searchGender !== undefined ? e.gender === searchGender : true;
+    return nameMatch && roleMatch && areaMatch && statusMatch && genderMatch;
   });
 
   const handleEdit = (practitioner: Practitioner) => {
@@ -134,6 +195,35 @@ export const PractitionersListForm = () => {
           {status === "Activo" ? "✓ Activo" : "✗ Inactivo"}
         </Tag>
       ),
+    },
+    {
+      title: "Género",
+      dataIndex: "gender",
+      key: "gender",
+      align: "center",
+      render: (genderCode: number) => {
+        const config = GENDER_CONFIG[genderCode] || GENDER_CONFIG[0];
+
+        return (
+          <Tooltip title={config.text}>
+            <Tag
+              color={config.color}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: "50%",
+                width: "32px",
+                height: "32px",
+                fontSize: "16px",
+                margin: "0 auto",
+              }}
+            >
+              {config.icon}
+            </Tag>
+          </Tooltip>
+        );
+      },
     },
     {
       title: "Acciones",
@@ -247,6 +337,21 @@ export const PractitionersListForm = () => {
               fieldProps={{
                 value: searchArea,
                 onChange: (value) => setSearchArea(value),
+              }}
+            />
+            <ProFormSelect
+              name="gender"
+              placeholder="Seleccionar"
+              label={<span className="text-general font-medium">Género</span>}
+              options={[
+                { label: "Desconocido", value: 0 },
+                { label: "Masculino", value: 1 },
+                { label: "Femenino", value: 2 },
+                { label: "Otro", value: 3 },
+              ]}
+              fieldProps={{
+                value: searchGender,
+                onChange: (value) => setSearchGender(value),
               }}
             />
             <ProFormSelect
