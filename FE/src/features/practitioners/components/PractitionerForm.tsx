@@ -1,5 +1,5 @@
 import { FaUserPlus, FaUserEdit, FaCheck } from "react-icons/fa";
-import { BsPersonVcardFill } from "react-icons/bs";
+import { BsPersonFill, BsPersonVcardFill } from "react-icons/bs";
 import { MdCancel } from "react-icons/md";
 import { Alert, Form, Spin } from "antd";
 import PhoneInput from "react-phone-number-input";
@@ -56,9 +56,9 @@ export default function PractitionerForm() {
       {/* Encabezado */}
       <div className="flex items-center gap-3 mb-8 pb-4 border-b border-gray-200">
         {isEditMode ? (
-          <FaUserEdit className="w-10 h-10 text-blue-600" />
+          <BsPersonFill className="text-blue-500 w-7 h-7" />
         ) : (
-          <FaUserPlus className="w-10 h-10 text-green-600" />
+          <BsPersonFill className="text-blue-500 w-7 h-7" />
         )}
         <div>
           <h1 className="text-2xl font-bold text-gray-800">
@@ -108,7 +108,7 @@ export default function PractitionerForm() {
       >
         <section className="mb-8">
           <div className="flex items-center gap-3 mb-6 pb-3 border-b border-gray-200">
-            <BsPersonVcardFill className="w-7 h-7 text-blue-600" />
+            <BsPersonVcardFill className="w-7 h-7 text-blue-500" />
             <h2 className="text-lg font-semibold text-gray-800">
               Datos Personales
             </h2>
