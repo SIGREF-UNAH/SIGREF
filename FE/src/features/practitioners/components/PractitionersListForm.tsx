@@ -46,7 +46,7 @@ interface Practitioner {
   positionCode: string;
   area: string;
   status: string;
-  gender: string;
+  gender?: number; // 0: Desconocido, 1: Masculino, 2: Femenino, 3: Otro
 }
 
 export const PractitionersListForm = () => {
@@ -56,6 +56,9 @@ export const PractitionersListForm = () => {
   const [searchName, setSearchName] = useState("");
   const [searchRole, setSearchRole] = useState<string | undefined>(undefined);
   const [searchArea, setSearchArea] = useState<string | undefined>(undefined);
+  const [searchGender, setSearchGender] = useState<number | undefined>(
+    undefined,
+  );
   const [searchStatus, setSearchStatus] = useState<string | undefined>(
     undefined,
   );
@@ -104,7 +107,7 @@ export const PractitionersListForm = () => {
     },
     3: {
       text: "Otro",
-      icon: <AppstoreOutlined/>,
+      icon: <AppstoreOutlined />,
       color: "purple",
     },
     0: {
@@ -153,7 +156,9 @@ export const PractitionersListForm = () => {
     const roleMatch = searchRole ? e.positionCode === searchRole : true;
     const areaMatch = searchArea ? e.area === searchArea : true;
     const statusMatch = searchStatus ? e.status === searchStatus : true;
-    return nameMatch && roleMatch && areaMatch && statusMatch;
+    const genderMatch =
+      searchGender !== undefined ? e.gender === searchGender : true;
+    return nameMatch && roleMatch && areaMatch && statusMatch && genderMatch;
   });
 
   const handleEdit = (practitioner: Practitioner) => {
@@ -332,6 +337,21 @@ export const PractitionersListForm = () => {
               fieldProps={{
                 value: searchArea,
                 onChange: (value) => setSearchArea(value),
+              }}
+            />
+            <ProFormSelect
+              name="gender"
+              placeholder="Seleccionar"
+              label={<span className="text-general font-medium">Género</span>}
+              options={[
+                { label: "Desconocido", value: 0 },
+                { label: "Masculino", value: 1 },
+                { label: "Femenino", value: 2 },
+                { label: "Otro", value: 3 },
+              ]}
+              fieldProps={{
+                value: searchGender,
+                onChange: (value) => setSearchGender(value),
               }}
             />
             <ProFormSelect
