@@ -196,7 +196,7 @@ export const UsersListPage = () => {
         {/* Búsqueda */}
         <div className="mb-4">
           <Input
-            placeholder="Buscar por nombre o email"
+            placeholder="Buscar por nombre"
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
