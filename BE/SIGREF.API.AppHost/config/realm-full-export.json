@@ -502,7 +502,7 @@
     "requiredActions" : [ ],
     "realmRoles" : [ "default-roles-sigref" ],
     "clientRoles" : {
-      "realm-management" : [ "manage-users", "view-users", "query-users" ],
+      "realm-management" : [ "manage-users", "view-users", "query-users", "view-realm" ],
       "sigref-admin-api" : [ "uma_protection" ]
     },
     "notBefore" : 0,
