@@ -158,8 +158,18 @@ export default function PractitionerForm() {
               name="dni"
               label="Número de Identificación"
               placeholder="Ej. 0401200098371"
+              dependencies={["idType"]}
               rules={[
                 { required: true, message: "El identificador es obligatorio" },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value) return Promise.resolve();
+                    if (getFieldValue("idType") === "DNI" && !/^\d+$/.test(value)) {
+                      return Promise.reject(new Error("El DNI solo debe contener números"));
+                    }
+                    return Promise.resolve();
+                  },
+                }),
               ]}
             />
             <ProFormDatePicker
