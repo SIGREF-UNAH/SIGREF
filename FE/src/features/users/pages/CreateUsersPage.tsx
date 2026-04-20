@@ -1,4 +1,5 @@
-import { Card, List, Tag, Space, message } from "antd";
+import { List, Tag, Space } from "antd";
+import { useMessage } from "../../../shared/hooks/useMessage";
 import { useEffect, useRef, useState } from "react";
 import { PageHeaderTabs } from "../../../shared/components";
 import { useGetApiPractitioner } from "../../../api/practitioner/practitioner";
@@ -60,6 +61,7 @@ export default function CreateUsersPage() {
   const ability = useAbility();
 
   const createUserMutation = usePostApiUsersCreate();
+  const { success, error } = useMessage();
 
   const currentUserRole = keycloak.tokenParsed?.realm_access?.roles || [];
 
@@ -315,12 +317,12 @@ export default function CreateUsersPage() {
             }}
             onFinish={async (values) => {
               if (!selected) {
-                message.error("Debe seleccionar un empleado");
+                error("Debe seleccionar un empleado");
                 return;
               }
 
               if (values.password !== values.confirmPassword) {
-                message.error("Las contraseñas no coinciden");
+                error("Las contraseñas no coinciden");
                 return;
               }
 
@@ -335,17 +337,11 @@ export default function CreateUsersPage() {
               try {
                 await createUserMutation.mutateAsync({ data: payload });
 
-                message.success({
-                  content: "Usuario creado correctamente",
-                  duration: 2,
-                });
+                success("Usuario creado correctamente", 2);
                 formRef.current?.resetFields();
-              } catch (error) {
-                console.error(error);
-                message.error({
-                  content: "Error al crear el usuario",
-                  duration: 2,
-                });
+              } catch (err) {
+                console.error(err);
+                error("Error al crear el usuario", 2);
               }
             }}
           >
