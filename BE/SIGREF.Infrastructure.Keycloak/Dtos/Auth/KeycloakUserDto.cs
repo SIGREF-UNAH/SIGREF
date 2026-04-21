@@ -4,16 +4,17 @@ namespace SIGREF.Infrastructure.Keycloak.Dtos.Auth;
 
 public class KeycloakUserDto
 {
-    public string Id { get; set; } = default!;            // ID interno de Keycloak
+    public string Id { get; set; } = default!;
     public string Username { get; set; } = default!;
     public string? Email { get; set; }
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
     public string? DisplayName { get; set; }
 
     // Atributo crítico de negocio
     public string PractitionerId { get; set; } = default!;
     public bool? Enabled { get; set; }
 
-    
     public List<string>? Roles { get; set; }
 }
 

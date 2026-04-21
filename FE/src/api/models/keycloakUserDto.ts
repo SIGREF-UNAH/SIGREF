@@ -13,6 +13,10 @@ export interface KeycloakUserDto {
   /** @nullable */
   email?: string | null;
   /** @nullable */
+  firstName?: string | null;
+  /** @nullable */
+  lastName?: string | null;
+  /** @nullable */
   displayName?: string | null;
   /** @nullable */
   practitionerId?: string | null;
