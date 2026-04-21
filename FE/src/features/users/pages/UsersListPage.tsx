@@ -13,7 +13,7 @@ import {
   message,
   Tooltip,
 } from "antd";
-import { UserOutlined } from "@ant-design/icons";
+import { CopyOutlined, UserOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import { PageHeaderTabs } from "../../../shared/components";
 import { useAbility } from "../../../config";
@@ -104,6 +104,32 @@ export const UsersListPage = () => {
       ),
     },
   ];
+
+  const handleCopyData = () => {
+    if (!selectedUser)
+      {
+      message.error("No hay usuario seleccionado para copiar");
+      return;
+    };
+    
+    const userData = `ID: ${selectedUser.id}
+    Username: ${selectedUser.username}
+    Nombre: ${selectedUser.firstName} ${selectedUser.lastName}  
+    Correo: ${selectedUser.email}
+    Estado: ${selectedUser.enabled ? "Activo" : "Inactivo"}`;
+  
+    // 3. Intento de copia
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(userData)
+      .then(() => {
+        message.success(`¡Datos de ${selectedUser.firstName} copiados!`);
+      })
+      .catch((err) => {
+        console.error("Error al copiar:", err);
+        message.error("No se pudo copiar al portapapeles");
+      });
+  }
+  };
 
   if (isLoading) {
     return (
@@ -254,6 +280,16 @@ export const UsersListPage = () => {
               ) : (
                 <Tag color="red">Inactivo</Tag>
               )}
+            </Descriptions.Item>
+            <Descriptions.Item label="Acción">
+            <Button
+              type="dashed"
+              icon={<CopyOutlined />}
+              className="bg-gray-200 hover:bg-gray-300"
+              onClick={handleCopyData}
+            >
+              Copiar Datos
+            </Button>
             </Descriptions.Item>
           </Descriptions>
         )}
