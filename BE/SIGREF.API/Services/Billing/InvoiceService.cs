@@ -90,6 +90,13 @@ public class InvoiceService : IInvoiceService
         if (dto.ParentInvoiceId != null)
             return ResponseHelper.Fail<InvoiceDetailDto>(400,
                 "Para notas de crédito o débito use los métodos específicos.");
+
+        // Validar PatientIdFhir: obligatorio solo si no es emergencia
+        if (dto.InvoiceType != InvoiceType.Emergency && string.IsNullOrWhiteSpace(dto.PatientIdFhir))
+        {
+            return ResponseHelper.Fail<InvoiceDetailDto>(400,
+                "El ID del paciente es obligatorio para facturas no de emergencia.");
+        }
  
         var userId = _userContextService.GetUserId();
         var roles  = _userContextService.GetUserRoles();
