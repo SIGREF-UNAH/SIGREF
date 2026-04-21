@@ -7,6 +7,7 @@ import { useGetApiLocations } from "../../../api/locations/locations";
 import { USER_ROLE_OPTIONS } from "../../../shared/constants/UserRolesConstants";
 import { FaCheck } from "react-icons/fa";
 import { usePostApiKeycloakSeederCreateUser } from "../../../api/keycloak-seeder/keycloak-seeder";
+import { useMessage } from "../../../shared/hooks/useMessage";
 import { useAbility } from "../../../config";
 import { useKeycloak } from "@react-keycloak/web";
 import {
@@ -48,6 +49,7 @@ function generarUsernameUnico(base: string, existentes: string[]) {
 }
 
 export default function CreateUsersPage() {
+  
   const [selected, setSelected] = useState<Practitioner | null>(null);
   const formRef = useRef<ProFormInstance | null>(null);
   const [searchName, setSearchName] = useState("");
@@ -58,7 +60,8 @@ export default function CreateUsersPage() {
   );
   const { keycloak } = useKeycloak();
   const ability = useAbility();
-
+  // Para los mensajes de error y éxito
+  const msg = useMessage();
   const createUserMutation = usePostApiUsersCreate();
 
   const currentUserRole = keycloak.tokenParsed?.realm_access?.roles || [];
@@ -315,12 +318,12 @@ export default function CreateUsersPage() {
             }}
             onFinish={async (values) => {
               if (!selected) {
-                message.error("Debe seleccionar un empleado");
+                msg.error("Debe seleccionar un empleado de la lista");
                 return;
               }
 
               if (values.password !== values.confirmPassword) {
-                message.error("Las contraseñas no coinciden");
+                msg.error("Las contraseñas no coinciden");
                 return;
               }
 
@@ -335,17 +338,17 @@ export default function CreateUsersPage() {
               try {
                 await createUserMutation.mutateAsync({ data: payload });
 
-                message.success({
-                  content: "Usuario creado correctamente",
-                  duration: 2,
-                });
+               msg.destroy("user-create");
+                msg.success("Usuario creado correctamente");
+
+
                 formRef.current?.resetFields();
               } catch (error) {
                 console.error(error);
-                message.error({
-                  content: "Error al crear el usuario",
-                  duration: 2,
-                });
+                msg.destroy("user-create");
+                
+                const errorMsg = error?.response?.data?.message || "Error al crear el usuario";
+                msg.error(errorMsg);
               }
             }}
           >
