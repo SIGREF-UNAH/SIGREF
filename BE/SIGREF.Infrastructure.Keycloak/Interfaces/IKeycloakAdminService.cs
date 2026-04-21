@@ -14,8 +14,13 @@ namespace SIGREF.Infrastructure.Keycloak.Interfaces;
 /// y normalización de respuestas mediante <see cref="ResponseDto{T}"/>.
 /// </para>
 /// <para>
-/// Ningún método de esta interfaz expone <see cref="System.Text.Json.JsonElement"/> al caller;
-/// todas las respuestas están mapeadas a DTOs tipados.
+/// Las reglas de jerarquía de roles determinan qué operaciones puede realizar
+/// cada tipo de usuario (p. ej., solo <c>ti</c> puede crear otros usuarios con
+/// rol <c>admin</c>).
+/// </para>
+/// <para>
+/// Ningún método de esta interfaz expone <see cref="System.Text.Json.JsonElement"/>
+/// al llamador; todas las respuestas están mapeadas a DTOs tipados.
 /// </para>
 /// </remarks>
 public interface IKeycloakAdminService
@@ -28,23 +33,47 @@ public interface IKeycloakAdminService
     /// Crea un usuario en Keycloak vinculado a un Practitioner FHIR.
     /// </summary>
     /// <remarks>
-    /// Valida en orden:
+    /// <para>
+    /// La creación sigue un flujo de validación estricto antes de ejecutar
+    /// cualquier escritura en Keycloak:
+    /// </para>
     /// <list type="number">
-    ///   <item><description>Que el creador tenga un rol válido y pueda asignar los roles solicitados.</description></item>
-    ///   <item><description>Que el Practitioner exista y esté activo en FHIR.</description></item>
-    ///   <item><description>Que el Practitioner no esté ya vinculado a otro usuario en Keycloak.</description></item>
+    ///   <item><description>
+    ///     El creador debe tener un rol válido en el sistema y dicho rol debe
+    ///     permitir la asignación de cada uno de los roles solicitados según
+    ///     las reglas de jerarquía.
+    ///   </description></item>
+    ///   <item><description>
+    ///     El Practitioner debe existir y estar activo en el servidor FHIR.
+    ///   </description></item>
+    ///   <item><description>
+    ///     El Practitioner no debe tener ya un usuario de Keycloak vinculado
+    ///     (un Practitioner → un usuario, relación 1:1).
+    ///   </description></item>
     /// </list>
+    /// <para>
+    /// Si la creación del usuario falla tras haber sido registrado en Keycloak
+    /// (p. ej. al asignar roles), se ejecuta automáticamente un rollback que
+    /// elimina el usuario creado para evitar registros huérfanos.
+    /// </para>
     /// </remarks>
-    /// <param name="creator">Claims del usuario que realiza la operación (para validar permisos).</param>
-    /// <param name="username">Nombre de usuario único en el realm.</param>
-    /// <param name="practitionerId">ID del Practitioner FHIR a vincular.</param>
-    /// <param name="email">Correo electrónico del usuario.</param>
-    /// <param name="password">Contraseña inicial (no temporal).</param>
-    /// <param name="roles">Arreglo de roles de realm a asignar.</param>
+    /// <param name="creator">
+    /// Claims del usuario autenticado que realiza la operación. Se usan para
+    /// extraer el rol del creador y validar su jerarquía.
+    /// </param>
+    /// <param name="username">Nombre de usuario único en el realm (case-insensitive en Keycloak).</param>
+    /// <param name="practitionerId">ID del Practitioner FHIR a vincular al nuevo usuario.</param>
+    /// <param name="email">Correo electrónico del nuevo usuario.</param>
+    /// <param name="password">Contraseña inicial del usuario (no se marca como temporal).</param>
+    /// <param name="roles">
+    /// Arreglo de nombres de roles de realm a asignar. Todos deben existir en el
+    /// realm y ser permitidos por el rol del creador.
+    /// </param>
     /// <param name="ct">Token de cancelación.</param>
     /// <returns>
-    /// <see cref="ResponseDto{T}"/> con el <see cref="KeycloakUserDto"/> creado,
-    /// o con el código de error correspondiente si alguna validación falla.
+    /// <see cref="ResponseDto{T}"/> con el <see cref="KeycloakUserDto"/> creado en caso
+    /// de éxito, o con el código y mensaje de error correspondiente si alguna validación
+    /// falla (401, 403, 404, 400, 500).
     /// </returns>
     Task<ResponseDto<KeycloakUserDto>> CreateUserAsync(
         ClaimsPrincipal creator,
@@ -60,67 +89,93 @@ public interface IKeycloakAdminService
     // =========================================================
  
     /// <summary>
-    /// Obtiene un usuario por su ID de Keycloak.
+    /// Obtiene un usuario por su ID interno de Keycloak.
     /// </summary>
     /// <param name="keycloakUserId">UUID del usuario en Keycloak.</param>
     /// <param name="ct">Token de cancelación.</param>
     /// <returns>
-    /// <see cref="ResponseDto{T}"/> con el <see cref="KeycloakUserDto"/> si existe,
-    /// o con <c>Data = null</c> si no fue encontrado (HTTP 404 se trata como resultado vacío).
+    /// <see cref="ResponseDto{T}"/> con el <see cref="KeycloakUserDto"/> si el usuario
+    /// existe, o con <c>Data = null</c> si no fue encontrado (HTTP 404 se trata como
+    /// resultado vacío, no como error).
     /// </returns>
     Task<ResponseDto<KeycloakUserDto?>> GetUserByIdAsync(
         string keycloakUserId,
         CancellationToken ct = default);
  
     /// <summary>
-    /// Obtiene en una sola petición varios usuarios a partir de una lista de IDs.
+    /// Obtiene en una sola petición HTTP varios usuarios a partir de una lista de IDs.
     /// </summary>
     /// <remarks>
-    /// Usa la sintaxis <c>id:uuid1 uuid2 …</c> de Keycloak 26.3+.
-    /// Los IDs no encontrados son ignorados silenciosamente.
+    /// <para>
+    /// Internamente usa la sintaxis <c>id:uuid1 uuid2 …</c> de Keycloak 26.3+,
+    /// lo que permite resolver todos los IDs en <b>una única petición</b>
+    /// en lugar de N llamadas paralelas.
+    /// </para>
+    /// <para>
+    /// Los IDs no encontrados son ignorados silenciosamente; el resultado
+    /// solo incluye los usuarios efectivamente hallados.
+    /// </para>
     /// </remarks>
-    /// <param name="userIds">Colección de UUIDs de Keycloak a consultar.</param>
+    /// <param name="userIds">
+    /// Colección de UUIDs de Keycloak a consultar. Las entradas vacías se descartan.
+    /// </param>
     /// <param name="ct">Token de cancelación.</param>
     /// <returns>
-    /// <see cref="ResponseDto{T}"/> con la lista de <see cref="KeycloakUserDto"/> encontrados.
+    /// <see cref="ResponseDto{T}"/> con la lista de <see cref="KeycloakUserDto"/>
+    /// encontrados. La lista puede estar vacía si ningún ID existe.
     /// </returns>
     Task<ResponseDto<List<KeycloakUserDto>>> GetUsersByIdsAsync(
         IEnumerable<string> userIds,
         CancellationToken ct = default);
  
     /// <summary>
-    /// Busca el usuario vinculado a un Practitioner FHIR por su <c>practitionerId</c>.
+    /// Busca el usuario de Keycloak vinculado a un Practitioner FHIR específico.
     /// </summary>
-    /// <param name="practitionerId">ID del Practitioner FHIR.</param>
+    /// <remarks>
+    /// La búsqueda se realiza sobre el atributo personalizado <c>practitionerId</c>
+    /// almacenado en Keycloak durante la creación del usuario.
+    /// </remarks>
+    /// <param name="practitionerId">ID del Practitioner FHIR a buscar.</param>
     /// <param name="ct">Token de cancelación.</param>
     /// <returns>
-    /// <see cref="ResponseDto{T}"/> con el usuario encontrado, o <c>Data = null</c> si no existe.
+    /// <see cref="ResponseDto{T}"/> con el <see cref="KeycloakUserDto"/> si se encontró
+    /// un usuario vinculado, o con <c>Data = null</c> si no existe ninguno.
     /// </returns>
     Task<ResponseDto<KeycloakUserDto?>> GetUserByPractitionerIdAsync(
         string practitionerId,
         CancellationToken ct = default);
  
     /// <summary>
-    /// Verifica si un Practitioner FHIR ya está vinculado a algún usuario de Keycloak.
+    /// Verifica si un Practitioner FHIR ya tiene un usuario de Keycloak vinculado.
     /// </summary>
-    /// <param name="practitionerId">ID del Practitioner FHIR.</param>
+    /// <remarks>
+    /// Útil para validaciones previas a la creación de usuarios, garantizando la
+    /// restricción de relación 1:1 entre Practitioner y usuario de Keycloak.
+    /// </remarks>
+    /// <param name="practitionerId">ID del Practitioner FHIR a verificar.</param>
     /// <param name="ct">Token de cancelación.</param>
     /// <returns>
-    /// <see cref="ResponseDto{T}"/> con <c>true</c> si ya tiene usuario vinculado,
-    /// <c>false</c> en caso contrario.
+    /// <see cref="ResponseDto{T}"/> con <see langword="true"/> si ya existe un usuario
+    /// vinculado al Practitioner, o <see langword="false"/> si no tiene usuario asignado.
     /// </returns>
     Task<ResponseDto<bool>> PractitionerHasUserAsync(
         string practitionerId,
         CancellationToken ct = default);
  
     /// <summary>
-    /// Verifica si un username ya está en uso en el realm, y retorna sugerencias similares.
+    /// Verifica si un username ya está en uso en el realm y retorna usernames similares.
     /// </summary>
+    /// <remarks>
+    /// La comparación exacta es case-insensitive. Además del resultado booleano,
+    /// el DTO incluye una lista de usernames similares que pueden usarse para
+    /// sugerir alternativas al usuario final.
+    /// </remarks>
     /// <param name="username">Username a verificar.</param>
     /// <param name="ct">Token de cancelación.</param>
     /// <returns>
     /// <see cref="ResponseDto{T}"/> con un <see cref="KeycloakUsernameDto"/> que indica
-    /// si el username está tomado y lista los usernames similares encontrados.
+    /// si el username está tomado (<c>ExistName</c>) y lista los usernames similares
+    /// encontrados (<c>Usernames</c>).
     /// </returns>
     Task<ResponseDto<KeycloakUsernameDto>> ExistUserNameAsync(
         string username,
@@ -131,17 +186,29 @@ public interface IKeycloakAdminService
     // =========================================================
  
     /// <summary>
-    /// Obtiene una página de usuarios con filtros opcionales.
+    /// Obtiene una página de usuarios del realm con filtros opcionales.
     /// </summary>
     /// <remarks>
-    /// El tamaño de página está limitado a un máximo de 30 elementos para proteger
-    /// el rendimiento del servidor de identidad. Keycloak no devuelve el total real
-    /// de registros en listas filtradas, por lo que <c>TotalItems</c> y <c>TotalPages</c>
-    /// siempre serán <c>null</c>.
+    /// <para>
+    /// El tamaño de página está limitado a un máximo de <b>30 elementos</b> para
+    /// proteger el rendimiento del servidor de identidad y evitar respuestas
+    /// excesivamente grandes.
+    /// </para>
+    /// <para>
+    /// Keycloak no devuelve el total real de registros en listas filtradas, por lo
+    /// que <c>TotalItems</c> y <c>TotalPages</c> siempre serán <see langword="null"/>
+    /// en el resultado de paginación. La presencia de página siguiente se detecta
+    /// solicitando un elemento extra (<c>pageSize + 1</c>) y verificando si se recibió.
+    /// </para>
     /// </remarks>
-    /// <param name="filter">Parámetros de paginación y filtrado.</param>
+    /// <param name="filter">
+    /// Parámetros de paginación y filtrado. Incluye <c>PageNumber</c>, <c>PageSize</c>,
+    /// <c>Search</c> (texto libre con precedencia) y <c>UserName</c> (filtro por username).
+    /// </param>
     /// <returns>
-    /// <see cref="ResponseDto{T}"/> con un <see cref="PagedResultDto{T}"/> de <see cref="KeycloakUserDto"/>.
+    /// <see cref="ResponseDto{T}"/> con un <see cref="PagedResultDto{T}"/> de
+    /// <see cref="KeycloakUserDto"/>. <c>TotalItems</c> y <c>TotalPages</c> son siempre
+    /// <see langword="null"/> por limitación de la API de Keycloak.
     /// </returns>
     Task<ResponseDto<PagedResultDto<KeycloakUserDto>>> GetUsersListAsync(KeycloakFilter filter);
  
@@ -150,18 +217,28 @@ public interface IKeycloakAdminService
     // =========================================================
  
     /// <summary>
-    /// Alterna el estado activo/inactivo de un usuario.
+    /// Alterna el estado activo/inactivo de un usuario en el realm.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Solo un usuario con rol <c>ti</c> o <c>admin</c> puede ejecutar esta operación.
-    /// Un usuario no puede desactivarse a sí mismo.
+    /// </para>
+    /// <para>
+    /// Un usuario no puede cambiar su propio estado (auto-desactivación prohibida)
+    /// para evitar bloqueos accidentales de la cuenta del operador activo.
+    /// </para>
     /// </remarks>
-    /// <param name="requestor">Claims del usuario que solicita el cambio de estado.</param>
+    /// <param name="requestor">
+    /// Claims del usuario autenticado que solicita el cambio de estado. Se verifican
+    /// su rol y su ID para aplicar las restricciones descritas.
+    /// </param>
     /// <param name="targetUserId">UUID del usuario cuyo estado se va a alternar.</param>
     /// <param name="ct">Token de cancelación.</param>
     /// <returns>
-    /// <see cref="ResponseDto{T}"/> con <c>true</c> si el usuario quedó habilitado,
-    /// <c>false</c> si fue deshabilitado.
+    /// <see cref="ResponseDto{T}"/> con <see langword="true"/> si el usuario quedó
+    /// habilitado, o <see langword="false"/> si fue deshabilitado.
+    /// Retorna error 403 si el solicitante no tiene permisos, o 400 si intenta
+    /// modificar su propio estado.
     /// </returns>
     Task<ResponseDto<bool>> ToggleUserStatusAsync(
         ClaimsPrincipal requestor,
@@ -177,25 +254,79 @@ public interface IKeycloakAdminService
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Solo los campos con valor no nulo en <paramref name="updateDto"/> son modificados;
-    /// los demás conservan su valor actual en Keycloak.
+    /// Solo los campos con valor no nulo en <paramref name="updateDto"/> son
+    /// modificados; los demás conservan su valor actual almacenado en Keycloak.
     /// </para>
     /// <para>
-    /// Si <paramref name="updateDto"/> incluye <c>NewRoleName</c>, el rol actual del usuario
-    /// es reemplazado. Solo un usuario con rol <c>ti</c> o <c>admin</c> puede cambiar roles,
-    /// y las mismas restricciones de jerarquía de <see cref="CreateUserAsync"/> aplican.
+    /// Si <paramref name="updateDto"/> incluye <c>NewRoleName</c>, el rol actual del
+    /// usuario es reemplazado. Solo un usuario con rol <c>ti</c> o <c>admin</c> puede
+    /// cambiar roles, y se aplican las mismas restricciones de jerarquía que en
+    /// <see cref="CreateUserAsync"/>.
     /// </para>
     /// </remarks>
-    /// <param name="requestor">Claims del usuario que realiza la edición.</param>
-    /// <param name="targetUserId">UUID del usuario a editar.</param>
-    /// <param name="updateDto">DTO con los campos a actualizar.</param>
+    /// <param name="requestor">
+    /// Claims del usuario autenticado que realiza la edición. Se verifican su rol
+    /// y permisos de jerarquía antes de aplicar cambios.
+    /// </param>
+    /// <param name="targetUserId">UUID del usuario a editar en Keycloak.</param>
+    /// <param name="updateDto">
+    /// DTO con los campos a actualizar. Los campos con valor <see langword="null"/>
+    /// son ignorados y los valores existentes se conservan.
+    /// </param>
     /// <param name="ct">Token de cancelación.</param>
     /// <returns>
-    /// <see cref="ResponseDto{T}"/> con el <see cref="KeycloakUserDto"/> actualizado.
+    /// <see cref="ResponseDto{T}"/> con el <see cref="KeycloakUserDto"/> actualizado,
+    /// o con el código de error correspondiente si alguna validación falla (403, 404).
     /// </returns>
     Task<ResponseDto<KeycloakUserDto>> UpdateUserAsync(
         ClaimsPrincipal requestor,
         string targetUserId,
         KeycloakUpdateUserDto updateDto,
+        CancellationToken ct = default);
+ 
+    // =========================================================
+    // ELIMINAR USUARIO
+    // =========================================================
+ 
+    /// <summary>
+    /// Elimina permanentemente un usuario del realm de Keycloak.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// La eliminación es <b>irreversible</b>. Antes de proceder se validan
+    /// los siguientes puntos en orden:
+    /// </para>
+    /// <list type="number">
+    ///   <item><description>
+    ///     El solicitante debe tener rol <c>ti</c> o <c>admin</c>.
+    ///   </description></item>
+    ///   <item><description>
+    ///     Un usuario no puede eliminarse a sí mismo.
+    ///   </description></item>
+    ///   <item><description>
+    ///     El usuario objetivo debe existir en Keycloak.
+    ///   </description></item>
+    /// </list>
+    /// <para>
+    /// Se recomienda usar <see cref="ToggleUserStatusAsync"/> para bajas
+    /// lógicas (reversibles). Esta operación debe reservarse para eliminaciones
+    /// definitivas o rollbacks durante la creación de usuarios.
+    /// </para>
+    /// </remarks>
+    /// <param name="requestor">
+    /// Claims del usuario autenticado que solicita la eliminación. Se verifican
+    /// su rol y su ID para aplicar las restricciones de seguridad.
+    /// </param>
+    /// <param name="targetUserId">UUID del usuario a eliminar en Keycloak.</param>
+    /// <param name="ct">Token de cancelación.</param>
+    /// <returns>
+    /// <see cref="ResponseDto{T}"/> con <see langword="true"/> si el usuario fue
+    /// eliminado correctamente.
+    /// Retorna error 403 si el solicitante no tiene permisos o intenta eliminarse
+    /// a sí mismo, o 404 si el usuario objetivo no existe.
+    /// </returns>
+    Task<ResponseDto<bool>> DeleteUserAsync(
+        ClaimsPrincipal requestor,
+        string targetUserId,
         CancellationToken ct = default);
 }

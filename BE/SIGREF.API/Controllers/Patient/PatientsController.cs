@@ -15,7 +15,7 @@ namespace SIGREF.API.Controllers.PatientC;
 /// </summary>
 [Route("api/[controller]")]
 [ApiController]
-[Authorize]
+//[Authorize]
 public class PatientsController : ControllerBase
 {
     private readonly IPatientService _patientService;
@@ -36,7 +36,7 @@ public class PatientsController : ControllerBase
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
+    //[Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
     [Produces("application/json")]
     public async Task<IActionResult> GetFiltered([FromQuery] PatientFilterDto filter)
     {

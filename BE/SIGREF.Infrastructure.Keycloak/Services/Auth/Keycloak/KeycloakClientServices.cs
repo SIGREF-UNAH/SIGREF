@@ -10,9 +10,17 @@ namespace SIGREF.Infrastructure.Keycloak.Services.Auth.Keycloak;
 /// Implementación de los servicios de usuario de la Admin REST API de Keycloak.
 /// </summary>
 /// <remarks>
-/// Este archivo es la parte de servicios de la <c>partial class</c> <see cref="KeycloakClient"/>.
-/// Contiene toda la lógica de búsqueda, creación, edición y gestión del ciclo de vida
-/// de los usuarios en el realm configurado.
+/// <para>
+/// Este archivo es la parte de servicios de la <c>partial class</c>
+/// <see cref="KeycloakClient"/>. Contiene toda la lógica de búsqueda, creación,
+/// edición, eliminación y gestión del ciclo de vida de los usuarios en el realm
+/// configurado.
+/// </para>
+/// <para>
+/// La autenticación se delega a <c>SendAuthenticatedAsync</c>, definido en la
+/// parte principal de la clase parcial, que se encarga de adjuntar el token de
+/// administrador a cada petición saliente.
+/// </para>
 /// </remarks>
 public partial class KeycloakClient : IKeycloakClient
 {
@@ -86,7 +94,7 @@ public partial class KeycloakClient : IKeycloakClient
  
         var response = await SendAuthenticatedAsync(HttpMethod.Get, url, ct: ct);
  
-        // HTTP 404 es el único caso silencioso: el usuario simplemente no existe
+        // HTTP 404 es el único caso silencioso: el usuario simplemente no existe.
         if (response.StatusCode == HttpStatusCode.NotFound)
             return null;
  
@@ -105,13 +113,14 @@ public partial class KeycloakClient : IKeycloakClient
     /// <inheritdoc/>
     /// <remarks>
     /// <para>
-    /// Utiliza el endpoint de búsqueda de Keycloak con la sintaxis <c>id:uuid1 uuid2 uuid3</c>,
-    /// disponible desde la versión <b>26.3.0</b>. Esto resuelve todos los IDs en
-    /// <b>una única petición HTTP</b>, a diferencia del enfoque de N peticiones paralelas.
+    /// Utiliza el endpoint de búsqueda de Keycloak con la sintaxis
+    /// <c>id:uuid1 uuid2 uuid3</c>, disponible desde la versión <b>26.3.0</b>.
+    /// Esto resuelve todos los IDs en <b>una única petición HTTP</b>,
+    /// a diferencia del enfoque de N peticiones paralelas.
     /// </para>
     /// <para>
-    /// Los IDs que no existan en Keycloak son ignorados silenciosamente por el propio servidor;
-    /// el resultado solo contiene los usuarios encontrados.
+    /// Los IDs que no existan en Keycloak son ignorados silenciosamente por el
+    /// propio servidor; el resultado solo contiene los usuarios encontrados.
     /// </para>
     /// <para>
     /// Si la colección <paramref name="userIds"/> está vacía, retorna una lista vacía
@@ -128,7 +137,7 @@ public partial class KeycloakClient : IKeycloakClient
             return [];
  
         // Sintaxis nativa de Keycloak 26.3+: "id:uuid1 uuid2 uuid3"
-        // El primer ID lleva el prefijo "id:", los restantes se separan por espacio.
+        // El prefijo "id:" indica a Keycloak que se trata de una búsqueda por IDs exactos.
         var searchQuery = "id:" + string.Join(" ", idList);
  
         var url = $"{_settings.BaseUrl}/admin/realms/{_settings.RealmName}/users" +
@@ -166,8 +175,33 @@ public partial class KeycloakClient : IKeycloakClient
                 $"Verifique que no exista un usuario con el mismo username o email.",
                 (int)response.StatusCode);
  
-        // Keycloak devuelve el ID del nuevo usuario en el header Location: .../users/{id}
+        // Keycloak responde HTTP 201 y el header Location apunta a la URL del nuevo usuario.
+        // El UUID se extrae del último segmento: .../admin/realms/{realm}/users/{uuid}
         return response.Headers.Location?.ToString().Split('/').Last();
+    }
+ 
+    // ======================================================
+    // ELIMINAR USUARIO
+    // ======================================================
+ 
+    /// <inheritdoc/>
+    public async Task<bool> DeleteUserAsync(string userId, CancellationToken ct)
+    {
+        var url = $"{_settings.BaseUrl}/admin/realms/{_settings.RealmName}/users/{userId}";
+ 
+        var response = await SendAuthenticatedAsync(HttpMethod.Delete, url, ct: ct);
+ 
+        // HTTP 404 se trata como éxito idempotente: si el usuario ya no existe
+        // el objetivo de la eliminación se considera cumplido.
+        if (response.StatusCode == HttpStatusCode.NotFound)
+            return true;
+ 
+        if (!response.IsSuccessStatusCode)
+            throw new KeycloakApiException(
+                $"Error al eliminar el usuario '{userId}' en Keycloak. HTTP {(int)response.StatusCode}.",
+                (int)response.StatusCode);
+ 
+        return true;
     }
  
     // ======================================================
@@ -177,7 +211,7 @@ public partial class KeycloakClient : IKeycloakClient
     /// <inheritdoc/>
     public async Task<bool> ToggleUserStatusAsync(string userId, CancellationToken ct)
     {
-        // Obtener estado actual del usuario
+        // Obtener estado actual del usuario; lanza excepción si no existe.
         JsonElement existing = await GetUserByIdAsync(userId, ct)
             ?? throw new KeycloakUserNotFoundException(userId);
  
@@ -186,13 +220,13 @@ public partial class KeycloakClient : IKeycloakClient
  
         var url = $"{_settings.BaseUrl}/admin/realms/{_settings.RealmName}/users/{userId}";
  
-        var patch = new { enabled = newEnabled };
+        var patch    = new { enabled = newEnabled };
         var response = await SendAuthenticatedAsync(HttpMethod.Put, url, patch, ct);
  
         if (!response.IsSuccessStatusCode)
             throw new KeycloakApiException(
-                $"Error al cambiar el estado del usuario '{userId}' a {(newEnabled ? "activo" : "inactivo")}. " +
-                $"HTTP {(int)response.StatusCode}.",
+                $"Error al cambiar el estado del usuario '{userId}' a " +
+                $"{(newEnabled ? "activo" : "inactivo")}. HTTP {(int)response.StatusCode}.",
                 (int)response.StatusCode);
  
         return newEnabled;
@@ -224,14 +258,14 @@ public partial class KeycloakClient : IKeycloakClient
     /// <inheritdoc/>
     public async Task UpdateUserRoleAsync(string userId, string newRoleName, CancellationToken ct)
     {
-        // Verificar que el usuario exista antes de cualquier operación
+        // Verificar que el usuario exista antes de cualquier operación.
         _ = await GetUserByIdAsync(userId, ct)
             ?? throw new KeycloakUserNotFoundException(userId);
  
         var mappingUrl = $"{_settings.BaseUrl}/admin/realms/{_settings.RealmName}" +
                          $"/users/{userId}/role-mappings/realm";
  
-        // 1. Obtener los roles actuales del usuario
+        // 1. Obtener los roles actuales del usuario.
         var currentRolesResponse = await SendAuthenticatedAsync(HttpMethod.Get, mappingUrl, ct: ct);
  
         if (!currentRolesResponse.IsSuccessStatusCode)
@@ -243,7 +277,7 @@ public partial class KeycloakClient : IKeycloakClient
         var currentRoles = await currentRolesResponse.Content
             .ReadFromJsonAsync<List<JsonElement>>(ct) ?? [];
  
-        // 2. Eliminar todos los roles actuales (si los tiene)
+        // 2. Eliminar todos los roles actuales (si los tiene).
         if (currentRoles.Count > 0)
         {
             var deleteResponse = await SendAuthenticatedAsync(
@@ -256,7 +290,7 @@ public partial class KeycloakClient : IKeycloakClient
                     (int)deleteResponse.StatusCode);
         }
  
-        // 3. Asignar el nuevo rol
+        // 3. Asignar el nuevo rol.
         await AssignRoleAsync(userId, newRoleName, ct);
     }
  
@@ -267,11 +301,10 @@ public partial class KeycloakClient : IKeycloakClient
     /// <inheritdoc/>
     public async Task UpdateUserAsync(string userId, KeycloakUpdateUserDto updateDto, CancellationToken ct)
     {
-        // Obtener datos actuales para hacer un merge y no pisar campos no enviados
+        // Obtener datos actuales para hacer un merge y no sobreescribir campos no enviados.
         JsonElement existing = await GetUserByIdAsync(userId, ct)
             ?? throw new KeycloakUserNotFoundException(userId);
  
-        // Construir el payload de actualización combinando datos existentes con los nuevos
         var updatedPayload = BuildUpdatePayload(existing, updateDto);
  
         var url = $"{_settings.BaseUrl}/admin/realms/{_settings.RealmName}/users/{userId}";
@@ -283,7 +316,7 @@ public partial class KeycloakClient : IKeycloakClient
                 $"Error al actualizar el usuario '{userId}'. HTTP {(int)response.StatusCode}.",
                 (int)response.StatusCode);
  
-        // Actualizar el rol si se especificó uno nuevo
+        // Actualizar el rol si se especificó uno nuevo en el DTO.
         if (!string.IsNullOrWhiteSpace(updateDto.NewRoleName))
             await UpdateUserRoleAsync(userId, updateDto.NewRoleName, ct);
     }
@@ -331,25 +364,58 @@ public partial class KeycloakClient : IKeycloakClient
     // ======================================================
  
     /// <summary>
-    /// Obtiene la representación JSON de un rol de realm por su nombre.
+    /// Obtiene la representación JSON completa de un rol de realm por su nombre.
     /// </summary>
-    /// <param name="roleName">Nombre exacto del rol a buscar.</param>
+    /// <remarks>
+    /// <para>
+    /// Este método es utilizado internamente por <see cref="AssignRoleAsync"/> y
+    /// puede ser invocado desde <see cref="KeycloakAdminService"/> para realizar
+    /// validaciones previas a la creación de usuarios, asegurando que los roles
+    /// existen y son accesibles antes de iniciar escrituras en Keycloak.
+    /// </para>
+    /// <para>
+    /// El acceso al endpoint de roles requiere que el Service Account tenga
+    /// el rol <c>view-realm</c> asignado en <c>realm-management</c>.
+    /// </para>
+    /// </remarks>
+    /// <param name="roleName">Nombre exacto del rol a buscar en el realm.</param>
     /// <param name="ct">Token de cancelación.</param>
-    /// <returns>El <see cref="JsonElement"/> con los datos del rol (id, name, etc.).</returns>
-    /// <exception cref="KeycloakRoleNotFoundException">Si el rol no existe en el realm.</exception>
-    /// <exception cref="KeycloakApiException">Si la petición falla con un error HTTP no esperado.</exception>
-    private async Task<JsonElement> FetchRealmRoleAsync(string roleName, CancellationToken ct)
+    /// <returns>
+    /// El <see cref="JsonElement"/> con los datos del rol (<c>id</c>, <c>name</c>,
+    /// <c>composite</c>, etc.), listo para ser incluido en el body de asignación.
+    /// </returns>
+    /// <exception cref="KeycloakRoleNotFoundException">
+    /// Si el rol no existe en el realm (HTTP 404).
+    /// </exception>
+    /// <exception cref="KeycloakAccessForbiddenException">
+    /// Si el Service Account no tiene permisos suficientes en el realm para
+    /// consultar roles (HTTP 403). Generalmente indica que falta el rol
+    /// <c>view-realm</c> en <c>realm-management</c>.
+    /// </exception>
+    /// <exception cref="KeycloakApiException">
+    /// Si la petición falla con cualquier otro código HTTP no exitoso.
+    /// </exception>
+    internal async Task<JsonElement> FetchRealmRoleAsync(string roleName, CancellationToken ct)
     {
         var roleUrl = $"{_settings.BaseUrl}/admin/realms/{_settings.RealmName}/roles/{roleName}";
  
         var roleResponse = await SendAuthenticatedAsync(HttpMethod.Get, roleUrl, ct: ct);
  
+        // Caso 1: El rol no existe en el realm.
         if (roleResponse.StatusCode == HttpStatusCode.NotFound)
             throw new KeycloakRoleNotFoundException(roleName);
  
+        // Caso 2: El Service Account carece de permisos para ver roles.
+        if (roleResponse.StatusCode == HttpStatusCode.Forbidden)
+            throw new KeycloakAccessForbiddenException(
+                roleName,
+                "El Service Account carece del rol 'view-realm' en realm-management.");
+ 
+        // Caso 3: Cualquier otro error HTTP no esperado.
         if (!roleResponse.IsSuccessStatusCode)
             throw new KeycloakApiException(
-                $"Error al consultar el rol '{roleName}' en Keycloak. HTTP {(int)roleResponse.StatusCode}.",
+                $"Fallo inesperado al consultar el rol '{roleName}' en Keycloak. " +
+                $"HTTP {(int)roleResponse.StatusCode}.",
                 (int)roleResponse.StatusCode);
  
         return await roleResponse.Content.ReadFromJsonAsync<JsonElement>(ct);
@@ -357,27 +423,40 @@ public partial class KeycloakClient : IKeycloakClient
  
     /// <summary>
     /// Construye el payload de actualización de usuario mezclando los datos existentes
-    /// con los nuevos valores del DTO, respetando los campos no modificados.
+    /// con los nuevos valores del DTO, conservando los campos no modificados.
     /// </summary>
     /// <remarks>
-    /// Solo los campos con valor no nulo en <paramref name="dto"/> sobrescriben los valores actuales.
-    /// Los atributos personalizados (displayName, practitionerId) se gestionan bajo la clave
-    /// <c>attributes</c> del payload.
+    /// <para>
+    /// El merge es field-by-field: si el campo en <paramref name="dto"/> tiene valor
+    /// no nulo, se usa ese valor; de lo contrario se conserva el valor actual leído
+    /// de <paramref name="existing"/>.
+    /// </para>
+    /// <para>
+    /// Los atributos personalizados (<c>displayName</c> y <c>practitionerId</c>)
+    /// se gestionan bajo la clave <c>attributes</c> del payload, que Keycloak espera
+    /// como un diccionario de <c>string → string[]</c>.
+    /// </para>
+    /// <para>
+    /// El campo <c>username</c> no se incluye en el payload para evitar modificaciones
+    /// accidentales de las credenciales de acceso.
+    /// </para>
     /// </remarks>
-    /// <param name="existing">Datos actuales del usuario obtenidos de Keycloak.</param>
-    /// <param name="dto">DTO con los nuevos valores a aplicar.</param>
-    /// <returns>Objeto anónimo listo para serializar y enviar a la Admin REST API.</returns>
+    /// <param name="existing">
+    /// Datos actuales del usuario obtenidos de Keycloak. Se usan como valores de
+    /// respaldo para los campos no especificados en <paramref name="dto"/>.
+    /// </param>
+    /// <param name="dto">DTO con los nuevos valores a aplicar. Los campos nulos se ignoran.</param>
+    /// <returns>
+    /// Objeto anónimo listo para serializar y enviar al endpoint PUT de la Admin REST API.
+    /// </returns>
     private static object BuildUpdatePayload(JsonElement existing, KeycloakUpdateUserDto dto)
     {
-        // Leer valores actuales como fallback para campos no modificados
-        var currentFirstName = existing.TryGetProperty("firstName", out var fn)
-            ? fn.GetString() : null;
-        var currentLastName = existing.TryGetProperty("lastName", out var ln)
-            ? ln.GetString() : null;
-        var currentEmail = existing.TryGetProperty("email", out var em)
-            ? em.GetString() : null;
+        // Leer valores actuales como fallback para campos no presentes en el DTO.
+        var currentFirstName = existing.TryGetProperty("firstName", out var fn) ? fn.GetString() : null;
+        var currentLastName  = existing.TryGetProperty("lastName",  out var ln) ? ln.GetString() : null;
+        var currentEmail     = existing.TryGetProperty("email",     out var em) ? em.GetString() : null;
  
-        // Leer atributos actuales
+        // Leer atributos personalizados actuales.
         string? currentDisplayName    = null;
         string? currentPractitionerId = null;
  
@@ -390,7 +469,7 @@ public partial class KeycloakClient : IKeycloakClient
                 currentPractitionerId = pid[0].GetString();
         }
  
-        // Aplicar nuevos valores (si no se proveen, se conservan los actuales)
+        // Aplicar nuevos valores; si no se proveen, se conservan los actuales.
         var finalFirstName      = dto.FirstName      ?? currentFirstName;
         var finalLastName       = dto.LastName       ?? currentLastName;
         var finalEmail          = dto.Email          ?? currentEmail;
@@ -399,9 +478,9 @@ public partial class KeycloakClient : IKeycloakClient
  
         return new
         {
-            firstName = finalFirstName,
-            lastName  = finalLastName,
-            email     = finalEmail,
+            firstName  = finalFirstName,
+            lastName   = finalLastName,
+            email      = finalEmail,
             attributes = new Dictionary<string, string[]>
             {
                 ["displayName"]    = [finalDisplayName    ?? ""],

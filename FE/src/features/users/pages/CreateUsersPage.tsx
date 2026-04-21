@@ -49,6 +49,7 @@ function generarUsernameUnico(base: string, existentes: string[]) {
 }
 
 export default function CreateUsersPage() {
+  
   const [selected, setSelected] = useState<Practitioner | null>(null);
   const formRef = useRef<ProFormInstance | null>(null);
   const [searchName, setSearchName] = useState("");
@@ -59,7 +60,7 @@ export default function CreateUsersPage() {
   );
   const { keycloak } = useKeycloak();
   const ability = useAbility();
-
+  // Para los mensajes de error y éxito
   const createUserMutation = usePostApiUsersCreate();
   const { success, error } = useMessage();
 

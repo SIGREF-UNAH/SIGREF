@@ -24,7 +24,18 @@ public class KeycloakApiException : Exception
         StatusCode = statusCode;
     }
 }
- 
+/// <summary>
+/// Excepción lanzada cuando el cliente de SIGREF no tiene permisos suficientes
+/// para realizar una operación en Keycloak (HTTP 403 Forbidden).
+/// </summary>
+public class KeycloakAccessForbiddenException : KeycloakApiException
+{
+    public KeycloakAccessForbiddenException(string message) 
+        : base(message, 403) { }
+
+    public KeycloakAccessForbiddenException(string roleName, string detail)
+        : base($"Acceso denegado al gestionar el rol '{roleName}'. Detalle: {detail}", 403) { }
+}
 /// <summary>
 /// Excepción lanzada cuando un usuario no es encontrado en Keycloak (HTTP 404).
 /// </summary>
