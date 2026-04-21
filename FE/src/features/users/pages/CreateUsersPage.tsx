@@ -61,7 +61,6 @@ export default function CreateUsersPage() {
   const { keycloak } = useKeycloak();
   const ability = useAbility();
   // Para los mensajes de error y éxito
-  const msg = useMessage();
   const createUserMutation = usePostApiUsersCreate();
   const { success, error } = useMessage();
 
