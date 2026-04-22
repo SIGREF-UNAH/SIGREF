@@ -6,6 +6,7 @@ public interface IUserContextService
 {
     Guid GetUserId();
     string? GetUsername();
+    string GetCorrelationId();
     IEnumerable<Claim> GetAllClaims();
     List<string> GetUserRoles();
 }

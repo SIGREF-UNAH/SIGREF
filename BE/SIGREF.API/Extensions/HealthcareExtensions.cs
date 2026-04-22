@@ -2,23 +2,18 @@
 using Hl7.Fhir.Model;
 using SIGREF.API.Dtos.Healthcare;
 using SIGREF.API.Extensions.Common;
+using SIGREF.API.Helpers;
 using SIGREF.Common.Constants;
 
 namespace SIGREF.API.Extensions;
 
 public static class HealthcareExtensions
 {
-    private const string AbbreviationExtensionUrl =
-        FhirNamespaces.HealthcareServiceAbbreviation;
-
-    private const string ScopeExtensionUrl =
-        FhirNamespaces.HealthcareServiceScope;
-
 
     // ============================================================
     //   FHIR  DTO
     // ============================================================
-    public static HealthcareDto ToDto(this HealthcareService? healthcare)
+    public static HealthcareDto ToDto(this HealthcareService? healthcare, IFhirNamespaceService ns)
     {
         if (healthcare is null)
             return new HealthcareDto();
@@ -30,14 +25,14 @@ public static class HealthcareExtensions
         {
             // Abbreviation
             var abbreviationExtension = healthcare.Extension
-                .FirstOrDefault(e => e.Url == AbbreviationExtensionUrl);
+                .FirstOrDefault(e => e.Url == ns.HealthcareServiceAbbreviation);
 
             if (abbreviationExtension?.Value is Code abbr)
                 abbreviation = abbr.Value ?? string.Empty;
 
             // Scope
             var scopeExtension = healthcare.Extension
-                .FirstOrDefault(e => e.Url == ScopeExtensionUrl);
+                .FirstOrDefault(e => e.Url == ns.HealthcareServiceScope);
 
             if (scopeExtension?.Value is Code scopeCode &&
                 Enum.TryParse<HealthcareScope>(
@@ -69,7 +64,7 @@ public static class HealthcareExtensions
     // ============================================================
     //   CREATE DTO to FHIR
     // ============================================================
-    public static HealthcareService ToFhirHealthcare(this CreateHealthcareDto dto)
+    public static HealthcareService ToFhirHealthcare(this CreateHealthcareDto dto, IFhirNamespaceService ns)
     {
         ArgumentNullException.ThrowIfNull(dto);
 
@@ -91,14 +86,14 @@ public static class HealthcareExtensions
 
         healthcare.Extension.Add(new Extension
         {
-            Url = AbbreviationExtensionUrl,
+            Url = ns.HealthcareServiceAbbreviation,
             Value = new Code(dto.Abbreviation)
         });
 
         // Scope (internal | external)
         healthcare.Extension.Add(new Extension
         {
-            Url = ScopeExtensionUrl,
+            Url = ns.HealthcareServiceScope,
             Value = new Code(dto.Scope.ToString().ToLowerInvariant())
         });
 
@@ -109,7 +104,7 @@ public static class HealthcareExtensions
     // ============================================================
     //   UPDATE DTO to FHIR
     // ============================================================
-    public static HealthcareService ApplyUpdate(this HealthcareService existing, UpdateHealthcareDto update)
+    public static HealthcareService ApplyUpdate(this HealthcareService existing, UpdateHealthcareDto update,  IFhirNamespaceService ns)
     {
         ArgumentNullException.ThrowIfNull(existing);
 
@@ -129,14 +124,14 @@ public static class HealthcareExtensions
         if (!string.IsNullOrEmpty(update.Abbreviation))
         {
             var abbreviationExtension = existing.Extension
-                .FirstOrDefault(e => e.Url == AbbreviationExtensionUrl);
+                .FirstOrDefault(e => e.Url == ns.HealthcareServiceAbbreviation);
 
             if (abbreviationExtension != null)
                 abbreviationExtension.Value = new Code(update.Abbreviation);
             else
                 existing.Extension.Add(new Extension
                 {
-                    Url = AbbreviationExtensionUrl,
+                    Url = ns.HealthcareServiceAbbreviation,
                     Value = new Code(update.Abbreviation)
                 });
         }
@@ -144,7 +139,7 @@ public static class HealthcareExtensions
         // Scope (siempre se guarda)
         var scopeValue = update.Scope.ToString().ToLowerInvariant();
 
-        var scopeExtension = existing.Extension.FirstOrDefault(e => e.Url == ScopeExtensionUrl);
+        var scopeExtension = existing.Extension.FirstOrDefault(e => e.Url == ns.HealthcareServiceScope);
 
         if (scopeExtension != null)
         {
@@ -155,15 +150,11 @@ public static class HealthcareExtensions
         {
             existing.Extension.Add(new Extension
             {
-                Url = ScopeExtensionUrl,
+                Url = ns.HealthcareServiceScope,
                 Value = new Code(scopeValue)
             });
         }
-
-        // Metadatos
-        existing.Meta ??= new Meta();
-        existing.Meta.LastUpdated = DateTimeOffset.Now;
-        existing.Meta.VersionId = FhirInfrastructureExtensions.IncrementVersion(existing.Meta.VersionId);
+        
 
         return existing;
     }
