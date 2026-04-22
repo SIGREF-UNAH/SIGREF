@@ -65,8 +65,6 @@
 		<EmbeddedResource Include="Assets/Fonts/DejaVuSans-Bold.ttf" />
 		<EmbeddedResource Include="Assets/Fonts/DejaVuSans-Oblique.ttf" />
 		<EmbeddedResource Include="Assets/Fonts/DejaVuSans-BoldOblique.ttf" />
-		<EmbeddedResource Include="Assets/Images/Hospital_Occidente_Logo.png" />
-		<EmbeddedResource Include="Assets/Images/Logo_de_SESAL.png" />
 	</ItemGroup>
 
 </Project>
