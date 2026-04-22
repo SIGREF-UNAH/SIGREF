@@ -12,7 +12,7 @@ namespace SIGREF.API.Controllers.ServiveGroup;
 [Route("api/[controller]")]
 [ApiController]
 [Authorize(Roles = $"{RolesConstants.admin},{RolesConstants.cashier},{RolesConstants.auditor}")]
-public class ServiceGroupController(ServiceGroupService serviceGroupService) : ControllerBase
+public class ServiceGroupController(HealthcareGroupService serviceGroupService) : ControllerBase
 {
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -22,15 +22,8 @@ public class ServiceGroupController(ServiceGroupService serviceGroupService) : C
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor} ")]
      public async Task<ActionResult<ServiceGroupDto>> GetFiltered([FromQuery] ServiceGroupFilterDto filter)
     {
-        var (items, pagination) = await serviceGroupService.GetFilteredServiceGroupsAsync(filter);
-
-        var pagedDtos = new PagedResultDto<ServiceGroupDto>
-        {
-            Items = items,
-            Pagination = pagination
-        };
-
-        return Ok(pagedDtos);
+        var result = await serviceGroupService.GetFilteredAsync(filter);
+        return Ok(result);
     }
 
     [HttpGet("{id}")]
@@ -40,7 +33,7 @@ public class ServiceGroupController(ServiceGroupService serviceGroupService) : C
     [Produces<ServiceGroupDto>()]
     public async Task<IActionResult> GetById(string id)
     {
-        var group = await serviceGroupService.GetServiceGroupByIdAsync(id);
+        var group = await serviceGroupService.GetByIdAsync(id);
         if (group == null) return NotFound($"ServiceGroup with id '{id}' not found.");
 
         return Ok(group);
@@ -56,10 +49,10 @@ public class ServiceGroupController(ServiceGroupService serviceGroupService) : C
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var list = createDto.ToFhirList();
-        var createdList = await serviceGroupService.CreateServiceGroupAsync(list);
+        var createdList = await serviceGroupService.CreateAsync(list);
 
         // Usar GetServiceGroupByIdAsync para obtener el DTO completo con locations/services
-        var createdDto = await serviceGroupService.GetServiceGroupByIdAsync(createdList.Id);
+        var createdDto = await serviceGroupService.GetByIdAsync(createdList.Id);
 
         return CreatedAtAction(nameof(GetById), new { id = createdList.Id }, createdDto);
     }
@@ -79,9 +72,9 @@ public class ServiceGroupController(ServiceGroupService serviceGroupService) : C
 
         existingList.ApplyUpdate(updateDto);
 
-        await serviceGroupService.UpdateServiceGroupAsync(existingList);
+        await serviceGroupService.UpdateAsync(existingList);
 
-        var updatedGroup = await serviceGroupService.GetServiceGroupByIdAsync(id);
+        var updatedGroup = await serviceGroupService.GetByIdAsync(id);
 
         return Ok(updatedGroup);
     }
@@ -95,7 +88,7 @@ public class ServiceGroupController(ServiceGroupService serviceGroupService) : C
         var existingList = await serviceGroupService.GetFhirListByIdAsync(id);
         if (existingList == null) return NotFound($"ServiceGroup with id '{id}' not found.");
 
-        await serviceGroupService.DeleteServiceGroupAsync(id);
+        await serviceGroupService.DeleteAsync(id);
 
         return NoContent();
     }

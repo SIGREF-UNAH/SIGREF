@@ -9,6 +9,7 @@ public class AuditLogDto
 {
     public string Id { get; set; }
     public string Action { get; set; }
+    public string TraceId { get; set; }
     public string ResourceType { get; set; }
     public string ResourceId { get; set; }
     public string UserId { get; set; }
@@ -29,6 +30,7 @@ public class AuditLogDto
         {
             Id = log.Id,
             Action = log.Action,
+            TraceId = log.TraceId,
             ResourceType = log.ResourceType,
             ResourceId = log.ResourceId,
             UserId = log.UserId,

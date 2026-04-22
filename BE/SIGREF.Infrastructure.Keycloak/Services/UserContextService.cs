@@ -61,5 +61,9 @@ public class UserContextService : IUserContextService
         }
         return roles.Distinct().ToList();
     }
-
+    public string GetCorrelationId()
+    {
+        // El TraceIdentifier es único por cada request HTTP
+        return _httpContext.HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
+    }
 }

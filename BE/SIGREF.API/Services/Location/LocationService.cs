@@ -1,20 +1,22 @@
 using System.Runtime.Serialization;
-using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
-using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Location;
+using SIGREF.API.Fhir;
 using SIGREF.API.Helpers;
 using SIGREF.API.Services.Common;
 using SIGREF.Common.Dtos;
+using SIGREF.Infrastructure.Keycloak.Interfaces;
 using FhirLocation = Hl7.Fhir.Model.Location;
 using Task = System.Threading.Tasks.Task;
 namespace SIGREF.API.Services.Location;
 
-public class LocationService
+public class LocationService : BaseFhirService
 {
     private readonly FhirClient _fhirClient;
 
-    public LocationService(FhirService fhirService)
+    public LocationService(FhirService fhirService,  IUserContextService userContext,       
+        IFhirNamespaceService ns)             
+        : base(userContext, ns)    
     {
         _fhirClient = fhirService.GetFhirClient();
     }
@@ -62,13 +64,7 @@ public class LocationService
         {
             location.Id = Guid.NewGuid().ToString();
         }
-
-        // Establecer metadatos
-        location.Meta = new Meta
-        {
-            LastUpdated = DateTimeOffset.Now,
-            VersionId = "1"
-        };
+        ApplyMeta(location, isCreate:true);
 
         await _fhirClient.CreateAsync(location);
         return location;
@@ -93,24 +89,7 @@ public class LocationService
     /// </example>
     public async Task<FhirLocation> UpdateLocationAsync(FhirLocation location)
     {
-        // Actualizar metadatos
-        if (location.Meta == null)
-        {
-            location.Meta = new Meta();
-        }
-
-        location.Meta.LastUpdated = DateTimeOffset.Now;
-
-        // Incrementar versión si ya existe
-        if (int.TryParse(location.Meta.VersionId, out var currentVersion))
-        {
-            location.Meta.VersionId = (currentVersion + 1).ToString();
-        }
-        else
-        {
-            location.Meta.VersionId = "1";
-        }
-
+        ApplyMeta(location,isCreate:false);
         var result = await _fhirClient.UpdateAsync(location);
         return result;
     }

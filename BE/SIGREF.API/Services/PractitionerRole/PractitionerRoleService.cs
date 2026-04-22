@@ -4,22 +4,23 @@ using SIGREF.API.Constants;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.PractitionerRole;
 using SIGREF.API.Extensions;
+using SIGREF.API.Fhir;
 using SIGREF.API.Helpers;
 using SIGREF.API.Services.Common;
+using SIGREF.API.Services.ServiceGroup;
 using SIGREF.Common.Dtos;
+using SIGREF.Infrastructure.Keycloak.Interfaces;
+using SIGREF.Infrastructure.Persistence;
 using FhirPractitionerRole = Hl7.Fhir.Model.PractitionerRole;
 
 namespace SIGREF.API.Services.PractitionerRole;
 
-public class PractitionerRoleService : IPractitionerRoleService
+public class PractitionerRoleService(
+    FhirClient _fhirClient,
+    IUserContextService userContext,
+    IFhirNamespaceService ns)
+    : BaseFhirService(userContext, ns), IPractitionerRoleService
 {
-    private readonly FhirClient _fhirClient;
-
-    public PractitionerRoleService(FhirClient fhirClient)
-    {
-        _fhirClient = fhirClient;
-    }
-
     public async Task<PagedResultDto<PractitionerRoleDto>> GetFilteredAsync(PractitionerRoleFilterDto filters)
     {
         // Normalizar paginación usando el helper
@@ -52,8 +53,8 @@ public class PractitionerRoleService : IPractitionerRoleService
         var resultDto = new PagedResultDto<PractitionerRoleDto>
         {
             Items = pagedResult.Items
-                    .Select(r => r.ToDto())
-                    .ToList(),
+                .Select(r => r.ToDto())
+                .ToList(),
             Pagination = pagedResult.Pagination
         };
 
@@ -96,16 +97,19 @@ public class PractitionerRoleService : IPractitionerRoleService
         try
         {
             var resource = dto.ToFhirResource();
+            ApplyMeta(resource , isCreate:true);
             var result = await _fhirClient.CreateAsync(resource);
             return ServiceResult<PractitionerRoleDto>.Success(result.ToDto());
         }
         catch (FhirOperationException ex) when (ex.Status == System.Net.HttpStatusCode.Conflict)
         {
-            return ServiceResult<PractitionerRoleDto>.Failure("Conflicto al crear el recurso en FHIR.", "FHIR_CONFLICT");
+            return ServiceResult<PractitionerRoleDto>.Failure("Conflicto al crear el recurso en FHIR.",
+                "FHIR_CONFLICT");
         }
         catch
         {
-            return ServiceResult<PractitionerRoleDto>.Failure("Error interno al crear el PractitionerRole.", "INTERNAL_ERROR");
+            return ServiceResult<PractitionerRoleDto>.Failure("Error interno al crear el PractitionerRole.",
+                "INTERNAL_ERROR");
         }
     }
 
@@ -262,7 +266,7 @@ public class PractitionerRoleService : IPractitionerRoleService
             r => ((FhirPractitionerRole)r).Organization?.Display,
             r => ((FhirPractitionerRole)r).Location?.FirstOrDefault()?.Display
         );
-
+        ApplyMeta(existing, isCreate:false);
         // 6. Guardar cambios
         try
         {
@@ -298,7 +302,8 @@ public class PractitionerRoleService : IPractitionerRoleService
 
     // ====================== HELPERS ======================
 
-    private async Task<bool> ExistsActiveRoleFor(string practitionerRef, string? organizationRef, CancellationToken ct = default)
+    private async Task<bool> ExistsActiveRoleFor(string practitionerRef, string? organizationRef,
+        CancellationToken ct = default)
     {
         var searchParams = new SearchParams()
             .Add("practitioner", practitionerRef)
@@ -316,7 +321,7 @@ public class PractitionerRoleService : IPractitionerRoleService
         var bundle = await _fhirClient.SearchAsync<FhirPractitionerRole>(searchParams, ct);
         return bundle?.Entry?.Any() == true;
     }
-    
+
     private async Task<bool> IdentifierExists(string system, string value)
     {
         try
@@ -333,7 +338,7 @@ public class PractitionerRoleService : IPractitionerRoleService
             return true;
         }
     }
-    
+
     private bool AreCodesValid(List<CodeableConceptDto> codeableConcepts)
     {
         if (codeableConcepts == null || codeableConcepts.Count == 0)

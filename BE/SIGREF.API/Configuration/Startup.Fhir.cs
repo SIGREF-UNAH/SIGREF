@@ -1,4 +1,5 @@
 using Hl7.Fhir.Rest;
+using SIGREF.API.Fhir;
 using SIGREF.API.Services.Common;
 using SIGREF.API.Services.Dashboard;
 using SIGREF.API.Services.FhirUtils;
