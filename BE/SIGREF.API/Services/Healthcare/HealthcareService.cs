@@ -425,9 +425,21 @@ public class HealthcareService : BaseFhirService, IHealthcareService
                 Message = "Servicio médico eliminado exitosamente de ambos sistemas."
             };
         }
-        catch (Exception ex)
+        catch (FhirOperationException ex)
         {
-            _logger.LogError(ex, "Error no controlado durante la eliminación del HealthcareService {Id}.", id);
+            _logger.LogError(ex, "Error FHIR durante la eliminación del HealthcareService {Id}.", id);
+
+            return new ResponseDto<bool>
+            {
+                Data = false,
+                Status = false,
+                StatusCode = StatusCodes.Status500InternalServerError,
+                Message = "Ocurrió un error interno al procesar la solicitud de eliminación."
+            };
+        }
+        catch (System.Net.Http.HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Error de comunicación durante la eliminación del HealthcareService {Id}.", id);
 
             return new ResponseDto<bool>
             {
