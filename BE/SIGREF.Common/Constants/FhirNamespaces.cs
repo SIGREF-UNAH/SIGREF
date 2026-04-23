@@ -1,13 +1,24 @@
 ﻿namespace SIGREF.Common.Constants;
 
 
+public class HospitalOptions
+{
+    // Código único del hospital (ej: OCCI-01, COPAN-01)
+    public string HospitalCode { get; set; } = "OCCI_01";
+    
+    // La URL base del servidor FHIR para este hospital
+    public string BaseUrl { get; set; } = "http://sigref.local/fhir";
+    
+    // Esquema para la atribución de autoría
+    public string UserSourceSchema { get; set; } = "sigref://{0}/usuarios/{1}";
+}
 public static class FhirNamespaces
 {
     // Base namespace (no requiere dominio real) 
     // Para cuando si este en la web cambiar aqui
     
     public const string Base = "http://sigref.local/fhir";
-
+    public const string AuditSystem = $"{Base}/audit-id";
     // StructureDefinitions
     public const string HealthcareServiceAbbreviation =
         Base + "/StructureDefinition/healthcareservice-abbreviation";

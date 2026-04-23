@@ -15,8 +15,7 @@ namespace SIGREF.API.Dtos.Invoice;
 public class InvoiceCreateDto
 {
     // ======== DATOS DEL PACIENTE ========
-    [Required]
-    public string PatientIdFhir { get; set; } = null!;
+    public string? PatientIdFhir { get; set; }
 
     public string? PatientDisplay { get; set; }
     public string? PatientSystem { get; set; }

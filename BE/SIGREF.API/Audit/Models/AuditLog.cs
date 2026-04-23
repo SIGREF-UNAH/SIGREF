@@ -11,6 +11,8 @@ public class AuditLog
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; }
+    
+    public string TraceId { get; set; }
 
     /// <summary>
     /// Tipo de acción: create, update, delete, read

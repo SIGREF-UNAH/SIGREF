@@ -3,8 +3,10 @@ using Hl7.Fhir.Rest;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Patient;
 using SIGREF.API.Extensions;
+using SIGREF.API.Fhir;
 using SIGREF.API.Helpers;
 using SIGREF.Common.Dtos;
+using SIGREF.Infrastructure.Keycloak.Interfaces;
 using FhirPatient = Hl7.Fhir.Model.Patient;
 using Task = System.Threading.Tasks.Task;
 namespace SIGREF.API.Services.Patient;
@@ -26,18 +28,22 @@ namespace SIGREF.API.Services.Patient;
 /// </code>
 /// </para>
 /// </remarks>
-public class PatientService : IPatientService
+public class PatientService :BaseFhirService, IPatientService
 {
     private readonly FhirClient _fhirClient;
+    private readonly IUserContextService _userContext;
     private const string ResourceType = "Patient"; // Cambiar a nameof(Location) pero que no tenga conflicto con la clase o carpeta
     /// <summary>
     /// Inicializa una nueva instancia de <see cref="PatientService"/> con el cliente FHIR especificado.
     /// </summary>
     /// <param name="fhirClient">Cliente FHIR configurado para comunicarse con el servidor FHIR. No debe ser nulo.</param>
     /// <exception cref="System.ArgumentNullException">Se lanza si <paramref name="fhirClient"/> es <c>null</c>.</exception>
-    public PatientService(FhirClient fhirClient)
+    public PatientService(FhirClient fhirClient, IUserContextService userContext,      
+        IFhirNamespaceService ns)             
+        : base(userContext, ns)    
     {
-        _fhirClient = fhirClient ?? throw new System.ArgumentNullException(nameof(fhirClient));
+        _fhirClient = fhirClient;
+        _userContext = userContext;
     }
 
     /// <summary>
@@ -60,9 +66,10 @@ public class PatientService : IPatientService
     /// </example>
     public async Task<PatientDto> CreatePatientAsync(CreatePatientDto dto)
     {
-        var patient = dto.ToFhirPatient(); // Convierte DTO -> FHIR Patient
+        var patient = dto.ToFhirPatient();
+        ApplyMeta(patient, isCreate:true);
         var created = await _fhirClient.CreateAsync(patient);
-        return created.ToDto(); // Convierte FHIR Patient -> DTO
+        return created.ToDto(); 
     }
 
 
@@ -107,7 +114,7 @@ public class PatientService : IPatientService
 
         // 2. Aplicar actualizaciones
         var updated = existing.ApplyUpdate(dto); // Usa la extensión ApplyUpdate
-
+        ApplyMeta(updated,isCreate:false);
         // 3. Enviar actualización
         var result = await _fhirClient.UpdateAsync(updated);
 

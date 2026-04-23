@@ -10,10 +10,13 @@ import {
   Drawer,
   Descriptions,
   Switch,
-  message,
   Tooltip,
+  message,
 } from "antd";
-import { CopyOutlined, UserOutlined } from "@ant-design/icons";
+
+import { CopyOutlined } from "@ant-design/icons";
+import { useMessage } from "../../../shared/hooks/useMessage";
+import { UserOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import { PageHeaderTabs } from "../../../shared/components";
 import { useAbility } from "../../../config";
@@ -38,6 +41,7 @@ export const UsersListPage = () => {
   });
 
   const { mutateAsync: toggleUserStatus } = usePatchApiUsersIdToggleStatus();
+  const { success, error } = useMessage();
 
   const users = data?.data?.items ?? [];
   const pagination = data?.data?.pagination;
@@ -53,7 +57,7 @@ export const UsersListPage = () => {
     setTogglingId(user.id);
     try {
       await toggleUserStatus({ id: user.id });
-      message.success(`Estado de ${user.firstName} actualizado correctamente`);
+      success(`Estado de ${user.firstName ?? user.username} actualizado correctamente`);
 
       queryClient.invalidateQueries({
         queryKey: getGetApiUsersListQueryKey({
@@ -61,16 +65,26 @@ export const UsersListPage = () => {
           PageSize: pageSize,
         }),
       });
-    } catch (error) {
-      message.error("No se pudo cambiar el estado");
+    } catch (err) {
+      error("No se pudo cambiar el estado");
     } finally {
       setTogglingId(null);
     }
   };
 
   const columns = [
-    { title: "Nombre", dataIndex: "firstName", key: "firstName" },
-    { title: "Apellido", dataIndex: "lastName", key: "lastName" },
+    {
+      title: "Nombre",
+      dataIndex: "firstName",
+      key: "firstName",
+      render: (val: string) => val || "-",
+    },
+    {
+      title: "Apellido",
+      dataIndex: "lastName",
+      key: "lastName",
+      render: (val: string) => val || "-",
+    },
     { title: "Correo", dataIndex: "email", key: "email" },
     {
       title: "Estado",
@@ -222,7 +236,7 @@ export const UsersListPage = () => {
         {/* Búsqueda */}
         <div className="mb-4">
           <Input
-            placeholder="Buscar por nombre o email"
+            placeholder="Buscar por nombre"
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -269,7 +283,10 @@ export const UsersListPage = () => {
               {selectedUser.username}
             </Descriptions.Item>
             <Descriptions.Item label="Nombre">
-              {selectedUser.firstName} {selectedUser.lastName}
+              {selectedUser.firstName || "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Apellido">
+              {selectedUser.lastName || "-"}
             </Descriptions.Item>
             <Descriptions.Item label="Correo">
               {selectedUser.email}

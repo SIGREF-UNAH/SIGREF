@@ -4,26 +4,32 @@ using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Practitioner;
 using SIGREF.API.Dtos.PractitionerRole;
 using SIGREF.API.Extensions;
+using SIGREF.API.Fhir;
 using SIGREF.API.Helpers;
 using SIGREF.API.Services.Patient;
 using SIGREF.API.Services.PractitionerRole;
 using SIGREF.Common.Dtos;
+using SIGREF.Infrastructure.Keycloak.Interfaces;
 using FhirPractitioner = Hl7.Fhir.Model.Practitioner;
 using Task = System.Threading.Tasks.Task;
 
 namespace SIGREF.API.Services.Practitioner;
 
-public class PractitionerService : IPractitionerService
+public class PractitionerService : BaseFhirService, IPractitionerService
 {
     private readonly FhirClient _fhirClient;
     private readonly IPractitionerRoleService _practitionerRoleService;
-    private const string ResourceType = nameof(Practitioner); // Cambiar a nameof(Location) pero que no tenga conflicto con la clase o carpeta
+    private const string ResourceType = nameof(Practitioner); 
+
     /// <summary>
-    /// Inicializa una nueva instancia de <see cref="PatientService"/> con el cliente FHIR especificado.
+    /// Inicializa una nueva instancia de <see cref="PractitionerService"/> con los clientes y servicios necesarios.
     /// </summary>
-    /// <param name="fhirClient">Cliente FHIR configurado para comunicarse con el servidor FHIR. No debe ser nulo.</param>
-    /// <exception cref="System.ArgumentNullException">Se lanza si <paramref name="fhirClient"/> es <c>null</c>.</exception>
-    public PractitionerService(FhirClient fhirClient, IPractitionerRoleService practitionerRoleService)
+    public PractitionerService(
+        FhirClient fhirClient, 
+        IPractitionerRoleService practitionerRoleService,
+        IUserContextService userContext,       
+        IFhirNamespaceService ns)             
+        : base(userContext, ns)               
     {
         _fhirClient = fhirClient ?? throw new System.ArgumentNullException(nameof(fhirClient));
         _practitionerRoleService = practitionerRoleService ?? throw new System.ArgumentNullException(nameof(practitionerRoleService));
@@ -60,24 +66,7 @@ public class PractitionerService : IPractitionerService
 
     public async Task<FhirPractitioner> UpdatePractitionerAsync(string id, FhirPractitioner dto)
     {
-        // Actualizar metadatos
-        if (dto.Meta == null)
-        {
-            dto.Meta = new Meta();
-        }
-
-        dto.Meta.LastUpdated = DateTimeOffset.Now;
-
-        // Incrementar versión si ya existe
-        if (int.TryParse(dto.Meta.VersionId, out var currentVersion))
-        {
-            dto.Meta.VersionId = (currentVersion + 1).ToString();
-        }
-        else
-        {
-            dto.Meta.VersionId = "1";
-        }
-
+        ApplyMeta(dto,isCreate:false);
         var result = await _fhirClient.UpdateAsync(dto);
         return result;
     }
@@ -88,6 +77,7 @@ public class PractitionerService : IPractitionerService
         {
             var existingPractitioner = await _fhirClient.ReadAsync<FhirPractitioner>($"{ResourceType}/{id}");
             existingPractitioner.ApplyUpdate(dto);
+            ApplyMeta(existingPractitioner,isCreate:false);
             var result = await _fhirClient.UpdateAsync(existingPractitioner);
             return result;
         }

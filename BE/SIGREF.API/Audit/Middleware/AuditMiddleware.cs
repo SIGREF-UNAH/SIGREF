@@ -134,7 +134,9 @@ public class AuditMiddleware
         var auditLog = new AuditLog
         {
             Action = MapHttpMethodToAction(request.Method, response.StatusCode),
+            
             Endpoint = request.Path.Value,
+            TraceId = context.TraceIdentifier,
             HttpMethod = request.Method,
             StatusCode = response.StatusCode,
             Success = response.StatusCode >= 200 && response.StatusCode < 300,

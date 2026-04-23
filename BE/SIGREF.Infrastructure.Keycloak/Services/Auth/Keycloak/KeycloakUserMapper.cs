@@ -60,6 +60,12 @@ public static class KeycloakUserMapper
             Email         = user.TryGetProperty("email", out var emailProp)
                                 ? emailProp.GetString()
                                 : null,
+            FirstName     = user.TryGetProperty("firstName", out var firstNameProp)
+                                ? firstNameProp.GetString()
+                                : null,
+            LastName      = user.TryGetProperty("lastName", out var lastNameProp)
+                                ? lastNameProp.GetString()
+                                : null,
             DisplayName   = null,
             PractitionerId = string.Empty,
             Enabled       = user.GetProperty("enabled").GetBoolean(),
