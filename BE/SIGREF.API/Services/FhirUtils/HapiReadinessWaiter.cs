@@ -1,5 +1,6 @@
 ﻿
 using SIGREF.API.Database;
+using SIGREF.API.Utils;
 
 namespace SIGREF.API.Services.FhirUtils;
 
@@ -24,7 +25,7 @@ public class HapiReadinessWaiter : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation(
-            $"{FhirAnsiColors.Blue}[HAPI-READY] Esperando a que HAPI FHIR se inicialice completamente...{FhirAnsiColors.Reset}");
+            $"{AnsiColors.Blue}[HAPI-READY] Esperando a que HAPI FHIR se inicialice completamente...{AnsiColors.Reset}");
 
         var client = _httpClientFactory.CreateClient();
 
@@ -40,7 +41,7 @@ public class HapiReadinessWaiter : BackgroundService
                 if (response.IsSuccessStatusCode)
                 {
                     _logger.LogInformation(
-                        $"{FhirAnsiColors.Cyan}[HAPI-READY] Metadata correcta, verificando acceso a base de datos...{FhirAnsiColors.Reset}");
+                        $"{AnsiColors.Cyan}[HAPI-READY] Metadata correcta, verificando acceso a base de datos...{AnsiColors.Reset}");
 
                     // Paso 2: JPA / DB
                     var test = await client.GetAsync(
@@ -50,7 +51,7 @@ public class HapiReadinessWaiter : BackgroundService
                     if (test.IsSuccessStatusCode)
                     {
                         _logger.LogInformation(
-                            $"{FhirAnsiColors.Green}[HAPI-READY] HAPI FHIR listo completamente (JPA y base de datos OK){FhirAnsiColors.Reset}");
+                            $"{AnsiColors.Green}[HAPI-READY] HAPI FHIR listo completamente (JPA y base de datos OK){AnsiColors.Reset}");
 
                         using var scope = _scopeFactory.CreateScope();
  
@@ -65,7 +66,7 @@ public class HapiReadinessWaiter : BackgroundService
                         await seeder.SeedAsync(stoppingToken);
  
                         _logger.LogInformation(
-                            $"{FhirAnsiColors.Green}[HAPI-READY] HAPI FHIR LISTO - Proceso de inicializacion terminado{FhirAnsiColors.Reset}");
+                            $"{AnsiColors.Green}[HAPI-READY] HAPI FHIR LISTO - Proceso de inicializacion terminado{AnsiColors.Reset}");
                         break;
                     }
                 }
@@ -73,7 +74,7 @@ public class HapiReadinessWaiter : BackgroundService
             catch (Exception ex)
             {
                 _logger.LogWarning(
-                    $"{FhirAnsiColors.Yellow}[HAPI-READY] Esperando a HAPI... ({ex.Message}){FhirAnsiColors.Reset}");
+                    $"{AnsiColors.Yellow}[HAPI-READY] Esperando a HAPI... ({ex.Message}){AnsiColors.Reset}");
             }
 
             await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);

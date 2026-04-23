@@ -1,4 +1,4 @@
-namespace SIGREF.API.Services.FhirUtils;
+namespace SIGREF.API.Utils;
 
 /// <summary>
 /// Códigos de escape ANSI para colorizar la salida de logs en terminales
@@ -9,7 +9,7 @@ namespace SIGREF.API.Services.FhirUtils;
 /// No aplicar en entornos donde la salida sea redirigida a archivos planos
 /// sin soporte ANSI, ya que los códigos aparecerán como caracteres literales.
 /// </remarks>
-internal static class FhirAnsiColors
+internal static class AnsiColors
 {
     internal const string Reset  = "[0m";
     internal const string Green  = "[32m";
