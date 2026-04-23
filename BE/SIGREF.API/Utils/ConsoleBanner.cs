@@ -21,13 +21,12 @@ public static class ConsoleBanner
         }
 
         Console.WriteLine($"{FhirAnsiColors.Blue}");
-        Console.WriteLine("_____     _____      _____     _____      ______     ______ ");
-        Console.WriteLine("/ ____|   |_   _|    / ____|   |  __ \\    |  ____|   |  ____|");
-        Console.WriteLine("| (___       | |     | |  __    | |__) |   | |__      | |__");
-        Console.WriteLine("\\___ \\      | |     | | |_ |   |  _  /    |  __|     |  __|");
-        Console.WriteLine("____) |    _| |_    | |__| |   | | \\ \\    | |____    | |");
-        Console.WriteLine("|_____/    |_____|    \\_____|   |_|  \\_\\   |______|   |_|");
-        Console.WriteLine("==== SIGREF ====");
+        Console.WriteLine("  _____   _____    _____   _____    ______   ______ ");
+        Console.WriteLine(" / ____| |_   _|  / ____| |  __ \\  |  ____| |  ____|");
+        Console.WriteLine("| (___     | |   | |  __  | |__) | | |__    | |__   ");
+        Console.WriteLine(" \\___ \\    | |   | | |_ | |  _  /  |  __|   |  __|  ");
+        Console.WriteLine(" ____) |  _| |_  | |__| | | | \\ \\  | |____  | |     ");
+        Console.WriteLine("|_____/  |_____|  \\_____| |_|  \\_\\ |______| |_|     ");
         Console.WriteLine($"{FhirAnsiColors.Reset}");
         
         Console.WriteLine($"{FhirAnsiColors.Blue}┌───────────────────────────────────────────┐{FhirAnsiColors.Reset}");
