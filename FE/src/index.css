@@ -27,3 +27,7 @@
 .PhoneInput input:focus {
   outline: none !important;
 }
+
+.ant-dropdown-menu {
+  min-width: 110px !important;
+}
