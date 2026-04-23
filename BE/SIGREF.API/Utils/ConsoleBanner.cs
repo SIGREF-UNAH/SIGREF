@@ -1,13 +1,9 @@
-﻿namespace SIGREF.API.Utils;
+﻿using SIGREF.API.Services.FhirUtils;
+
+namespace SIGREF.API.Utils;
 
 public static class ConsoleBanner
 {
-    // ANSI escape codes for colors
-    private const string Reset = "\u001b[0m";
-    private const string Blue = "\u001b[34m";
-    private const string Green = "\u001b[32m";
-    const string Gray = "\x1b[90m";
-
     public static void Print()
     {
         // Enable ANSI escape codes on Windows (if needed — .NET 6+ usually handles this automatically)
@@ -24,7 +20,7 @@ public static class ConsoleBanner
             }
         }
 
-        Console.WriteLine($"{Blue}");
+        Console.WriteLine($"{FhirAnsiColors.Blue}");
         Console.WriteLine("_____     _____      _____     _____      ______     ______ ");
         Console.WriteLine("/ ____|   |_   _|    / ____|   |  __ \\    |  ____|   |  ____|");
         Console.WriteLine("| (___       | |     | |  __    | |__) |   | |__      | |__");
@@ -32,19 +28,19 @@ public static class ConsoleBanner
         Console.WriteLine("____) |    _| |_    | |__| |   | | \\ \\    | |____    | |");
         Console.WriteLine("|_____/    |_____|    \\_____|   |_|  \\_\\   |______|   |_|");
         Console.WriteLine("==== SIGREF ====");
-        Console.WriteLine($"{Reset}");
+        Console.WriteLine($"{FhirAnsiColors.Reset}");
         
-        Console.WriteLine($"{Blue}┌───────────────────────────────────────────┐{Reset}");
-        Console.WriteLine($"{Blue}│          {Green}SIGREF API{Blue}                       │{Reset}");
-        Console.WriteLine($"{Blue}│           {Gray}v1.0.0 (stable){Blue}                  │{Reset}");
-        Console.WriteLine($"{Blue}├───────────────────────────────────────────┤{Reset}");
-        Console.WriteLine($"{Gray}│ GitHub: https://github.com/SIGREF-UNAH/SIGREF{Reset}");
-        Console.WriteLine($"{Gray}│                                           {Reset}");
-        Console.WriteLine($"{Gray}│ Dedicado a:                               {Reset}");
-        Console.WriteLine($"{Gray}│ UNAH-COPAN • Hospital de Occidente        {Reset}");
-        Console.WriteLine($"{Gray}│ IS-COPAN, Honduras C.A.                   {Reset}");
-        Console.WriteLine($"{Blue}└───────────────────────────────────────────┘{Reset}");
+        Console.WriteLine($"{FhirAnsiColors.Blue}┌───────────────────────────────────────────┐{FhirAnsiColors.Reset}");
+        Console.WriteLine($"{FhirAnsiColors.Blue}│          {FhirAnsiColors.Green}SIGREF API{FhirAnsiColors.Blue}                       │{FhirAnsiColors.Reset}");
+        Console.WriteLine($"{FhirAnsiColors.Blue}│           {FhirAnsiColors.Gray}v1.0.0 (stable){FhirAnsiColors.Blue}                  │{FhirAnsiColors.Reset}");
+        Console.WriteLine($"{FhirAnsiColors.Blue}├───────────────────────────────────────────┤{FhirAnsiColors.Reset}");
+        Console.WriteLine($"{FhirAnsiColors.Gray}│ GitHub: https://github.com/SIGREF-UNAH/SIGREF{FhirAnsiColors.Reset}");
+        Console.WriteLine($"{FhirAnsiColors.Gray}│                                           {FhirAnsiColors.Reset}");
+        Console.WriteLine($"{FhirAnsiColors.Gray}│ Dedicado a:                               {FhirAnsiColors.Reset}");
+        Console.WriteLine($"{FhirAnsiColors.Gray}│ UNAH-COPAN • Hospital de Occidente        {FhirAnsiColors.Reset}");
+        Console.WriteLine($"{FhirAnsiColors.Gray}│ IS-COPAN, Honduras C.A.                   {FhirAnsiColors.Reset}");
+        Console.WriteLine($"{FhirAnsiColors.Blue}└───────────────────────────────────────────┘{FhirAnsiColors.Reset}");
         Console.WriteLine();
-        Console.WriteLine($"{Reset}");
+        Console.WriteLine($"{FhirAnsiColors.Reset}");
     }
 }

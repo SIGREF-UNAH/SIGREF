@@ -77,14 +77,14 @@ public class FhirSearchParameterOrchestrator
         var initializerList = _initializers.ToList();
 
         _logger.LogInformation(
-            "[FHIR-ORCH] ===================================================");
+            $"{FhirAnsiColors.Cyan}[FHIR-ORCH] ==================================================={FhirAnsiColors.Reset}");
         _logger.LogInformation(
-            "[FHIR-ORCH] =   Iniciando verificación de SearchParameters    =");
+            $"{FhirAnsiColors.Cyan}[FHIR-ORCH] =   Iniciando verificación de SearchParameters    ={FhirAnsiColors.Reset}");
         _logger.LogInformation(
-            "[FHIR-ORCH] =   {Count} inicializadores registrados           =",
+            $"{FhirAnsiColors.Cyan}[FHIR-ORCH] =   {{Count}} inicializadores registrados           ={FhirAnsiColors.Reset}",
             initializerList.Count);
         _logger.LogInformation(
-            "[FHIR-ORCH] ===================================================");
+            $"{FhirAnsiColors.Cyan}[FHIR-ORCH] ==================================================={FhirAnsiColors.Reset}");
 
         // Limitamos a 5 inicializadores ejecutándose simultáneamente.
         // Protege la memoria y las conexiones HTTP al servidor FHIR.
@@ -101,14 +101,14 @@ public class FhirSearchParameterOrchestrator
         await Task.WhenAll(tasks);
 
         _logger.LogInformation(
-            "[FHIR-ORCH] ===================================================");
+            $"{FhirAnsiColors.Cyan}[FHIR-ORCH] ==================================================={FhirAnsiColors.Reset}");
 
         var uniqueResources = resourcesToReindex.Distinct().ToHashSet();
 
         if (uniqueResources.Count > 0)
         {
             _logger.LogInformation(
-                "[FHIR-ORCH] SearchParameters nuevos detectados en: {Resources}",
+                $"{FhirAnsiColors.Green}[FHIR-ORCH] SearchParameters nuevos detectados en: {{Resources}}{FhirAnsiColors.Reset}",
                 string.Join(", ", uniqueResources));
 
             await TriggerReindex(uniqueResources);
@@ -116,11 +116,11 @@ public class FhirSearchParameterOrchestrator
         else
         {
             _logger.LogInformation(
-                "[FHIR-ORCH] Sincronización completa. No se requieren cambios en los índices.");
+                $"{FhirAnsiColors.Yellow}[FHIR-ORCH] Sincronización completa. No se requieren cambios en los índices.{FhirAnsiColors.Reset}");
         }
 
         _logger.LogInformation(
-            "[FHIR-ORCH] Proceso de inicialización FHIR finalizado exitosamente.");
+            $"{FhirAnsiColors.Green}[FHIR-ORCH] Proceso de inicialización FHIR finalizado exitosamente.{FhirAnsiColors.Reset}");
     }
 
     /// <summary>
