@@ -14,6 +14,8 @@ export interface AuditLogDto {
   /** @nullable */
   action?: string | null;
   /** @nullable */
+  traceId?: string | null;
+  /** @nullable */
   resourceType?: string | null;
   /** @nullable */
   resourceId?: string | null;

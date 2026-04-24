@@ -11,6 +11,5 @@ export interface ShiftIncomeDtoListResponseDto {
   data?: ShiftIncomeDto[] | null;
   /** @nullable */
   message?: string | null;
-  statusCode?: number;
   status?: boolean;
 }

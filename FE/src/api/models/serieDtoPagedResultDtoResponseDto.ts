@@ -10,6 +10,5 @@ export interface SerieDtoPagedResultDtoResponseDto {
   data?: SerieDtoPagedResultDto;
   /** @nullable */
   message?: string | null;
-  statusCode?: number;
   status?: boolean;
 }

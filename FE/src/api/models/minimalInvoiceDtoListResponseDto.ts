@@ -11,6 +11,5 @@ export interface MinimalInvoiceDtoListResponseDto {
   data?: MinimalInvoiceDto[] | null;
   /** @nullable */
   message?: string | null;
-  statusCode?: number;
   status?: boolean;
 }

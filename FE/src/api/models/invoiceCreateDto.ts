@@ -9,8 +9,8 @@ import type { InvoiceType } from "./invoiceType";
 import type { PaymentMethodType } from "./paymentMethodType";
 
 export interface InvoiceCreateDto {
-  /** @minLength 1 */
-  patientIdFhir: string;
+  /** @nullable */
+  patientIdFhir?: string | null;
   /** @nullable */
   patientDisplay?: string | null;
   /** @nullable */
@@ -22,6 +22,8 @@ export interface InvoiceCreateDto {
   /** @nullable */
   singleServiceFhirId?: string | null;
   items: InvoiceItemCreateDto[];
+  /** @nullable */
+  invoiceDiscount?: number | null;
   invoice_type: InvoiceType;
   payment_type: PaymentMethodType;
   serieId?: string;

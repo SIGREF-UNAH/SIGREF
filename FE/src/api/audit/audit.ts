@@ -21,7 +21,7 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
-  AuditLogDto,
+  AuditLogDtoPagedResultDtoResponseDto,
   GetApiAuditParams,
   ProblemDetails,
 } from ".././models";
@@ -32,7 +32,7 @@ export const getApiAudit = (
   params?: GetApiAuditParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<AuditLogDto>({
+  return customInstance<AuditLogDtoPagedResultDtoResponseDto>({
     url: `/api/Audit`,
     method: "GET",
     params,

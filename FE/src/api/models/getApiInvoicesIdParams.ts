@@ -6,7 +6,7 @@
  */
 
 export type GetApiInvoicesIdParams = {
-  includeNotes?: boolean;
-  notesPage?: number;
-  notesPageSize?: number;
+  IncludeNotes?: boolean;
+  NotesPage?: number;
+  NotesPageSize?: number;
 };

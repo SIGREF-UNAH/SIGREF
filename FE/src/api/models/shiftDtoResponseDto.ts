@@ -10,6 +10,5 @@ export interface ShiftDtoResponseDto {
   data?: ShiftDto;
   /** @nullable */
   message?: string | null;
-  statusCode?: number;
   status?: boolean;
 }

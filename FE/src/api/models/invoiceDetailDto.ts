@@ -19,6 +19,7 @@ export interface InvoiceDetailDto {
   patientDisplay?: string | null;
   totalOriginal?: number;
   adjustmentTotal?: number;
+  invoiceDiscount?: number;
   finalTotal?: number;
   amountPaid?: number;
   amountDue?: number;

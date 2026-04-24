@@ -20,7 +20,7 @@ export interface CreateLocationDto {
   alias?: string[] | null;
   /** @nullable */
   description?: string | null;
-  status?: LocationStatus;
+  status: LocationStatus;
   mode?: LocationMode;
   address?: AddressDto;
   /** @nullable */

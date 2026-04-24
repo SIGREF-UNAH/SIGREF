@@ -10,6 +10,5 @@ export interface HealthcareDtoPagedResultDtoResponseDto {
   data?: HealthcareDtoPagedResultDto;
   /** @nullable */
   message?: string | null;
-  statusCode?: number;
   status?: boolean;
 }

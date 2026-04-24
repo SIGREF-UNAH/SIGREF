@@ -10,6 +10,5 @@ export interface SerieDtoResponseDto {
   data?: SerieDto;
   /** @nullable */
   message?: string | null;
-  statusCode?: number;
   status?: boolean;
 }

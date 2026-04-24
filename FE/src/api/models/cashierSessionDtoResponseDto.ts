@@ -10,6 +10,5 @@ export interface CashierSessionDtoResponseDto {
   data?: CashierSessionDto;
   /** @nullable */
   message?: string | null;
-  statusCode?: number;
   status?: boolean;
 }
