@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace SIGREF.Infrastructure.Keycloak.Dtos.Auth;
+﻿namespace SIGREF.Infrastructure.Keycloak.Dtos.Auth;
 
 public class KeycloakUserDto
 {
@@ -14,8 +12,21 @@ public class KeycloakUserDto
     // Atributo crítico de negocio
     public string PractitionerId { get; set; } = default!;
     public bool? Enabled { get; set; }
+    
+    // Por limitaciones solo se incluye en el get bi ID
 
     public List<string>? Roles { get; set; }
+    
+    /// <summary>
+    /// Fecha de creación del usuario (mapeado desde 'createdTimestamp' de Keycloak)
+    /// </summary>
+    public DateTimeOffset? CreatedAt { get; set; }
+
+    /// <summary>
+    /// Fecha de la última actualización de perfil/credenciales.
+    /// Nota: atributo custom
+    /// </summary>
+    public DateTimeOffset? LastModifiedAt { get; set; }
 }
 
 

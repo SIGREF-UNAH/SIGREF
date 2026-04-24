@@ -43,4 +43,6 @@ public sealed class KeycloakUpdateUserDto
     /// Nulo si no se desea cambiar el rol.
     /// </summary>
     public string? NewRoleName { get; set; }
+    
+    public bool? Enabled { get; set; }
 }

@@ -40,6 +40,9 @@ public interface IKeycloakClient
     /// Si la petición al endpoint de token falla con un código HTTP no exitoso.
     /// </exception>
     Task<string> GetAdminTokenAsync(CancellationToken ct);
+
+
+    Task<List<string>> GetUserRolesAsync(string userId, CancellationToken ct);
  
     // =========================================================
     // BÚSQUEDAS
