@@ -10,6 +10,5 @@ export interface KeycloakUserDtoResponseDto {
   data?: KeycloakUserDto;
   /** @nullable */
   message?: string | null;
-  statusCode?: number;
   status?: boolean;
 }

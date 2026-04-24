@@ -11,6 +11,5 @@ export interface LocationIncomeDtoListResponseDto {
   data?: LocationIncomeDto[] | null;
   /** @nullable */
   message?: string | null;
-  statusCode?: number;
   status?: boolean;
 }

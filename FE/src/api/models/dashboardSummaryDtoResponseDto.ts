@@ -10,6 +10,5 @@ export interface DashboardSummaryDtoResponseDto {
   data?: DashboardSummaryDto;
   /** @nullable */
   message?: string | null;
-  statusCode?: number;
   status?: boolean;
 }

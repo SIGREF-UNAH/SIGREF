@@ -10,6 +10,5 @@ export interface InvoiceNotesSummaryDtoResponseDto {
   data?: InvoiceNotesSummaryDto;
   /** @nullable */
   message?: string | null;
-  statusCode?: number;
   status?: boolean;
 }

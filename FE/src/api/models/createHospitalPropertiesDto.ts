@@ -13,7 +13,7 @@ export interface CreateHospitalPropertiesDto {
   /** @nullable */
   subdirector?: string | null;
   /** @nullable */
-  ubication?: string | null;
+  location?: string | null;
   /** @minLength 1 */
   phoneNumber: string;
   /** @nullable */

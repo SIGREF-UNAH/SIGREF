@@ -10,6 +10,5 @@ export interface ServiceUsageResultDtoResponseDto {
   data?: ServiceUsageResultDto;
   /** @nullable */
   message?: string | null;
-  statusCode?: number;
   status?: boolean;
 }

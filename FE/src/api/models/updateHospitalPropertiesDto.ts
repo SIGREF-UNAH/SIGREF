@@ -13,7 +13,7 @@ export interface UpdateHospitalPropertiesDto {
   /** @nullable */
   subdirector?: string | null;
   /** @nullable */
-  ubication?: string | null;
+  location?: string | null;
   /** @nullable */
   phoneNumber?: string | null;
   /** @nullable */

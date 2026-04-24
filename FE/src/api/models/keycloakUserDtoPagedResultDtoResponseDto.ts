@@ -10,6 +10,5 @@ export interface KeycloakUserDtoPagedResultDtoResponseDto {
   data?: KeycloakUserDtoPagedResultDto;
   /** @nullable */
   message?: string | null;
-  statusCode?: number;
   status?: boolean;
 }

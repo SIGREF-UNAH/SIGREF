@@ -10,6 +10,5 @@ export interface CashierSessionMinimalDtoResponseDto {
   data?: CashierSessionMinimalDto;
   /** @nullable */
   message?: string | null;
-  statusCode?: number;
   status?: boolean;
 }

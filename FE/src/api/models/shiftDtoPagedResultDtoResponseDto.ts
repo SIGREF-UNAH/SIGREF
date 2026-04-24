@@ -10,6 +10,5 @@ export interface ShiftDtoPagedResultDtoResponseDto {
   data?: ShiftDtoPagedResultDto;
   /** @nullable */
   message?: string | null;
-  statusCode?: number;
   status?: boolean;
 }

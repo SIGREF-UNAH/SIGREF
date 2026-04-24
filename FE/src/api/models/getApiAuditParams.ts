@@ -6,11 +6,31 @@
  */
 
 export type GetApiAuditParams = {
-  page?: number;
-  pageSize?: number;
-  action?: string;
-  userId?: string;
-  userName?: string;
-  from?: string;
-  to?: string;
+  /**
+   * @minimum 1
+   * @maximum 2147483647
+   */
+  Page?: number;
+  /**
+   * @minimum 1
+   * @maximum 100
+   */
+  PageSize?: number;
+  /**
+   * @minLength 0
+   * @maxLength 50
+   */
+  Action?: string;
+  /**
+   * @minLength 0
+   * @maxLength 50
+   */
+  UserId?: string;
+  /**
+   * @minLength 0
+   * @maxLength 100
+   */
+  UserName?: string;
+  From?: string;
+  To?: string;
 };

@@ -12,7 +12,4 @@ export interface InvoiceItemCreateDto {
   nameService?: string | null;
   quantity?: number;
   unitPrice?: number;
-  /** @nullable */
-  discount?: number | null;
-  totalAmount?: number;
 }

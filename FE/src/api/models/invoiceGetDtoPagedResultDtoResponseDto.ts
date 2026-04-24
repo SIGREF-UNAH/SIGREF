@@ -10,6 +10,5 @@ export interface InvoiceGetDtoPagedResultDtoResponseDto {
   data?: InvoiceGetDtoPagedResultDto;
   /** @nullable */
   message?: string | null;
-  statusCode?: number;
   status?: boolean;
 }

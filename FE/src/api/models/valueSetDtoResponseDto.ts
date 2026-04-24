@@ -10,6 +10,5 @@ export interface ValueSetDtoResponseDto {
   data?: ValueSetDto;
   /** @nullable */
   message?: string | null;
-  statusCode?: number;
   status?: boolean;
 }

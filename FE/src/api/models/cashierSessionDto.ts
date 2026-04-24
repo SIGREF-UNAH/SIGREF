@@ -8,6 +8,8 @@
 export interface CashierSessionDto {
   id?: string;
   userId?: string;
+  /** @nullable */
+  userName?: string | null;
   shiftId?: string;
   openAt?: string;
   /** @nullable */

@@ -9,6 +9,5 @@ export interface BooleanResponseDto {
   data?: boolean;
   /** @nullable */
   message?: string | null;
-  statusCode?: number;
   status?: boolean;
 }
