@@ -81,7 +81,7 @@ public class PractitionerController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var updatedPractitioner = await _practitionerService.UpdatePractitionerWithDtoAsync(id, updatePractitionerDto);
+        var updatedPractitioner = await _practitionerService.UpdatePractitionerAsync(id, updatePractitionerDto);
         if (updatedPractitioner == null)
             return NotFound($"Practitioner with id '{id}' not found.");
 

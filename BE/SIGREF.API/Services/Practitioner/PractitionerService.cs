@@ -64,14 +64,7 @@ public class PractitionerService : BaseFhirService, IPractitionerService
         return dto;
     }
 
-    public async Task<FhirPractitioner> UpdatePractitionerAsync(string id, FhirPractitioner dto)
-    {
-        ApplyMeta(dto,isCreate:false);
-        var result = await _fhirClient.UpdateAsync(dto);
-        return result;
-    }
-
-    public async Task<FhirPractitioner?> UpdatePractitionerWithDtoAsync(string id, UpdatePractitionerDto dto)
+    public async Task<FhirPractitioner?> UpdatePractitionerAsync(string id, UpdatePractitionerDto dto)
     {
         try
         {
