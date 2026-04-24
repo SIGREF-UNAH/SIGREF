@@ -227,8 +227,9 @@ public class KeycloakAdminService : IKeycloakAdminService
  
         if (raw is null)
             return Ok<KeycloakUserDto?>("Usuario no encontrado.", null);
- 
-        return Ok<KeycloakUserDto?>("Usuario encontrado.", KeycloakUserMapper.ToDto(raw.Value));
+        var roles = await _kc.GetUserRolesAsync(keycloakUserId, ct);
+        var dto = KeycloakUserMapper.ToDto(raw.Value, roles);
+        return Ok<KeycloakUserDto?>("Usuario encontrado.", dto);
     }
  
     // ============================================================

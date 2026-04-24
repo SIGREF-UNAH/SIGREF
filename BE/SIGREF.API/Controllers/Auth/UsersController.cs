@@ -73,7 +73,7 @@ public class UsersController : ControllerBase
     /// Obtiene un usuario por su UUID de Keycloak.
     /// </summary>
     /// <param name="id">UUID del usuario en Keycloak.</param>
-    [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}")]
+    //[Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}")]
     [HttpGet("by-id/{id}")]
     [ProducesResponseType(typeof(ResponseDto<KeycloakUserDto?>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResponseDto<KeycloakUserDto?>), StatusCodes.Status401Unauthorized)]

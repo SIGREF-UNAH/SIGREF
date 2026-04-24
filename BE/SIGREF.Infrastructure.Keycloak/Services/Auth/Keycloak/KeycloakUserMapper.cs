@@ -47,7 +47,7 @@ public static class KeycloakUserMapper
     /// Un <see cref="KeycloakUserDto"/> poblado con los datos del usuario,
     /// o <c>null</c> si el elemento no es un usuario válido.
     /// </returns>
-    public static KeycloakUserDto? ToDto(JsonElement user)
+    public static KeycloakUserDto? ToDto(JsonElement user, List<string>? roles = null)
     {
         // El campo 'id' es obligatorio; si no existe la respuesta es inválida
         if (!user.TryGetProperty("id", out var idProp))
@@ -66,11 +66,17 @@ public static class KeycloakUserMapper
             LastName      = user.TryGetProperty("lastName", out var lastNameProp)
                                 ? lastNameProp.GetString()
                                 : null,
+            Roles = roles ?? new List<string>(),
             DisplayName   = null,
             PractitionerId = string.Empty,
             Enabled       = user.GetProperty("enabled").GetBoolean(),
+            
         };
- 
+        // Importante: Keycloak usa 'createdTimestamp' en MILISEGUNDOS
+        if (user.TryGetProperty("createdTimestamp", out var createdProp))
+        {
+            dto.CreatedAt = DateTimeOffset.FromUnixTimeMilliseconds(createdProp.GetInt64());
+        }
         // Los atributos personalizados son opcionales; se procesan solo si existen
         if (!user.TryGetProperty("attributes", out var attrs))
             return dto;
@@ -85,6 +91,17 @@ public static class KeycloakUserMapper
             && practitionerIdArray.GetArrayLength() > 0)
         {
             dto.PractitionerId = practitionerIdArray[0].GetString() ?? string.Empty;
+        }
+        
+        if (attrs.TryGetProperty("lastModifiedAt", out var lastModifiedAtArray) 
+            && lastModifiedAtArray.ValueKind == JsonValueKind.Array 
+            && lastModifiedAtArray.GetArrayLength() > 0)
+        {
+            var rawValue = lastModifiedAtArray[0].GetString();
+            if (DateTimeOffset.TryParse(rawValue, out var parsedDate))
+            {
+                dto.LastModifiedAt = parsedDate;
+            }
         }
  
         return dto;
