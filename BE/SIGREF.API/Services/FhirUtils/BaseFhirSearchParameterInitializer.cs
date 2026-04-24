@@ -1,6 +1,7 @@
 ﻿using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 using System.Linq;
+using SIGREF.API.Utils;
 namespace SIGREF.API.Services.FhirUtils;
 
 
@@ -63,9 +64,9 @@ public abstract class BaseFhirSearchParameterInitializer
         var resourceName = definitions.FirstOrDefault()?.Base.ToString() ?? "Unknown";
  
         Logger.LogInformation(
-            $"{FhirAnsiColors.Cyan}[FHIR-SP] ==========================={FhirAnsiColors.Reset}");
+            $"{AnsiColors.Cyan}[FHIR-SP] ==========================={AnsiColors.Reset}");
         Logger.LogInformation(
-            $"{FhirAnsiColors.Cyan}[FHIR-SP] Verificando SearchParameters de {resourceName} ({definitions.Count} definidos){FhirAnsiColors.Reset}");
+            $"{AnsiColors.Cyan}[FHIR-SP] Verificando SearchParameters de {resourceName} ({definitions.Count} definidos){AnsiColors.Reset}");
  
         int created = 0;
         int skipped = 0;
@@ -84,14 +85,14 @@ public abstract class BaseFhirSearchParameterInitializer
         }
  
         Logger.LogInformation(
-            $"{FhirAnsiColors.Cyan}[FHIR-SP] {resourceName} — Resultado: " +
-            $"{FhirAnsiColors.Green}{created} creados{FhirAnsiColors.Reset} | " +
-            $"{FhirAnsiColors.Blue}{skipped} ya existían{FhirAnsiColors.Reset} | " +
-            $"{(failed > 0 ? FhirAnsiColors.Red : FhirAnsiColors.Cyan)}{failed} fallidos{FhirAnsiColors.Reset} | ");
+            $"{AnsiColors.Cyan}[FHIR-SP] {resourceName} — Resultado: " +
+            $"{AnsiColors.Green}{created} creados{AnsiColors.Reset} | " +
+            $"{AnsiColors.Blue}{skipped} ya existían{AnsiColors.Reset} | " +
+            $"{(failed > 0 ? AnsiColors.Red : AnsiColors.Cyan)}{failed} fallidos{AnsiColors.Reset} | ");
  
         if (failed > 0)
             Logger.LogWarning(
-                $"{FhirAnsiColors.Yellow}[FHIR-SP] {resourceName} tuvo {failed} SearchParameter(s) con error. Revise los logs anteriores.{FhirAnsiColors.Reset}");
+                $"{AnsiColors.Yellow}[FHIR-SP] {resourceName} tuvo {failed} SearchParameter(s) con error. Revise los logs anteriores.{AnsiColors.Reset}");
  
         return (created > 0, resourceName);
     }
@@ -143,13 +144,13 @@ public abstract class BaseFhirSearchParameterInitializer
             catch (InvalidOperationException configEx)
             {
                 Logger.LogError(
-                    $"{FhirAnsiColors.Red}[FHIR-SP] Configuracion invalida para '{definition.Code}': {configEx.Message}{FhirAnsiColors.Reset}");
+                    $"{AnsiColors.Red}[FHIR-SP] Configuracion invalida para '{definition.Code}': {configEx.Message}{AnsiColors.Reset}");
                 return EnsureResult.Failed;
             }
  
             // Verificar si ya existe
             Logger.LogInformation(
-                $"{FhirAnsiColors.Blue}[FHIR-SP] Verificando '{definition.Code}' (base={definition.Base})...{FhirAnsiColors.Reset}");
+                $"{AnsiColors.Blue}[FHIR-SP] Verificando '{definition.Code}' (base={definition.Base})...{AnsiColors.Reset}");
  
             var bundle = await Client.SearchAsync<SearchParameter>(
                 [$"code={definition.Code}", $"base={definition.Base}"]);
@@ -157,15 +158,15 @@ public abstract class BaseFhirSearchParameterInitializer
             if (bundle?.Entry?.Any() == true)
             {
                 Logger.LogInformation(
-                    $"{FhirAnsiColors.Blue}[FHIR-SP]  '{definition.Code}' ya existe - omitiendo{FhirAnsiColors.Reset}");
+                    $"{AnsiColors.Blue}[FHIR-SP]  '{definition.Code}' ya existe - omitiendo{AnsiColors.Reset}");
                 return EnsureResult.AlreadyExists;
             }
  
             // No existe — crear
             Logger.LogInformation(
-                $"{FhirAnsiColors.Green}[FHIR-SP]  '{definition.Code}' no existe - creando...{FhirAnsiColors.Reset}");
+                $"{AnsiColors.Green}[FHIR-SP]  '{definition.Code}' no existe - creando...{AnsiColors.Reset}");
             Logger.LogInformation(
-                $"{FhirAnsiColors.Green}[FHIR-SP]   Expression: {expression}{FhirAnsiColors.Reset}");
+                $"{AnsiColors.Green}[FHIR-SP]   Expression: {expression}{AnsiColors.Reset}");
  
             var sp = new SearchParameter
             {
@@ -182,7 +183,7 @@ public abstract class BaseFhirSearchParameterInitializer
             await Client.CreateAsync(sp);
  
             Logger.LogInformation(
-                $"{FhirAnsiColors.Green}[FHIR-SP]  '{definition.Code}' creado correctamente{FhirAnsiColors.Reset}");
+                $"{AnsiColors.Green}[FHIR-SP]  '{definition.Code}' creado correctamente{AnsiColors.Reset}");
  
             return EnsureResult.Created;
         }
@@ -190,27 +191,27 @@ public abstract class BaseFhirSearchParameterInitializer
         {
             // Errores devueltos por el servidor FHIR (ej: 403 Forbidden, 400 Bad Request)
             Logger.LogError(
-                $"{FhirAnsiColors.Red}[FHIR-SP] Error del Servidor FHIR en '{definition.Code}': {fhirEx.Status} - {fhirEx.Message}{FhirAnsiColors.Reset}");
+                $"{AnsiColors.Red}[FHIR-SP] Error del Servidor FHIR en '{definition.Code}': {fhirEx.Status} - {fhirEx.Message}{AnsiColors.Reset}");
             return EnsureResult.Failed;
         }
         catch (HttpRequestException httpEx)
         {
             // Errores de red o el servidor está caído
             Logger.LogError(
-                $"{FhirAnsiColors.Red}[FHIR-SP] Error de red al procesar '{definition.Code}': {httpEx.Message}{FhirAnsiColors.Reset}");
+                $"{AnsiColors.Red}[FHIR-SP] Error de red al procesar '{definition.Code}': {httpEx.Message}{AnsiColors.Reset}");
             return EnsureResult.Failed;
         }
         catch (OperationCanceledException oce)
         {
             // La operación fue cancelada (por ejemplo, por un token de cancelación); se propaga para que el llamador pueda manejarla.
             Logger.LogInformation(
-                $"{FhirAnsiColors.Red}[FHIR-SP] Operación cancelada al procesar '{definition.Code}': {oce.Message}{FhirAnsiColors.Reset}");
+                $"{AnsiColors.Red}[FHIR-SP] Operación cancelada al procesar '{definition.Code}': {oce.Message}{AnsiColors.Reset}");
             throw;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             // Cualquier otro error inesperado
-            Logger.LogError(ex, $"{FhirAnsiColors.Red}[FHIR-SP] Error inesperado en '{definition.Code}': {ex.Message}{FhirAnsiColors.Reset}");
+            Logger.LogError(ex, $"{AnsiColors.Red}[FHIR-SP] Error inesperado en '{definition.Code}': {ex.Message}{AnsiColors.Reset}");
             return EnsureResult.Failed;
         }
     }

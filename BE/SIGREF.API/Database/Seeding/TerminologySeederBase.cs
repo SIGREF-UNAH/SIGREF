@@ -1,7 +1,7 @@
 ﻿using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 using SIGREF.API.Services.Common;
-using SIGREF.API.Services.FhirUtils;
+using SIGREF.API.Utils;
 using Task = System.Threading.Tasks.Task;
 
 namespace SIGREF.API.Database.Seeding;
@@ -95,7 +95,7 @@ public abstract class TerminologySeederBase : ITerminologySeeder
         if (await CodeSystemExistsAsync(def.CodeSystemUrl, ct))
         {
             Logger.LogInformation(
-                $"{FhirAnsiColors.Cyan}[{CatalogName}] CodeSystem '{def.CodeSystemName}' ya existe. Omitiendo creación.{FhirAnsiColors.Reset}");
+                $"{AnsiColors.Cyan}[{CatalogName}] CodeSystem '{def.CodeSystemName}' ya existe. Omitiendo creación.{AnsiColors.Reset}");
             return;
         }
  
@@ -114,7 +114,7 @@ public abstract class TerminologySeederBase : ITerminologySeeder
  
         await FhirClient.CreateAsync(codeSystem, ct);
         Logger.LogInformation(
-            $"{FhirAnsiColors.Green}[{CatalogName}] CodeSystem '{def.CodeSystemName}' creado con éxito ({def.Concepts.Count} conceptos).{FhirAnsiColors.Reset}");
+            $"{AnsiColors.Green}[{CatalogName}] CodeSystem '{def.CodeSystemName}' creado con éxito ({def.Concepts.Count} conceptos).{AnsiColors.Reset}");
     }
     /// <summary>
     /// Asegura la existencia de un <see cref="ValueSet"/> en el servidor FHIR. Si no existe, lo crea vinculado a su CodeSystem.
@@ -127,7 +127,7 @@ public abstract class TerminologySeederBase : ITerminologySeeder
         if (await ValueSetExistsAsync(def.ValueSetUrl, ct))
         {
             Logger.LogInformation(
-                $"{FhirAnsiColors.Cyan}[{CatalogName}] ValueSet '{def.ValueSetName}' ya existe. Omitiendo creación.{FhirAnsiColors.Reset}");
+                $"{AnsiColors.Cyan}[{CatalogName}] ValueSet '{def.ValueSetName}' ya existe. Omitiendo creación.{AnsiColors.Reset}");
             return;
         }
  
@@ -155,7 +155,7 @@ public abstract class TerminologySeederBase : ITerminologySeeder
  
         await FhirClient.CreateAsync(valueSet, ct);
         Logger.LogInformation(
-            $"{FhirAnsiColors.Green}[{CatalogName}] ValueSet '{def.ValueSetName}' creado con éxito.{FhirAnsiColors.Reset}");
+            $"{AnsiColors.Green}[{CatalogName}] ValueSet '{def.ValueSetName}' creado con éxito.{AnsiColors.Reset}");
     }
  
     // =========================================================================
@@ -196,7 +196,7 @@ public abstract class TerminologySeederBase : ITerminologySeeder
         if (existing is null)
         {
             Logger.LogWarning(
-                $"{FhirAnsiColors.Yellow}[{CatalogName}] UpdateCodeSystem: no se encontró '{ def.CodeSystemUrl}'. Redirigiendo a flujo de creación inicial.{FhirAnsiColors.Reset}");
+                $"{AnsiColors.Yellow}[{CatalogName}] UpdateCodeSystem: no se encontró '{ def.CodeSystemUrl}'. Redirigiendo a flujo de creación inicial.{AnsiColors.Reset}");
             await EnsureCodeSystemAsync(def, ct);
             return;
         }
@@ -215,7 +215,7 @@ public abstract class TerminologySeederBase : ITerminologySeeder
         if (newConcepts.Count == 0)
         {
             Logger.LogInformation(
-                $"{FhirAnsiColors.Blue}[{CatalogName}] CodeSystem '{def.CodeSystemName}' validado. Sin conceptos nuevos que añadir.{FhirAnsiColors.Reset}");
+                $"{AnsiColors.Blue}[{CatalogName}] CodeSystem '{def.CodeSystemName}' validado. Sin conceptos nuevos que añadir.{AnsiColors.Reset}");
             return;
         }
  
@@ -223,7 +223,7 @@ public abstract class TerminologySeederBase : ITerminologySeeder
         await FhirClient.UpdateAsync(existing, versionAware: false, ct);
 
         Logger.LogInformation(
-            $"{FhirAnsiColors.Green}[{CatalogName}] CodeSystem '{def.CodeSystemName}' actualizado: +{newConcepts.Count} concepto(s) nuevo(s) añadido(s) ({string.Join(", ", newConcepts.Select(c => c.Code))}){FhirAnsiColors.Reset}");
+            $"{AnsiColors.Green}[{CatalogName}] CodeSystem '{def.CodeSystemName}' actualizado: +{newConcepts.Count} concepto(s) nuevo(s) añadido(s) ({string.Join(", ", newConcepts.Select(c => c.Code))}){AnsiColors.Reset}");
     }
  
     /// <summary>
@@ -241,7 +241,7 @@ public abstract class TerminologySeederBase : ITerminologySeeder
         if (existing is null)
         {
             Logger.LogWarning(
-                $"{FhirAnsiColors.Yellow}[{ CatalogName}] UpdateValueSet: no se encontró '{def.ValueSetUrl}'. Redirigiendo a flujo de creación inicial.{FhirAnsiColors.Reset}");
+                $"{AnsiColors.Yellow}[{ CatalogName}] UpdateValueSet: no se encontró '{def.ValueSetUrl}'. Redirigiendo a flujo de creación inicial.{AnsiColors.Reset}");
             await EnsureValueSetAsync(def, ct);
             return;
         }
@@ -264,7 +264,7 @@ public abstract class TerminologySeederBase : ITerminologySeeder
  
             await FhirClient.UpdateAsync(existing, versionAware: false, ct);
             Logger.LogInformation(
-                $"{FhirAnsiColors.Green}[{CatalogName}] ValueSet '{def.ValueSetName}': Directiva 'Include' del CodeSystem agregada exitosamente.{FhirAnsiColors.Reset}");
+                $"{AnsiColors.Green}[{CatalogName}] ValueSet '{def.ValueSetName}': Directiva 'Include' del CodeSystem agregada exitosamente.{AnsiColors.Reset}");
             return;
         }
         
@@ -281,7 +281,7 @@ public abstract class TerminologySeederBase : ITerminologySeeder
         if (newRefs.Count == 0)
         {
             Logger.LogInformation(
-                $"{FhirAnsiColors.Blue}[{ CatalogName}] ValueSet '{def.ValueSetName}' validado. Sin conceptos referenciales nuevos que añadir.{FhirAnsiColors.Reset}");
+                $"{AnsiColors.Blue}[{ CatalogName}] ValueSet '{def.ValueSetName}' validado. Sin conceptos referenciales nuevos que añadir.{AnsiColors.Reset}");
             return;
         }
  
@@ -289,7 +289,7 @@ public abstract class TerminologySeederBase : ITerminologySeeder
         await FhirClient.UpdateAsync(existing, versionAware: false, ct);
  
         Logger.LogInformation(
-            $"{FhirAnsiColors.Green}[{CatalogName}] ValueSet '{def.ValueSetName}' actualizado: +{newRefs.Count} concepto(s) de referencia nuevo(s).{FhirAnsiColors.Reset}");
+            $"{AnsiColors.Green}[{CatalogName}] ValueSet '{def.ValueSetName}' actualizado: +{newRefs.Count} concepto(s) de referencia nuevo(s).{AnsiColors.Reset}");
     }
  
     // =========================================================================
@@ -346,14 +346,14 @@ public abstract class TerminologySeederBase : ITerminologySeeder
             {
                 var delay = TimeSpan.FromSeconds(2 * (attempt + 1));
                 Logger.LogWarning(ex,
-                    $"{FhirAnsiColors.Yellow}[{CatalogName}] Interrupción al consultar {resourceLabel}. Reintentando en {delay.TotalSeconds}s (Intento {attempt + 1} de {MaxRetries})...{FhirAnsiColors.Reset}");
+                    $"{AnsiColors.Yellow}[{CatalogName}] Interrupción al consultar {resourceLabel}. Reintentando en {delay.TotalSeconds}s (Intento {attempt + 1} de {MaxRetries})...{AnsiColors.Reset}");
  
                 await Task.Delay(delay, ct);
             }
         }
  
         Logger.LogError(
-            $"{FhirAnsiColors.Red}[{CatalogName}] Falla crítica. No se pudo verificar la existencia de {resourceLabel} tras {MaxRetries} intentos. Se asume como inexistente.{FhirAnsiColors.Reset}");
+            $"{AnsiColors.Red}[{CatalogName}] Falla crítica. No se pudo verificar la existencia de {resourceLabel} tras {MaxRetries} intentos. Se asume como inexistente.{AnsiColors.Reset}");
  
         return false;
     }

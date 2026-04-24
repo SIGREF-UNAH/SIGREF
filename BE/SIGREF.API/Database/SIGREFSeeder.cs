@@ -1,6 +1,6 @@
 ﻿
 using SIGREF.API.Database.Seeding;
-using SIGREF.API.Services.FhirUtils;
+using SIGREF.API.Utils;
 
 namespace  SIGREF.API.Database;
 /// <summary>
@@ -27,13 +27,13 @@ public class SIGREFSeeder
         
         
         _logger.LogInformation(
-            $"{FhirAnsiColors.Blue}[FHIR-SEED] ==================================================={FhirAnsiColors.Reset}");
+            $"{AnsiColors.Blue}[FHIR-SEED] ==================================================={AnsiColors.Reset}");
         _logger.LogInformation(
-            $"{FhirAnsiColors.Blue}   SIGREF - FHIR Inicializacion de Catalogos{FhirAnsiColors.Reset}");
+            $"{AnsiColors.Blue}   SIGREF - FHIR Inicializacion de Catalogos{AnsiColors.Reset}");
         _logger.LogInformation(
-            $"{FhirAnsiColors.Blue}>> Starting...{FhirAnsiColors.Reset}");
+            $"{AnsiColors.Blue}>> Starting...{AnsiColors.Reset}");
         _logger.LogInformation(
-            $"{FhirAnsiColors.Blue}[FHIR-SEED] ==================================================={FhirAnsiColors.Reset}");
+            $"{AnsiColors.Blue}[FHIR-SEED] ==================================================={AnsiColors.Reset}");
 
         var failed = new List<string>();
         var success = 0;
@@ -42,7 +42,7 @@ public class SIGREFSeeder
             ct.ThrowIfCancellationRequested();
             _logger.LogInformation(
                 "{Line}",
-                $"{FhirAnsiColors.Cyan}   [{seeder.CatalogName}] Procesando...{FhirAnsiColors.Reset}");
+                $"{AnsiColors.Cyan}   [{seeder.CatalogName}] Procesando...{AnsiColors.Reset}");
             try
             {
                 await seeder.SeedAsync(ct);
@@ -52,13 +52,13 @@ public class SIGREFSeeder
                 {
                     _logger.LogInformation(
                         "{Line}",
-                    $"{FhirAnsiColors.Cyan}  >> [{seeder.CatalogName}] Actualizacion de Catalogo Detectado... Sincronizando...{FhirAnsiColors.Reset}");
+                    $"{AnsiColors.Cyan}  >> [{seeder.CatalogName}] Actualizacion de Catalogo Detectado... Sincronizando...{AnsiColors.Reset}");
                     await updatable.UpdateAsync(ct);
                 }
                 success++;
                 _logger.LogInformation(
                     "{Line}",
-                    $"{FhirAnsiColors.Green}  OK [{seeder.CatalogName}] Exito.{FhirAnsiColors.Reset}");
+                    $"{AnsiColors.Green}  OK [{seeder.CatalogName}] Exito.{AnsiColors.Reset}");
             }
             catch (OperationCanceledException) { throw; }
             catch (Exception ex)
@@ -66,26 +66,26 @@ public class SIGREFSeeder
                 failed.Add(seeder.CatalogName);
                 _logger.LogError(ex,
                     "{Line}",
-                    $"{FhirAnsiColors.Red}  XX [{seeder.CatalogName}] Fallo: {ex.Message}{FhirAnsiColors.Reset}");
+                    $"{AnsiColors.Red}  XX [{seeder.CatalogName}] Fallo: {ex.Message}{AnsiColors.Reset}");
             }
         }
 
-        _logger.LogInformation("{Separator}", $"{FhirAnsiColors.Blue}====================================================={FhirAnsiColors.Reset}");
+        _logger.LogInformation("{Separator}", $"{AnsiColors.Blue}====================================================={AnsiColors.Reset}");
 
         if (failed.Count > 0)
         {
             _logger.LogWarning(
                 "{Summary}\n{Failed}",
-                $"{FhirAnsiColors.Yellow}  !! Inicializacion Completada con Errores.{FhirAnsiColors.Reset}",
-                $"{FhirAnsiColors.Yellow}  !! Catalogos que Fallaron al iniciar ({failed.Count}): {string.Join(", ", failed)}{FhirAnsiColors.Reset}");
+                $"{AnsiColors.Yellow}  !! Inicializacion Completada con Errores.{AnsiColors.Reset}",
+                $"{AnsiColors.Yellow}  !! Catalogos que Fallaron al iniciar ({failed.Count}): {string.Join(", ", failed)}{AnsiColors.Reset}");
         }
         else
         {
             _logger.LogInformation(
                 "{Summary}",
-                $"{FhirAnsiColors.Green}   Todos los Catalogos fueron inicializados Correctamente ({success}/{all.Count}){FhirAnsiColors.Reset}");
+                $"{AnsiColors.Green}   Todos los Catalogos fueron inicializados Correctamente ({success}/{all.Count}){AnsiColors.Reset}");
         }
 
-        _logger.LogInformation("{Footer}", $"{FhirAnsiColors.Blue}============================================={FhirAnsiColors.Reset}");
+        _logger.LogInformation("{Footer}", $"{AnsiColors.Blue}============================================={AnsiColors.Reset}");
     }
 }

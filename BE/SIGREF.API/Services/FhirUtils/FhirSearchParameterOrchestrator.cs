@@ -6,6 +6,7 @@ using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 using Hl7.Fhir.Serialization;
 using Task = System.Threading.Tasks.Task;
+using SIGREF.API.Utils;
 
 namespace SIGREF.API.Services.FhirUtils;
 
@@ -77,14 +78,14 @@ public class FhirSearchParameterOrchestrator
         var initializerList = _initializers.ToList();
 
         _logger.LogInformation(
-            "[FHIR-ORCH] ===================================================");
+            $"{AnsiColors.Cyan}[FHIR-ORCH] ==================================================={AnsiColors.Reset}");
         _logger.LogInformation(
-            "[FHIR-ORCH] =   Iniciando verificación de SearchParameters    =");
+            $"{AnsiColors.Cyan}[FHIR-ORCH] =   Iniciando verificación de SearchParameters    ={AnsiColors.Reset}");
         _logger.LogInformation(
-            "[FHIR-ORCH] =   {Count} inicializadores registrados           =",
+            $"{AnsiColors.Cyan}[FHIR-ORCH] =   {{Count}} inicializadores registrados           ={AnsiColors.Reset}",
             initializerList.Count);
         _logger.LogInformation(
-            "[FHIR-ORCH] ===================================================");
+            $"{AnsiColors.Cyan}[FHIR-ORCH] ==================================================={AnsiColors.Reset}");
 
         // Limitamos a 5 inicializadores ejecutándose simultáneamente.
         // Protege la memoria y las conexiones HTTP al servidor FHIR.
@@ -101,14 +102,14 @@ public class FhirSearchParameterOrchestrator
         await Task.WhenAll(tasks);
 
         _logger.LogInformation(
-            "[FHIR-ORCH] ===================================================");
+            $"{AnsiColors.Cyan}[FHIR-ORCH] ==================================================={AnsiColors.Reset}");
 
         var uniqueResources = resourcesToReindex.Distinct().ToHashSet();
 
         if (uniqueResources.Count > 0)
         {
             _logger.LogInformation(
-                "[FHIR-ORCH] SearchParameters nuevos detectados en: {Resources}",
+                $"{AnsiColors.Green}[FHIR-ORCH] SearchParameters nuevos detectados en: {{Resources}}{AnsiColors.Reset}",
                 string.Join(", ", uniqueResources));
 
             await TriggerReindex(uniqueResources);
@@ -116,11 +117,11 @@ public class FhirSearchParameterOrchestrator
         else
         {
             _logger.LogInformation(
-                "[FHIR-ORCH] Sincronización completa. No se requieren cambios en los índices.");
+                $"{AnsiColors.Yellow}[FHIR-ORCH] Sincronización completa. No se requieren cambios en los índices.{AnsiColors.Reset}");
         }
 
         _logger.LogInformation(
-            "[FHIR-ORCH] Proceso de inicialización FHIR finalizado exitosamente.");
+            $"{AnsiColors.Green}[FHIR-ORCH] Proceso de inicialización FHIR finalizado exitosamente.{AnsiColors.Reset}");
     }
 
     /// <summary>
@@ -255,8 +256,8 @@ public class FhirSearchParameterOrchestrator
         {
             var reindexUri = new Uri(_client.Endpoint, "$reindex");
 
-            _logger.LogInformation($"{FhirAnsiColors.Cyan}[FHIR-ORCH] Solicitando reindex Batch2 en: {reindexUri}{FhirAnsiColors.Reset}");
-            _logger.LogInformation($"{FhirAnsiColors.Cyan}[FHIR-ORCH] Recursos afectados: {string.Join(", ", resourceTypes)}{FhirAnsiColors.Reset}");
+            _logger.LogInformation($"{AnsiColors.Cyan}[FHIR-ORCH] Solicitando reindex Batch2 en: {reindexUri}{AnsiColors.Reset}");
+            _logger.LogInformation($"{AnsiColors.Cyan}[FHIR-ORCH] Recursos afectados: {string.Join(", ", resourceTypes)}{AnsiColors.Reset}");
 
             //  Serialización estándar de FHIR
             var serializer = new FhirJsonSerializer();
@@ -274,25 +275,25 @@ public class FhirSearchParameterOrchestrator
             if (response.IsSuccessStatusCode)
             {
                 _logger.LogInformation(
-                    $"{FhirAnsiColors.Green}[FHIR-ORCH] Reindex aceptado (Job Batch2 en cola). Status: {(int)response.StatusCode}{FhirAnsiColors.Reset}");
+                    $"{AnsiColors.Green}[FHIR-ORCH] Reindex aceptado (Job Batch2 en cola). Status: {(int)response.StatusCode}{AnsiColors.Reset}");
             }
             else
             {
                 //  Intentar extraer el error detallado de FHIR (OperationOutcome)
                 var errorBody = await response.Content.ReadAsStringAsync();
                 _logger.LogWarning(
-                    $"{FhirAnsiColors.Yellow}[FHIR-ORCH] El servidor rechazó el reindex (HTTP {(int)response.StatusCode}){FhirAnsiColors.Reset}");
-                _logger.LogWarning($"{FhirAnsiColors.Yellow}[FHIR-ORCH] Detalle: {errorBody}{FhirAnsiColors.Reset}");
+                    $"{AnsiColors.Yellow}[FHIR-ORCH] El servidor rechazó el reindex (HTTP {(int)response.StatusCode}){AnsiColors.Reset}");
+                _logger.LogWarning($"{AnsiColors.Yellow}[FHIR-ORCH] Detalle: {errorBody}{AnsiColors.Reset}");
             }
         }
         catch (HttpRequestException httpEx)
         {
             _logger.LogCritical(
-                $"{FhirAnsiColors.Red}[FHIR-ORCH] Error de conectividad al intentar reindexar: {httpEx.Message}{FhirAnsiColors.Reset}");
+                $"{AnsiColors.Red}[FHIR-ORCH] Error de conectividad al intentar reindexar: {httpEx.Message}{AnsiColors.Reset}");
         }
         catch (TaskCanceledException)
         {
-            _logger.LogWarning($"{FhirAnsiColors.Yellow}[FHIR-ORCH] Tiempo de espera agotado (Timeout) al disparar reindex.{FhirAnsiColors.Reset}");
+            _logger.LogWarning($"{AnsiColors.Yellow}[FHIR-ORCH] Tiempo de espera agotado (Timeout) al disparar reindex.{AnsiColors.Reset}");
         }
         catch (Exception ex)
         {
@@ -302,7 +303,7 @@ public class FhirSearchParameterOrchestrator
                 throw;
             }
 
-            _logger.LogError(ex, $"{FhirAnsiColors.Red}[FHIR-ORCH] Error inesperado en orquestación de reindex: {ex.Message}{FhirAnsiColors.Reset}");
+            _logger.LogError(ex, $"{AnsiColors.Red}[FHIR-ORCH] Error inesperado en orquestación de reindex: {ex.Message}{AnsiColors.Reset}");
         }
     }
 }
