@@ -21,15 +21,18 @@ import { useState } from "react";
 import { PageHeaderTabs } from "../../../shared/components";
 import { useAbility } from "../../../config";
 import { useQueryClient } from "@tanstack/react-query";
-import { usePatchApiUsersIdToggleStatus } from "../../../api/users/users";
+import {
+  useGetApiUsersByIdId,
+  usePatchApiUsersIdToggleStatus,
+} from "../../../api/users/users";
 import { useGetApiUsersList } from "../../../api/users/users";
 import { getGetApiUsersListQueryKey } from "../../../api/users/users";
 
 export const UsersListPage = () => {
   const [search, setSearch] = useState("");
   const [pageNumber, setPage] = useState(1);
-  const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const ability = useAbility();
 
@@ -53,11 +56,18 @@ export const UsersListPage = () => {
   const activeUsers = users.filter((u: any) => u.enabled).length;
   const inactiveUsers = totalUsers - activeUsers;
 
+  const { data: userDetail } = useGetApiUsersByIdId(selectedUserId!, {
+    query: { enabled: !!selectedUserId },
+  });
+  const detailedUserData = userDetail?.data;
+
   const handleToggleUserStatus = async (user: any) => {
     setTogglingId(user.id);
     try {
       await toggleUserStatus({ id: user.id });
-      success(`Estado de ${user.firstName ?? user.username} actualizado correctamente`);
+      success(
+        `Estado de ${user.firstName ?? user.username} actualizado correctamente`,
+      );
 
       queryClient.invalidateQueries({
         queryKey: getGetApiUsersListQueryKey({
@@ -112,7 +122,8 @@ export const UsersListPage = () => {
       title: "Acciones",
       key: "actions",
       render: (_: any, record: any) => (
-        <Button type="link" onClick={() => setSelectedUser(record)}>
+        <Button type="link" onClick={() => setSelectedUserId(record.id)}>
+          {" "}
           Ver detalles
         </Button>
       ),
@@ -120,29 +131,31 @@ export const UsersListPage = () => {
   ];
 
   const handleCopyData = () => {
-    if (!selectedUser)
-      {
+    if (!selectedUserId || !detailedUserData) {
       message.error("No hay usuario seleccionado para copiar");
       return;
-    };
-    
-    const userData = `ID: ${selectedUser.id}
-    Username: ${selectedUser.username}
-    Nombre: ${selectedUser.firstName} ${selectedUser.lastName}  
-    Correo: ${selectedUser.email}
-    Estado: ${selectedUser.enabled ? "Activo" : "Inactivo"}`;
-  
-    // 3. Intento de copia
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(userData)
-      .then(() => {
-        message.success(`¡Datos de ${selectedUser.firstName} copiados!`);
-      })
-      .catch((err) => {
-        console.error("Error al copiar:", err);
-        message.error("No se pudo copiar al portapapeles");
-      });
-  }
+    }
+
+    const userData = `ID: ${detailedUserData.id}
+    Username: ${detailedUserData.username}
+    Nombre: ${detailedUserData.firstName} ${detailedUserData.lastName}  
+    Correo: ${detailedUserData.email}
+    Estado: ${detailedUserData.enabled ? "Activo" : "Inactivo"}
+    Role(s): ${detailedUserData.roles ? detailedUserData.roles.join(", ") : "N/A"}
+    Fecha de Creación: ${detailedUserData.createdAt ? new Date(detailedUserData.createdAt).toLocaleString() : "N/A"}
+    Fecha de Actualización: ${detailedUserData.lastModifiedAt ? new Date(detailedUserData.lastModifiedAt).toLocaleString() : "N/A"}`;
+
+    if (navigator.clipboard) {
+      navigator.clipboard
+        .writeText(userData)
+        .then(() => {
+          message.success(`¡Datos de ${detailedUserData.firstName} copiados!`);
+        })
+        .catch((err) => {
+          console.error("Error al copiar:", err);
+          message.error("No se pudo copiar al portapapeles");
+        });
+    }
   };
 
   if (isLoading) {
@@ -270,45 +283,101 @@ export const UsersListPage = () => {
       </div>
 
       {/* Drawer */}
+
       <Drawer
         title="Detalle del Usuario"
-        open={!!selectedUser}
-        onClose={() => setSelectedUser(null)}
+        open={!!selectedUserId}
+        onClose={() => setSelectedUserId(null)}
         width={520}
       >
-        {selectedUser && (
-          <Descriptions column={1} bordered>
-            <Descriptions.Item label="ID">{selectedUser.id}</Descriptions.Item>
-            <Descriptions.Item label="Username">
-              {selectedUser.username}
-            </Descriptions.Item>
-            <Descriptions.Item label="Nombre">
-              {selectedUser.firstName || "-"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Apellido">
-              {selectedUser.lastName || "-"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Correo">
-              {selectedUser.email}
-            </Descriptions.Item>
-            <Descriptions.Item label="Estado">
-              {selectedUser.enabled ? (
-                <Tag color="green">Activo</Tag>
-              ) : (
-                <Tag color="red">Inactivo</Tag>
-              )}
-            </Descriptions.Item>
-            <Descriptions.Item label="Acción">
-            <Button
-              type="dashed"
-              icon={<CopyOutlined />}
-              className="bg-gray-200 hover:bg-gray-300"
-              onClick={handleCopyData}
-            >
-              Copiar Datos
-            </Button>
-            </Descriptions.Item>
-          </Descriptions>
+        {detailedUserData && (
+          <div className="flex flex-col gap-6">
+            <Descriptions column={1} bordered>
+              <Descriptions.Item label="ID">
+                {detailedUserData.id}
+              </Descriptions.Item>
+              <Descriptions.Item label="Username">
+                {detailedUserData.username}
+              </Descriptions.Item>
+              <Descriptions.Item label="Nombre">
+                {detailedUserData.firstName || "-"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Apellido">
+                {detailedUserData.lastName || "-"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Correo">
+                {detailedUserData.email}
+              </Descriptions.Item>
+              <Descriptions.Item label="Estado">
+                {detailedUserData.enabled ? (
+                  <Tag color="green">Activo</Tag>
+                ) : (
+                  <Tag color="red">Inactivo</Tag>
+                )}
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Fecha de Creación">
+                {detailedUserData.createdAt
+                  ? new Date(detailedUserData.createdAt).toLocaleString(
+                      "es-HN",
+                      {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                      },
+                    )
+                  : "No disponible"}
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Fecha de Actualización">
+                {detailedUserData.lastModifiedAt ? (
+                  new Date(detailedUserData.lastModifiedAt).toLocaleString(
+                    "es-HN",
+                    {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                    },
+                  )
+                ) : (
+                  <span className="text-gray-400">Sin modificaciones</span>
+                )}
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Roles">
+                {detailedUserData.roles && detailedUserData.roles.length > 0 ? (
+                  <div className="flex flex-wrap gap-1">
+                    {detailedUserData.roles.map((role: string) => (
+                      <Tag color="blue" key={role}>
+                        {role.toUpperCase()}
+                      </Tag>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-gray-400">
+                    El usuario no tiene roles
+                  </span>
+                )}
+              </Descriptions.Item>
+            </Descriptions>
+
+            <div className="mt-4 pt-4 border-t flex justify-center">
+              <Button
+                type="dashed"
+                icon={<CopyOutlined />}
+                onClick={handleCopyData}
+                className="w-full h-10 border-blue-400 text-blue-500 hover:bg-blue-50"
+              >
+                Copiar Datos al Portapapeles
+              </Button>
+            </div>
+          </div>
         )}
       </Drawer>
     </div>
