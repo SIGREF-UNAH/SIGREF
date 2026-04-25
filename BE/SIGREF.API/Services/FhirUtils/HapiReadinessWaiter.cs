@@ -6,18 +6,26 @@ namespace SIGREF.API.Services.FhirUtils;
 
 public class HapiReadinessWaiter : BackgroundService
 {
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly HttpClient _httpClient;
     private readonly ILogger<HapiReadinessWaiter> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
 
     private const string HapiBaseUrl = "http://hapifhir:8080/fhir";
 
+    // ANSI COLORS (ASCII only)
+    private const string RESET  = "\u001b[0m";
+    private const string GREEN  = "\u001b[32m";
+    private const string YELLOW = "\u001b[33m";
+    private const string BLUE   = "\u001b[34m";
+    private const string RED    = "\u001b[31m";
+    private const string CYAN   = "\u001b[36m";
+
     public HapiReadinessWaiter(
-        IHttpClientFactory httpClientFactory,
+        HttpClient httpClient,
         ILogger<HapiReadinessWaiter> logger,
         IServiceScopeFactory scopeFactory)
     {
-        _httpClientFactory = httpClientFactory;
+        _httpClient = httpClient;
         _logger = logger;
         _scopeFactory = scopeFactory;
     }
@@ -27,15 +35,13 @@ public class HapiReadinessWaiter : BackgroundService
         _logger.LogInformation(
             $"{AnsiColors.Blue}[HAPI-READY] Esperando a que HAPI FHIR se inicialice completamente...{AnsiColors.Reset}");
 
-        var client = _httpClientFactory.CreateClient();
-
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
                 // Paso 1: metadata
-                var response = await client.GetAsync(
-                    $"{HapiBaseUrl}/metadata",
+                var response = await _httpClient.GetAsync(
+                    "metadata",
                     stoppingToken);
 
                 if (response.IsSuccessStatusCode)
@@ -44,8 +50,8 @@ public class HapiReadinessWaiter : BackgroundService
                         $"{AnsiColors.Cyan}[HAPI-READY] Metadata correcta, verificando acceso a base de datos...{AnsiColors.Reset}");
 
                     // Paso 2: JPA / DB
-                    var test = await client.GetAsync(
-                        $"{HapiBaseUrl}/Patient?_summary=count",
+                    var test = await _httpClient.GetAsync(
+                        "Patient?_summary=count",
                         stoppingToken);
 
                     if (test.IsSuccessStatusCode)
