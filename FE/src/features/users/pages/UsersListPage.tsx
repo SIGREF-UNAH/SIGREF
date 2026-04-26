@@ -7,26 +7,20 @@ import {
   Tag,
   Input,
   Button,
-  Drawer,
-  Descriptions,
   Switch,
   Tooltip,
-  message,
 } from "antd";
 
-import { CopyOutlined } from "@ant-design/icons";
 import { useMessage } from "../../../shared/hooks/useMessage";
 import { UserOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import { PageHeaderTabs } from "../../../shared/components";
 import { useAbility } from "../../../config";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  useGetApiUsersByIdId,
-  usePatchApiUsersIdToggleStatus,
-} from "../../../api/users/users";
+import { usePatchApiUsersIdToggleStatus } from "../../../api/users/users";
 import { useGetApiUsersList } from "../../../api/users/users";
 import { getGetApiUsersListQueryKey } from "../../../api/users/users";
+import UserDetailDrawer from "../components/UserDetailDrawer";
 
 export const UsersListPage = () => {
   const [search, setSearch] = useState("");
@@ -55,11 +49,6 @@ export const UsersListPage = () => {
   const totalUsers = users.length; // porque totalItems viene null
   const activeUsers = users.filter((u: any) => u.enabled).length;
   const inactiveUsers = totalUsers - activeUsers;
-
-  const { data: userDetail } = useGetApiUsersByIdId(selectedUserId!, {
-    query: { enabled: !!selectedUserId },
-  });
-  const detailedUserData = userDetail?.data;
 
   const handleToggleUserStatus = async (user: any) => {
     setTogglingId(user.id);
@@ -129,34 +118,6 @@ export const UsersListPage = () => {
       ),
     },
   ];
-
-  const handleCopyData = () => {
-    if (!selectedUserId || !detailedUserData) {
-      message.error("No hay usuario seleccionado para copiar");
-      return;
-    }
-
-    const userData = `ID: ${detailedUserData.id}
-    Username: ${detailedUserData.username}
-    Nombre: ${detailedUserData.firstName} ${detailedUserData.lastName}  
-    Correo: ${detailedUserData.email}
-    Estado: ${detailedUserData.enabled ? "Activo" : "Inactivo"}
-    Role(s): ${detailedUserData.roles ? detailedUserData.roles.join(", ") : "N/A"}
-    Fecha de Creación: ${detailedUserData.createdAt ? new Date(detailedUserData.createdAt).toLocaleString() : "N/A"}
-    Fecha de Actualización: ${detailedUserData.lastModifiedAt ? new Date(detailedUserData.lastModifiedAt).toLocaleString() : "N/A"}`;
-
-    if (navigator.clipboard) {
-      navigator.clipboard
-        .writeText(userData)
-        .then(() => {
-          message.success(`¡Datos de ${detailedUserData.firstName} copiados!`);
-        })
-        .catch((err) => {
-          console.error("Error al copiar:", err);
-          message.error("No se pudo copiar al portapapeles");
-        });
-    }
-  };
 
   if (isLoading) {
     return (
@@ -282,104 +243,10 @@ export const UsersListPage = () => {
         </div>
       </div>
 
-      {/* Drawer */}
-
-      <Drawer
-        title="Detalle del Usuario"
-        open={!!selectedUserId}
+      <UserDetailDrawer
+        userId={selectedUserId}
         onClose={() => setSelectedUserId(null)}
-        width={520}
-      >
-        {detailedUserData && (
-          <div className="flex flex-col gap-6">
-            <Descriptions column={1} bordered>
-              <Descriptions.Item label="ID">
-                {detailedUserData.id}
-              </Descriptions.Item>
-              <Descriptions.Item label="Username">
-                {detailedUserData.username}
-              </Descriptions.Item>
-              <Descriptions.Item label="Nombre">
-                {detailedUserData.firstName || "-"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Apellido">
-                {detailedUserData.lastName || "-"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Correo">
-                {detailedUserData.email}
-              </Descriptions.Item>
-              <Descriptions.Item label="Estado">
-                {detailedUserData.enabled ? (
-                  <Tag color="green">Activo</Tag>
-                ) : (
-                  <Tag color="red">Inactivo</Tag>
-                )}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Fecha de Creación">
-                {detailedUserData.createdAt
-                  ? new Date(detailedUserData.createdAt).toLocaleString(
-                      "es-HN",
-                      {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                      },
-                    )
-                  : "No disponible"}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Fecha de Actualización">
-                {detailedUserData.lastModifiedAt ? (
-                  new Date(detailedUserData.lastModifiedAt).toLocaleString(
-                    "es-HN",
-                    {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: true,
-                    },
-                  )
-                ) : (
-                  <span className="text-gray-400">Sin modificaciones</span>
-                )}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Roles">
-                {detailedUserData.roles && detailedUserData.roles.length > 0 ? (
-                  <div className="flex flex-wrap gap-1">
-                    {detailedUserData.roles.map((role: string) => (
-                      <Tag color="blue" key={role}>
-                        {role.toUpperCase()}
-                      </Tag>
-                    ))}
-                  </div>
-                ) : (
-                  <span className="text-gray-400">
-                    El usuario no tiene roles
-                  </span>
-                )}
-              </Descriptions.Item>
-            </Descriptions>
-
-            <div className="mt-4 pt-4 border-t flex justify-center">
-              <Button
-                type="dashed"
-                icon={<CopyOutlined />}
-                onClick={handleCopyData}
-                className="w-full h-10 border-blue-400 text-blue-500 hover:bg-blue-50"
-              >
-                Copiar Datos al Portapapeles
-              </Button>
-            </div>
-          </div>
-        )}
-      </Drawer>
+      />
     </div>
   );
 };
