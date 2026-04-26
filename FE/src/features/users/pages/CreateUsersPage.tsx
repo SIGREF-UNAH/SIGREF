@@ -7,9 +7,9 @@ import { ROLE_OPTIONS } from "../../../shared/constants/RolesConstants";
 import { useGetApiLocations } from "../../../api/locations/locations";
 import { USER_ROLE_OPTIONS } from "../../../shared/constants/UserRolesConstants";
 import { FaCheck } from "react-icons/fa";
-import { usePostApiKeycloakSeederCreateUser } from "../../../api/keycloak-seeder/keycloak-seeder";
 import { useAbility } from "../../../config";
 import { useKeycloak } from "@react-keycloak/web";
+import { useNavigate } from "react-router-dom";
 import {
   ProForm,
   ProFormText,
@@ -49,14 +49,14 @@ function generarUsernameUnico(base: string, existentes: string[]) {
 }
 
 export default function CreateUsersPage() {
-  
+  const navigate = useNavigate();
   const [selected, setSelected] = useState<Practitioner | null>(null);
   const formRef = useRef<ProFormInstance | null>(null);
   const [searchName, setSearchName] = useState("");
   const [searchRole, setSearchRole] = useState<string | undefined>(undefined);
   const [searchArea, setSearchArea] = useState<string | undefined>(undefined);
   const [searchStatus, setSearchStatus] = useState<string | undefined>(
-    undefined
+    undefined,
   );
   const { keycloak } = useKeycloak();
   const ability = useAbility();
@@ -125,10 +125,10 @@ export default function CreateUsersPage() {
 
     // Obtener valores de telecom del practitioner original
     const phone = selected.raw?.telecom?.find(
-      (t) => t.system === "Phone"
+      (t) => t.system === "Phone",
     )?.value;
     const email = selected.raw?.telecom?.find(
-      (t) => t.system === "Email"
+      (t) => t.system === "Email",
     )?.value;
 
     const base = generarBaseUsername(selected.name);
@@ -166,26 +166,42 @@ export default function CreateUsersPage() {
       <PageHeaderTabs
         title="Gestión de Empleados"
         tabs={[
-          ...(ability.can("read", "practitioners") ? [{
-            key: "read-practitioners",
-            label: "Lista de Empleados",
-            path: "/practitioners/list",
-          }] : []),
-          ...(ability.can("create", "practitioners") ? [{
-            key: "create-practitioners",
-            label: "Crear Empleado",
-            path: "/practitioners/create",
-          }] : []),
-          ...(ability.can("read", "users") ? [{
-            key: "read-users",
-            label: "Lista de Usuarios",
-            path: "/users/list",
-          }] : []),
-            ...(ability.can("create", "users") ? [{
-              key: "create-users",
-              label: "Crear Usuario",
-              path: "/users/create",
-          }] : []),
+          ...(ability.can("read", "practitioners")
+            ? [
+                {
+                  key: "read-practitioners",
+                  label: "Lista de Empleados",
+                  path: "/practitioners/list",
+                },
+              ]
+            : []),
+          ...(ability.can("create", "practitioners")
+            ? [
+                {
+                  key: "create-practitioners",
+                  label: "Crear Empleado",
+                  path: "/practitioners/create",
+                },
+              ]
+            : []),
+          ...(ability.can("read", "users")
+            ? [
+                {
+                  key: "read-users",
+                  label: "Lista de Usuarios",
+                  path: "/users/list",
+                },
+              ]
+            : []),
+          ...(ability.can("create", "users")
+            ? [
+                {
+                  key: "create-users",
+                  label: "Crear Usuario",
+                  path: "/users/create",
+                },
+              ]
+            : []),
         ]}
         defaultActive="create-users"
       />
@@ -336,13 +352,24 @@ export default function CreateUsersPage() {
               };
 
               try {
-                await createUserMutation.mutateAsync({ data: payload });
+                const response = await createUserMutation.mutateAsync({
+                  data: payload,
+                });
 
-                success("Usuario creado correctamente", 2);
-                formRef.current?.resetFields();
+                if (response) {
+                  success("Usuario creado correctamente", 2);
+                  formRef.current?.resetFields();
+
+                  setTimeout(() => {
+                    navigate("/users/list");
+                  }, 1500);
+                }
               } catch (err) {
                 console.error(err);
-                error("Error al crear el usuario", 2);
+                error(
+                  "Error al crear el usuario. Verifique los datos o permisos.",
+                  3,
+                );
               }
             }}
           >
@@ -385,7 +412,7 @@ export default function CreateUsersPage() {
                   label="Rol del Usuario"
                   placeholder="Seleccione un rol"
                   options={USER_ROLE_OPTIONS.filter((r) =>
-                    allowedRoles.includes(r.value)
+                    allowedRoles.includes(r.value),
                   )}
                 />
               </div>
