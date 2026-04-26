@@ -10,16 +10,7 @@ public class HapiReadinessWaiter : BackgroundService
     private readonly ILogger<HapiReadinessWaiter> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
 
-    private const string HapiBaseUrl = "http://hapifhir:8080/fhir";
-
-    // ANSI COLORS (ASCII only)
-    private const string RESET  = "\u001b[0m";
-    private const string GREEN  = "\u001b[32m";
-    private const string YELLOW = "\u001b[33m";
-    private const string BLUE   = "\u001b[34m";
-    private const string RED    = "\u001b[31m";
-    private const string CYAN   = "\u001b[36m";
-
+    
     public HapiReadinessWaiter(
         HttpClient httpClient,
         ILogger<HapiReadinessWaiter> logger,
