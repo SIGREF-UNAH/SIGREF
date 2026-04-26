@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using SIGREF.API;
 using SIGREF.API.ServiceDefaults;
 using SIGREF.API.Utils;
+using SIGREF.API.Services.FhirUtils;
 using Microsoft.Extensions.Logging.Console;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -75,6 +76,12 @@ builder.Services.AddScoped<Npgsql.NpgsqlConnection>(sp =>
     sp.GetRequiredService<Npgsql.NpgsqlDataSource>().OpenConnection());
 // MongoDB
 builder.AddMongoDBClient("MongoDb");
+
+// HttpClient nombrado para HAPI FHIR con Service Discovery de Aspire
+builder.Services.AddHttpClient<HapiReadinessWaiter>(client =>
+{
+    client.BaseAddress = new Uri("http://hapifhir/fhir");
+});
 
 // =============================================================
 // STARTUP CLASS
