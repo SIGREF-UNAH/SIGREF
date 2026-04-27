@@ -29,7 +29,7 @@ public partial class Startup
         services.Configure<HospitalOptions>(applicationBuilder.Configuration.GetSection("HospitalOptions"));
         services.AddScoped<IFhirNamespaceService, FhirNamespaceService>();
         // ================= HEALTH =================
-        services.AddScoped<LocationService>();
+        services.AddScoped<ILocationService ,LocationService>();
         services.AddScoped<IPatientService, PatientService>();
         services.AddScoped<IPractitionerRoleService, PractitionerRoleService>();
         services.AddScoped<IPractitionerService, PractitionerService>();
