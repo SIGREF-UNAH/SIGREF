@@ -12,7 +12,7 @@ namespace SIGREF.API.Controllers.Location;
 [Route("api/[controller]")]
 [ApiController]
 [Authorize(AuthenticationSchemes = "Bearer")]
-public class LocationsController(LocationService locationService) : ControllerBase
+public class LocationsController(ILocationService locationService) : ControllerBase
 {
     // GET: api/locations
     [HttpGet]

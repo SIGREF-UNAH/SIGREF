@@ -10,7 +10,7 @@ using FhirLocation = Hl7.Fhir.Model.Location;
 using Task = System.Threading.Tasks.Task;
 namespace SIGREF.API.Services.Location;
 
-public class LocationService : BaseFhirService
+public class LocationService : BaseFhirService, ILocationService
 {
     private readonly FhirClient _fhirClient;
 
