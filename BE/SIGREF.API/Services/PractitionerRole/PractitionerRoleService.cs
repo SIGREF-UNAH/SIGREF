@@ -1,17 +1,18 @@
-﻿using Hl7.Fhir.Model;
+﻿using System.Net;
+using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 using SIGREF.API.Constants;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.PractitionerRole;
+using SIGREF.API.Exceptions;
 using SIGREF.API.Extensions;
 using SIGREF.API.Fhir;
 using SIGREF.API.Helpers;
-using SIGREF.API.Services.Common;
-using SIGREF.API.Services.ServiceGroup;
+using SIGREF.API.Middleware;
 using SIGREF.Common.Dtos;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
-using SIGREF.Infrastructure.Persistence;
 using FhirPractitionerRole = Hl7.Fhir.Model.PractitionerRole;
+using Task = System.Threading.Tasks.Task;
 
 namespace SIGREF.API.Services.PractitionerRole;
 
@@ -23,106 +24,159 @@ public class PractitionerRoleService(
 {
     public async Task<PagedResultDto<PractitionerRoleDto>> GetFilteredAsync(PractitionerRoleFilterDto filters)
     {
-        // Normalizar paginación usando el helper
-        var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filters.PageNumber, filters.PageSize);
-
-        var searchParams = new SearchParams();
-
-        // Filtros
-        if (filters.Active.HasValue)
-            searchParams.Add("active", filters.Active.Value.ToString().ToLowerInvariant());
-
-        if (!string.IsNullOrEmpty(filters.OrganizationId))
-            searchParams.Add("organization", $"Organization/{filters.OrganizationId}");
-
-        if (!string.IsNullOrEmpty(filters.Specialty))
-            searchParams.Add("specialty", filters.Specialty);
-
-        // Paginación FHIR
-        searchParams.Count = pageSize;
-        searchParams.Add("_offset", offset.ToString());
-        searchParams.Add("_total", "accurate");
-
-        // Ejecutar búsqueda
-        var bundle = await _fhirClient.SearchAsync<FhirPractitionerRole>(searchParams);
-
-        // Obtener PagedResult del helper
-        var pagedResult = FhirPaginationHelper.ToPagedResult<FhirPractitionerRole>(bundle, pageNumber, pageSize);
-
-        // Convertir Items a DTO
-        var resultDto = new PagedResultDto<PractitionerRoleDto>
+        try
         {
-            Items = pagedResult.Items
-                .Select(r => r.ToDto())
-                .ToList(),
-            Pagination = pagedResult.Pagination
-        };
+            // Validación de seguridad (Límite de paginación)
+            if (filters.PageSize > 500)
+            {
+                throw new ValidationException(MessageCodes.ValidationError, new Dictionary<string, object>
+                {
+                    { "Field", "PageSize" },
+                    { "MaxAllowed", 500 },
+                    { "ValueReceived", filters.PageSize }
+                });
+            }
 
-        return resultDto;
+            // Normalizar paginación usando el helper
+            var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filters.PageNumber, filters.PageSize);
+
+            var searchParams = new SearchParams();
+
+            // Filtros
+            if (filters.Active.HasValue)
+                searchParams.Add("active", filters.Active.Value.ToString().ToLowerInvariant());
+
+            if (!string.IsNullOrEmpty(filters.OrganizationId))
+                searchParams.Add("organization", $"Organization/{filters.OrganizationId}");
+
+            if (!string.IsNullOrEmpty(filters.Specialty))
+                searchParams.Add("specialty", filters.Specialty);
+
+            // Paginación FHIR
+            searchParams.Count = pageSize;
+            searchParams.Add("_offset", offset.ToString());
+            searchParams.Add("_total", "accurate");
+
+            // Ejecutar búsqueda y capturar posibles fallos del servidor médico
+            var bundle = await _fhirClient.SearchAsync<FhirPractitionerRole>(searchParams);
+
+            // Obtener PagedResult del helper
+            var pagedResult = FhirPaginationHelper.ToPagedResult<FhirPractitionerRole>(bundle, pageNumber, pageSize);
+
+            // Convertir Items a DTO
+            return new PagedResultDto<PractitionerRoleDto>
+            {
+                Items = pagedResult.Items
+                    .Select(r => r.ToDto())
+                    .ToList(),
+                Pagination = pagedResult.Pagination
+            };
+        }
+        catch (FhirOperationException ex)
+        {
+            throw FhirExceptionMapper.Map(ex, "SEARCH_FILTERED", "PRACTITIONER_ROLE_LIST");
+        }
     }
 
-    public async Task<ServiceResult<PractitionerRoleDto>> CreateAsync(CreatePractitionerRoleDto dto)
+    public async Task<PractitionerRoleDto> CreateAsync(CreatePractitionerRoleDto dto)
     {
-        // 1. Validar códigos
+        // Validar códigos de roles
         if (!AreCodesValid(dto.Code))
-            return ServiceResult<PractitionerRoleDto>.Failure(
-                "Uno o más códigos no pertenecen al sistema de roles permitido.",
-                "INVALID_CODE");
+        {
+            throw new ValidationException(MessageCodes.BusinessRuleViolation, new Dictionary<string, object>
+            {
+                { "Field", "Code" },
+                { "Details", "Uno o más códigos no pertenecen al sistema de roles permitido." }
+            });
+        }
 
-        // 2. Validar identificadores únicos
+        // Validar identificadores únicos (Detección de duplicados)
+        // TODO: Centralizar la validación de unicidad interna en un ValidationAttribute  see #432
+        // personalizado (ej. [UniqueIdentifier]). Esto asegurará que la lista 'Identifier' 
+        // no contenga duplicados (mismo System y Value) en este y otros DTOs, 
+        // delegando la validación estructural al framework antes de llegar al servicio.
+        
+        // validacion en la DB
         foreach (var idDto in dto.Identifier)
         {
             if (string.IsNullOrEmpty(idDto.System) || string.IsNullOrEmpty(idDto.Value))
                 continue;
+            var conflictingId = await GetConflictingIdentifierId(idDto.System.Trim(), idDto.Value.Trim());
 
-            if (await IdentifierExists(idDto.System.Trim(), idDto.Value.Trim()))
-                return ServiceResult<PractitionerRoleDto>.Failure(
-                    "Ya existe un PractitionerRole con uno de los identificadores proporcionados.",
-                    "DUPLICATE_IDENTIFIER");
+            // TODO Se dispara ???
+            if (conflictingId != null)
+            {
+                throw new ConflictException(MessageCodes.DbUniqueConstraint, new Dictionary<string, object>
+                {
+                    { "System", idDto.System },
+                    { "Value", idDto.Value },
+                    { "ConflictingResourceId", conflictingId } 
+                });
+            }
         }
 
-        // 3. Validar unicidad de asignación
+        // Validar unicidad de asignación (Regla de negocio SIGREF)
+        // Dentro de CreateAsync
         if (dto.Active)
         {
-            var practitionerRef = dto.Practitioner.Reference;
-            var organizationRef = dto.Organization?.Reference;
+            var conflictingId = await GetActiveRoleIdFor(dto.Practitioner.Reference, dto.Organization?.Reference);
 
-            if (await ExistsActiveRoleFor(practitionerRef, organizationRef))
-                return ServiceResult<PractitionerRoleDto>.Failure(
-                    "No se puede asignar más de un rol activo al mismo practitioner en una organización.",
-                    "DUPLICATE_ACTIVE_ROLE");
+            if (conflictingId != null)
+            {
+                throw new ConflictException(MessageCodes.BusinessRuleViolation, new Dictionary<string, object>
+                {
+                    { "Reason", "DuplicateActiveRole" },
+                    { "ConflictingId", conflictingId }, 
+                    { "Practitioner", dto.Practitioner.Reference }
+                });
+            }
         }
 
-        // 4. Crear
+        // Proceso de creación
         try
         {
             var resource = dto.ToFhirResource();
-            ApplyMeta(resource , isCreate:true);
+            ApplyMeta(resource, isCreate: true);
+
             var result = await _fhirClient.CreateAsync(resource);
-            return ServiceResult<PractitionerRoleDto>.Success(result.ToDto());
+
+            return result.ToDto();
         }
-        catch (FhirOperationException ex) when (ex.Status == System.Net.HttpStatusCode.Conflict)
+        catch (FhirOperationException ex)
         {
-            return ServiceResult<PractitionerRoleDto>.Failure("Conflicto al crear el recurso en FHIR.",
-                "FHIR_CONFLICT");
+            // Mapeo de errores de infraestructura FHIR
+            throw ex.Status switch
+            {
+                System.Net.HttpStatusCode.Conflict => new ConflictException(MessageCodes.DbConcurrencyConflict),
+                System.Net.HttpStatusCode.BadRequest => new ValidationException(MessageCodes.UnsupportedDataFormat),
+                _ => new AppException(MessageCodes.BadGateway, 502)
+            };
         }
-        catch
+        catch (Exception ex) when (ex is not AppException)
         {
-            return ServiceResult<PractitionerRoleDto>.Failure("Error interno al crear el PractitionerRole.",
-                "INTERNAL_ERROR");
+            // Error de sistema inesperado
+            throw new AppException(MessageCodes.InternalServerError, 500);
         }
     }
 
-    public async Task<PractitionerRoleDto?> GetByIdAsync(string id)
+    public async Task<PractitionerRoleDto> GetByIdAsync(string id)
     {
         try
         {
-            var resource = await _fhirClient.ReadAsync<FhirPractitionerRole>($"PractitionerRole/{id}");
+            // Intentar leer el recurso
+            // Si ReadAsync devuelve null, lanzamos NotFound
+            var resource = await _fhirClient.ReadAsync<FhirPractitionerRole>($"PractitionerRole/{id}")
+                           ?? throw new NotFoundException(MessageCodes.NotFound, new Dictionary<string, object>
+                           {
+                               { "ResourceId", id },
+                               { "ResourceType", "PractitionerRole" }
+                           });
+
             return resource.ToDto();
         }
-        catch (FhirOperationException)
+        catch (FhirOperationException ex)
         {
-            return null;
+            throw FhirExceptionMapper.Map(ex, id, "READ_PRACTITIONER_ROLE");
         }
     }
 
@@ -130,12 +184,17 @@ public class PractitionerRoleService(
     {
         try
         {
-            // Realiza la búsqueda en el servidor FHIR por practitioner
+            // Buscamos los roles asociados al ID del médico
+            // Usamos el formato de búsqueda estándar de FHIR
             var searchResult = await _fhirClient.SearchAsync<FhirPractitionerRole>(
                 new string[] { $"practitioner=Practitioner/{practitionerId}" }
             );
 
-            // Convierte todos los recursos encontrados a PractitionerRoleDto
+            // Si no hay resultados, devolvemos lista vacía (esto NO es un error de excepción)
+            if (searchResult == null || searchResult.Entry == null)
+                return Enumerable.Empty<PractitionerRoleDto>();
+
+            // Mapeo a DTOs
             var roles = searchResult.Entry
                 .Where(e => e.Resource is FhirPractitionerRole)
                 .Select(e => ((FhirPractitionerRole)e.Resource).ToDto())
@@ -145,40 +204,33 @@ public class PractitionerRoleService(
         }
         catch (FhirOperationException ex)
         {
-            // Puedes registrar el error si quieres más detalle
-            Console.WriteLine($"Error al obtener roles del Practitioner: {ex.Message}");
-            return Enumerable.Empty<PractitionerRoleDto>();
+            throw FhirExceptionMapper.Map(ex, practitionerId, "SEARCH_PRACTITIONER_ROLES");
         }
     }
 
 
-    public async Task<ServiceResult<PractitionerRoleDto>> UpdateAsync(string id, UpdatePractitionerRoleDto dto)
+    public async Task<PractitionerRoleDto> UpdateAsync(string id, UpdatePractitionerRoleDto dto)
     {
-        // 1. Verificar que el recurso exista
+        // 1. Verificar que el recurso exista (Fail Fast)
         FhirPractitionerRole existing;
         try
         {
-            existing = await _fhirClient.ReadAsync<FhirPractitionerRole>($"PractitionerRole/{id}");
+            existing = await _fhirClient.ReadAsync<FhirPractitionerRole>($"PractitionerRole/{id}")
+                       ?? throw new NotFoundException(MessageCodes.NotFound, new Dictionary<string, object> { { "Id", id } });
         }
-        catch (FhirOperationException ex) when (ex.Status == System.Net.HttpStatusCode.NotFound)
+        catch (FhirOperationException ex)
         {
-            return ServiceResult<PractitionerRoleDto>.Failure(
-                $"PractitionerRole con id '{id}' no encontrado.",
-                "NOT_FOUND");
-        }
-        catch
-        {
-            return ServiceResult<PractitionerRoleDto>.Failure(
-                "Error al intentar leer el recurso desde el servidor FHIR.",
-                "FHIR_READ_ERROR");
+            throw FhirExceptionMapper.Map(ex, id, "READ_FOR_UPDATE");
         }
 
         // 2. Validar códigos
         if (!AreCodesValid(dto.Code))
         {
-            return ServiceResult<PractitionerRoleDto>.Failure(
-                "Uno o más códigos no pertenecen al sistema de roles permitido.",
-                "INVALID_CODE");
+            throw new ValidationException(MessageCodes.BusinessRuleViolation, new Dictionary<string, object>
+            {
+                { "Field", "Code" },
+                { "Details", "Uno o más códigos no pertenecen al sistema de roles permitido." }
+            });
         }
 
         // 3. Validar identificadores únicos (excluyendo el recurso actual)
@@ -187,24 +239,20 @@ public class PractitionerRoleService(
             if (string.IsNullOrEmpty(idDto.System) || string.IsNullOrEmpty(idDto.Value))
                 continue;
 
-            try
-            {
-                var searchParams = new SearchParams()
-                    .Add("identifier", $"{idDto.System.Trim()}|{idDto.Value.Trim()}");
+            var searchParams = new SearchParams()
+                .Add("identifier", $"{idDto.System.Trim()}|{idDto.Value.Trim()}");
 
-                var bundle = await _fhirClient.SearchAsync<FhirPractitionerRole>(searchParams);
-                if (bundle?.Entry?.Any(e => e.Resource.Id != id) == true)
-                {
-                    return ServiceResult<PractitionerRoleDto>.Failure(
-                        "Ya existe otro PractitionerRole con uno de los identificadores proporcionados.",
-                        "DUPLICATE_IDENTIFIER");
-                }
-            }
-            catch
+            var bundle = await _fhirClient.SearchAsync<FhirPractitionerRole>(searchParams);
+
+            // Si hay un resultado y no es el que estamos editando
+            if (bundle?.Entry?.Any(e => e.Resource.Id != id) == true)
             {
-                return ServiceResult<PractitionerRoleDto>.Failure(
-                    "Error al validar los identificadores.",
-                    "IDENTIFIER_VALIDATION_ERROR");
+                throw new ConflictException(MessageCodes.DbUniqueConstraint, new Dictionary<string, object>
+                {
+                    { "System", idDto.System },
+                    { "Value", idDto.Value },
+                    { "ConflictWithId", bundle.Entry.First(e => e.Resource.Id != id).Resource.Id }
+                });
             }
         }
 
@@ -214,44 +262,46 @@ public class PractitionerRoleService(
             var practitionerRef = dto.Practitioner.Reference;
             var organizationRef = dto.Organization?.Reference;
 
-            try
-            {
-                var searchParams = new SearchParams()
-                    .Add("practitioner", practitionerRef)
-                    .Add("active", "true");
+            var searchParams = new SearchParams()
+                .Add("practitioner", practitionerRef)
+                .Add("active", "true");
 
-                if (string.IsNullOrEmpty(organizationRef))
-                {
-                    searchParams = searchParams.Add("organization:missing", "true");
-                }
-                else
-                {
-                    searchParams = searchParams.Add("organization", organizationRef);
-                }
+            if (string.IsNullOrEmpty(organizationRef))
+                searchParams.Add("organization:missing", "true");
+            else
+                searchParams.Add("organization", organizationRef);
 
-                var bundle = await _fhirClient.SearchAsync<FhirPractitionerRole>(searchParams);
-                if (bundle?.Entry?.Any(e => e.Resource.Id != id) == true)
-                {
-                    return ServiceResult<PractitionerRoleDto>.Failure(
-                        "Ya existe un rol activo para este practitioner en la organización.",
-                        "DUPLICATE_ACTIVE_ROLE");
-                }
-            }
-            catch
+            var bundle = await _fhirClient.SearchAsync<FhirPractitionerRole>(searchParams);
+
+            if (bundle?.Entry?.Any(e => e.Resource.Id != id) == true)
             {
-                return ServiceResult<PractitionerRoleDto>.Failure(
-                    "Error al validar la unicidad del rol activo.",
-                    "UNIQUENESS_VALIDATION_ERROR");
+                throw new ConflictException(MessageCodes.BusinessRuleViolation, new Dictionary<string, object>
+                {
+                    { "Reason", "DuplicateActiveRole" },
+                    { "Practitioner", practitionerRef },
+                    { "Organization", organizationRef ?? "N/A" }
+                });
             }
         }
 
-        // 5. Actualizar campos
+        // Mapeo y Actualización de campos
+        // TODO: Refactorizar lógica de mapeo a un método de extensión 'ApplyUpdate'
+        // El servicio no debe conocer los detalles de transformación entre DTO y Entidad FHIR.
+        // Se sugiere: existing.ApplyUpdate(dto);
         existing.Active = dto.Active;
-        existing.Period = dto.Period != null
+        // TODO: Extraer a un método de extensión global (ej. dto.Period.ToFhirPeriod())
+        // Esta lógica de conversión de fechas es transversal a todos los recursos que usan Period (Pacientes, Encuentros, etc.).
+        existing.Period = (
+            (dto.Period.Start.HasValue || dto.Period.End.HasValue))
             ? new Period
             {
-                StartElement = dto.Period.Start.HasValue ? new FhirDateTime(dto.Period.Start.Value) : null,
-                EndElement = dto.Period.End.HasValue ? new FhirDateTime(dto.Period.End.Value) : null
+                StartElement = dto.Period.Start.HasValue
+                    ? new FhirDateTime(dto.Period.Start.Value)
+                    : null,
+
+                EndElement = dto.Period.End.HasValue
+                    ? new FhirDateTime(dto.Period.End.Value)
+                    : null
             }
             : null;
         existing.Practitioner = dto.Practitioner?.ToFhirReference();
@@ -266,43 +316,45 @@ public class PractitionerRoleService(
             r => ((FhirPractitionerRole)r).Organization?.Display,
             r => ((FhirPractitionerRole)r).Location?.FirstOrDefault()?.Display
         );
-        ApplyMeta(existing, isCreate:false);
-        // 6. Guardar cambios
+
+        ApplyMeta(existing, isCreate: false);
         try
         {
             var updated = await _fhirClient.UpdateAsync(existing);
-            return ServiceResult<PractitionerRoleDto>.Success(updated.ToDto());
+            return updated.ToDto();
         }
-        catch (FhirOperationException ex) when (ex.Status == System.Net.HttpStatusCode.Conflict)
+        catch (FhirOperationException ex)
         {
-            return ServiceResult<PractitionerRoleDto>.Failure(
-                "Conflicto al actualizar el recurso (versión obsoleta o regla de negocio violada).",
-                "FHIR_CONFLICT");
-        }
-        catch
-        {
-            return ServiceResult<PractitionerRoleDto>.Failure(
-                "Error interno al actualizar el PractitionerRole.",
-                "UPDATE_ERROR");
+            throw FhirExceptionMapper.Map(ex, id, "UPDATE_SAVE");
         }
     }
 
-    public async Task<bool> DeleteAsync(string id)
+    public async Task DeleteAsync(string id)
     {
         try
         {
+            // Verificación previa
+            // Intentamos leerlo antes de borrarlo para asegurar que el rastro del log 
+            // tenga el ID correcto antes de que el recurso desaparezca.
+            var existing = await _fhirClient.ReadAsync<FhirPractitionerRole>($"PractitionerRole/{id}")
+                           ?? throw new NotFoundException(MessageCodes.NotFound, new Dictionary<string, object>
+                           {
+                               { "ResourceId", id },
+                               { "ResourceType", "PractitionerRole" }
+                           });
+
+            // Ejecutar el borrado en el servidor FHIR
             await _fhirClient.DeleteAsync($"PractitionerRole/{id}");
-            return true;
         }
-        catch (FhirOperationException)
+        catch (FhirOperationException ex)
         {
-            return false;
+            throw FhirExceptionMapper.Map(ex, id, "DELETE_PRACTITIONER_ROLE");
         }
     }
 
     // ====================== HELPERS ======================
 
-    private async Task<bool> ExistsActiveRoleFor(string practitionerRef, string? organizationRef,
+    private async Task<string?> GetActiveRoleIdFor(string practitionerRef, string? organizationRef,
         CancellationToken ct = default)
     {
         var searchParams = new SearchParams()
@@ -310,35 +362,36 @@ public class PractitionerRoleService(
             .Add("active", "true");
 
         if (string.IsNullOrEmpty(organizationRef))
-        {
-            searchParams = searchParams.Add("organization:missing", "true");
-        }
+            searchParams.Add("organization:missing", "true");
         else
-        {
-            searchParams = searchParams.Add("organization", organizationRef);
-        }
+            searchParams.Add("organization", organizationRef);
 
         var bundle = await _fhirClient.SearchAsync<FhirPractitionerRole>(searchParams, ct);
-        return bundle?.Entry?.Any() == true;
+    
+        // Retornamos el ID del primer conflicto que encontremos
+        return bundle?.Entry?.FirstOrDefault()?.Resource?.Id;
     }
 
-    private async Task<bool> IdentifierExists(string system, string value)
+    
+    private async Task<string?> GetConflictingIdentifierId(string system, string value)
     {
         try
         {
             var searchParams = new SearchParams()
-                .Add("identifier", $"{system}|{value}");
+                .Add("identifier", $"{system.Trim()}|{value.Trim()}");
 
             var bundle = await _fhirClient.SearchAsync<FhirPractitionerRole>(searchParams);
-            return bundle?.Entry?.Any() == true;
+    
+            // Retornamos el ID del primer recurso que coincida con ese identificador
+            return bundle?.Entry?.FirstOrDefault()?.Resource?.Id;
         }
-        catch
+        catch (FhirOperationException ex)
         {
-            // En caso de error de red o FHIR, asumimos que podría existir (seguridad)
-            return true;
+            throw FhirExceptionMapper.Map(ex, $"{system}|{value}", "VALIDATE_DUPLICATE_IDENTIFIER");
         }
     }
 
+    // TODO MEJORAR ESTE METODO
     private bool AreCodesValid(List<CodeableConceptDto> codeableConcepts)
     {
         if (codeableConcepts == null || codeableConcepts.Count == 0)

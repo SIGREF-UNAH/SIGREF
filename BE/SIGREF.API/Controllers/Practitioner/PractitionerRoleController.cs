@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.PractitionerRole;
 using SIGREF.API.Services.PractitionerRole;
 using SIGREF.Common.Constants;
@@ -22,138 +21,104 @@ public class PractitionerRoleController : ControllerBase
 
     // GET ALL
     [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor} , {RolesConstants.ti}")]
-    [Produces(typeof(PagedResultDto<PractitionerRoleDto>))]
-    public async Task<IActionResult> GetFiltered([FromQuery] PractitionerRoleFilterDto filters)
+    // Éxito: Especificamos el DTO de paginación con su tipo genérico
+    [ProducesResponseType(typeof(PagedResultDto<PractitionerRoleDto>), StatusCodes.Status200OK)]
+    // Errores estándar con ProblemDetails
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor},{RolesConstants.ti}")]
+    public async Task<ActionResult<PagedResultDto<PractitionerRoleDto>>> GetFiltered([FromQuery] PractitionerRoleFilterDto filters)
     {
         var pagedRoles = await _prService.GetFilteredAsync(filters);
-
-        var pagedRoleDtos = new PagedResultDto<PractitionerRoleDto>
-        {
-            Items = pagedRoles.Items,
-            Pagination = pagedRoles.Pagination
-        };
-
-        return Ok(pagedRoleDtos);
+        return Ok(pagedRoles);
     }
 
     // GET BY ID 
     [HttpGet("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.auditor} , {RolesConstants.ti}")]
-    [Produces<PractitionerRoleDto>()]
-    public async Task<IActionResult> GetById(string id)
+    // Éxito: Retorna un solo objeto DTO
+    [ProducesResponseType(typeof(PractitionerRoleDto), StatusCodes.Status200OK)]
+    // Errores:
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)] // Vital para un Get por ID
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = $"{RolesConstants.admin},{RolesConstants.auditor},{RolesConstants.ti}")]
+    public async Task<ActionResult<PractitionerRoleDto>> GetById(string id)
     {
         var role = await _prService.GetByIdAsync(id);
-        if (role == null) return NotFound($"PractitionerRole with id '{id}' not found.");
         return Ok(role);
     }
 
     // GET BY PRACTITIONER ID 
     [HttpGet("practitioner/{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    [Produces<PractitionerRoleDto>()]
-    [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.auditor} , {RolesConstants.ti}")]
-    public async Task<IActionResult> GetByPractitionerId(string id)
+    // Especificamos que devuelve una colección (IEnumerable o List)
+    [ProducesResponseType(typeof(IEnumerable<PractitionerRoleDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = $"{RolesConstants.admin},{RolesConstants.auditor},{RolesConstants.ti}")]
+    public async Task<ActionResult<IEnumerable<PractitionerRoleDto>>> GetByPractitionerId(string id)
     {
         var roles = await _prService.GetByPractitionerIdAsync(id);
-        if (roles == null) return NotFound($"Practitioner with id '{id}' not found.");
         return Ok(roles);
     }
 
     //CREATE 
     [HttpPost]
-    [ProducesResponseType(StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.ti}")]
-    [Produces<PractitionerRoleDto>()]
-    public async Task<IActionResult> Create([FromBody] CreatePractitionerRoleDto dto)
+    // Éxito: Orval generará una función que retorna PractitionerRoleDto
+    [ProducesResponseType(typeof(PractitionerRoleDto), StatusCodes.Status201Created)]
+    // Errores: Orval mapeará esto a un objeto de error (ProblemDetails)
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = $"{RolesConstants.admin}, {RolesConstants.ti}")]
+    public async Task<ActionResult<PractitionerRoleDto>> Create([FromBody] CreatePractitionerRoleDto dto)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
         var result = await _prService.CreateAsync(dto);
-
-        if (!result.IsSuccess)
-        {
-            return result.ErrorCode switch
-            {
-                "DUPLICATE_IDENTIFIER" or "DUPLICATE_ACTIVE_ROLE" =>
-                    Conflict(result.ErrorMessage),
-                "INVALID_CODE" =>
-                    BadRequest(result.ErrorMessage),
-                _ =>
-                    StatusCode(500, result.ErrorMessage)
-            };
-        }
-
-        return CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, result.Data);
+        // Usamos CreatedAtAction para el estándar REST 201
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
     // UPDATE
     [HttpPut("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(PractitionerRoleDto), StatusCodes.Status200OK)]
+    // Errores: Orval mapeará esto a un objeto de error (ProblemDetails)
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     [Authorize(Roles = $"{RolesConstants.admin}, {RolesConstants.ti}")]
     [Produces<PractitionerRoleDto>()]
     public async Task<IActionResult> Update(string id, [FromBody] UpdatePractitionerRoleDto dto)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
         var result = await _prService.UpdateAsync(id, dto);
-
-        if (!result.IsSuccess)
-        {
-            return result.ErrorCode switch
-            {
-                "NOT_FOUND" => NotFound(result.ErrorMessage),
-                "DUPLICATE_ACTIVE_ROLE" or "DUPLICATE_IDENTIFIER" => Conflict(result.ErrorMessage),
-                "INVALID_CODE" => BadRequest(result.ErrorMessage),
-                _ => StatusCode(500, result.ErrorMessage)
-            };
-        }
-
-        return Ok(result.Data);
+        return Ok(result);
     }
 
     // DELETE 
     [HttpDelete("{id}")]
+    // Éxito: 204 No Content es el estándar de oro para borrados exitosos
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.ti}")]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    // Errores:
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    [Authorize(Roles = $"{RolesConstants.admin}, {RolesConstants.ti}")]
     public async Task<IActionResult> Delete(string id)
     {
-        var deleted = await _prService.DeleteAsync(id);
-        if (!deleted) return NotFound($"PractitionerRole with id '{id}' not found.");
-
+        await _prService.DeleteAsync(id);
         return NoContent();
     }
 }

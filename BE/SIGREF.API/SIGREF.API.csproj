@@ -24,6 +24,9 @@
     <None Remove="Database\Entities\**" />
     <None Remove="media\**" />
     <None Remove="SeedData\**" />
+    <EmbeddedResource Update="Resources\SharedResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
@@ -66,5 +69,7 @@
 		<EmbeddedResource Include="Assets/Fonts/DejaVuSans-Oblique.ttf" />
 		<EmbeddedResource Include="Assets/Fonts/DejaVuSans-BoldOblique.ttf" />
 	</ItemGroup>
+
+    
 
 </Project>

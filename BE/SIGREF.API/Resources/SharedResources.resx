@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<accessability>public</accessability>
+	<data id="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d" name="ACCOUNT_LOCKED" xml:space="preserve">
+		<value>ACCOUNT LOCKED DUE TO MULTIPLE FAILED LOGIN ATTEMPTS.</value>
+		<comment>Security response for brute-force protection.</comment>
+	</data>
+	<data id="c8d4e1a2-5b6c-7d8e-9f0a-1b2c3d4e5f6a" name="BAD_GATEWAY" xml:space="preserve">
+		<value>UPSTREAM SERVICE IS CURRENTLY UNAVAILABLE.</value>
+		<comment>Error 502 when a third-party API or downstream microservice fails.</comment>
+	</data>
+	<data id="f6a7b89c-0d1e-2f3a-4b5c-6d7e8f9a0b1c" name="BUSINESS_RULE_VIOLATION" xml:space="preserve">
+		<value>THE OPERATION CANNOT BE COMPLETED DUE TO CURRENT BUSINESS STATE CONFLICTS.</value>
+		<comment>Error 422 for domain logic rejections (e.g., trying to rent an item already in use).</comment>
+	</data>
+	<data id="b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e" name="DB_CONCURRENCY_CONFLICT" xml:space="preserve">
+		<value>THE RECORD WAS MODIFIED BY ANOTHER USER. PLEASE REFRESH AND TRY AGAIN.</value>
+		<comment>Error 409 for DbUpdateConcurrencyException (e.g., PostgreSQL/SQL Server optimistic locking).</comment>
+	</data>
+	<data id="c3d4e5f6-a7b8-9c0d-1e2f-3a4b5c6d7e8f" name="DB_FOREIGN_KEY_VIOLATION" xml:space="preserve">
+		<value>OPERATION FAILED. THE RECORD IS REFERENCED BY OTHER ENTITIES.</value>
+		<comment>Conflict 409 when attempting to delete a record with active relationships.</comment>
+	</data>
+	<data id="d4e5f6a7-b89c-0d1e-2f3a-4b5c6d7e8f9a" name="DB_UNIQUE_CONSTRAINT" xml:space="preserve">
+		<value>A RECORD WITH THESE UNIQUE IDENTIFIERS ALREADY EXISTS.</value>
+		<comment>Conflict 409 for duplicate inserts (e.g., identical email or identification number).</comment>
+	</data>
+	<data id="f1c3e8a2-7b5d-4910-a2f4-6e8d9c1b3a50" name="FORBIDDEN" xml:space="preserve">
+		<value>YOU DO NOT HAVE THE REQUIRED PERMISSIONS TO PERFORM THIS ACTION.</value>
+		<comment>Error 403 when user is authenticated but lacks roles/claims.</comment>
+	</data>
+	<data id="93cc3c82-40d0-4ba1-8afb-170f718e2a84" name="INTERNAL_SERVER_ERROR" xml:space="preserve">
+		<value>AN UNEXPECTED ERROR OCCURRED. PLEASE CONTACT SYSTEM ADMINISTRATOR.</value>
+		<comment>Generic 500 error for unhandled exceptions. Never expose stack traces here.</comment>
+	</data>
+	<data id="b5f2c1a4-68d1-4e92-9b3f-12c8e5a7d90b" name="NOT_FOUND" xml:space="preserve">
+		<value>THE REQUESTED RESOURCE COULD NOT BE FOUND.</value>
+		<comment>Standard 404 for missing database records or endpoints.</comment>
+	</data>
+	<data id="c4d1f7a9-8e2b-4503-b1d6-3a9e2c5f8b4d" name="RECORD_CREATED_SUCCESS" xml:space="preserve">
+		<value>THE RECORD HAS BEEN CREATED SUCCESSFULLY.</value>
+		<comment>Status 201 Created.</comment>
+	</data>
+	<data id="b2f5d8e1-9a3c-4b67-8e1f-4a0d9c2b5e7f" name="RECORD_DELETED_SUCCESS" xml:space="preserve">
+		<value>THE RECORD HAS BEEN DELETED SUCCESSFULLY.</value>
+		<comment>Status 204 No Content or 200 OK after DELETE.</comment>
+	</data>
+	<data id="e9b3a2d5-4c1f-4870-9d5e-1f8a6c7b0d2e" name="RECORD_UPDATED_SUCCESS" xml:space="preserve">
+		<value>THE RECORD HAS BEEN UPDATED SUCCESSFULLY.</value>
+		<comment>Status 200 OK after PUT/PATCH.</comment>
+	</data>
+	<data id="e5f6a7b8-c9d0-1e2f-3a4b-5c6d7e8f9a0b" name="TOKEN_EXPIRED" xml:space="preserve">
+		<value>AUTHENTICATION TOKEN HAS EXPIRED. PLEASE REFRESH YOUR SESSION.</value>
+		<comment>Specific 401 for JWT expiration.</comment>
+	</data>
+	<data id="d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5f6b" name="TOO_MANY_REQUESTS" xml:space="preserve">
+		<value>RATE LIMIT EXCEEDED. PLEASE TRY AGAIN LATER.</value>
+		<comment>Error 429 for API throttling/rate limiting.</comment>
+	</data>
+	<data id="d8a9e4f1-32b5-4c76-8f1d-5b9e0c2a4d3f" name="UNAUTHORIZED" xml:space="preserve">
+		<value>UNAUTHORIZED ACCESS. PLEASE AUTHENTICATE.</value>
+		<comment>Error 401 when token is missing or malformed.</comment>
+	</data>
+	<data id="e5f6a7b8-9c0d-1e2f-3a4b-5c6d7e8f9a0b" name="UNSUPPORTED_DATA_FORMAT" xml:space="preserve">
+		<value>THE SUBMITTED PAYLOAD FORMAT IS UNSUPPORTED OR MALFORMED.</value>
+		<comment>Error 415 or 400 for strict standard parsing failures (e.g., invalid HL7 FHIR structures).</comment>
+	</data>
+	<data id="a7e2b9c4-1d8f-4356-9a0e-2f5c8b1d7e6a" name="VALIDATION_ERROR" xml:space="preserve">
+		<value>THE PROVIDED DATA IS INVALID. PLEASE VERIFY YOUR INPUT PAYLOAD.</value>
+		<comment>Generic 400 or 422 for bad DTOs.</comment>
+	</data>
+</root>

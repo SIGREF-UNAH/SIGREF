@@ -1,14 +1,18 @@
 ﻿using System.Runtime.Serialization;
 using Hl7.Fhir.Rest;
+using SIGREF.API.Constants;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Patient;
+using SIGREF.API.Exceptions;
 using SIGREF.API.Extensions;
 using SIGREF.API.Fhir;
 using SIGREF.API.Helpers;
+using SIGREF.API.Middleware;
 using SIGREF.Common.Dtos;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
 using FhirPatient = Hl7.Fhir.Model.Patient;
 using Task = System.Threading.Tasks.Task;
+
 namespace SIGREF.API.Services.Patient;
 
 /// <summary>
@@ -28,19 +32,22 @@ namespace SIGREF.API.Services.Patient;
 /// </code>
 /// </para>
 /// </remarks>
-public class PatientService :BaseFhirService, IPatientService
+public class PatientService : BaseFhirService, IPatientService
 {
     private readonly FhirClient _fhirClient;
     private readonly IUserContextService _userContext;
-    private const string ResourceType = "Patient"; // Cambiar a nameof(Location) pero que no tenga conflicto con la clase o carpeta
+
+    private const string
+        ResourceType = "Patient"; // Cambiar a nameof(Location) pero que no tenga conflicto con la clase o carpeta
+
     /// <summary>
     /// Inicializa una nueva instancia de <see cref="PatientService"/> con el cliente FHIR especificado.
     /// </summary>
     /// <param name="fhirClient">Cliente FHIR configurado para comunicarse con el servidor FHIR. No debe ser nulo.</param>
     /// <exception cref="System.ArgumentNullException">Se lanza si <paramref name="fhirClient"/> es <c>null</c>.</exception>
-    public PatientService(FhirClient fhirClient, IUserContextService userContext,      
-        IFhirNamespaceService ns)             
-        : base(userContext, ns)    
+    public PatientService(FhirClient fhirClient, IUserContextService userContext,
+        IFhirNamespaceService ns)
+        : base(userContext, ns)
     {
         _fhirClient = fhirClient;
         _userContext = userContext;
@@ -66,10 +73,26 @@ public class PatientService :BaseFhirService, IPatientService
     /// </example>
     public async Task<PatientDto> CreatePatientAsync(CreatePatientDto dto)
     {
-        var patient = dto.ToFhirPatient();
-        ApplyMeta(patient, isCreate:true);
-        var created = await _fhirClient.CreateAsync(patient);
-        return created.ToDto(); 
+        try
+        {
+            // Transformación a Entidad FHIR y Metadatos de auditoría
+            var patient = dto.ToFhirPatient();
+            ApplyMeta(patient, isCreate: true);
+
+            // TODO VALIDACION DE IDENTIFICADORES
+            // TODO #431 , #432 en DataAnotations
+
+            // Persistencia en el Servidor FHIR
+            // Usamos el objeto retornado por CreateAsync porque contiene el ID y Meta generado por el servidor
+            var created = await _fhirClient.CreateAsync(patient);
+
+            // Respuesta mapeada a DTO para el controlador
+            return created.ToDto();
+        }
+        catch (FhirOperationException ex)
+        {
+            throw FhirExceptionMapper.Map(ex, "NEW_PATIENT", "CREATE_PATIENT");
+        }
     }
 
 
@@ -88,8 +111,23 @@ public class PatientService :BaseFhirService, IPatientService
     /// </example>
     public async Task<PatientDto> GetPatientByIdAsync(string id)
     {
-        var patient = await _fhirClient.ReadAsync<FhirPatient>($"{ResourceType}/{id}");
-        return patient.ToDto();
+        try
+        {
+            // Intentar obtener el recurso desde FHIR
+            var patient = await _fhirClient.ReadAsync<FhirPatient>($"{ResourceType}/{id}")
+                          ?? throw new NotFoundException(MessageCodes.NotFound, new Dictionary<string, object>
+                          {
+                              { "ResourceId", id },
+                              { "ResourceType", "Patient" }
+                          });
+
+            // Mapeo a DTO para el cliente (Orval)
+            return patient.ToDto();
+        }
+        catch (FhirOperationException ex)
+        {
+            throw FhirExceptionMapper.Map(ex, id, "GET_PATIENT_BY_ID");
+        }
     }
 
     /// <summary>
@@ -107,83 +145,130 @@ public class PatientService :BaseFhirService, IPatientService
     /// var updatedPatient = await patientService.UpdatePatientAsync("123", updateDto);
     /// </code>
     /// </example>
+    ///
+    /// TODO MANEJO DE IDENTIFICADORES 
     public async Task<PatientDto> UpdatePatientAsync(string id, UpdatePatientDto dto)
     {
-        // 1. Leer paciente existente
-        var existing = await _fhirClient.ReadAsync<FhirPatient>($"{ResourceType}/{id}");
+        try
+        {
+            // Leer paciente existente (Fail Fast)
+            var existing = await _fhirClient.ReadAsync<FhirPatient>($"{ResourceType}/{id}")
+                           ?? throw new NotFoundException(MessageCodes.NotFound, new Dictionary<string, object>
+                           {
+                               { "Id", id },
+                               { "ResourceType", "Patient" }
+                           });
 
-        // 2. Aplicar actualizaciones
-        var updated = existing.ApplyUpdate(dto); // Usa la extensión ApplyUpdate
-        ApplyMeta(updated,isCreate:false);
-        // 3. Enviar actualización
-        var result = await _fhirClient.UpdateAsync(updated);
+            // Aplicar actualizaciones y metadatos de auditoría
+            // Delegamos la lógica de transformación a la extensión ApplyUpdate
+            existing.ApplyUpdate(dto);
+            ApplyMeta(existing, isCreate: false);
 
-        return result.ToDto();
+            // Enviar actualización al servidor FHIR
+            // El servidor devuelve la versión final (incluyendo el nuevo versionId/ETag)
+            var result = await _fhirClient.UpdateAsync(existing);
+
+            return result.ToDto();
+        }
+        catch (FhirOperationException ex)
+        {
+            throw FhirExceptionMapper.Map(ex, id, "UPDATE_PATIENT");
+        }
     }
 
     public async Task DeletePatientAsync(string id)
     {
-        await _fhirClient.DeleteAsync($"{ResourceType}/{id}");
+        try
+        {
+            // Verificación previa (Fail Fast)
+            // Intentamos leerlo para asegurar que el rastro del log tenga el contexto
+            // y para devolver un 404 real si el paciente ya no existe.
+            _ = await _fhirClient.ReadAsync<FhirPatient>($"{ResourceType}/{id}")
+                ?? throw new NotFoundException(MessageCodes.NotFound, new Dictionary<string, object>
+                {
+                    { "ResourceId", id },
+                    { "ResourceType", "Patient" }
+                });
+
+            //  Ejecutar el borrado físico en el servidor FHIR
+            await _fhirClient.DeleteAsync($"{ResourceType}/{id}");
+        }
+        catch (FhirOperationException ex)
+        {
+            // Centralización total con el Mapper
+            // Maneja automáticamente conflictos (409) si el paciente tiene 
+            // encuentros o registros clínicos vinculados.
+            throw FhirExceptionMapper.Map(ex, id, "DELETE_PATIENT");
+        }
     }
 
     // Filtros
     public async Task<PagedResultDto<PatientDto>> GetFilteredPatientsAsync(PatientFilterDto filter)
     {
-        var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
-
-        var searchParams = new SearchParams();
-
-        // 1. Nombre
-        if (!string.IsNullOrWhiteSpace(filter.Name))
-            searchParams.Add("name", filter.Name.Trim());
-
-        // 2. Género
-        if (filter.Gender.HasValue)
-            searchParams.Add("gender", filter.Gender.Value.ToString().ToLowerInvariant());
-
-        // 3. Filtro por tipo de identificador
-        if (!string.IsNullOrWhiteSpace(filter.IdentifierType))
+        try
         {
-            searchParams.Add("identifier-type:contains", filter.IdentifierType.Trim());
-        }
+            // Validación de seguridad (Fail Fast)
+            if (filter.PageSize > 500)
+            {
+                throw new ValidationException(MessageCodes.ValidationError, new Dictionary<string, object>
+                {
+                    { "Field", "PageSize" },
+                    { "MaxAllowed", 500 }
+                });
+            }
 
-        // 4. Filtro por valor de identificador
-        if (!string.IsNullOrWhiteSpace(filter.IdentifierValue))
-        {
-            searchParams.Add("identifier-value:above", filter.IdentifierValue.Trim());
-        }
+            // Normalizar paginación y preparar parámetros
+            var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
+            var searchParams = new SearchParams();
 
-        // 5. Fecha de nacimiento
-        if (filter.BirthDate.HasValue)
-        {
-            var date = filter.BirthDate.Value.ToString("yyyy-MM-dd");
-            searchParams.Add("birthdate", $"eq{date}");
-        }
+            // Construcción de Filtros FHIR
+            if (!string.IsNullOrWhiteSpace(filter.Name))
+                searchParams.Add("name", filter.Name.Trim());
 
-        // 6 .Estado vital
-        if (filter.Active.HasValue)
-            searchParams.Add("active", filter.Active.Value.ToString().
-                ToLowerInvariant());
+            if (filter.Gender.HasValue)
+                searchParams.Add("gender", filter.Gender.Value.ToString().ToLowerInvariant());
 
-        // Paginación
-        searchParams.Count = pageSize;
-        searchParams.Add("_offset", offset.ToString());
-        searchParams.Add("_total", "accurate");
+            // Nota: Los modificadores como :contains o :above dependen del soporte del servidor FHIR
+            // Para los identificadores, usualmente se usa el formato system|value
+            if (!string.IsNullOrWhiteSpace(filter.IdentifierType))
+                searchParams.Add("identifier-type:contains", filter.IdentifierType.Trim());
 
-        var bundle = await _fhirClient.SearchAsync<FhirPatient>(searchParams);
+            if (!string.IsNullOrWhiteSpace(filter.IdentifierValue))
+                searchParams.Add("identifier-value:above", filter.IdentifierValue.Trim());
 
-        var pagedResult = FhirPaginationHelper.ToPagedResult<FhirPatient>(bundle, pageNumber, pageSize);
+            if (filter.BirthDate.HasValue)
+            {
+                var date = filter.BirthDate.Value.ToString("yyyy-MM-dd");
+                searchParams.Add("birthdate", $"eq{date}");
+            }
 
-        var resultDto = new PagedResultDto<PatientDto>
-        {
-            Items = pagedResult.Items
+            if (filter.Active.HasValue)
+                searchParams.Add("active", filter.Active.Value.ToString().ToLowerInvariant());
+
+            // Parámetros técnicos de paginación
+            searchParams.Count = pageSize;
+            searchParams.Add("_offset", offset.ToString());
+            searchParams.Add("_total", "accurate");
+
+            //  Ejecución de búsqueda
+            var bundle = await _fhirClient.SearchAsync<FhirPatient>(searchParams);
+
+            //  Transformación a PagedResult y mapeo a DTO
+            var pagedResult = FhirPaginationHelper.ToPagedResult<FhirPatient>(bundle, pageNumber, pageSize);
+
+            return new PagedResultDto<PatientDto>
+            {
+                Items = pagedResult.Items
                     .Select(p => p.ToDto())
                     .Where(dto => dto != null)!
                     .ToList(),
-            Pagination = pagedResult.Pagination
-        };
-
-        return resultDto;
+                Pagination = pagedResult.Pagination
+            };
+        }
+        catch (FhirOperationException ex)
+        {
+            // Pasamos el contexto de búsqueda al Mapper
+            throw FhirExceptionMapper.Map(ex, "SEARCH_FILTERED", "PATIENT_LIST");
+        }
     }
 }
-

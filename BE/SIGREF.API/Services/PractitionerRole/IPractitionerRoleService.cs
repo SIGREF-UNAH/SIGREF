@@ -8,7 +8,7 @@ namespace SIGREF.API.Services.PractitionerRole;
 public interface IPractitionerRoleService
 {
     // Crear un nuevo PractitionerRole
-    Task<ServiceResult<PractitionerRoleDto>> CreateAsync(CreatePractitionerRoleDto dto);
+    Task<PractitionerRoleDto> CreateAsync(CreatePractitionerRoleDto dto);
 
     // Obtener un PractitionerRole por Id
     Task<PractitionerRoleDto?> GetByIdAsync(string id);
@@ -17,10 +17,10 @@ public interface IPractitionerRoleService
     Task<IEnumerable<PractitionerRoleDto>> GetByPractitionerIdAsync(string practitionerId);
 
     // Actualizar
-    Task<ServiceResult<PractitionerRoleDto?>> UpdateAsync(string id, UpdatePractitionerRoleDto dto);
+    Task<PractitionerRoleDto?> UpdateAsync(string id, UpdatePractitionerRoleDto dto);
 
     // Eliminar
-    Task<bool> DeleteAsync(string id);
+    Task DeleteAsync(string id);
 
     // Filtrar
     Task<PagedResultDto<PractitionerRoleDto>> GetFilteredAsync(PractitionerRoleFilterDto filters);

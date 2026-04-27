@@ -1,4 +1,5 @@
 using SIGREF.API.Audit.Extensions;
+using SIGREF.API.Middleware;
 
 namespace SIGREF.API;
 
@@ -15,6 +16,7 @@ public partial class Startup
     public void ConfigureServices(IServiceCollection services, WebApplicationBuilder applicationBuilder)
     {
         this._builder = applicationBuilder;
+        services.AddLocalization(options => options.ResourcesPath = "Resourses");
         ConfigureBase(services);             // Env, cache, httpcontext
         AddFhir(services);                   // FhirService + FhirClient
         AddSeeders(services);                // Seeders
@@ -30,6 +32,7 @@ public partial class Startup
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
+        app.UseMiddleware<GlobalExceptionMiddleware>();
         if (env.IsDevelopment())
         {
             app.UseSwagger();
