@@ -108,22 +108,16 @@ public class OrganizationsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = $"{RolesConstants.admin}  , {RolesConstants.ti}")]
-    public async Task<ActionResult> DeleteOrganization(string id)
+    [Authorize(Roles = $"{RolesConstants.admin}, {RolesConstants.ti}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
+    public async Task<IActionResult> DeleteOrganization(string id)
     {
-        try
-        {
-            var result = await _organizationService.DeleteOrganizationAsync(id);
-            if (!result)
-            {
-                return NotFound($"Organización con ID {id} no encontrada");
-            }
-            return NoContent();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error eliminando organización con ID {Id}", id);
-            return StatusCode(500, $"Ocurrió un error al eliminar la organización con ID {id}");
-        }
+        // El Middleware captura todo y Orval recibe el status code correcto.
+        await _organizationService.DeleteOrganizationAsync(id);
+    
+        return NoContent();
     }
 }

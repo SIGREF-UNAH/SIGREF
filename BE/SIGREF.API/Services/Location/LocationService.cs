@@ -1,8 +1,12 @@
 using System.Runtime.Serialization;
 using Hl7.Fhir.Rest;
+using SIGREF.API.Constants;
 using SIGREF.API.Dtos.Location;
+using SIGREF.API.Exceptions;
+using SIGREF.API.Extensions;
 using SIGREF.API.Fhir;
 using SIGREF.API.Helpers;
+using SIGREF.API.Middleware;
 using SIGREF.API.Services.Common;
 using SIGREF.Common.Dtos;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
@@ -36,10 +40,25 @@ public class LocationService : BaseFhirService, ILocationService
     /// Console.WriteLine(location.Name);
     /// </code>
     /// </example>
-    public Task<FhirLocation> GetLocationByIdAsync(int id)
-
+    public async Task<LocationDto> GetLocationByIdAsync(string id)
     {
-        return _fhirClient.ReadAsync<FhirLocation>($"{ResourceType}/{id}");
+        try
+        {
+            // Intentar obtener el recurso desde el servidor médico
+            var location = await _fhirClient.ReadAsync<FhirLocation>($"{ResourceType}/{id}")
+                           ?? throw new NotFoundException(MessageCodes.NotFound, new Dictionary<string, object>
+                           {
+                               { "ResourceId", id },
+                               { "ResourceType", "Location" }
+                           });
+
+            // Mapeo a DTO para asegurar que el frontend reciba data limpia y tipada
+            return location.ToDto();
+        }
+        catch (FhirOperationException ex)
+        {
+            throw FhirExceptionMapper.Map(ex, id, "GET_LOCATION_BY_ID");
+        }
     }
     /// <summary>
     /// Crea un nuevo recurso <see cref="FhirLocation"/> en el servidor FHIR.
@@ -57,17 +76,25 @@ public class LocationService : BaseFhirService, ILocationService
     /// Console.WriteLine($"Creado con ID: {createdLocation.Id}");
     /// </code>
     /// </example>
-    public async Task<FhirLocation> CreateLocationAsync(FhirLocation location)
+    public async Task<LocationDto> CreateLocationAsync(CreateLocationDto dto)
     {
-        // Generar un ID si no tiene uno
-        if (string.IsNullOrEmpty(location.Id))
+        try
         {
-            location.Id = Guid.NewGuid().ToString();
-        }
-        ApplyMeta(location, isCreate:true);
+            var locationFhir = dto.ToFhirLocation();
+            ApplyMeta(locationFhir, isCreate: true);
 
-        await _fhirClient.CreateAsync(location);
-        return location;
+            // Intento de Creación en el Servidor FHIR
+            // IMPORTANTE: Capturamos la respuesta del servidor (created)
+            var created = await _fhirClient.CreateAsync(locationFhir);
+
+            // Retorno del DTO basado en la respuesta oficial del servidor
+            // Esto garantiza que el DTO lleve el ID y el versionId generados
+            return created.ToDto();
+        }
+        catch (FhirOperationException ex)
+        {
+            throw FhirExceptionMapper.Map(ex, "NEW_LOCATION", "CREATE_LOCATION");
+        }
     }
     /// <summary>
     /// Actualiza un recurso <see cref="FhirLocation"/> existente en el servidor FHIR.
@@ -87,11 +114,32 @@ public class LocationService : BaseFhirService, ILocationService
     /// Console.WriteLine($"Versión: {updatedLocation.Meta.VersionId}");
     /// </code>
     /// </example>
-    public async Task<FhirLocation> UpdateLocationAsync(FhirLocation location)
+    public async Task<LocationDto> UpdateLocationAsync(string id, UpdateLocationDto dto)
     {
-        ApplyMeta(location,isCreate:false);
-        var result = await _fhirClient.UpdateAsync(location);
-        return result;
+        try
+        {
+            // Leer recurso existente (Fail Fast)
+            var existing = await _fhirClient.ReadAsync<FhirLocation>($"{ResourceType}/{id}")
+                           ?? throw new NotFoundException(MessageCodes.NotFound, new Dictionary<string, object> 
+                           { 
+                               { "ResourceId", id },
+                               { "ResourceType", "Location" }
+                           });
+
+            // Aplicar actualizaciones y metadatos
+            existing.ApplyUpdate(dto);
+            ApplyMeta(existing, isCreate: false);
+
+            // Enviar actualización al servidor médico
+            var result = await _fhirClient.UpdateAsync(existing);
+
+            // Retornar DTO fresco
+            return result.ToDto();
+        }
+        catch (FhirOperationException ex)
+        {
+            throw FhirExceptionMapper.Map(ex, id, "UPDATE_LOCATION");
+        }
     }
 
     /// <summary>
@@ -107,31 +155,78 @@ public class LocationService : BaseFhirService, ILocationService
     /// await locationService.DeleteLocationAsync("loc-123");
     /// </code>
     /// </example>
-    public async Task DeleteLocationAsync(int id)
+    public async Task DeleteLocationAsync(string id)
     {
-        await _fhirClient.DeleteAsync($"{ResourceType}/{id}");
+        try
+        {
+            // Verificación previa (Fail Fast)
+            _ = await _fhirClient.ReadAsync<FhirLocation>($"{ResourceType}/{id}")
+                ?? throw new NotFoundException(MessageCodes.NotFound, new Dictionary<string, object>
+                {
+                    { "ResourceId", id },
+                    { "ResourceType", "Location" }
+                });
+
+            // Ejecución del borrado en el servidor FHIR
+            await _fhirClient.DeleteAsync($"{ResourceType}/{id}");
+        }
+        catch (FhirOperationException ex)
+        {
+            throw FhirExceptionMapper.Map(ex, id, "DELETE_LOCATION");
+        }
     }
 
     // Filtrado
-    public async Task<PagedResultDto<FhirLocation>> GetFilteredLocationsAsync(LocationFilterDto filter)
+    public async Task<PagedResultDto<LocationDto>> GetFilteredLocationsAsync(LocationFilterDto filter)
     {
-        var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
+        try
+        {
+            // Validación de seguridad (Fail Fast)
+            if (filter.PageSize > 500)
+            {
+                throw new ValidationException(MessageCodes.ValidationError, new Dictionary<string, object>
+                {
+                    { "Field", "PageSize" },
+                    { "MaxAllowed", 500 }
+                });
+            }
 
-        var searchParams = new SearchParams();
+            // Normalizar paginación usando el helper
+            var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
+            var searchParams = new SearchParams();
 
-        if (!string.IsNullOrWhiteSpace(filter.Name))
-            searchParams.Add("name", filter.Name);
+            //Construcción de Filtros FHIR
+            if (!string.IsNullOrWhiteSpace(filter.Name))
+                searchParams.Add("name", filter.Name.Trim());
 
-        if (filter.Status.HasValue)
-            searchParams.Add("status", GetEnumMemberValue(filter.Status.Value));
+            if (filter.Status.HasValue)
+                searchParams.Add("status", GetEnumMemberValue(filter.Status.Value));
 
-        searchParams.Count = pageSize;
-        searchParams.Add("_offset", offset.ToString());
-        searchParams.Add("_total", "accurate");
+            // Parámetros técnicos de paginación
+            searchParams.Count = pageSize;
+            searchParams.Add("_offset", offset.ToString());
+            searchParams.Add("_total", "accurate");
 
-        var bundle = await _fhirClient.SearchAsync<FhirLocation>(searchParams);
+            // Ejecución de búsqueda
+            var bundle = await _fhirClient.SearchAsync<FhirLocation>(searchParams);
 
-        return FhirPaginationHelper.ToPagedResult<FhirLocation>(bundle, pageNumber, pageSize);
+            // Convertir el Bundle de FHIR a nuestro PagedResult genérico
+            var pagedResult = FhirPaginationHelper.ToPagedResult<FhirLocation>(bundle, pageNumber, pageSize);
+
+            // Mapeo final de Items a DTO
+            return new PagedResultDto<LocationDto>
+            {
+                Items = pagedResult.Items
+                    .Select(l => l.ToDto())
+                    .Where(dto => dto != null)!
+                    .ToList(),
+                Pagination = pagedResult.Pagination
+            };
+        }
+        catch (FhirOperationException ex)
+        {
+            throw FhirExceptionMapper.Map(ex, "SEARCH_FILTERED", "LOCATION_LIST");
+        }
     }
 
     // Auxiliar para obtener el valor de [EnumMember]
