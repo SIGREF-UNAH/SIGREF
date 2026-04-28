@@ -14,6 +14,7 @@ import {
   BarChartOutlined,
   RetweetOutlined,
   SnippetsOutlined,
+  SolutionOutlined,
 } from "@ant-design/icons";
 import { USER_ROLE_OPTIONS } from "../constants";
 
@@ -52,9 +53,8 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
       <div className="flex h-16 items-center justify-center">
         <Button
           type="primary"
-          className="rounded-lg px-6"
+          className="rounded-lg px-6 bg-primary! hover:bg-background-primary! transition-all! duration-300!"
           onClick={() => navigate(path)}
-          style={{ backgroundColor: "var(--color-primary)" }}
         >
           Acceder
         </Button>
@@ -144,7 +144,7 @@ export const HomePage: React.FC = () => {
           <ModuleCard
             title="Gestión de Pacientes"
             description={"Administre los pacientes que se encuentran en el hospital"}
-            icon={<UserOutlined />}
+            icon={<SolutionOutlined />}
             shortcut="Ctrl + P"
             path="/patients/list"
           />
@@ -158,6 +158,17 @@ export const HomePage: React.FC = () => {
             icon={<TeamOutlined />}
             shortcut="Ctrl + E"
             path="/practitioners/list"
+          />
+        </Can>
+
+        {/* Gestión de Usuarios */}
+        <Can I="read" a="users" ability={ability}>
+          <ModuleCard
+            title="Gestión de Usuarios"
+            description={"Control de todos los usuarios que interactuan con el sistema"}
+            icon={<UserOutlined />}
+            shortcut="Ctrl + U"
+            path="/users/list"
           />
         </Can>
         
@@ -178,7 +189,7 @@ export const HomePage: React.FC = () => {
             title="Gestión de Ubicaciones"
             description={"Administre las áreas donde se ofrecen los servicios médicos"}
             icon={<EnvironmentOutlined />}
-            shortcut="Ctrl + U"
+            shortcut="Ctrl + A"
             path="/locations/list"
           />
         </Can>

@@ -140,20 +140,20 @@ export const appShortcuts: ShortcutConfig[] = [
     requiredSubject: "practitioners",
   },
   {
-    keys: "alt+e",
+    keys: "ctrl+u",
     description: "Listar usuarios",
     action: (navigate) => navigate("/users/list"),
     title: "Gestión de Empleados",
-    category: "practitioners",
+    category: "users",
     requiredAction: "read",
     requiredSubject: "users",
   },
   {
-    keys: "alt+shift+e",
+    keys: "ctrl+shift+u",
     description: "Crear usuario",
     action: (navigate) => navigate("/users/create"),
     title: "Gestión de Empleados",
-    category: "practitioners",
+    category: "users",
     requiredAction: "create",
     requiredSubject: "users",
   },
@@ -180,7 +180,7 @@ export const appShortcuts: ShortcutConfig[] = [
 
   // Gestión de Ubicaciones
   {
-    keys: "ctrl+u",
+    keys: "ctrl+a",
     description: "Listar ubicaciones",
     action: (navigate) => navigate("/locations/list"),
     title: "Gestión de Ubicaciones",
@@ -189,7 +189,7 @@ export const appShortcuts: ShortcutConfig[] = [
     requiredSubject: "locations",
   },
   {
-    keys: "ctrl+shift+u",
+    keys: "ctrl+shift+a",
     description: "Crear ubicación",
     action: (navigate) => navigate("/locations/create"),
     title: "Gestión de Ubicaciones",

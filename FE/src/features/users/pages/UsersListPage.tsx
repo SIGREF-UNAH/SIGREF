@@ -131,26 +131,8 @@ export const UsersListPage = () => {
     <div>
       {/* Header */}
       <PageHeaderTabs
-        title="Gestión de Empleados"
+        title="Gestión de Usuarios"
         tabs={[
-          ...(ability.can("read", "practitioners")
-            ? [
-                {
-                  key: "read-practitioners",
-                  label: "Lista de Empleados",
-                  path: "/practitioners/list",
-                },
-              ]
-            : []),
-          ...(ability.can("create", "practitioners")
-            ? [
-                {
-                  key: "create-practitioners",
-                  label: "Crear Empleado",
-                  path: "/practitioners/create",
-                },
-              ]
-            : []),
           ...(ability.can("read", "users")
             ? [
                 {

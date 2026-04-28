@@ -86,16 +86,6 @@ export default function PractitionerDetailsPage() {
             label: "Crear Empleado",
             path: "/practitioners/create",
           }] : []),
-          ...(ability.can("read", "users") ? [{
-            key: "read-users",
-            label: "Lista de Usuarios",
-            path: "/users/list",
-          }] : []),
-            ...(ability.can("create", "users") ? [{
-              key: "create-users",
-              label: "Crear Usuario",
-              path: "/users/create",
-          }] : []),
         ]}
         defaultActive="null"
       />
