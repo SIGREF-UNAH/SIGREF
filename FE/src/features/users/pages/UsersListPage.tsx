@@ -202,15 +202,9 @@ export const UsersListPage = () => {
         </div>
 
         <Table
-          columns={columns}
+          columns={columns as any}
           dataSource={users}
           rowKey="id"
-          // pagination={{
-          //   current: page,
-          //   pageSize: pageSize,
-          //   total: totalUsers,
-          //   onChange: (newPage) => setPage(newPage),
-          // }}
           pagination={false}
           bordered
         />
