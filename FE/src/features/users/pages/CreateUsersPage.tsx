@@ -16,7 +16,7 @@ import {
   ProFormSelect,
   type ProFormInstance,
 } from "@ant-design/pro-components";
-import { usePostApiUsersCreate } from "../../../api/users/users";
+import { useGetApiUsersList, usePostApiUsersCreate } from "../../../api/users/users";
 
 type Practitioner = {
   id: number;
@@ -30,12 +30,11 @@ type Practitioner = {
 
 function generarBaseUsername(nombreCompleto: string) {
   const partes = nombreCompleto.trim().split(/\s+/);
-
   const primerNombre = partes[0] ?? "";
   const segundoNombre = partes.length >= 3 ? partes[1][0] : "";
-  const apellido = partes[partes.length - 1][0] ?? "";
-
-  return `${primerNombre}${segundoNombre}${apellido}`;
+  const primerApellido = partes[partes.length - 2][0] ?? "";
+  const segundoApellido = partes[partes.length - 1][0] ?? "";
+  return `${primerNombre}${segundoNombre}${primerApellido}${segundoApellido}`.toLowerCase();
 }
 
 function generarUsernameUnico(base: string, existentes: string[]) {
@@ -55,14 +54,21 @@ export default function CreateUsersPage() {
   const [searchName, setSearchName] = useState("");
   const [searchRole, setSearchRole] = useState<string | undefined>(undefined);
   const [searchArea, setSearchArea] = useState<string | undefined>(undefined);
-  const [searchStatus, setSearchStatus] = useState<string | undefined>(
-    undefined,
-  );
+  const [searchStatus, setSearchStatus] = useState<string | undefined>( undefined, );
   const { keycloak } = useKeycloak();
   const ability = useAbility();
+
   // Para los mensajes de error y éxito
   const createUserMutation = usePostApiUsersCreate();
   const { success, error } = useMessage();
+
+  // Obtener nombres de usuarios existentes desde backend
+  const { data: allUsers } = useGetApiUsersList({
+      PageNumber: 1,
+      PageSize: 999,
+    });
+
+  const existingUsernames = allUsers?.data?.items?.map((u : any) => u.username) ?? [];
 
   const currentUserRole = keycloak.tokenParsed?.realm_access?.roles || [];
 
@@ -81,7 +87,7 @@ export default function CreateUsersPage() {
   const practitioners: Practitioner[] =
     data?.items?.map((p: any, index: number) => {
       const role = p.roles?.[0];
-      const positionCode = role?.code?.[0]?.coding?.[0]?.code ?? "sin-código";
+      const positionCode = role?.code?.[0]?.coding?.[0]?.code ?? "Sin código";
       const positionText = role?.code?.[0]?.text ?? "Sin puesto";
       const area = role?.location?.[0]?.display ?? "Sin área";
 
@@ -107,15 +113,10 @@ export default function CreateUsersPage() {
       return nameMatch && roleMatch && areaMatch && statusMatch;
     });
 
-  const existingUsernames = ["juanclopez1", "juanclopez2", "anamtorres1"];
-  // const existingUsernames = ["isaacv1", "milcajr1", "annerjh1"];
+  const { data: locations } = useGetApiLocations<{items: { name: string }[];}>();
 
-  const { data: locations } = useGetApiLocations<{
-    items: { name: string }[];
-  }>();
-
-  const locationOptions =
-    locations?.items?.map((loc) => ({
+  const locationOptions = locations?.items?.map((loc) => 
+    ({
       label: loc.name,
       value: loc.name,
     })) ?? [];
@@ -164,26 +165,8 @@ export default function CreateUsersPage() {
     <div>
       {/* Header */}
       <PageHeaderTabs
-        title="Gestión de Empleados"
+        title="Gestión de Usuarios"
         tabs={[
-          ...(ability.can("read", "practitioners")
-            ? [
-                {
-                  key: "read-practitioners",
-                  label: "Lista de Empleados",
-                  path: "/practitioners/list",
-                },
-              ]
-            : []),
-          ...(ability.can("create", "practitioners")
-            ? [
-                {
-                  key: "create-practitioners",
-                  label: "Crear Empleado",
-                  path: "/practitioners/create",
-                },
-              ]
-            : []),
           ...(ability.can("read", "users")
             ? [
                 {
@@ -353,7 +336,7 @@ export default function CreateUsersPage() {
 
               try {
                 const response = await createUserMutation.mutateAsync({
-                  data: payload,
+                  data: payload
                 });
 
                 if (response) {
@@ -364,12 +347,13 @@ export default function CreateUsersPage() {
                     navigate("/users/list");
                   }, 1500);
                 }
-              } catch (err) {
+              } catch (err: any) {
                 console.error(err);
-                error(
-                  "Error al crear el usuario. Verifique los datos o permisos.",
-                  3,
-                );
+                const apiMessage =
+                  err?.response?.data?.message ||
+                  err?.message ||
+                  "Error al crear el usuario. Verifique los datos o permisos.";
+                error(apiMessage, 3);
               }
             }}
           >
@@ -404,7 +388,7 @@ export default function CreateUsersPage() {
                 <ProFormText
                   name="username"
                   label="Nombre de Usuario"
-                  placeholder="Ej. JuanP1"
+                  placeholder="Ej. juanperez1"
                 />
 
                 <ProFormSelect

@@ -73,7 +73,14 @@ export const ShortcutsGuideModal = ({
                     {shortcut.description}
                   </span>
                   <kbd className="px-2 py-1 text-xs font-semibold text-gray-800 bg-white border border-gray-300 rounded shadow-sm">
-                    {shortcut.keys}
+                    {shortcut.keys.split('+').map((word, i, arr) => (
+                      <span key={i}>
+                        {word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()}
+                        {i < arr.length - 1 && (
+                          <span className="text-blue-600 mx-1">+</span>
+                        )}
+                      </span>
+                    ))}
                   </kbd>
                 </div>
               ))}
