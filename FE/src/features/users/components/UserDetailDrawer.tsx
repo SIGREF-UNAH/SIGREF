@@ -32,7 +32,7 @@ const UserDetailDrawer = ({ userId, onClose }: Props) => {
             <Descriptions.Item label="ID">
               {detailedUserData.id}
             </Descriptions.Item>
-            <Descriptions.Item label="Username">
+            <Descriptions.Item label="Usuario">
               {detailedUserData.username}
             </Descriptions.Item>
             <Descriptions.Item label="Nombre">

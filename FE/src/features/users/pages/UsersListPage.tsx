@@ -73,6 +73,12 @@ export const UsersListPage = () => {
 
   const columns = [
     {
+      title: "Usuario",
+      dataIndex: "username",
+      key: "username",
+      render: (val: string) => <span className="text-primary">{val || "-"}</span>,
+    },
+    {
       title: "Nombre",
       dataIndex: "firstName",
       key: "firstName",

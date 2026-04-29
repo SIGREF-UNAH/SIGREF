@@ -62,7 +62,7 @@ export const useUserDetail = (userId: string | null) => {
 
     const userData = `=== Datos de Usuario ===
 ID: ${detailedUserData.id}
-Username: ${detailedUserData.username}
+Usuario: ${detailedUserData.username}
 Nombre: ${detailedUserData.firstName} ${detailedUserData.lastName}
 Correo: ${detailedUserData.email}
 Estado: ${detailedUserData.enabled ? 'Activo' : 'Inactivo'}
