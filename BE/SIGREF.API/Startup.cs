@@ -1,4 +1,3 @@
-using SIGREF.API.Audit.Extensions;
 using SIGREF.API.Middleware;
 
 namespace SIGREF.API;
@@ -17,6 +16,7 @@ public partial class Startup
     {
         this._builder = applicationBuilder;
         services.AddLocalization(options => options.ResourcesPath = "Resourses");
+        Audit(services);
         ConfigureBase(services);             // Env, cache, httpcontext
         AddFhir(services);                   // FhirService + FhirClient
         AddSeeders(services);                // Seeders
@@ -42,7 +42,7 @@ public partial class Startup
         app.UseRouting();
         app.UseCors("CorsPolicy");
         app.UseHttpsRedirection();
-        app.UseAuditMiddleware();
+        app.UseMiddleware<AuditMiddleware>();
         // Middleware de auditoría (después de routing, antes de auth)
         // Carpetas de Media
         UseMediaStaticFiles(app, env);
