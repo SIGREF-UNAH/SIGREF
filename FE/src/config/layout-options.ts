@@ -130,7 +130,11 @@ export const PractitionersRoutes: RouteItem[] = [
     name: "Crear Empleado",
     subject: "practitioners" as Subjects,
     action: "create",
-  },
+  }
+];
+
+// Gestión de Usuarios
+export const UsersRoutes: RouteItem[] = [
   {
     path: "/users/list",
     name: "Lista de Usuarios",
@@ -219,6 +223,7 @@ export const RoutesByRole: Record<
     servicios?: RouteItem[];
     pacientes?: RouteItem[];
     empleados?: RouteItem[];
+    usuarios?: RouteItem[];
     turnos?: RouteItem[];
     ubicaciones?: RouteItem[];
     organizaciones?: RouteItem[];
@@ -234,6 +239,7 @@ export const RoutesByRole: Record<
     servicios: [...HealthcaresRoutes, ...ServiceGroupsRoutes],
     pacientes: PatientsRoutes,
     empleados: PractitionersRoutes,
+    usuarios: UsersRoutes,
     turnos: ShiftsRoutes.filter((route) => route.action === "read"),
     ubicaciones: LocationsRoutes,
     organizaciones: OrganizationsRoutes,
@@ -268,6 +274,7 @@ export const RoutesByRole: Record<
     // Técnico de Informática
     servicios: HealthcaresRoutes.filter((route) => route.action === "read"),
     empleados: PractitionersRoutes,
+    usuarios: UsersRoutes,
     organizaciones: OrganizationsRoutes,
     eventos: EventsRoutes,
   },

@@ -73,6 +73,12 @@ export const UsersListPage = () => {
 
   const columns = [
     {
+      title: "Usuario",
+      dataIndex: "username",
+      key: "username",
+      render: (val: string) => <span className="text-primary">{val || "-"}</span>,
+    },
+    {
       title: "Nombre",
       dataIndex: "firstName",
       key: "firstName",
@@ -131,26 +137,8 @@ export const UsersListPage = () => {
     <div>
       {/* Header */}
       <PageHeaderTabs
-        title="Gestión de Empleados"
+        title="Gestión de Usuarios"
         tabs={[
-          ...(ability.can("read", "practitioners")
-            ? [
-                {
-                  key: "read-practitioners",
-                  label: "Lista de Empleados",
-                  path: "/practitioners/list",
-                },
-              ]
-            : []),
-          ...(ability.can("create", "practitioners")
-            ? [
-                {
-                  key: "create-practitioners",
-                  label: "Crear Empleado",
-                  path: "/practitioners/create",
-                },
-              ]
-            : []),
           ...(ability.can("read", "users")
             ? [
                 {
@@ -220,15 +208,9 @@ export const UsersListPage = () => {
         </div>
 
         <Table
-          columns={columns}
+          columns={columns as any}
           dataSource={users}
           rowKey="id"
-          // pagination={{
-          //   current: page,
-          //   pageSize: pageSize,
-          //   total: totalUsers,
-          //   onChange: (newPage) => setPage(newPage),
-          // }}
           pagination={false}
           bordered
         />
