@@ -7,11 +7,11 @@ using FhirPractitioner = Hl7.Fhir.Model.Practitioner;
 namespace SIGREF.API.Services.Practitioner;
 public interface IPractitionerService
 {
-    Task<FhirPractitioner> CreatePractitionerAsync(CreatePractitionerDto dto);
+    Task<PractitionerDto> CreatePractitionerAsync(CreatePractitionerDto dto);
 
     Task<PractitionerDto> GetPractitionerByIdAsync(string id);
 
-    Task<FhirPractitioner?> UpdatePractitionerAsync(string id, UpdatePractitionerDto dto);
+    Task<PractitionerDto> UpdatePractitionerAsync(string id, UpdatePractitionerDto dto);
 
     Task DeletePractitionerAsync(string id);
 

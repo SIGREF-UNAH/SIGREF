@@ -6,34 +6,34 @@ namespace SIGREF.API.Services.FhirUtils;
 
 public class HapiReadinessWaiter : BackgroundService
 {
-    private readonly HttpClient _httpClient;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<HapiReadinessWaiter> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
 
-    
     public HapiReadinessWaiter(
-        HttpClient httpClient,
+        IHttpClientFactory httpClientFactory,  // ← IHttpClientFactory, NO HttpClient
         ILogger<HapiReadinessWaiter> logger,
         IServiceScopeFactory scopeFactory)
     {
-        _httpClient = httpClient;
+        _httpClientFactory = httpClientFactory;
         _logger = logger;
         _scopeFactory = scopeFactory;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var _httpClient = _httpClientFactory.CreateClient("hapifhir");
         _logger.LogInformation(
             $"{AnsiColors.Blue}[HAPI-READY] Esperando a que HAPI FHIR se inicialice completamente...{AnsiColors.Reset}");
+        // Depuración: Verifica si la URL llegó de Aspire
+        _logger.LogInformation($"Base Address configurada: {_httpClient.BaseAddress}");
 
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
                 // Paso 1: metadata
-                var response = await _httpClient.GetAsync(
-                    "metadata",
-                    stoppingToken);
+                var response = await _httpClient.GetAsync("metadata", stoppingToken);
 
                 if (response.IsSuccessStatusCode)
                 {
