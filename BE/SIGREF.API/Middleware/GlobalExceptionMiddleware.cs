@@ -25,17 +25,23 @@ public class GlobalExceptionMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        try 
-        { 
-            await _next(context); 
+        try
+        {
+            await _next(context);
         }
-        catch (Exception ex) 
-        { 
-            
-            _logger.LogError(ex, "Error en SIGREF: {Message}. Path: {Path}, TraceId: {TraceId}", 
+        catch (AppException ex)
+        {
+            _logger.LogWarning(ex, "App error en SIGREF: {Message}. Path: {Path}, TraceId: {TraceId}",
                 ex.Message, context.Request.Path, context.TraceIdentifier);
 
-            await HandleExceptionAsync(context, ex); 
+            await HandleExceptionAsync(context, ex);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error interno en SIGREF: {Message}. Path: {Path}, TraceId: {TraceId}",
+                ex.Message, context.Request.Path, context.TraceIdentifier);
+
+            await HandleExceptionAsync(context, ex);
         }
     }
 

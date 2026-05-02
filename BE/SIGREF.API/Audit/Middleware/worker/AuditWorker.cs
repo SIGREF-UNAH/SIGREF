@@ -36,7 +36,11 @@ public class AuditWorker : BackgroundService
             {
                 await _collection.InsertOneAsync(log, cancellationToken: stoppingToken);
             }
-            catch (Exception ex)
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (MongoException ex)
             {
                 _logger.LogError(ex, "Error crítico guardando auditoría. TraceId: {TraceId}", log.TraceId);
             }

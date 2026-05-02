@@ -57,7 +57,7 @@ public static class AuditDatabaseSetup
             
             logger.LogInformation("Los índices de auditoría en MongoDB han sido validados/creados con éxito.");
         }
-        catch (Exception ex)
+        catch (MongoException ex)
         {
             // Atrapamos el error para no tumbar la aplicación, pero lo registramos
             logger.LogWarning(ex, "Advertencia: Ocurrió un problema al verificar los índices de auditoría en MongoDB.");

@@ -128,7 +128,7 @@ public class AuditMiddleware
             using var document = JsonDocument.Parse(json);
             ExtractKeysRecursive(document.RootElement, string.Empty, keys);
         }
-        catch
+        catch (JsonException)
         {
             keys.Add("invalid_json_format");
         }

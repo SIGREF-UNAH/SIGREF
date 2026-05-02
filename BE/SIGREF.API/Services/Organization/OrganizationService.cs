@@ -1,4 +1,5 @@
 using System.Runtime.Serialization;
+using System.Linq;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 using SIGREF.API.Constants;
@@ -146,9 +147,8 @@ public class OrganizationService : BaseFhirService, IOrganizationService
 
             if (filter.Type != null && filter.Type.Any())
             {
-                foreach (var type in filter.Type)
+                foreach (var typeValue in filter.Type.Select(GetEnumMemberValue))
                 {
-                    var typeValue = GetEnumMemberValue(type);
                     searchParams.Add("type", typeValue);
                 }
             }
