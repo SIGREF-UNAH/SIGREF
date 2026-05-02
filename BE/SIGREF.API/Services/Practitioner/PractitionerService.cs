@@ -89,9 +89,8 @@ public class PractitionerService : BaseFhirService, IPractitionerService
             ApplyMeta(practitioner, isCreate: true);
 
             // Intento de Creación
-            await _fhirClient.CreateAsync(practitioner);
-            
-            return practitioner.ToDto();
+            var createdPractitioner = await _fhirClient.CreateAsync(practitioner);
+            return createdPractitioner.ToDto();
         }
         catch (FhirOperationException ex)
         {
