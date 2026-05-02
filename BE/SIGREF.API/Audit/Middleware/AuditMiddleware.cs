@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using System.Linq;
 using SIGREF.API.Audit.Dto;
 using SIGREF.API.Audit.Middleware.Quee;
 using SIGREF.API.Audit.Types;
@@ -89,14 +90,11 @@ public class AuditMiddleware
 
                 // B. Capturamos las variables de la URL (ej. el {id} de /api/Patient/{id})
                 // RouteValues es poblado automáticamente por .NET basado en tu [Route("")]
-                foreach (var routeValue in context.Request.RouteValues)
+                foreach (var routeValue in context.Request.RouteValues
+                             .Where(rv => rv.Key != "controller" && rv.Key != "action"))
                 {
-                    // Ignoramos metadata interna de .NET como "controller" o "action"
-                    if (routeValue.Key != "controller" && routeValue.Key != "action")
-                    {
-                        // Agregamos un prefijo para distinguirlo de los query params
-                        filters[$"route_{routeValue.Key}"] = routeValue.Value?.ToString();
-                    }
+                    // Agregamos un prefijo para distinguirlo de los query params
+                    filters[$"route_{routeValue.Key}"] = routeValue.Value?.ToString();
                 }
 
                 // Solo asignamos si realmente encontramos algo
