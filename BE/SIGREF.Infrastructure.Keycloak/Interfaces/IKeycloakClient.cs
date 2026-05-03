@@ -141,7 +141,14 @@ public interface IKeycloakClient
     /// username o email ya existen).
     /// </exception>
     Task<string?> CreateUserAsync(object kcUser, CancellationToken ct);
- 
+
+    Task<int> GetUsersCountAsync(
+        string? search,
+        string? username,
+        string? email,
+        string? firstName,
+        string? lastName,
+        CancellationToken ct);
     /// <summary>
     /// Asigna un rol de realm a un usuario existente.
     /// </summary>
@@ -346,7 +353,7 @@ public interface IKeycloakClient
     // =========================================================
     // LISTAR USUARIOS CON PAGINACIÓN
     // =========================================================
- 
+
     /// <summary>
     /// Obtiene una página de usuarios con soporte de paginación y filtro opcional.
     /// </summary>
@@ -384,6 +391,10 @@ public interface IKeycloakClient
     Task<List<KeycloakUserDto>> GetUsersFilteredAsync(
         int first,
         int max,
-        string? usernameFilter,
-        CancellationToken ct = default);
+        string? search,
+        string? username,
+        string? email,
+        string? firstName,
+        string? lastName,
+        CancellationToken ct);
 }

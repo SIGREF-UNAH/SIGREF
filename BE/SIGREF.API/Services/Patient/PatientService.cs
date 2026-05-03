@@ -1,14 +1,13 @@
-﻿using System.Runtime.Serialization;
+﻿
 using Hl7.Fhir.Rest;
 using SIGREF.API.Constants;
-using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Patient;
-using SIGREF.API.Exceptions;
 using SIGREF.API.Extensions;
 using SIGREF.API.Fhir;
 using SIGREF.API.Helpers;
 using SIGREF.API.Middleware;
 using SIGREF.Common.Dtos;
+using SIGREF.Common.Exceptions;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
 using FhirPatient = Hl7.Fhir.Model.Patient;
 using Task = System.Threading.Tasks.Task;

@@ -151,11 +151,11 @@ public class ReportDataCollector : IReportDataCollector
                 try
                 {
                     var user     = await _keycloakClient.GetUserByIdAsync(id, cancellationToken);
-                    var fullName = (user?.Data?.DisplayName ?? string.Empty).Trim();
+                    var fullName = (user?.DisplayName ?? string.Empty).Trim();
  
                     // Fallback al email si no hay DisplayName
                     if (string.IsNullOrEmpty(fullName))
-                        fullName = user?.Data?.Email ?? "Desconocido";
+                        fullName = user?.Email ?? "Desconocido";
  
                     freshlyFetched[id] = fullName;
                 }

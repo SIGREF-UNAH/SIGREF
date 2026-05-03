@@ -18,24 +18,20 @@ namespace SIGREF.API.Controllers.Auth;
 /// </remarks>
 [ApiController]
 [Route("api/[controller]")]
-//[Authorize(AuthenticationSchemes = "Bearer")]
+[Authorize(AuthenticationSchemes = "Bearer")]
 public class UsersController : ControllerBase
 {
     private readonly IKeycloakAdminService _kcAdmin;
- 
-    /// <summary>
-    /// Inicializa una nueva instancia de <see cref="UsersController"/>.
-    /// </summary>
-    /// <param name="kcAdmin">Servicio de administración de usuarios de Keycloak.</param>
+
     public UsersController(IKeycloakAdminService kcAdmin)
     {
         _kcAdmin = kcAdmin;
     }
- 
+
     // ============================================================
     // CREAR USUARIO
     // ============================================================
- 
+
     /// <summary>
     /// Crea un nuevo usuario en Keycloak vinculado a un Practitioner FHIR.
     /// </summary>
@@ -44,51 +40,68 @@ public class UsersController : ControllerBase
     /// dicho Practitioner no esté ya vinculado a otro usuario.
     /// </remarks>
     /// <param name="dto">Datos del usuario a crear.</param>
+    /// <param name="ct">Token de cancelación.</param>
     [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}")]
-    [HttpPost("create")]
-    [ProducesResponseType(typeof(ResponseDto<KeycloakUserDto>),  StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ResponseDto<KeycloakUserDto>),  StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ResponseDto<KeycloakUserDto>),  StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ResponseDto<KeycloakUserDto>),  StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ResponseDto<KeycloakUserDto>),  StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> CreateUser([FromBody] UserCreateDto dto)
+    [HttpPost]
+    [ProducesResponseType(typeof(KeycloakUserDto),  StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status502BadGateway)]
+    public async Task<IActionResult> CreateUser(
+        [FromBody] UserCreateDto dto,
+        CancellationToken ct)
     {
-        var response = await _kcAdmin.CreateUserAsync(
+        var created = await _kcAdmin.CreateUserAsync(
             User,
             dto.Username,
             dto.PractitionerId,
             dto.Email,
             dto.Password,
-            dto.Roles
-        );
- 
-        return StatusCode(response.StatusCode, response);
+            dto.Roles,
+            ct);
+
+        return CreatedAtAction(
+            nameof(GetUserById),
+            new { id = created.Id },
+            created);
     }
- 
+
     // ============================================================
     // OBTENER USUARIO POR ID
     // ============================================================
- 
+
     /// <summary>
     /// Obtiene un usuario por su UUID de Keycloak.
     /// </summary>
     /// <param name="id">UUID del usuario en Keycloak.</param>
-    //[Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}")]
-    [HttpGet("by-id/{id}")]
-    [ProducesResponseType(typeof(ResponseDto<KeycloakUserDto?>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ResponseDto<KeycloakUserDto?>), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ResponseDto<KeycloakUserDto?>), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ResponseDto<KeycloakUserDto?>), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetUserById(string id)
+    /// <param name="ct">Token de cancelación.</param>
+    [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}")]
+    [HttpGet("{id}")]
+    [ProducesResponseType(typeof(KeycloakUserDto),  StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status502BadGateway)]
+    public async Task<ActionResult<KeycloakUserDto>> GetUserById(
+        string id,
+        CancellationToken ct)
     {
-        var response = await _kcAdmin.GetUserByIdAsync(id);
-        return StatusCode(response.StatusCode, response);
+        var user = await _kcAdmin.GetUserByIdAsync(id, ct);
+
+        if (user is null)
+            return NotFound();
+
+        return Ok(user);
     }
-    // PRUEBAS TEST
+
     // ============================================================
     // OBTENER MÚLTIPLES USUARIOS POR IDS
     // ============================================================
- 
+
     /// <summary>
     /// Obtiene en una sola petición varios usuarios a partir de una lista de IDs.
     /// </summary>
@@ -96,73 +109,78 @@ public class UsersController : ControllerBase
     /// Usa la sintaxis nativa <c>id:uuid1 uuid2 …</c> de Keycloak 26.3+.
     /// Los IDs no encontrados son ignorados silenciosamente.
     /// </remarks>
-    /// <param name="ids">Lista de UUIDs de Keycloak separados por coma en el query string.</param>
-    //[Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}")]
+    /// <param name="ids">Lista de UUIDs de Keycloak.</param>
+    /// <param name="ct">Token de cancelación.</param>
+    [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}")]
     [HttpGet("by-ids")]
-    [ProducesResponseType(typeof(ResponseDto<List<KeycloakUserDto>>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ResponseDto<List<KeycloakUserDto>>), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ResponseDto<List<KeycloakUserDto>>), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ResponseDto<List<KeycloakUserDto>>), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ResponseDto<List<KeycloakUserDto>>), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetUsersByIds([FromQuery, Required] List<string> ids)
+    [ProducesResponseType(typeof(List<KeycloakUserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails),        StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails),        StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails),        StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails),        StatusCodes.Status502BadGateway)]
+    public async Task<ActionResult<List<KeycloakUserDto>>> GetUsersByIds(
+        [FromQuery, Required] List<string> ids,
+        CancellationToken ct)
     {
-        if (!ModelState.IsValid || ids.Count == 0)
-            return BadRequest(new ResponseDto<List<KeycloakUserDto>>
-            {
-                Status     = false,
-                StatusCode = 400,
-                Message    = "Debe proporcionar al menos un ID.",
-                Data       = null
-            });
- 
-        var response = await _kcAdmin.GetUsersByIdsAsync(ids);
-        return StatusCode(response.StatusCode, response);
+        var users = await _kcAdmin.GetUsersByIdsAsync(ids, ct);
+        return Ok(users);
     }
- 
+
     // ============================================================
     // OBTENER USUARIO POR PRACTITIONER
     // ============================================================
- 
+
     /// <summary>
     /// Busca el usuario de Keycloak vinculado a un Practitioner FHIR.
     /// </summary>
     /// <param name="practitionerId">ID del Practitioner FHIR.</param>
+    /// <param name="ct">Token de cancelación.</param>
     [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}")]
     [HttpGet("by-practitioner/{practitionerId}")]
-    [ProducesResponseType(typeof(ResponseDto<KeycloakUserDto?>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ResponseDto<KeycloakUserDto?>), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ResponseDto<KeycloakUserDto?>), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ResponseDto<KeycloakUserDto?>), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetUserByPractitionerId(string practitionerId)
+    [ProducesResponseType(typeof(KeycloakUserDto),  StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status502BadGateway)]
+    public async Task<ActionResult<KeycloakUserDto>> GetUserByPractitionerId(
+        string practitionerId,
+        CancellationToken ct)
     {
-        var response = await _kcAdmin.GetUserByPractitionerIdAsync(practitionerId);
-        return StatusCode(response.StatusCode, response);
+        var user = await _kcAdmin.GetUserByPractitionerIdAsync(practitionerId, ct);
+
+        if (user is null)
+            return NotFound();
+
+        return Ok(user);
     }
- 
+
     // ============================================================
     // VERIFICAR VINCULACIÓN DE PRACTITIONER
     // ============================================================
- 
+
     /// <summary>
     /// Verifica si un Practitioner FHIR ya está vinculado a algún usuario de Keycloak.
     /// </summary>
     /// <param name="practitionerId">ID del Practitioner FHIR.</param>
+    /// <param name="ct">Token de cancelación.</param>
     [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}")]
     [HttpGet("exists/practitioner/{practitionerId}")]
-    [ProducesResponseType(typeof(ResponseDto<bool>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ResponseDto<bool>), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ResponseDto<bool>), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ResponseDto<bool>), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> PractitionerHasUser(string practitionerId)
+    [ProducesResponseType(typeof(bool),           StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
+    public async Task<ActionResult<bool>> PractitionerHasUser(
+        string practitionerId,
+        CancellationToken ct)
     {
-        var response = await _kcAdmin.PractitionerHasUserAsync(practitionerId);
-        return StatusCode(response.StatusCode, response);
+        var hasUser = await _kcAdmin.PractitionerHasUserAsync(practitionerId, ct);
+        return Ok(hasUser);
     }
- 
+
     // ============================================================
     // VERIFICAR DISPONIBILIDAD DE USERNAME
     // ============================================================
- 
+
     /// <summary>
     /// Verifica si un username ya está en uso y retorna usernames similares encontrados.
     /// </summary>
@@ -172,32 +190,26 @@ public class UsersController : ControllerBase
     /// La propiedad <c>ExistName</c> indica únicamente si hay coincidencia exacta de username.
     /// </remarks>
     /// <param name="username">Username a verificar.</param>
+    /// <param name="ct">Token de cancelación.</param>
     [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin},{RolesConstants.auditor}")]
     [HttpGet("exists/username")]
-    [ProducesResponseType(typeof(ResponseDto<KeycloakUsernameDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ResponseDto<KeycloakUsernameDto>), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ResponseDto<KeycloakUsernameDto>), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ResponseDto<KeycloakUsernameDto>), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ResponseDto<KeycloakUsernameDto>), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> ExistUsername([FromQuery, Required] string username)
+    [ProducesResponseType(typeof(KeycloakUsernameDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails),      StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails),      StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails),      StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails),      StatusCodes.Status502BadGateway)]
+    public async Task<ActionResult<KeycloakUsernameDto>> ExistUsername(
+        [FromQuery, Required] string username,
+        CancellationToken ct)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(new ResponseDto<KeycloakUsernameDto>
-            {
-                Status     = false,
-                StatusCode = 400,
-                Message    = "El parámetro 'username' es obligatorio.",
-                Data       = null
-            });
- 
-        var response = await _kcAdmin.ExistUserNameAsync(username);
-        return StatusCode(response.StatusCode, response);
+        var result = await _kcAdmin.ExistUserNameAsync(username, ct);
+        return Ok(result);
     }
- 
+
     // ============================================================
     // LISTAR USUARIOS PAGINADOS
     // ============================================================
- 
+
     /// <summary>
     /// Obtiene una lista paginada de usuarios con filtro opcional por username o término de búsqueda.
     /// </summary>
@@ -207,23 +219,26 @@ public class UsersController : ControllerBase
     /// siempre serán <c>null</c>.
     /// </remarks>
     /// <param name="filter">Parámetros de paginación y filtrado.</param>
+    /// <param name="ct">Token de cancelación.</param>
     [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin},{RolesConstants.auditor}")]
-    [HttpGet("list")]
-    [ProducesResponseType(typeof(ResponseDto<PagedResultDto<KeycloakUserDto>>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ResponseDto<PagedResultDto<KeycloakUserDto>>), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ResponseDto<PagedResultDto<KeycloakUserDto>>), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ResponseDto<PagedResultDto<KeycloakUserDto>>), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ResponseDto<PagedResultDto<KeycloakUserDto>>), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetUsersList([FromQuery] KeycloakFilter filter)
+    [HttpGet]
+    [ProducesResponseType(typeof(PagedResultDto<KeycloakUserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails),                  StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails),                  StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails),                  StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails),                  StatusCodes.Status502BadGateway)]
+    public async Task<ActionResult<PagedResultDto<KeycloakUserDto>>> GetUsersList(
+        [FromQuery] KeycloakFilter filter,
+        CancellationToken ct)
     {
-        var response = await _kcAdmin.GetUsersListAsync(filter);
-        return StatusCode(response.StatusCode, response);
+        var result = await _kcAdmin.GetUsersListAsync(filter);
+        return Ok(result);
     }
- 
+
     // ============================================================
     // TOGGLE DE ESTADO (ACTIVAR / DESACTIVAR)
     // ============================================================
- 
+
     /// <summary>
     /// Alterna el estado activo/inactivo de un usuario.
     /// </summary>
@@ -232,24 +247,27 @@ public class UsersController : ControllerBase
     /// Solo roles <c>ti</c> y <c>admin</c> pueden ejecutar esta operación.
     /// </remarks>
     /// <param name="id">UUID del usuario cuyo estado se va a alternar.</param>
+    /// <param name="ct">Token de cancelación.</param>
     [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}")]
     [HttpPatch("{id}/toggle-status")]
-    [ProducesResponseType(typeof(ResponseDto<bool>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ResponseDto<bool>), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ResponseDto<bool>), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ResponseDto<bool>), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ResponseDto<bool>), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ResponseDto<bool>), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> ToggleUserStatus(string id)
+    [ProducesResponseType(typeof(bool),           StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
+    public async Task<ActionResult<bool>> ToggleUserStatus(
+        string id,
+        CancellationToken ct)
     {
-        var response = await _kcAdmin.ToggleUserStatusAsync(User, id);
-        return StatusCode(response.StatusCode, response);
+        var newStatus = await _kcAdmin.ToggleUserStatusAsync(User, id, ct);
+        return Ok(newStatus);
     }
- 
+
     // ============================================================
     // EDITAR USUARIO
     // ============================================================
- 
+
     /// <summary>
     /// Actualiza los datos de un usuario existente (sin contraseña ni username).
     /// </summary>
@@ -260,17 +278,50 @@ public class UsersController : ControllerBase
     /// </remarks>
     /// <param name="id">UUID del usuario a editar.</param>
     /// <param name="dto">Campos a actualizar.</param>
+    /// <param name="ct">Token de cancelación.</param>
     [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}")]
     [HttpPut("{id}")]
-    [ProducesResponseType(typeof(ResponseDto<KeycloakUserDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ResponseDto<KeycloakUserDto>), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ResponseDto<KeycloakUserDto>), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ResponseDto<KeycloakUserDto>), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ResponseDto<KeycloakUserDto>), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ResponseDto<KeycloakUserDto>), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdateUser(string id, [FromBody] KeycloakUpdateUserDto dto)
+    [ProducesResponseType(typeof(KeycloakUserDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails),  StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails),  StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails),  StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails),  StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails),  StatusCodes.Status502BadGateway)]
+    public async Task<ActionResult<KeycloakUserDto>> UpdateUser(
+        string id,
+        [FromBody] KeycloakUpdateUserDto dto,
+        CancellationToken ct)
     {
-        var response = await _kcAdmin.UpdateUserAsync(User, id, dto);
-        return StatusCode(response.StatusCode, response);
+        var updated = await _kcAdmin.UpdateUserAsync(User, id, dto, ct);
+        return Ok(updated);
+    }
+
+    // ============================================================
+    // ELIMINAR USUARIO
+    // ============================================================
+
+    /// <summary>
+    /// Elimina permanentemente un usuario del realm de Keycloak.
+    /// </summary>
+    /// <remarks>
+    /// Un usuario no puede eliminarse a sí mismo.
+    /// Solo roles <c>ti</c> y <c>admin</c> pueden ejecutar esta operación.
+    /// </remarks>
+    /// <param name="id">UUID del usuario a eliminar.</param>
+    /// <param name="ct">Token de cancelación.</param>
+    [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}")]
+    [HttpDelete("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
+    public async Task<IActionResult> DeleteUser(
+        string id,
+        CancellationToken ct)
+    {
+        await _kcAdmin.DeleteUserAsync(User, id, ct);
+        return NoContent();
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace SIGREF.API.Exceptions;
+﻿namespace SIGREF.Common.Exceptions;
 
 public class AppException : Exception
 {

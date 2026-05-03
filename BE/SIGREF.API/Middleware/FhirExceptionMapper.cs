@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using Hl7.Fhir.Rest;
 using SIGREF.API.Constants;
-using SIGREF.API.Exceptions;
+using SIGREF.Common.Exceptions;
 
 namespace SIGREF.API.Middleware;
 

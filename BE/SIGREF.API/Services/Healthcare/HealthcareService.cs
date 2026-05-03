@@ -2,12 +2,12 @@
 using Microsoft.EntityFrameworkCore;
 using SIGREF.API.Constants;
 using SIGREF.API.Dtos.Healthcare;
-using SIGREF.API.Exceptions;
 using SIGREF.API.Extensions;
 using SIGREF.API.Fhir;
 using SIGREF.API.Helpers;
 using SIGREF.API.Middleware;
 using SIGREF.Common.Dtos;
+using SIGREF.Common.Exceptions;
 using SIGREF.Core.Entity.Catalogs;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
 using SIGREF.Infrastructure.Persistence;
