@@ -414,10 +414,10 @@ public class CashierSessionService : ICashierSessionService
                 if (kcUser is null) return null;
 
                 // Prioridad: DisplayName (atributo custom) → Username
-                if (!string.IsNullOrWhiteSpace(kcUser.Data.DisplayName))
-                    return kcUser.Data.DisplayName;
+                if (!string.IsNullOrWhiteSpace(kcUser.DisplayName))
+                    return kcUser.DisplayName;
 
-                return kcUser.Data.Username;
+                return kcUser.Username;
             }
         );
 

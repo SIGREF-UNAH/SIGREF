@@ -1,17 +1,14 @@
 using System.Runtime.Serialization;
-using System.Linq;
-using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 using SIGREF.API.Constants;
 using SIGREF.API.Dtos;
-using SIGREF.API.Dtos.Common;
-using SIGREF.API.Exceptions;
 using SIGREF.API.Extensions;
 using SIGREF.API.Fhir;
 using SIGREF.API.Helpers;
 using SIGREF.API.Middleware;
 using SIGREF.API.Services.Organization;
 using SIGREF.Common.Dtos;
+using SIGREF.Common.Exceptions;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
 using Task = System.Threading.Tasks.Task;
 
@@ -147,7 +144,7 @@ public class OrganizationService : BaseFhirService, IOrganizationService
 
             if (filter.Type != null && filter.Type.Any())
             {
-                foreach (var typeValue in filter.Type.Select(GetEnumMemberValue))
+                foreach (var typeValue in filter.Type.Select(t => GetEnumMemberValue(t)))
                 {
                     searchParams.Add("type", typeValue);
                 }
@@ -183,7 +180,7 @@ public class OrganizationService : BaseFhirService, IOrganizationService
             throw FhirExceptionMapper.Map(ex, "SEARCH_FILTERED", "ORGANIZATION_LIST");
         }
     }
-
+    
     // Auxiliar para obtener el valor de EnumMember
     private static string GetEnumMemberValue(Enum enumValue)
     {

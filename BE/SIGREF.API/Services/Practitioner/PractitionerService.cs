@@ -1,15 +1,15 @@
-﻿using System.Net;
+﻿
 using Hl7.Fhir.Rest;
 using SIGREF.API.Constants;
 using SIGREF.API.Dtos.Practitioner;
 using SIGREF.API.Dtos.PractitionerRole;
-using SIGREF.API.Exceptions;
 using SIGREF.API.Extensions;
 using SIGREF.API.Fhir;
 using SIGREF.API.Helpers;
 using SIGREF.API.Middleware;
 using SIGREF.API.Services.PractitionerRole;
 using SIGREF.Common.Dtos;
+using SIGREF.Common.Exceptions;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
 using FhirPractitioner = Hl7.Fhir.Model.Practitioner;
 using Task = System.Threading.Tasks.Task;

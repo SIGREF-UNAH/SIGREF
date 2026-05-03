@@ -1,9 +1,9 @@
 ﻿using System.Net;
-using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
-using SIGREF.API.Exceptions;
+
 using SIGREF.API.Resources;
+using SIGREF.Common.Exceptions;
 
 namespace SIGREF.API.Middleware;
 

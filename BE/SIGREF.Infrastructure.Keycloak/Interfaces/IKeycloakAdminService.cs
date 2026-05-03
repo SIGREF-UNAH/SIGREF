@@ -11,7 +11,6 @@ namespace SIGREF.Infrastructure.Keycloak.Interfaces;
 /// <para>
 /// Esta interfaz actúa como fachada sobre <see cref="IKeycloakClient"/>, añadiendo
 /// lógica de negocio: validación de permisos por rol, integración con FHIR,
-/// y normalización de respuestas mediante <see cref="ResponseDto{T}"/>.
 /// </para>
 /// <para>
 /// Las reglas de jerarquía de roles determinan qué operaciones puede realizar
@@ -75,7 +74,7 @@ public interface IKeycloakAdminService
     /// de éxito, o con el código y mensaje de error correspondiente si alguna validación
     /// falla (401, 403, 404, 400, 500).
     /// </returns>
-    Task<ResponseDto<KeycloakUserDto>> CreateUserAsync(
+    Task<KeycloakUserDto> CreateUserAsync(
         ClaimsPrincipal creator,
         string username,
         string practitionerId,
@@ -98,7 +97,7 @@ public interface IKeycloakAdminService
     /// existe, o con <c>Data = null</c> si no fue encontrado (HTTP 404 se trata como
     /// resultado vacío, no como error).
     /// </returns>
-    Task<ResponseDto<KeycloakUserDto?>> GetUserByIdAsync(
+    Task<KeycloakUserDto?> GetUserByIdAsync(
         string keycloakUserId,
         CancellationToken ct = default);
  
@@ -124,7 +123,7 @@ public interface IKeycloakAdminService
     /// <see cref="ResponseDto{T}"/> con la lista de <see cref="KeycloakUserDto"/>
     /// encontrados. La lista puede estar vacía si ningún ID existe.
     /// </returns>
-    Task<ResponseDto<List<KeycloakUserDto>>> GetUsersByIdsAsync(
+    Task<List<KeycloakUserDto>> GetUsersByIdsAsync(
         IEnumerable<string> userIds,
         CancellationToken ct = default);
  
@@ -141,7 +140,7 @@ public interface IKeycloakAdminService
     /// <see cref="ResponseDto{T}"/> con el <see cref="KeycloakUserDto"/> si se encontró
     /// un usuario vinculado, o con <c>Data = null</c> si no existe ninguno.
     /// </returns>
-    Task<ResponseDto<KeycloakUserDto?>> GetUserByPractitionerIdAsync(
+    Task<KeycloakUserDto?> GetUserByPractitionerIdAsync(
         string practitionerId,
         CancellationToken ct = default);
  
@@ -158,7 +157,7 @@ public interface IKeycloakAdminService
     /// <see cref="ResponseDto{T}"/> con <see langword="true"/> si ya existe un usuario
     /// vinculado al Practitioner, o <see langword="false"/> si no tiene usuario asignado.
     /// </returns>
-    Task<ResponseDto<bool>> PractitionerHasUserAsync(
+    Task<bool> PractitionerHasUserAsync(
         string practitionerId,
         CancellationToken ct = default);
  
@@ -177,14 +176,14 @@ public interface IKeycloakAdminService
     /// si el username está tomado (<c>ExistName</c>) y lista los usernames similares
     /// encontrados (<c>Usernames</c>).
     /// </returns>
-    Task<ResponseDto<KeycloakUsernameDto>> ExistUserNameAsync(
+    Task<KeycloakUsernameDto> ExistUserNameAsync(
         string username,
         CancellationToken ct = default);
  
     // =========================================================
     // LISTAR USUARIOS
     // =========================================================
- 
+
     /// <summary>
     /// Obtiene una página de usuarios del realm con filtros opcionales.
     /// </summary>
@@ -210,7 +209,9 @@ public interface IKeycloakAdminService
     /// <see cref="KeycloakUserDto"/>. <c>TotalItems</c> y <c>TotalPages</c> son siempre
     /// <see langword="null"/> por limitación de la API de Keycloak.
     /// </returns>
-    Task<ResponseDto<PagedResultDto<KeycloakUserDto>>> GetUsersListAsync(KeycloakFilter filter);
+    Task<PagedResultDto<KeycloakUserDto>> GetUsersListAsync(
+        KeycloakFilter filter,
+        CancellationToken ct = default);
  
     // =========================================================
     // TOGGLE DE ESTADO
@@ -240,7 +241,7 @@ public interface IKeycloakAdminService
     /// Retorna error 403 si el solicitante no tiene permisos, o 400 si intenta
     /// modificar su propio estado.
     /// </returns>
-    Task<ResponseDto<bool>> ToggleUserStatusAsync(
+    Task<bool> ToggleUserStatusAsync(
         ClaimsPrincipal requestor,
         string targetUserId,
         CancellationToken ct = default);
@@ -278,7 +279,7 @@ public interface IKeycloakAdminService
     /// <see cref="ResponseDto{T}"/> con el <see cref="KeycloakUserDto"/> actualizado,
     /// o con el código de error correspondiente si alguna validación falla (403, 404).
     /// </returns>
-    Task<ResponseDto<KeycloakUserDto>> UpdateUserAsync(
+    Task<KeycloakUserDto> UpdateUserAsync(
         ClaimsPrincipal requestor,
         string targetUserId,
         KeycloakUpdateUserDto updateDto,
@@ -325,7 +326,7 @@ public interface IKeycloakAdminService
     /// Retorna error 403 si el solicitante no tiene permisos o intenta eliminarse
     /// a sí mismo, o 404 si el usuario objetivo no existe.
     /// </returns>
-    Task<ResponseDto<bool>> DeleteUserAsync(
+    Task DeleteUserAsync(
         ClaimsPrincipal requestor,
         string targetUserId,
         CancellationToken ct = default);

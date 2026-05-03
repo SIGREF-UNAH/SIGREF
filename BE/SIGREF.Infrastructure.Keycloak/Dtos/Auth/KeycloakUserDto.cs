@@ -41,10 +41,36 @@ public class KeycloakUsernameDto
 
 
 
-public class KeycloakFilter 
+public class KeycloakFilter
 {
-    public int PageNumber { get; set; }
-    public int PageSize { get; set; }
-    public string? UserName { get; set; }
-    public string? Search { get; set; } // Para buscar por nombre, email o username
+    public int     PageNumber { get; set; }
+    public int     PageSize   { get; set; }
+
+    // TODO: Crear un atributo de validación (o implementar IValidatableObject) para esta clase. 
+    // Requerimiento: Si el cliente envía una búsqueda específica por UserName, Email, FirstName o LastName, 
+    // no debe permitirse el uso del campo general 'Search' simultáneamente.
+    /// <summary>
+    /// Búsqueda amplia: Keycloak aplica sobre username, email, firstName y lastName.
+    /// </summary>
+    public string? Search    { get; set; }
+
+    /// <summary>
+    /// Filtro exacto por username (usa el parámetro ?username= del endpoint).
+    /// </summary>
+    public string? UserName  { get; set; }
+
+    /// <summary>
+    /// Filtro exacto por email (usa el parámetro ?email= del endpoint).
+    /// </summary>
+    public string? Email     { get; set; }
+
+    /// <summary>
+    /// Filtro por firstName.
+    /// </summary>
+    public string? FirstName { get; set; }
+
+    /// <summary>
+    /// Filtro por lastName.
+    /// </summary>
+    public string? LastName  { get; set; }
 }
