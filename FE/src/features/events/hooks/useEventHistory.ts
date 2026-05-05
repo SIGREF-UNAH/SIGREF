@@ -1,9 +1,15 @@
 import { useState, useMemo } from "react";
 import { useUrlFilters } from "../../../shared/hooks";
-import { useGetApiAudit } from "../../../api/audit/audit";
-import type { AuditLogDto } from "../../../api/models";
+//import { useGetApiAudit } from "../../../api/audit/audit";
+//import type { AuditLogDto } from "../../../api/models/auditLogDto";
 import dayjs, { Dayjs } from "dayjs";
 import { Form } from "antd";
+
+
+type AuditLogDto = {
+  id: number;
+  action: string;}
+
 
 export default function useEventHistory() {
   const [form] = Form.useForm();
@@ -45,8 +51,8 @@ export default function useEventHistory() {
   );
 
   // Fetch data
-  const { data: response, isLoading } = useGetApiAudit(queryParams);
-
+  //const { data: response, isLoading } = useGetApiAudit(queryParams);
+ const response = null;
   const responseData = response as any;
   const data = responseData?.data || [];
   const pagination = responseData;
@@ -116,7 +122,7 @@ export default function useEventHistory() {
     selectedRecord,
     modalOpen,
     pagination,
-    isLoading,
+    //isLoading,
     setFilters,
     handleSearch,
     handleClearFilters,

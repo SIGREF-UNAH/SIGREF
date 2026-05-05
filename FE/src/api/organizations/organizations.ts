@@ -25,6 +25,7 @@ import type {
   GetApiOrganizationsParams,
   OrganizationDto,
   OrganizationDtoPagedResultDto,
+  ProblemDetails,
   UpdateOrganizationDto,
 } from ".././models";
 
@@ -498,7 +499,7 @@ export const deleteApiOrganizationsId = (id: string) => {
 };
 
 export const getDeleteApiOrganizationsIdMutationOptions = <
-  TError = unknown,
+  TError = ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -538,10 +539,10 @@ export type DeleteApiOrganizationsIdMutationResult = NonNullable<
   Awaited<ReturnType<typeof deleteApiOrganizationsId>>
 >;
 
-export type DeleteApiOrganizationsIdMutationError = unknown;
+export type DeleteApiOrganizationsIdMutationError = ProblemDetails;
 
 export const useDeleteApiOrganizationsId = <
-  TError = unknown,
+  TError = ProblemDetails,
   TContext = unknown,
 >(
   options?: {

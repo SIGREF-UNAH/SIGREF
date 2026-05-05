@@ -19,25 +19,31 @@ import type {
 
 import type {
   CatalogType,
+  GetApiValuesetsTypeParams,
   ProblemDetails,
-  ValueSetDtoResponseDto,
+  ValueSetItemDtoPagedResultDto,
 } from ".././models";
 
 import { customInstance } from ".././mutator/customInstance";
 
 export const getApiValuesetsType = (
   type: CatalogType,
+  params?: GetApiValuesetsTypeParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<ValueSetDtoResponseDto>({
+  return customInstance<ValueSetItemDtoPagedResultDto>({
     url: `/api/valuesets/${type}`,
     method: "GET",
+    params,
     signal,
   });
 };
 
-export const getGetApiValuesetsTypeQueryKey = (type?: CatalogType) => {
-  return [`/api/valuesets/${type}`] as const;
+export const getGetApiValuesetsTypeQueryKey = (
+  type?: CatalogType,
+  params?: GetApiValuesetsTypeParams,
+) => {
+  return [`/api/valuesets/${type}`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetApiValuesetsTypeQueryOptions = <
@@ -45,6 +51,7 @@ export const getGetApiValuesetsTypeQueryOptions = <
   TError = ProblemDetails | void,
 >(
   type: CatalogType,
+  params?: GetApiValuesetsTypeParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -58,11 +65,11 @@ export const getGetApiValuesetsTypeQueryOptions = <
   const { query: queryOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ?? getGetApiValuesetsTypeQueryKey(type);
+    queryOptions?.queryKey ?? getGetApiValuesetsTypeQueryKey(type, params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof getApiValuesetsType>>
-  > = ({ signal }) => getApiValuesetsType(type, signal);
+  > = ({ signal }) => getApiValuesetsType(type, params, signal);
 
   return {
     queryKey,
@@ -86,6 +93,7 @@ export function useGetApiValuesetsType<
   TError = ProblemDetails | void,
 >(
   type: CatalogType,
+  params: undefined | GetApiValuesetsTypeParams,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -112,6 +120,7 @@ export function useGetApiValuesetsType<
   TError = ProblemDetails | void,
 >(
   type: CatalogType,
+  params?: GetApiValuesetsTypeParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -138,6 +147,7 @@ export function useGetApiValuesetsType<
   TError = ProblemDetails | void,
 >(
   type: CatalogType,
+  params?: GetApiValuesetsTypeParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -157,6 +167,7 @@ export function useGetApiValuesetsType<
   TError = ProblemDetails | void,
 >(
   type: CatalogType,
+  params?: GetApiValuesetsTypeParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -170,7 +181,11 @@ export function useGetApiValuesetsType<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getGetApiValuesetsTypeQueryOptions(type, options);
+  const queryOptions = getGetApiValuesetsTypeQueryOptions(
+    type,
+    params,
+    options,
+  );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

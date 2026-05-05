@@ -7,5 +7,5 @@ namespace SIGREF.API.Services.ValueSet;
 
 public interface IValueSetService
 {
-    Task<ResponseDto<ValueSetDto>> GetCatalogAsync(CatalogType type);
+    Task<PagedResultDto<ValueSetItemDto>> GetCatalogAsync(CatalogType type, int page = 1, int pageSize = 100);
 }

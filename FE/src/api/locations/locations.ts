@@ -49,7 +49,7 @@ export const getGetApiLocationsQueryKey = (params?: GetApiLocationsParams) => {
 
 export const getGetApiLocationsQueryOptions = <
   TData = Awaited<ReturnType<typeof getApiLocations>>,
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
 >(
   params?: GetApiLocationsParams,
   options?: {
@@ -80,11 +80,11 @@ export const getGetApiLocationsQueryOptions = <
 export type GetApiLocationsQueryResult = NonNullable<
   Awaited<ReturnType<typeof getApiLocations>>
 >;
-export type GetApiLocationsQueryError = ProblemDetails | void;
+export type GetApiLocationsQueryError = ProblemDetails;
 
 export function useGetApiLocations<
   TData = Awaited<ReturnType<typeof getApiLocations>>,
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
 >(
   params: undefined | GetApiLocationsParams,
   options: {
@@ -110,7 +110,7 @@ export function useGetApiLocations<
 };
 export function useGetApiLocations<
   TData = Awaited<ReturnType<typeof getApiLocations>>,
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
 >(
   params?: GetApiLocationsParams,
   options?: {
@@ -136,7 +136,7 @@ export function useGetApiLocations<
 };
 export function useGetApiLocations<
   TData = Awaited<ReturnType<typeof getApiLocations>>,
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
 >(
   params?: GetApiLocationsParams,
   options?: {
@@ -155,7 +155,7 @@ export function useGetApiLocations<
 
 export function useGetApiLocations<
   TData = Awaited<ReturnType<typeof getApiLocations>>,
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
 >(
   params?: GetApiLocationsParams,
   options?: {
@@ -187,7 +187,7 @@ export const postApiLocations = (
   createLocationDto: CreateLocationDto,
   signal?: AbortSignal,
 ) => {
-  return customInstance<LocationDto | void>({
+  return customInstance<LocationDto>({
     url: `/api/Locations`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -262,7 +262,7 @@ export const usePostApiLocations = <
 
   return useMutation(mutationOptions, queryClient);
 };
-export const getApiLocationsId = (id: number, signal?: AbortSignal) => {
+export const getApiLocationsId = (id: string, signal?: AbortSignal) => {
   return customInstance<LocationDto>({
     url: `/api/Locations/${id}`,
     method: "GET",
@@ -270,7 +270,7 @@ export const getApiLocationsId = (id: number, signal?: AbortSignal) => {
   });
 };
 
-export const getGetApiLocationsIdQueryKey = (id?: number) => {
+export const getGetApiLocationsIdQueryKey = (id?: string) => {
   return [`/api/Locations/${id}`] as const;
 };
 
@@ -278,7 +278,7 @@ export const getGetApiLocationsIdQueryOptions = <
   TData = Awaited<ReturnType<typeof getApiLocationsId>>,
   TError = ProblemDetails,
 >(
-  id: number,
+  id: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -318,7 +318,7 @@ export function useGetApiLocationsId<
   TData = Awaited<ReturnType<typeof getApiLocationsId>>,
   TError = ProblemDetails,
 >(
-  id: number,
+  id: string,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -344,7 +344,7 @@ export function useGetApiLocationsId<
   TData = Awaited<ReturnType<typeof getApiLocationsId>>,
   TError = ProblemDetails,
 >(
-  id: number,
+  id: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -370,7 +370,7 @@ export function useGetApiLocationsId<
   TData = Awaited<ReturnType<typeof getApiLocationsId>>,
   TError = ProblemDetails,
 >(
-  id: number,
+  id: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -389,7 +389,7 @@ export function useGetApiLocationsId<
   TData = Awaited<ReturnType<typeof getApiLocationsId>>,
   TError = ProblemDetails,
 >(
-  id: number,
+  id: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -416,7 +416,7 @@ export function useGetApiLocationsId<
 }
 
 export const putApiLocationsId = (
-  id: number,
+  id: string,
   updateLocationDto: UpdateLocationDto,
 ) => {
   return customInstance<LocationDto>({
@@ -434,13 +434,13 @@ export const getPutApiLocationsIdMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof putApiLocationsId>>,
     TError,
-    { id: number; data: UpdateLocationDto },
+    { id: string; data: UpdateLocationDto },
     TContext
   >;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof putApiLocationsId>>,
   TError,
-  { id: number; data: UpdateLocationDto },
+  { id: string; data: UpdateLocationDto },
   TContext
 > => {
   const mutationKey = ["putApiLocationsId"];
@@ -454,7 +454,7 @@ export const getPutApiLocationsIdMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof putApiLocationsId>>,
-    { id: number; data: UpdateLocationDto }
+    { id: string; data: UpdateLocationDto }
   > = (props) => {
     const { id, data } = props ?? {};
 
@@ -478,7 +478,7 @@ export const usePutApiLocationsId = <
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof putApiLocationsId>>,
       TError,
-      { id: number; data: UpdateLocationDto },
+      { id: string; data: UpdateLocationDto },
       TContext
     >;
   },
@@ -486,14 +486,14 @@ export const usePutApiLocationsId = <
 ): UseMutationResult<
   Awaited<ReturnType<typeof putApiLocationsId>>,
   TError,
-  { id: number; data: UpdateLocationDto },
+  { id: string; data: UpdateLocationDto },
   TContext
 > => {
   const mutationOptions = getPutApiLocationsIdMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };
-export const deleteApiLocationsId = (id: number) => {
+export const deleteApiLocationsId = (id: string) => {
   return customInstance<void>({
     url: `/api/Locations/${id}`,
     method: "DELETE",
@@ -507,13 +507,13 @@ export const getDeleteApiLocationsIdMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof deleteApiLocationsId>>,
     TError,
-    { id: number },
+    { id: string },
     TContext
   >;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof deleteApiLocationsId>>,
   TError,
-  { id: number },
+  { id: string },
   TContext
 > => {
   const mutationKey = ["deleteApiLocationsId"];
@@ -527,7 +527,7 @@ export const getDeleteApiLocationsIdMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof deleteApiLocationsId>>,
-    { id: number }
+    { id: string }
   > = (props) => {
     const { id } = props ?? {};
 
@@ -551,7 +551,7 @@ export const useDeleteApiLocationsId = <
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof deleteApiLocationsId>>,
       TError,
-      { id: number },
+      { id: string },
       TContext
     >;
   },
@@ -559,7 +559,7 @@ export const useDeleteApiLocationsId = <
 ): UseMutationResult<
   Awaited<ReturnType<typeof deleteApiLocationsId>>,
   TError,
-  { id: number },
+  { id: string },
   TContext
 > => {
   const mutationOptions = getDeleteApiLocationsIdMutationOptions(options);

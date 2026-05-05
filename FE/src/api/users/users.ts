@@ -21,26 +21,25 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
-  BooleanResponseDto,
   GetApiUsersByIdsParams,
   GetApiUsersExistsUsernameParams,
-  GetApiUsersListParams,
+  GetApiUsersParams,
   KeycloakUpdateUserDto,
-  KeycloakUserDtoListResponseDto,
-  KeycloakUserDtoPagedResultDtoResponseDto,
-  KeycloakUserDtoResponseDto,
-  KeycloakUsernameDtoResponseDto,
+  KeycloakUserDto,
+  KeycloakUserDtoPagedResultDto,
+  KeycloakUsernameDto,
+  ProblemDetails,
   UserCreateDto,
 } from ".././models";
 
 import { customInstance } from ".././mutator/customInstance";
 
-export const postApiUsersCreate = (
+export const postApiUsers = (
   userCreateDto: UserCreateDto,
   signal?: AbortSignal,
 ) => {
-  return customInstance<KeycloakUserDtoResponseDto>({
-    url: `/api/Users/create`,
+  return customInstance<KeycloakUserDto>({
+    url: `/api/Users`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     data: userCreateDto,
@@ -48,23 +47,23 @@ export const postApiUsersCreate = (
   });
 };
 
-export const getPostApiUsersCreateMutationOptions = <
-  TError = KeycloakUserDtoResponseDto,
+export const getPostApiUsersMutationOptions = <
+  TError = ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof postApiUsersCreate>>,
+    Awaited<ReturnType<typeof postApiUsers>>,
     TError,
     { data: UserCreateDto },
     TContext
   >;
 }): UseMutationOptions<
-  Awaited<ReturnType<typeof postApiUsersCreate>>,
+  Awaited<ReturnType<typeof postApiUsers>>,
   TError,
   { data: UserCreateDto },
   TContext
 > => {
-  const mutationKey = ["postApiUsersCreate"];
+  const mutationKey = ["postApiUsers"];
   const { mutation: mutationOptions } = options
     ? options.mutation &&
       "mutationKey" in options.mutation &&
@@ -74,30 +73,27 @@ export const getPostApiUsersCreateMutationOptions = <
     : { mutation: { mutationKey } };
 
   const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof postApiUsersCreate>>,
+    Awaited<ReturnType<typeof postApiUsers>>,
     { data: UserCreateDto }
   > = (props) => {
     const { data } = props ?? {};
 
-    return postApiUsersCreate(data);
+    return postApiUsers(data);
   };
 
   return { mutationFn, ...mutationOptions };
 };
 
-export type PostApiUsersCreateMutationResult = NonNullable<
-  Awaited<ReturnType<typeof postApiUsersCreate>>
+export type PostApiUsersMutationResult = NonNullable<
+  Awaited<ReturnType<typeof postApiUsers>>
 >;
-export type PostApiUsersCreateMutationBody = UserCreateDto;
-export type PostApiUsersCreateMutationError = KeycloakUserDtoResponseDto;
+export type PostApiUsersMutationBody = UserCreateDto;
+export type PostApiUsersMutationError = ProblemDetails;
 
-export const usePostApiUsersCreate = <
-  TError = KeycloakUserDtoResponseDto,
-  TContext = unknown,
->(
+export const usePostApiUsers = <TError = ProblemDetails, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof postApiUsersCreate>>,
+      Awaited<ReturnType<typeof postApiUsers>>,
       TError,
       { data: UserCreateDto },
       TContext
@@ -105,85 +101,76 @@ export const usePostApiUsersCreate = <
   },
   queryClient?: QueryClient,
 ): UseMutationResult<
-  Awaited<ReturnType<typeof postApiUsersCreate>>,
+  Awaited<ReturnType<typeof postApiUsers>>,
   TError,
   { data: UserCreateDto },
   TContext
 > => {
-  const mutationOptions = getPostApiUsersCreateMutationOptions(options);
+  const mutationOptions = getPostApiUsersMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };
-export const getApiUsersByIdId = (id: string, signal?: AbortSignal) => {
-  return customInstance<KeycloakUserDtoResponseDto>({
-    url: `/api/Users/by-id/${id}`,
+export const getApiUsers = (
+  params?: GetApiUsersParams,
+  signal?: AbortSignal,
+) => {
+  return customInstance<KeycloakUserDtoPagedResultDto>({
+    url: `/api/Users`,
     method: "GET",
+    params,
     signal,
   });
 };
 
-export const getGetApiUsersByIdIdQueryKey = (id?: string) => {
-  return [`/api/Users/by-id/${id}`] as const;
+export const getGetApiUsersQueryKey = (params?: GetApiUsersParams) => {
+  return [`/api/Users`, ...(params ? [params] : [])] as const;
 };
 
-export const getGetApiUsersByIdIdQueryOptions = <
-  TData = Awaited<ReturnType<typeof getApiUsersByIdId>>,
-  TError = KeycloakUserDtoResponseDto,
+export const getGetApiUsersQueryOptions = <
+  TData = Awaited<ReturnType<typeof getApiUsers>>,
+  TError = ProblemDetails,
 >(
-  id: string,
+  params?: GetApiUsersParams,
   options?: {
     query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof getApiUsersByIdId>>,
-        TError,
-        TData
-      >
+      UseQueryOptions<Awaited<ReturnType<typeof getApiUsers>>, TError, TData>
     >;
   },
 ) => {
   const { query: queryOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetApiUsersByIdIdQueryKey(id);
+  const queryKey = queryOptions?.queryKey ?? getGetApiUsersQueryKey(params);
 
-  const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof getApiUsersByIdId>>
-  > = ({ signal }) => getApiUsersByIdId(id, signal);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiUsers>>> = ({
+    signal,
+  }) => getApiUsers(params, signal);
 
-  return {
-    queryKey,
-    queryFn,
-    enabled: !!id,
-    ...queryOptions,
-  } as UseQueryOptions<
-    Awaited<ReturnType<typeof getApiUsersByIdId>>,
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getApiUsers>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetApiUsersByIdIdQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getApiUsersByIdId>>
+export type GetApiUsersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getApiUsers>>
 >;
-export type GetApiUsersByIdIdQueryError = KeycloakUserDtoResponseDto;
+export type GetApiUsersQueryError = ProblemDetails;
 
-export function useGetApiUsersByIdId<
-  TData = Awaited<ReturnType<typeof getApiUsersByIdId>>,
-  TError = KeycloakUserDtoResponseDto,
+export function useGetApiUsers<
+  TData = Awaited<ReturnType<typeof getApiUsers>>,
+  TError = ProblemDetails,
 >(
-  id: string,
+  params: undefined | GetApiUsersParams,
   options: {
     query: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof getApiUsersByIdId>>,
-        TError,
-        TData
-      >
+      UseQueryOptions<Awaited<ReturnType<typeof getApiUsers>>, TError, TData>
     > &
       Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiUsersByIdId>>,
+          Awaited<ReturnType<typeof getApiUsers>>,
           TError,
-          Awaited<ReturnType<typeof getApiUsersByIdId>>
+          Awaited<ReturnType<typeof getApiUsers>>
         >,
         "initialData"
       >;
@@ -192,24 +179,20 @@ export function useGetApiUsersByIdId<
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
-export function useGetApiUsersByIdId<
-  TData = Awaited<ReturnType<typeof getApiUsersByIdId>>,
-  TError = KeycloakUserDtoResponseDto,
+export function useGetApiUsers<
+  TData = Awaited<ReturnType<typeof getApiUsers>>,
+  TError = ProblemDetails,
 >(
-  id: string,
+  params?: GetApiUsersParams,
   options?: {
     query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof getApiUsersByIdId>>,
-        TError,
-        TData
-      >
+      UseQueryOptions<Awaited<ReturnType<typeof getApiUsers>>, TError, TData>
     > &
       Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiUsersByIdId>>,
+          Awaited<ReturnType<typeof getApiUsers>>,
           TError,
-          Awaited<ReturnType<typeof getApiUsersByIdId>>
+          Awaited<ReturnType<typeof getApiUsers>>
         >,
         "initialData"
       >;
@@ -218,18 +201,14 @@ export function useGetApiUsersByIdId<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
-export function useGetApiUsersByIdId<
-  TData = Awaited<ReturnType<typeof getApiUsersByIdId>>,
-  TError = KeycloakUserDtoResponseDto,
+export function useGetApiUsers<
+  TData = Awaited<ReturnType<typeof getApiUsers>>,
+  TError = ProblemDetails,
 >(
-  id: string,
+  params?: GetApiUsersParams,
   options?: {
     query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof getApiUsersByIdId>>,
-        TError,
-        TData
-      >
+      UseQueryOptions<Awaited<ReturnType<typeof getApiUsers>>, TError, TData>
     >;
   },
   queryClient?: QueryClient,
@@ -237,25 +216,21 @@ export function useGetApiUsersByIdId<
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
-export function useGetApiUsersByIdId<
-  TData = Awaited<ReturnType<typeof getApiUsersByIdId>>,
-  TError = KeycloakUserDtoResponseDto,
+export function useGetApiUsers<
+  TData = Awaited<ReturnType<typeof getApiUsers>>,
+  TError = ProblemDetails,
 >(
-  id: string,
+  params?: GetApiUsersParams,
   options?: {
     query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof getApiUsersByIdId>>,
-        TError,
-        TData
-      >
+      UseQueryOptions<Awaited<ReturnType<typeof getApiUsers>>, TError, TData>
     >;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getGetApiUsersByIdIdQueryOptions(id, options);
+  const queryOptions = getGetApiUsersQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,
@@ -267,11 +242,289 @@ export function useGetApiUsersByIdId<
   return query;
 }
 
+export const getApiUsersId = (id: string, signal?: AbortSignal) => {
+  return customInstance<KeycloakUserDto>({
+    url: `/api/Users/${id}`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getGetApiUsersIdQueryKey = (id?: string) => {
+  return [`/api/Users/${id}`] as const;
+};
+
+export const getGetApiUsersIdQueryOptions = <
+  TData = Awaited<ReturnType<typeof getApiUsersId>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getApiUsersId>>, TError, TData>
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetApiUsersIdQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiUsersId>>> = ({
+    signal,
+  }) => getApiUsersId(id, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getApiUsersId>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetApiUsersIdQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getApiUsersId>>
+>;
+export type GetApiUsersIdQueryError = ProblemDetails;
+
+export function useGetApiUsersId<
+  TData = Awaited<ReturnType<typeof getApiUsersId>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getApiUsersId>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiUsersId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiUsersId>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiUsersId<
+  TData = Awaited<ReturnType<typeof getApiUsersId>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getApiUsersId>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiUsersId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiUsersId>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetApiUsersId<
+  TData = Awaited<ReturnType<typeof getApiUsersId>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getApiUsersId>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useGetApiUsersId<
+  TData = Awaited<ReturnType<typeof getApiUsersId>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getApiUsersId>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getGetApiUsersIdQueryOptions(id, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const putApiUsersId = (
+  id: string,
+  keycloakUpdateUserDto: KeycloakUpdateUserDto,
+) => {
+  return customInstance<KeycloakUserDto>({
+    url: `/api/Users/${id}`,
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    data: keycloakUpdateUserDto,
+  });
+};
+
+export const getPutApiUsersIdMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof putApiUsersId>>,
+    TError,
+    { id: string; data: KeycloakUpdateUserDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof putApiUsersId>>,
+  TError,
+  { id: string; data: KeycloakUpdateUserDto },
+  TContext
+> => {
+  const mutationKey = ["putApiUsersId"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof putApiUsersId>>,
+    { id: string; data: KeycloakUpdateUserDto }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return putApiUsersId(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PutApiUsersIdMutationResult = NonNullable<
+  Awaited<ReturnType<typeof putApiUsersId>>
+>;
+export type PutApiUsersIdMutationBody = KeycloakUpdateUserDto;
+export type PutApiUsersIdMutationError = ProblemDetails;
+
+export const usePutApiUsersId = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof putApiUsersId>>,
+      TError,
+      { id: string; data: KeycloakUpdateUserDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof putApiUsersId>>,
+  TError,
+  { id: string; data: KeycloakUpdateUserDto },
+  TContext
+> => {
+  const mutationOptions = getPutApiUsersIdMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+export const deleteApiUsersId = (id: string) => {
+  return customInstance<void>({ url: `/api/Users/${id}`, method: "DELETE" });
+};
+
+export const getDeleteApiUsersIdMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteApiUsersId>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteApiUsersId>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["deleteApiUsersId"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteApiUsersId>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteApiUsersId(id);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteApiUsersIdMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteApiUsersId>>
+>;
+
+export type DeleteApiUsersIdMutationError = ProblemDetails;
+
+export const useDeleteApiUsersId = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteApiUsersId>>,
+      TError,
+      { id: string },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteApiUsersId>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationOptions = getDeleteApiUsersIdMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
 export const getApiUsersByIds = (
   params: GetApiUsersByIdsParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<KeycloakUserDtoListResponseDto>({
+  return customInstance<KeycloakUserDto[]>({
     url: `/api/Users/by-ids`,
     method: "GET",
     params,
@@ -287,7 +540,7 @@ export const getGetApiUsersByIdsQueryKey = (
 
 export const getGetApiUsersByIdsQueryOptions = <
   TData = Awaited<ReturnType<typeof getApiUsersByIds>>,
-  TError = KeycloakUserDtoListResponseDto,
+  TError = ProblemDetails,
 >(
   params: GetApiUsersByIdsParams,
   options?: {
@@ -319,11 +572,11 @@ export const getGetApiUsersByIdsQueryOptions = <
 export type GetApiUsersByIdsQueryResult = NonNullable<
   Awaited<ReturnType<typeof getApiUsersByIds>>
 >;
-export type GetApiUsersByIdsQueryError = KeycloakUserDtoListResponseDto;
+export type GetApiUsersByIdsQueryError = ProblemDetails;
 
 export function useGetApiUsersByIds<
   TData = Awaited<ReturnType<typeof getApiUsersByIds>>,
-  TError = KeycloakUserDtoListResponseDto,
+  TError = ProblemDetails,
 >(
   params: GetApiUsersByIdsParams,
   options: {
@@ -349,7 +602,7 @@ export function useGetApiUsersByIds<
 };
 export function useGetApiUsersByIds<
   TData = Awaited<ReturnType<typeof getApiUsersByIds>>,
-  TError = KeycloakUserDtoListResponseDto,
+  TError = ProblemDetails,
 >(
   params: GetApiUsersByIdsParams,
   options?: {
@@ -375,7 +628,7 @@ export function useGetApiUsersByIds<
 };
 export function useGetApiUsersByIds<
   TData = Awaited<ReturnType<typeof getApiUsersByIds>>,
-  TError = KeycloakUserDtoListResponseDto,
+  TError = ProblemDetails,
 >(
   params: GetApiUsersByIdsParams,
   options?: {
@@ -394,7 +647,7 @@ export function useGetApiUsersByIds<
 
 export function useGetApiUsersByIds<
   TData = Awaited<ReturnType<typeof getApiUsersByIds>>,
-  TError = KeycloakUserDtoListResponseDto,
+  TError = ProblemDetails,
 >(
   params: GetApiUsersByIdsParams,
   options?: {
@@ -426,7 +679,7 @@ export const getApiUsersByPractitionerPractitionerId = (
   practitionerId: string,
   signal?: AbortSignal,
 ) => {
-  return customInstance<KeycloakUserDtoResponseDto>({
+  return customInstance<KeycloakUserDto>({
     url: `/api/Users/by-practitioner/${practitionerId}`,
     method: "GET",
     signal,
@@ -441,7 +694,7 @@ export const getGetApiUsersByPractitionerPractitionerIdQueryKey = (
 
 export const getGetApiUsersByPractitionerPractitionerIdQueryOptions = <
   TData = Awaited<ReturnType<typeof getApiUsersByPractitionerPractitionerId>>,
-  TError = KeycloakUserDtoResponseDto,
+  TError = ProblemDetails,
 >(
   practitionerId: string,
   options?: {
@@ -480,12 +733,11 @@ export const getGetApiUsersByPractitionerPractitionerIdQueryOptions = <
 export type GetApiUsersByPractitionerPractitionerIdQueryResult = NonNullable<
   Awaited<ReturnType<typeof getApiUsersByPractitionerPractitionerId>>
 >;
-export type GetApiUsersByPractitionerPractitionerIdQueryError =
-  KeycloakUserDtoResponseDto;
+export type GetApiUsersByPractitionerPractitionerIdQueryError = ProblemDetails;
 
 export function useGetApiUsersByPractitionerPractitionerId<
   TData = Awaited<ReturnType<typeof getApiUsersByPractitionerPractitionerId>>,
-  TError = KeycloakUserDtoResponseDto,
+  TError = ProblemDetails,
 >(
   practitionerId: string,
   options: {
@@ -511,7 +763,7 @@ export function useGetApiUsersByPractitionerPractitionerId<
 };
 export function useGetApiUsersByPractitionerPractitionerId<
   TData = Awaited<ReturnType<typeof getApiUsersByPractitionerPractitionerId>>,
-  TError = KeycloakUserDtoResponseDto,
+  TError = ProblemDetails,
 >(
   practitionerId: string,
   options?: {
@@ -537,7 +789,7 @@ export function useGetApiUsersByPractitionerPractitionerId<
 };
 export function useGetApiUsersByPractitionerPractitionerId<
   TData = Awaited<ReturnType<typeof getApiUsersByPractitionerPractitionerId>>,
-  TError = KeycloakUserDtoResponseDto,
+  TError = ProblemDetails,
 >(
   practitionerId: string,
   options?: {
@@ -556,7 +808,7 @@ export function useGetApiUsersByPractitionerPractitionerId<
 
 export function useGetApiUsersByPractitionerPractitionerId<
   TData = Awaited<ReturnType<typeof getApiUsersByPractitionerPractitionerId>>,
-  TError = KeycloakUserDtoResponseDto,
+  TError = ProblemDetails,
 >(
   practitionerId: string,
   options?: {
@@ -591,7 +843,7 @@ export const getApiUsersExistsPractitionerPractitionerId = (
   practitionerId: string,
   signal?: AbortSignal,
 ) => {
-  return customInstance<BooleanResponseDto>({
+  return customInstance<boolean>({
     url: `/api/Users/exists/practitioner/${practitionerId}`,
     method: "GET",
     signal,
@@ -608,7 +860,7 @@ export const getGetApiUsersExistsPractitionerPractitionerIdQueryOptions = <
   TData = Awaited<
     ReturnType<typeof getApiUsersExistsPractitionerPractitionerId>
   >,
-  TError = BooleanResponseDto,
+  TError = ProblemDetails,
 >(
   practitionerId: string,
   options?: {
@@ -649,13 +901,13 @@ export type GetApiUsersExistsPractitionerPractitionerIdQueryResult =
     Awaited<ReturnType<typeof getApiUsersExistsPractitionerPractitionerId>>
   >;
 export type GetApiUsersExistsPractitionerPractitionerIdQueryError =
-  BooleanResponseDto;
+  ProblemDetails;
 
 export function useGetApiUsersExistsPractitionerPractitionerId<
   TData = Awaited<
     ReturnType<typeof getApiUsersExistsPractitionerPractitionerId>
   >,
-  TError = BooleanResponseDto,
+  TError = ProblemDetails,
 >(
   practitionerId: string,
   options: {
@@ -687,7 +939,7 @@ export function useGetApiUsersExistsPractitionerPractitionerId<
   TData = Awaited<
     ReturnType<typeof getApiUsersExistsPractitionerPractitionerId>
   >,
-  TError = BooleanResponseDto,
+  TError = ProblemDetails,
 >(
   practitionerId: string,
   options?: {
@@ -719,7 +971,7 @@ export function useGetApiUsersExistsPractitionerPractitionerId<
   TData = Awaited<
     ReturnType<typeof getApiUsersExistsPractitionerPractitionerId>
   >,
-  TError = BooleanResponseDto,
+  TError = ProblemDetails,
 >(
   practitionerId: string,
   options?: {
@@ -740,7 +992,7 @@ export function useGetApiUsersExistsPractitionerPractitionerId<
   TData = Awaited<
     ReturnType<typeof getApiUsersExistsPractitionerPractitionerId>
   >,
-  TError = BooleanResponseDto,
+  TError = ProblemDetails,
 >(
   practitionerId: string,
   options?: {
@@ -776,7 +1028,7 @@ export const getApiUsersExistsUsername = (
   params: GetApiUsersExistsUsernameParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<KeycloakUsernameDtoResponseDto>({
+  return customInstance<KeycloakUsernameDto>({
     url: `/api/Users/exists/username`,
     method: "GET",
     params,
@@ -792,7 +1044,7 @@ export const getGetApiUsersExistsUsernameQueryKey = (
 
 export const getGetApiUsersExistsUsernameQueryOptions = <
   TData = Awaited<ReturnType<typeof getApiUsersExistsUsername>>,
-  TError = KeycloakUsernameDtoResponseDto,
+  TError = ProblemDetails,
 >(
   params: GetApiUsersExistsUsernameParams,
   options?: {
@@ -824,12 +1076,11 @@ export const getGetApiUsersExistsUsernameQueryOptions = <
 export type GetApiUsersExistsUsernameQueryResult = NonNullable<
   Awaited<ReturnType<typeof getApiUsersExistsUsername>>
 >;
-export type GetApiUsersExistsUsernameQueryError =
-  KeycloakUsernameDtoResponseDto;
+export type GetApiUsersExistsUsernameQueryError = ProblemDetails;
 
 export function useGetApiUsersExistsUsername<
   TData = Awaited<ReturnType<typeof getApiUsersExistsUsername>>,
-  TError = KeycloakUsernameDtoResponseDto,
+  TError = ProblemDetails,
 >(
   params: GetApiUsersExistsUsernameParams,
   options: {
@@ -855,7 +1106,7 @@ export function useGetApiUsersExistsUsername<
 };
 export function useGetApiUsersExistsUsername<
   TData = Awaited<ReturnType<typeof getApiUsersExistsUsername>>,
-  TError = KeycloakUsernameDtoResponseDto,
+  TError = ProblemDetails,
 >(
   params: GetApiUsersExistsUsernameParams,
   options?: {
@@ -881,7 +1132,7 @@ export function useGetApiUsersExistsUsername<
 };
 export function useGetApiUsersExistsUsername<
   TData = Awaited<ReturnType<typeof getApiUsersExistsUsername>>,
-  TError = KeycloakUsernameDtoResponseDto,
+  TError = ProblemDetails,
 >(
   params: GetApiUsersExistsUsernameParams,
   options?: {
@@ -900,7 +1151,7 @@ export function useGetApiUsersExistsUsername<
 
 export function useGetApiUsersExistsUsername<
   TData = Awaited<ReturnType<typeof getApiUsersExistsUsername>>,
-  TError = KeycloakUsernameDtoResponseDto,
+  TError = ProblemDetails,
 >(
   params: GetApiUsersExistsUsernameParams,
   options?: {
@@ -931,168 +1182,15 @@ export function useGetApiUsersExistsUsername<
   return query;
 }
 
-export const getApiUsersList = (
-  params?: GetApiUsersListParams,
-  signal?: AbortSignal,
-) => {
-  return customInstance<KeycloakUserDtoPagedResultDtoResponseDto>({
-    url: `/api/Users/list`,
-    method: "GET",
-    params,
-    signal,
-  });
-};
-
-export const getGetApiUsersListQueryKey = (params?: GetApiUsersListParams) => {
-  return [`/api/Users/list`, ...(params ? [params] : [])] as const;
-};
-
-export const getGetApiUsersListQueryOptions = <
-  TData = Awaited<ReturnType<typeof getApiUsersList>>,
-  TError = KeycloakUserDtoPagedResultDtoResponseDto,
->(
-  params?: GetApiUsersListParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof getApiUsersList>>,
-        TError,
-        TData
-      >
-    >;
-  },
-) => {
-  const { query: queryOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetApiUsersListQueryKey(params);
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiUsersList>>> = ({
-    signal,
-  }) => getApiUsersList(params, signal);
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getApiUsersList>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetApiUsersListQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getApiUsersList>>
->;
-export type GetApiUsersListQueryError =
-  KeycloakUserDtoPagedResultDtoResponseDto;
-
-export function useGetApiUsersList<
-  TData = Awaited<ReturnType<typeof getApiUsersList>>,
-  TError = KeycloakUserDtoPagedResultDtoResponseDto,
->(
-  params: undefined | GetApiUsersListParams,
-  options: {
-    query: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof getApiUsersList>>,
-        TError,
-        TData
-      >
-    > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiUsersList>>,
-          TError,
-          Awaited<ReturnType<typeof getApiUsersList>>
-        >,
-        "initialData"
-      >;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-export function useGetApiUsersList<
-  TData = Awaited<ReturnType<typeof getApiUsersList>>,
-  TError = KeycloakUserDtoPagedResultDtoResponseDto,
->(
-  params?: GetApiUsersListParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof getApiUsersList>>,
-        TError,
-        TData
-      >
-    > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getApiUsersList>>,
-          TError,
-          Awaited<ReturnType<typeof getApiUsersList>>
-        >,
-        "initialData"
-      >;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-export function useGetApiUsersList<
-  TData = Awaited<ReturnType<typeof getApiUsersList>>,
-  TError = KeycloakUserDtoPagedResultDtoResponseDto,
->(
-  params?: GetApiUsersListParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof getApiUsersList>>,
-        TError,
-        TData
-      >
-    >;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-
-export function useGetApiUsersList<
-  TData = Awaited<ReturnType<typeof getApiUsersList>>,
-  TError = KeycloakUserDtoPagedResultDtoResponseDto,
->(
-  params?: GetApiUsersListParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof getApiUsersList>>,
-        TError,
-        TData
-      >
-    >;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-} {
-  const queryOptions = getGetApiUsersListQueryOptions(params, options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
-    TData,
-    TError
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey;
-
-  return query;
-}
-
 export const patchApiUsersIdToggleStatus = (id: string) => {
-  return customInstance<BooleanResponseDto>({
+  return customInstance<boolean>({
     url: `/api/Users/${id}/toggle-status`,
     method: "PATCH",
   });
 };
 
 export const getPatchApiUsersIdToggleStatusMutationOptions = <
-  TError = BooleanResponseDto,
+  TError = ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1132,10 +1230,10 @@ export type PatchApiUsersIdToggleStatusMutationResult = NonNullable<
   Awaited<ReturnType<typeof patchApiUsersIdToggleStatus>>
 >;
 
-export type PatchApiUsersIdToggleStatusMutationError = BooleanResponseDto;
+export type PatchApiUsersIdToggleStatusMutationError = ProblemDetails;
 
 export const usePatchApiUsersIdToggleStatus = <
-  TError = BooleanResponseDto,
+  TError = ProblemDetails,
   TContext = unknown,
 >(
   options?: {
@@ -1155,84 +1253,6 @@ export const usePatchApiUsersIdToggleStatus = <
 > => {
   const mutationOptions =
     getPatchApiUsersIdToggleStatusMutationOptions(options);
-
-  return useMutation(mutationOptions, queryClient);
-};
-export const putApiUsersId = (
-  id: string,
-  keycloakUpdateUserDto: KeycloakUpdateUserDto,
-) => {
-  return customInstance<KeycloakUserDtoResponseDto>({
-    url: `/api/Users/${id}`,
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    data: keycloakUpdateUserDto,
-  });
-};
-
-export const getPutApiUsersIdMutationOptions = <
-  TError = KeycloakUserDtoResponseDto,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof putApiUsersId>>,
-    TError,
-    { id: string; data: KeycloakUpdateUserDto },
-    TContext
-  >;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof putApiUsersId>>,
-  TError,
-  { id: string; data: KeycloakUpdateUserDto },
-  TContext
-> => {
-  const mutationKey = ["putApiUsersId"];
-  const { mutation: mutationOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey } };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof putApiUsersId>>,
-    { id: string; data: KeycloakUpdateUserDto }
-  > = (props) => {
-    const { id, data } = props ?? {};
-
-    return putApiUsersId(id, data);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type PutApiUsersIdMutationResult = NonNullable<
-  Awaited<ReturnType<typeof putApiUsersId>>
->;
-export type PutApiUsersIdMutationBody = KeycloakUpdateUserDto;
-export type PutApiUsersIdMutationError = KeycloakUserDtoResponseDto;
-
-export const usePutApiUsersId = <
-  TError = KeycloakUserDtoResponseDto,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof putApiUsersId>>,
-      TError,
-      { id: string; data: KeycloakUpdateUserDto },
-      TContext
-    >;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof putApiUsersId>>,
-  TError,
-  { id: string; data: KeycloakUpdateUserDto },
-  TContext
-> => {
-  const mutationOptions = getPutApiUsersIdMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

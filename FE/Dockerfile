@@ -12,8 +12,8 @@
 # ============================================================================
 
 # --- STAGE 1: COMPILACIÓN (BUILDER) ---
-# Usamos Node 20 sobre Alpine para reducir la superficie de ataque
-FROM node:20-alpine AS build
+# Usamos Node 22 sobre Alpine para reducir la superficie de ataque
+FROM node:22-alpine AS build
 
 WORKDIR /app
 

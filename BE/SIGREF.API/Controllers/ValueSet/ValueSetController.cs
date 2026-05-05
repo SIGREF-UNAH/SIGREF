@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos.Common;
+using SIGREF.API.Dtos.ValueSet;
 using SIGREF.API.Services.ValueSet;
 using SIGREF.Common.Dtos;
 using SIGREF.Common.Types;
@@ -31,10 +32,10 @@ public class ValueSetController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    [Produces(typeof(ResponseDto<ValueSetDto>))]
-    public async Task<IActionResult> GetCatalog(CatalogType type)
+    [Produces(typeof(PagedResultDto<ValueSetItemDto>))]
+    public async Task<IActionResult> GetCatalog([FromRoute] CatalogType type, [FromQuery] GetCatalogRequestDto request)
     {
-        var result = await _valueSetService.GetCatalogAsync(type);
-        return StatusCode(result.StatusCode, result);
+        var result = await _valueSetService.GetCatalogAsync(type, request.Page, request.PageSize);
+        return Ok(result);
     }
 }

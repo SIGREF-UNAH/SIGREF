@@ -6,14 +6,16 @@
 /**
  * Enum de estados de lista según FHIR
  */
-export enum ListStatus {
+export const ListStatus = {
   /** La lista se considera una parte activa del registro del paciente */
-  Current = 'Current',
+  Current: 'Current',
   /** La lista es "antigua" y ya no debe considerarse precisa o relevante */
-  Retired = 'Retired',
+  Retired: 'Retired',
   /** La lista nunca fue precisa. Se conserva solo con fines médico-legales */
-  EnteredInError = 'EnteredInError',
-}
+  EnteredInError: 'EnteredInError',
+} as const;
+
+export type ListStatus = typeof ListStatus[keyof typeof ListStatus];
 
 /**
  * Traducciones de ListStatus al español

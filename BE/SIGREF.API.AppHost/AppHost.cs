@@ -191,7 +191,8 @@ keycloak.PublishAsContainer();
 var hapi = builder.AddHapiFhir("hapifhir")
     .WithPostgresDatabase(postgres, hapiDb, postgresUsername, postgresPassword)
     .WithConfigurationFile("config/hapi.application.yaml")  
-    //.WithCorsEnabled()                                  
+    //.WithCorsEnabled()  
+    .WithBindMount("./hapi-lucene-data", "/tmp/lucenefiles")
     .WithLogLevel("INFO");
 
 // ============================================================================
@@ -306,7 +307,7 @@ IResourceBuilder<ContainerResource>? frontend = null;
 
 if (builder.ExecutionContext.IsRunMode)
 {
-    frontend = builder.AddContainer("frontend", "node", "20-alpine")
+    frontend = builder.AddContainer("frontend", "node", "22-alpine")
         .WithBindMount("../../FE", "/app")
         .WithEntrypoint("/bin/sh")
         .WithArgs("-c", "cd /app && if [ ! -d 'node_modules' ]; then npm install; fi; npm run dev -- --host 0.0.0.0")

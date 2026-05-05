@@ -152,13 +152,19 @@ spring:
 # ============================================================
 hapi:
   # Ref Oficial: https://hapifhir.io/hapi-fhir/docs/server_jpa/configuration.html
-  fhir:
+  fhir: 
     # ============================================================
     # VERSIÓN FHIR
     # ============================================================
     # R4 (R4B) es el estándar actual para interoperabilidad internacional.
     fhir_version: R4
-
+    any_resource_id_can_be_referred_to_as_a_canonical: true
+    # Fuerza a que el servidor intente expandir los ValueSets en cuanto se crean
+    preexpand_valuesets: true
+    # Controla cuántos conceptos se procesan antes de fallar por timeout
+    expansions_per_page: 5000
+    auto_create_placeholder_resources: true
+    
     terminology_server_enabled: true
 
     # FLAG OBLIGATORIO: Le dice a HAPI que inicialice los beans de Lucene.
@@ -212,6 +218,8 @@ logging:
     ca.uhn.fhir.jpa.search: DEBUG
     # Muestra los queries SQL reales y los inserts en batch
     org.hibernate.SQL: DEBUG
+    org.quartz: INFO
+    ca.uhn.fhir.jpa.term: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 # ----------------------------------------------------------------------------
 # NOTAS ADICIONALES PARA POSTGRESQL:

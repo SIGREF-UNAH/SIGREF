@@ -21,11 +21,11 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
-  BooleanResponseDto,
   CreateHealthcareDto,
   GetApiHealthcaresParams,
-  HealthcareDtoPagedResultDtoResponseDto,
-  HealthcareDtoResponseDto,
+  HealthcareDto,
+  HealthcareDtoPagedResultDto,
+  ProblemDetails,
   UpdateHealthcareDto,
 } from ".././models";
 
@@ -35,7 +35,7 @@ export const getApiHealthcares = (
   params?: GetApiHealthcaresParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<HealthcareDtoPagedResultDtoResponseDto>({
+  return customInstance<HealthcareDtoPagedResultDto>({
     url: `/api/Healthcares`,
     method: "GET",
     params,
@@ -51,7 +51,7 @@ export const getGetApiHealthcaresQueryKey = (
 
 export const getGetApiHealthcaresQueryOptions = <
   TData = Awaited<ReturnType<typeof getApiHealthcares>>,
-  TError = void,
+  TError = ProblemDetails,
 >(
   params?: GetApiHealthcaresParams,
   options?: {
@@ -83,11 +83,11 @@ export const getGetApiHealthcaresQueryOptions = <
 export type GetApiHealthcaresQueryResult = NonNullable<
   Awaited<ReturnType<typeof getApiHealthcares>>
 >;
-export type GetApiHealthcaresQueryError = void;
+export type GetApiHealthcaresQueryError = ProblemDetails;
 
 export function useGetApiHealthcares<
   TData = Awaited<ReturnType<typeof getApiHealthcares>>,
-  TError = void,
+  TError = ProblemDetails,
 >(
   params: undefined | GetApiHealthcaresParams,
   options: {
@@ -113,7 +113,7 @@ export function useGetApiHealthcares<
 };
 export function useGetApiHealthcares<
   TData = Awaited<ReturnType<typeof getApiHealthcares>>,
-  TError = void,
+  TError = ProblemDetails,
 >(
   params?: GetApiHealthcaresParams,
   options?: {
@@ -139,7 +139,7 @@ export function useGetApiHealthcares<
 };
 export function useGetApiHealthcares<
   TData = Awaited<ReturnType<typeof getApiHealthcares>>,
-  TError = void,
+  TError = ProblemDetails,
 >(
   params?: GetApiHealthcaresParams,
   options?: {
@@ -158,7 +158,7 @@ export function useGetApiHealthcares<
 
 export function useGetApiHealthcares<
   TData = Awaited<ReturnType<typeof getApiHealthcares>>,
-  TError = void,
+  TError = ProblemDetails,
 >(
   params?: GetApiHealthcaresParams,
   options?: {
@@ -190,7 +190,7 @@ export const postApiHealthcares = (
   createHealthcareDto: CreateHealthcareDto,
   signal?: AbortSignal,
 ) => {
-  return customInstance<HealthcareDtoResponseDto | void>({
+  return customInstance<HealthcareDto>({
     url: `/api/Healthcares`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -200,7 +200,7 @@ export const postApiHealthcares = (
 };
 
 export const getPostApiHealthcaresMutationOptions = <
-  TError = void,
+  TError = ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -240,9 +240,12 @@ export type PostApiHealthcaresMutationResult = NonNullable<
   Awaited<ReturnType<typeof postApiHealthcares>>
 >;
 export type PostApiHealthcaresMutationBody = CreateHealthcareDto;
-export type PostApiHealthcaresMutationError = void;
+export type PostApiHealthcaresMutationError = ProblemDetails;
 
-export const usePostApiHealthcares = <TError = void, TContext = unknown>(
+export const usePostApiHealthcares = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof postApiHealthcares>>,
@@ -263,7 +266,7 @@ export const usePostApiHealthcares = <TError = void, TContext = unknown>(
   return useMutation(mutationOptions, queryClient);
 };
 export const getApiHealthcaresId = (id: string, signal?: AbortSignal) => {
-  return customInstance<HealthcareDtoResponseDto>({
+  return customInstance<HealthcareDto>({
     url: `/api/Healthcares/${id}`,
     method: "GET",
     signal,
@@ -276,7 +279,7 @@ export const getGetApiHealthcaresIdQueryKey = (id?: string) => {
 
 export const getGetApiHealthcaresIdQueryOptions = <
   TData = Awaited<ReturnType<typeof getApiHealthcaresId>>,
-  TError = void,
+  TError = ProblemDetails,
 >(
   id: string,
   options?: {
@@ -312,11 +315,11 @@ export const getGetApiHealthcaresIdQueryOptions = <
 export type GetApiHealthcaresIdQueryResult = NonNullable<
   Awaited<ReturnType<typeof getApiHealthcaresId>>
 >;
-export type GetApiHealthcaresIdQueryError = void;
+export type GetApiHealthcaresIdQueryError = ProblemDetails;
 
 export function useGetApiHealthcaresId<
   TData = Awaited<ReturnType<typeof getApiHealthcaresId>>,
-  TError = void,
+  TError = ProblemDetails,
 >(
   id: string,
   options: {
@@ -342,7 +345,7 @@ export function useGetApiHealthcaresId<
 };
 export function useGetApiHealthcaresId<
   TData = Awaited<ReturnType<typeof getApiHealthcaresId>>,
-  TError = void,
+  TError = ProblemDetails,
 >(
   id: string,
   options?: {
@@ -368,7 +371,7 @@ export function useGetApiHealthcaresId<
 };
 export function useGetApiHealthcaresId<
   TData = Awaited<ReturnType<typeof getApiHealthcaresId>>,
-  TError = void,
+  TError = ProblemDetails,
 >(
   id: string,
   options?: {
@@ -387,7 +390,7 @@ export function useGetApiHealthcaresId<
 
 export function useGetApiHealthcaresId<
   TData = Awaited<ReturnType<typeof getApiHealthcaresId>>,
-  TError = void,
+  TError = ProblemDetails,
 >(
   id: string,
   options?: {
@@ -419,7 +422,7 @@ export const putApiHealthcaresId = (
   id: string,
   updateHealthcareDto: UpdateHealthcareDto,
 ) => {
-  return customInstance<HealthcareDtoResponseDto>({
+  return customInstance<HealthcareDto>({
     url: `/api/Healthcares/${id}`,
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -428,7 +431,7 @@ export const putApiHealthcaresId = (
 };
 
 export const getPutApiHealthcaresIdMutationOptions = <
-  TError = void,
+  TError = ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -468,9 +471,12 @@ export type PutApiHealthcaresIdMutationResult = NonNullable<
   Awaited<ReturnType<typeof putApiHealthcaresId>>
 >;
 export type PutApiHealthcaresIdMutationBody = UpdateHealthcareDto;
-export type PutApiHealthcaresIdMutationError = void;
+export type PutApiHealthcaresIdMutationError = ProblemDetails;
 
-export const usePutApiHealthcaresId = <TError = void, TContext = unknown>(
+export const usePutApiHealthcaresId = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof putApiHealthcaresId>>,
@@ -491,14 +497,14 @@ export const usePutApiHealthcaresId = <TError = void, TContext = unknown>(
   return useMutation(mutationOptions, queryClient);
 };
 export const deleteApiHealthcaresId = (id: string) => {
-  return customInstance<BooleanResponseDto>({
+  return customInstance<void>({
     url: `/api/Healthcares/${id}`,
     method: "DELETE",
   });
 };
 
 export const getDeleteApiHealthcaresIdMutationOptions = <
-  TError = void,
+  TError = ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -538,9 +544,12 @@ export type DeleteApiHealthcaresIdMutationResult = NonNullable<
   Awaited<ReturnType<typeof deleteApiHealthcaresId>>
 >;
 
-export type DeleteApiHealthcaresIdMutationError = void;
+export type DeleteApiHealthcaresIdMutationError = ProblemDetails;
 
-export const useDeleteApiHealthcaresId = <TError = void, TContext = unknown>(
+export const useDeleteApiHealthcaresId = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof deleteApiHealthcaresId>>,

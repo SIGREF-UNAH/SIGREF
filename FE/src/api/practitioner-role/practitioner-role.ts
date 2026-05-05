@@ -51,7 +51,7 @@ export const getGetApiPractitionerRoleQueryKey = (
 
 export const getGetApiPractitionerRoleQueryOptions = <
   TData = Awaited<ReturnType<typeof getApiPractitionerRole>>,
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
 >(
   params?: GetApiPractitionerRoleParams,
   options?: {
@@ -83,11 +83,11 @@ export const getGetApiPractitionerRoleQueryOptions = <
 export type GetApiPractitionerRoleQueryResult = NonNullable<
   Awaited<ReturnType<typeof getApiPractitionerRole>>
 >;
-export type GetApiPractitionerRoleQueryError = ProblemDetails | void;
+export type GetApiPractitionerRoleQueryError = ProblemDetails;
 
 export function useGetApiPractitionerRole<
   TData = Awaited<ReturnType<typeof getApiPractitionerRole>>,
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
 >(
   params: undefined | GetApiPractitionerRoleParams,
   options: {
@@ -113,7 +113,7 @@ export function useGetApiPractitionerRole<
 };
 export function useGetApiPractitionerRole<
   TData = Awaited<ReturnType<typeof getApiPractitionerRole>>,
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
 >(
   params?: GetApiPractitionerRoleParams,
   options?: {
@@ -139,7 +139,7 @@ export function useGetApiPractitionerRole<
 };
 export function useGetApiPractitionerRole<
   TData = Awaited<ReturnType<typeof getApiPractitionerRole>>,
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
 >(
   params?: GetApiPractitionerRoleParams,
   options?: {
@@ -158,7 +158,7 @@ export function useGetApiPractitionerRole<
 
 export function useGetApiPractitionerRole<
   TData = Awaited<ReturnType<typeof getApiPractitionerRole>>,
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
 >(
   params?: GetApiPractitionerRoleParams,
   options?: {
@@ -190,7 +190,7 @@ export const postApiPractitionerRole = (
   createPractitionerRoleDto: CreatePractitionerRoleDto,
   signal?: AbortSignal,
 ) => {
-  return customInstance<PractitionerRoleDto | void>({
+  return customInstance<PractitionerRoleDto>({
     url: `/api/PractitionerRole`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -200,7 +200,7 @@ export const postApiPractitionerRole = (
 };
 
 export const getPostApiPractitionerRoleMutationOptions = <
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -240,10 +240,10 @@ export type PostApiPractitionerRoleMutationResult = NonNullable<
   Awaited<ReturnType<typeof postApiPractitionerRole>>
 >;
 export type PostApiPractitionerRoleMutationBody = CreatePractitionerRoleDto;
-export type PostApiPractitionerRoleMutationError = ProblemDetails | void;
+export type PostApiPractitionerRoleMutationError = ProblemDetails;
 
 export const usePostApiPractitionerRole = <
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
   TContext = unknown,
 >(
   options?: {
@@ -279,7 +279,7 @@ export const getGetApiPractitionerRoleIdQueryKey = (id?: string) => {
 
 export const getGetApiPractitionerRoleIdQueryOptions = <
   TData = Awaited<ReturnType<typeof getApiPractitionerRoleId>>,
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
 >(
   id: string,
   options?: {
@@ -316,11 +316,11 @@ export const getGetApiPractitionerRoleIdQueryOptions = <
 export type GetApiPractitionerRoleIdQueryResult = NonNullable<
   Awaited<ReturnType<typeof getApiPractitionerRoleId>>
 >;
-export type GetApiPractitionerRoleIdQueryError = ProblemDetails | void;
+export type GetApiPractitionerRoleIdQueryError = ProblemDetails;
 
 export function useGetApiPractitionerRoleId<
   TData = Awaited<ReturnType<typeof getApiPractitionerRoleId>>,
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
 >(
   id: string,
   options: {
@@ -346,7 +346,7 @@ export function useGetApiPractitionerRoleId<
 };
 export function useGetApiPractitionerRoleId<
   TData = Awaited<ReturnType<typeof getApiPractitionerRoleId>>,
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
 >(
   id: string,
   options?: {
@@ -372,7 +372,7 @@ export function useGetApiPractitionerRoleId<
 };
 export function useGetApiPractitionerRoleId<
   TData = Awaited<ReturnType<typeof getApiPractitionerRoleId>>,
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
 >(
   id: string,
   options?: {
@@ -391,7 +391,7 @@ export function useGetApiPractitionerRoleId<
 
 export function useGetApiPractitionerRoleId<
   TData = Awaited<ReturnType<typeof getApiPractitionerRoleId>>,
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
 >(
   id: string,
   options?: {
@@ -432,7 +432,7 @@ export const putApiPractitionerRoleId = (
 };
 
 export const getPutApiPractitionerRoleIdMutationOptions = <
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -472,10 +472,10 @@ export type PutApiPractitionerRoleIdMutationResult = NonNullable<
   Awaited<ReturnType<typeof putApiPractitionerRoleId>>
 >;
 export type PutApiPractitionerRoleIdMutationBody = UpdatePractitionerRoleDto;
-export type PutApiPractitionerRoleIdMutationError = ProblemDetails | void;
+export type PutApiPractitionerRoleIdMutationError = ProblemDetails;
 
 export const usePutApiPractitionerRoleId = <
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
   TContext = unknown,
 >(
   options?: {
@@ -498,14 +498,14 @@ export const usePutApiPractitionerRoleId = <
   return useMutation(mutationOptions, queryClient);
 };
 export const deleteApiPractitionerRoleId = (id: string) => {
-  return customInstance<void | void>({
+  return customInstance<void>({
     url: `/api/PractitionerRole/${id}`,
     method: "DELETE",
   });
 };
 
 export const getDeleteApiPractitionerRoleIdMutationOptions = <
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -545,10 +545,10 @@ export type DeleteApiPractitionerRoleIdMutationResult = NonNullable<
   Awaited<ReturnType<typeof deleteApiPractitionerRoleId>>
 >;
 
-export type DeleteApiPractitionerRoleIdMutationError = ProblemDetails | void;
+export type DeleteApiPractitionerRoleIdMutationError = ProblemDetails;
 
 export const useDeleteApiPractitionerRoleId = <
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
   TContext = unknown,
 >(
   options?: {
@@ -575,7 +575,7 @@ export const getApiPractitionerRolePractitionerId = (
   id: string,
   signal?: AbortSignal,
 ) => {
-  return customInstance<PractitionerRoleDto>({
+  return customInstance<PractitionerRoleDto[]>({
     url: `/api/PractitionerRole/practitioner/${id}`,
     method: "GET",
     signal,
@@ -590,7 +590,7 @@ export const getGetApiPractitionerRolePractitionerIdQueryKey = (
 
 export const getGetApiPractitionerRolePractitionerIdQueryOptions = <
   TData = Awaited<ReturnType<typeof getApiPractitionerRolePractitionerId>>,
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
 >(
   id: string,
   options?: {
@@ -628,12 +628,11 @@ export const getGetApiPractitionerRolePractitionerIdQueryOptions = <
 export type GetApiPractitionerRolePractitionerIdQueryResult = NonNullable<
   Awaited<ReturnType<typeof getApiPractitionerRolePractitionerId>>
 >;
-export type GetApiPractitionerRolePractitionerIdQueryError =
-  ProblemDetails | void;
+export type GetApiPractitionerRolePractitionerIdQueryError = ProblemDetails;
 
 export function useGetApiPractitionerRolePractitionerId<
   TData = Awaited<ReturnType<typeof getApiPractitionerRolePractitionerId>>,
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
 >(
   id: string,
   options: {
@@ -659,7 +658,7 @@ export function useGetApiPractitionerRolePractitionerId<
 };
 export function useGetApiPractitionerRolePractitionerId<
   TData = Awaited<ReturnType<typeof getApiPractitionerRolePractitionerId>>,
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
 >(
   id: string,
   options?: {
@@ -685,7 +684,7 @@ export function useGetApiPractitionerRolePractitionerId<
 };
 export function useGetApiPractitionerRolePractitionerId<
   TData = Awaited<ReturnType<typeof getApiPractitionerRolePractitionerId>>,
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
 >(
   id: string,
   options?: {
@@ -704,7 +703,7 @@ export function useGetApiPractitionerRolePractitionerId<
 
 export function useGetApiPractitionerRolePractitionerId<
   TData = Awaited<ReturnType<typeof getApiPractitionerRolePractitionerId>>,
-  TError = ProblemDetails | void,
+  TError = ProblemDetails,
 >(
   id: string,
   options?: {
