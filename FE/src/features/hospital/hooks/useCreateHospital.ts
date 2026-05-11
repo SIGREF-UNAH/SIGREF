@@ -1,10 +1,10 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import { useMessage } from "../../../shared/hooks";
 import type { CreateHospitalPropertiesDto } from "../../../api/models";
 import {
-  getGetApiHospitalPropertiesDetailsQueryKey,
-  usePostApiHospitalProperties,
+  getGetHospitalPropertiesDetailsQueryKey,
+  useCreateHospitalProperties,
 } from "../../../api/hospital-properties/hospital-properties";
 
 export default function useCreateHospital() {
@@ -12,25 +12,31 @@ export default function useCreateHospital() {
   const queryClient = useQueryClient();
   const msg = useMessage();
 
-  const createMutation = usePostApiHospitalProperties({
+  const { mutateAsync: createHospital, isPending } = useCreateHospitalProperties({
     mutation: {
       onSuccess: () => {
-        msg.success("Información del hospital registrada exitosamente");
-        // Invalidar la query de detalles para que se recargue
+        // Invalidar la query de detalles para que se recargue al navegar
         queryClient.invalidateQueries({
-          queryKey: getGetApiHospitalPropertiesDetailsQueryKey(),
+          queryKey: getGetHospitalPropertiesDetailsQueryKey(),
         });
+        
+        msg.success("Información del hospital registrada exitosamente");
         navigate("/hospital/details");
       },
-      onError: (error) => {
-        console.error("Error al crear hospital:", error);
-        msg.error("Error al registrar la información del hospital");
+      onError: (error: any) => {
+        // Extraer mensaje según ProblemDetails (RFC 7807)
+        const errorMessage =
+          error?.response?.data?.detail ||
+          error?.response?.data?.title ||
+          "Error al registrar la información del hospital";
+
+        msg.error(errorMessage);
       },
     },
   });
 
-  const handleCreate = (values: CreateHospitalPropertiesDto) => {
-    createMutation.mutate({ data: values });
+  const handleCreate = async (values: CreateHospitalPropertiesDto) => {
+    await createHospital({ data: values });
   };
 
   const handleCancel = () => {
@@ -38,7 +44,7 @@ export default function useCreateHospital() {
   };
 
   return {
-    createMutation,
+    isPending,
     handleCreate,
     handleCancel,
   };

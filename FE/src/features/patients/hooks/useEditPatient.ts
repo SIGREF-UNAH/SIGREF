@@ -1,9 +1,9 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { message } from "antd";
 import {
-  getGetApiPatientsQueryKey,
-  useGetApiPatientsId,
-  usePutApiPatientsId,
+  getGetPatientListQueryKey,
+  useGetPatientById,
+  useUpdatePatientById,
 } from "../../../api/patients/patients";
 import type { PatientDto } from "../../../api/models";
 import { PatientExtensionsUrls } from "../../../shared/constants";
@@ -18,7 +18,7 @@ export const useEditPatient = () => {
   const [messageApi, contextHolder] = message.useMessage();
 
   // Obtener paciente por ID
-  const { data } = useGetApiPatientsId(id ?? "") as {
+  const { data } = useGetPatientById(id ?? "") as {
     data?: PatientDto;
     isLoading: boolean;
     error?: any;
@@ -26,11 +26,11 @@ export const useEditPatient = () => {
   const patient: PatientDto | undefined = Array.isArray(data) ? data[0] : data;
 
   // Mutación para actualizar
-  const { mutate: updatePatient, isPending } = usePutApiPatientsId({
+  const { mutate: updatePatient, isPending } = useUpdatePatientById({
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({
-          queryKey: getGetApiPatientsQueryKey(),
+          queryKey: getGetPatientListQueryKey(),
         });
         msg.success("Paciente actualizado correctamente");
         navigate("/patients/list");

@@ -1,20 +1,28 @@
-﻿using Microsoft.OpenApi.Any;
-using Microsoft.OpenApi.Models;
+﻿using System.Text.Json;
+using System.Text.Json.Nodes;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace SIGREF.API.Utils;
 
 public class EnumSchemaFilter : ISchemaFilter
 {
-    public void Apply(OpenApiSchema schema, SchemaFilterContext context)
+    public void Apply(IOpenApiSchema schema, SchemaFilterContext context)
     {
-        if (!context.Type.IsEnum) return;
+        if (context.Type is null || !context.Type.IsEnum)
+            return;
 
-        schema.Enum.Clear();
+        if (schema is not OpenApiSchema openApiSchema)
+            return;
+
+        openApiSchema.Enum.Clear();
         foreach (var name in Enum.GetNames(context.Type))
         {
-            schema.Enum.Add(new OpenApiString(name));
+            var camelName = JsonNamingPolicy.CamelCase.ConvertName(name);
+            openApiSchema.Enum.Add(JsonValue.Create(camelName)!);
         }
-        schema.Type = "string";
+
+        openApiSchema.Type = JsonSchemaType.String;
+        openApiSchema.Format = null;
     }
 }

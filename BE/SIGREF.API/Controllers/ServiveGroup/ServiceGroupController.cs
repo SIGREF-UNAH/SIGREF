@@ -1,48 +1,61 @@
+using System.Net.Mime;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.ServiceGroup;
 using SIGREF.API.Extensions;
 using SIGREF.API.Services.ServiceGroup;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace SIGREF.API.Controllers.ServiveGroup;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = $"{RolesConstants.admin},{RolesConstants.cashier},{RolesConstants.auditor}")]
+[SwaggerTag("Paquetes de Servicios Medicos - Gestión de Paquetes de Servicios Medicos")]
+[Authorize(AuthenticationSchemes = "Bearer")]
+[Produces(MediaTypeNames.Application.Json)]
+[Consumes(MediaTypeNames.Application.Json)]
 public class ServiceGroupController(HealthcareGroupService serviceGroupService) : ControllerBase
 {
     [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    [Produces(typeof(PagedResultDto<ServiceGroupDto>))]
+    [SwaggerOperation(
+        OperationId = "GetServiceGroupList",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "ServiceGroup" }
+    )]
+    [ProducesResponseType(typeof(PagedResultDto<ServiceGroupDto>), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor} ")]
-     public async Task<ActionResult<ServiceGroupDto>> GetFiltered([FromQuery] ServiceGroupFilterDto filter)
+    public async Task<ActionResult<ServiceGroupDto>> GetFiltered([FromQuery] ServiceGroupFilterDto filter)
     {
         var result = await serviceGroupService.GetFilteredAsync(filter);
         return Ok(result);
     }
 
     [HttpGet("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [SwaggerOperation(
+        OperationId = "GetServiceGroupById",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "ServiceGroup" }
+    )]
+    [ProducesResponseType(typeof(ServiceGroupDto), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor} ")]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [Produces<ServiceGroupDto>()]
     public async Task<IActionResult> GetById(string id)
     {
         var group = await serviceGroupService.GetByIdAsync(id);
-        if (group == null) return NotFound($"ServiceGroup with id '{id}' not found.");
-
         return Ok(group);
     }
 
     [HttpPost]
-    [ProducesResponseType(StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [Produces<ServiceGroupDto>()]
+    [SwaggerOperation(
+        OperationId = "CreateServiceGroup",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "ServiceGroup" }
+    )]
+    [ProducesResponseType(typeof(ServiceGroupDto), StatusCodes.Status201Created)]
     [Authorize(Roles = $" {RolesConstants.admin}")]
     public async Task<IActionResult> Create([FromBody] CreateServiceGroupDto createDto)
     {
@@ -58,11 +71,14 @@ public class ServiceGroupController(HealthcareGroupService serviceGroupService) 
     }
 
     [HttpPut("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [SwaggerOperation(
+        OperationId = "UpdateServiceGroupById",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "ServiceGroup" }
+    )]
+    [ProducesResponseType(typeof(ServiceGroupDto), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.admin}")]
-    [Produces<ServiceGroupDto>()]
     public async Task<IActionResult> Update(string id, [FromBody] UpdateServiceGroupDto updateDto)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -80,8 +96,13 @@ public class ServiceGroupController(HealthcareGroupService serviceGroupService) 
     }
 
     [HttpDelete("{id}")]
+    [SwaggerOperation(
+        OperationId = "DeleteServiceGroupById",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "ServiceGroup" }
+    )]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Authorize(Roles = $"{RolesConstants.admin}")]
     public async Task<IActionResult> Delete(string id)
     {

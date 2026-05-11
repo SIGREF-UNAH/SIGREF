@@ -5,9 +5,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useMessage } from "../../../shared/hooks";
 import type { TablePaginationConfig } from "antd";
 import {
-  getGetApiServiceGroupQueryKey,
-  useDeleteApiServiceGroupId,
-  useGetApiServiceGroup,
+  getGetServiceGroupListQueryKey,
+  useDeleteServiceGroupById,
+  useGetServiceGroupList,
 } from "../../../api/service-group/service-group";
 
 export function useServiceGroupsList() {
@@ -52,7 +52,7 @@ export function useServiceGroupsList() {
   }, [filters]);
 
   // Obtener datos con filtros
-  const { data: response, isLoading, isFetching, isError } = useGetApiServiceGroup(queryParams, {
+  const { data: response, isLoading, isFetching, isError } = useGetServiceGroupList(queryParams, {
     query: {
       placeholderData: (previousData) => previousData,
     }
@@ -74,11 +74,11 @@ export function useServiceGroupsList() {
   }, [serviceGroups]);
 
   // Mutación para eliminar
-  const { mutate: deleteServiceGroup } = useDeleteApiServiceGroupId({
+  const { mutate: deleteServiceGroup } = useDeleteServiceGroupById({
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({
-          queryKey: getGetApiServiceGroupQueryKey(),
+          queryKey: getGetServiceGroupListQueryKey(),
         });
         msg.success("Paquete eliminado correctamente");
       },

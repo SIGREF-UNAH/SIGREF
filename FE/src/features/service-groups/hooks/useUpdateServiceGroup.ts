@@ -3,9 +3,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useMessage } from "../../../shared/hooks";
 import type { UpdateServiceGroupDto } from "../../../api/models";
 import {
-  getGetApiServiceGroupQueryKey,
-  usePutApiServiceGroupId,
-  useGetApiServiceGroupId,
+  getGetServiceGroupListQueryKey,
+  useUpdateServiceGroupById,
+  useGetServiceGroupById,
 } from "../../../api/service-group/service-group";
 
 export function useUpdateServiceGroup() {
@@ -14,17 +14,17 @@ export function useUpdateServiceGroup() {
   const msg = useMessage();
   const { id } = useParams<{ id: string }>();
 
-  const { data: serviceGroup, isLoading } = useGetApiServiceGroupId(id || "", {
+  const { data: serviceGroup, isLoading } = useGetServiceGroupById(id || "", {
     query: {
       enabled: !!id,
     },
   });
 
-  const { mutateAsync, isPending } = usePutApiServiceGroupId({
+  const { mutateAsync, isPending } = useUpdateServiceGroupById({
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({
-          queryKey: getGetApiServiceGroupQueryKey(),
+          queryKey: getGetServiceGroupListQueryKey(),
         });
         msg.success("Paquete actualizado correctamente");
         navigate("/service-groups/list");

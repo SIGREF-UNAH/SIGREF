@@ -1,12 +1,12 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import { useMessage } from "../../../shared/hooks";
 import type { UpdateHospitalPropertiesDto } from "../../../api/models";
 import {
-  getGetApiHospitalPropertiesDetailsQueryKey,
-  useGetApiHospitalPropertiesDetails,
-  usePutApiHospitalProperties,
+  getGetHospitalPropertiesDetailsQueryKey,
+  useGetHospitalPropertiesDetails,
+  useUpdateHospitalProperties,
 } from "../../../api/hospital-properties/hospital-properties";
 
 export default function useUpdateHospital() {
@@ -14,54 +14,60 @@ export default function useUpdateHospital() {
   const queryClient = useQueryClient();
   const msg = useMessage();
 
+  // Obtener datos del hospital
   const {
-    data: response,
+    data: hospital,
     isLoading,
     isError,
-  } = useGetApiHospitalPropertiesDetails();
+  } = useGetHospitalPropertiesDetails();
 
-  // Extraer los datos del objeto data
-  const hospital = response?.data;
-
-  const updateMutation = usePutApiHospitalProperties({
+  // Mutación para actualizar
+  const { mutateAsync: updateHospital, isPending } = useUpdateHospitalProperties({
     mutation: {
       onSuccess: () => {
-        msg.success("Información del hospital actualizada exitosamente");
         // Invalidar la query de detalles para que se recargue
         queryClient.invalidateQueries({
-          queryKey: getGetApiHospitalPropertiesDetailsQueryKey(),
+          queryKey: getGetHospitalPropertiesDetailsQueryKey(),
         });
+        
+        msg.success("Información del hospital actualizada exitosamente");
         navigate("/hospital/details");
       },
-      onError: (error) => {
-        console.error("Error al actualizar hospital:", error);
-        msg.error("Error al actualizar la información del hospital");
+      onError: (error: any) => {
+        // Extraer mensaje según ProblemDetails (RFC 7807)
+        const errorMessage =
+          error?.response?.data?.detail ||
+          error?.response?.data?.title ||
+          "Error al actualizar la información del hospital";
+
+        msg.error(errorMessage);
       },
     },
   });
 
+  // Redirigir si hay error o no hay datos
   useEffect(() => {
-    // Si hay error o no hay datos, redirigir a detalles
     if (isError || (!isLoading && !hospital)) {
-      msg.warning("No hay información para actualizar");
+      msg.warning("No hay información del hospital para actualizar");
       navigate("/hospital/details");
     }
-  }, [isError, isLoading, hospital, navigate]);
+  }, [isError, isLoading, hospital, navigate, msg]);
 
-  const handleUpdate = (values: UpdateHospitalPropertiesDto) => {
-    updateMutation.mutate({ data: values });
+  // Manejar submit del formulario
+  const handleUpdate = async (values: UpdateHospitalPropertiesDto) => {
+    await updateHospital({ data: values });
   };
 
+  // Manejar cancelación
   const handleCancel = () => {
     navigate("/hospital/details");
   };
 
   return {
     hospital,
-    updateMutation,
+    isPending,
     isLoading,
     isError,
-    navigate,
     handleUpdate,
     handleCancel,
   };

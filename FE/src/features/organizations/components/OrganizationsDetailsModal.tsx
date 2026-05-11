@@ -1,5 +1,8 @@
+// TODO: Organizacion no muestra todos los elementos de identificadores existentes para este archivo, igualmente con otras props
+
 import { Modal, Descriptions, Tag, Empty } from "antd";
 import type { OrganizationDto } from "../../../api/models";
+import { OrganizationTypeEnum } from "../../../api/models";
 
 interface OrganizationDetailsModalProps {
   open: boolean;
@@ -41,6 +44,21 @@ export const OrganizationDetailsModal = ({
     [address?.country, address?.state, address?.city, ...(address?.line || [])]
       .filter(Boolean)
       .join(", ") || "No registrada";
+
+  // Función para obtener el label del tipo de organización
+  const getOrganizationTypeLabel = (typeValue: string): string => {
+    const entry = Object.entries(OrganizationTypeEnum).find(
+      ([_, value]) => value === typeValue
+    );
+    return entry ? entry[1] : typeValue;
+  };
+
+  // Obtener los tipos de organización
+  const organizationTypes = organization.type?.map(item => {
+    // Si el item tiene alguna propiedad que podamos mostrar
+    const values = Object.values(item).filter(v => v !== null && v !== undefined);
+    return values.length > 0 ? values.join(", ") : "No especificado";
+  }) || [];
 
   return (
     <Modal
@@ -85,13 +103,15 @@ export const OrganizationDetailsModal = ({
             )}
           </Descriptions.Item>
 
-          {organization.types && organization.types.length > 0 && (
+          {organization.type && organization.type.length > 0 && (
             <Descriptions.Item label="Tipo" span={2}>
-              <Tag color="purple" className="text-sm px-3 py-1">
-                {organization.type?.[0]?.coding?.[0]?.display ||
-                  organization.type?.[0]?.coding?.[0]?.code ||
-                  "No especificado"}
-              </Tag>
+              <div className="flex flex-wrap gap-2">
+                {organizationTypes.map((type, index) => (
+                  <Tag key={index} color="purple" className="text-sm px-3 py-1">
+                    {getOrganizationTypeLabel(type)}
+                  </Tag>
+                ))}
+              </div>
             </Descriptions.Item>
           )}
 

@@ -1,11 +1,17 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMessage } from "../../../shared/hooks";
-import type { MediaFileType } from "../../../api/models";
-import { getGetApiMediaFilesQueryKey, useDeleteApiMediaFilesId, useGetApiMediaFiles, usePostApiMediaFilesMediaIdAssign, usePostApiMediaFilesUpload } from "../../../api/media-files/media-files";
-import { getGetApiHospitalPropertiesDetailsQueryKey } from "../../../api/hospital-properties/hospital-properties";
+import { MediaFileType } from "../../../api/models";
+import {
+  getGetMediaFileListQueryKey,
+  useDeleteMediaFileById,
+  useGetMediaFileList,
+  useCreateMediaFileAssignment,
+  useCreateMediaFileUpload,
+} from "../../../api/media-files/media-files";
+import { getGetHospitalPropertiesDetailsQueryKey } from "../../../api/hospital-properties/hospital-properties";
 
-export default function useMediaFiles(logoType: MediaFileType = 0) {
+export default function useMediaFiles(logoType: MediaFileType = MediaFileType.appHospital) {
   const queryClient = useQueryClient();
   const msg = useMessage();
 
@@ -14,7 +20,7 @@ export default function useMediaFiles(logoType: MediaFileType = 0) {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Query para obtener las imágenes según el tipo de logo
-  const { data: response, isLoading } = useGetApiMediaFiles({
+  const { data: response, isLoading } = useGetMediaFileList({
     Type: logoType,
     Search: searchQuery || undefined,
     PageNumber: currentPage,
@@ -27,16 +33,16 @@ export default function useMediaFiles(logoType: MediaFileType = 0) {
   const pagination = responseData?.data?.pagination;
 
   // Mutation para subir imagen
-  const uploadMutation = usePostApiMediaFilesUpload({
+  const uploadMutation = useCreateMediaFileUpload({
     mutation: {
       onSuccess: () => {
         msg.success("Imagen subida exitosamente");
         // Invalidar queries de media files y hospital details
         queryClient.invalidateQueries({
-          queryKey: getGetApiMediaFilesQueryKey(),
+          queryKey: getGetMediaFileListQueryKey(),
         });
         queryClient.invalidateQueries({
-          queryKey: getGetApiHospitalPropertiesDetailsQueryKey(),
+          queryKey: getGetHospitalPropertiesDetailsQueryKey(),
         });
       },
       onError: (error) => {
@@ -47,12 +53,12 @@ export default function useMediaFiles(logoType: MediaFileType = 0) {
   });
 
   // Mutation para eliminar imagen
-  const deleteMutation = useDeleteApiMediaFilesId({
+  const deleteMutation = useDeleteMediaFileById({
     mutation: {
       onSuccess: () => {
         msg.success("Imagen eliminada exitosamente");
         queryClient.invalidateQueries({
-          queryKey: getGetApiMediaFilesQueryKey(),
+          queryKey: getGetMediaFileListQueryKey(),
         });
       },
       onError: (error) => {
@@ -63,12 +69,12 @@ export default function useMediaFiles(logoType: MediaFileType = 0) {
   });
 
   // Mutation para asignar logo al hospital
-  const assignMutation = usePostApiMediaFilesMediaIdAssign({
+  const assignMutation = useCreateMediaFileAssignment({
     mutation: {
       onSuccess: () => {
         msg.success("Logotipo asignado exitosamente");
         queryClient.invalidateQueries({
-          queryKey: getGetApiHospitalPropertiesDetailsQueryKey(),
+          queryKey: getGetHospitalPropertiesDetailsQueryKey(),
         });
       },
       onError: (error) => {
@@ -83,13 +89,10 @@ export default function useMediaFiles(logoType: MediaFileType = 0) {
     type: MediaFileType,
     description?: string
   ) => {
-    // Asegurar que type sea número
-    const numericType = Number(type) as MediaFileType;
-
     uploadMutation.mutate({
       data: {
         File: file,
-        Type: numericType,
+        Type: type,
         Description: description || undefined,
       },
     });

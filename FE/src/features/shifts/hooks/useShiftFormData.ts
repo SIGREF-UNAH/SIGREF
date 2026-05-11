@@ -1,7 +1,9 @@
-import { useGetApiLocations } from "../../../api/locations/locations";
+import { useGetLocationList } from "../../../api/locations/locations";
+
+// ! no hay paginacion real en locations
 
 export function useShiftFormData() {
-  const { data: locationsResponse, isLoading } = useGetApiLocations({
+  const { data: locationsResponse, isLoading } = useGetLocationList({
     PageNumber: 1,
     PageSize: 9999,
   });

@@ -1,16 +1,16 @@
-import React from "react";
 import { HospitalForm } from "../components/HospitalForm";
 import useCreateHospital from "../hooks/useCreateHospital";
+import type { CreateHospitalPropertiesDto } from "../../../api/models";
 
-export const CreateHospitalPage: React.FC = () => {
-  const { createMutation, handleCreate, handleCancel } = useCreateHospital();
+export const CreateHospitalPage = () => {
+  const { isPending, handleCreate, handleCancel } = useCreateHospital();
 
   return (
     <div className="primary-card">
-      <HospitalForm
-        onSubmit={handleCreate as any}
+      <HospitalForm<CreateHospitalPropertiesDto>
+        onSubmit={handleCreate}
         onCancel={handleCancel}
-        loading={createMutation.isPending}
+        loading={isPending}
       />
     </div>
   );

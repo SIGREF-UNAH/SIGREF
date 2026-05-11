@@ -2,7 +2,8 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { useAbility } from "../../../config";
 import { useUrlFilters } from "../../../shared/hooks";
-import { useGetApiSeries } from "../../../api/series/series";
+import { useGetSerieList } from "../../../api/series/series";
+import type { SerieDto, GetSerieListParams } from "../../../api/models";
 import type { TablePaginationConfig } from "antd";
 
 export type SeriesStatusFilter = "all" | "active" | "inactive";
@@ -23,16 +24,19 @@ export function useSeriesList() {
     },
   });
 
-  const queryParams = useMemo(() => {
-    const params: any = {
-      pageNumber: filters.pageNumber,
-      pageSize: filters.pageSize,
+  const queryParams = useMemo((): GetSerieListParams => {
+    const params: GetSerieListParams = {
+      PageNumber: filters.pageNumber,
+      PageSize: filters.pageSize,
     };
     if (filters.search) {
-      params.name = filters.search;
+      params.Name = filters.search;
+    }
+    if (statusFilter !== "all") {
+      params.IsActive = statusFilter === "active";
     }
     return params;
-  }, [filters]);
+  }, [filters, statusFilter]);
 
   const {
     data: response,
@@ -40,31 +44,26 @@ export function useSeriesList() {
     isFetching,
     isError,
     refetch,
-  } = useGetApiSeries(queryParams, {
+  } = useGetSerieList(queryParams, {
     query: {
       placeholderData: (prev) => prev,
     },
   });
 
- // Extraer datos
-  const allSeries = response?.data?.items || [];
+  // Extraer datos
+  const allSeries: SerieDto[] = response?.items || [];
 
-  // Filtrar series según el tab activo
+  // Filtrar series según el tab activo (ahora el filtro se hace en la API)
   const series = useMemo(() => {
-    if (statusFilter === "all") return allSeries;
-    if (statusFilter === "active")
-      return allSeries.filter((s) => s.isActive === true);
-    if (statusFilter === "inactive")
-      return allSeries.filter((s) => s.isActive === false);
     return allSeries;
-  }, [allSeries, statusFilter]);
+  }, [allSeries]);
 
-  const pagination = response?.data?.pagination || null;
+  const pagination = response?.pagination || null;
 
-  // Estadísticas
+  // Estadísticas (nota: ahora solo muestra las de la página actual si el filtro es por API)
   const stats = useMemo(() => {
-    const active = allSeries.filter((s) => s.isActive === true).length;
-    const inactive = allSeries.filter((s) => s.isActive === false).length;
+    const active = allSeries.filter((s: SerieDto) => s.isActive === true).length;
+    const inactive = allSeries.filter((s: SerieDto) => s.isActive === false).length;
     return {
       active,
       inactive,
@@ -77,13 +76,16 @@ export function useSeriesList() {
 
   const handleSearchInputChange = (value: string) => setSearchInput(value);
 
-  const handleSearch = () => setFilter("search", searchInput);
+  const handleSearch = () => {
+    setFilter("search", searchInput);
+    setFilters({ pageNumber: 1 });
+  };
 
   const handleClearSearch = () => {
     setSearchInput("");
     setFilter("search", "");
+    setFilters({ pageNumber: 1 });
   };
-
 
   const handleStatusFilterChange = (status: SeriesStatusFilter) => {
     setStatusFilter(status);

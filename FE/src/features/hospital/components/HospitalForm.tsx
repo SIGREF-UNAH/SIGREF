@@ -1,12 +1,7 @@
-import React from "react";
 import { Button, Form, Space } from "antd";
 import { BankOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
-import type {
-  CreateHospitalPropertiesDto,
-  UpdateHospitalPropertiesDto,
-} from "../../../api/models";
 import {
   ProForm,
   ProFormText,
@@ -14,24 +9,21 @@ import {
 } from "@ant-design/pro-components";
 import useHospitalForm from "../hooks/useHospitalForm";
 
-interface HospitalFormProps {
-  onSubmit: (
-    values: CreateHospitalPropertiesDto | UpdateHospitalPropertiesDto
-  ) => void;
+interface HospitalFormProps<T extends Record<string, any>> {
+  onSubmit: (values: T) => void | Promise<void>;
   onCancel: () => void;
-  initialValues?: UpdateHospitalPropertiesDto;
+  initialValues?: T;
   isEdit?: boolean;
   loading?: boolean;
 }
 
-export const HospitalForm: React.FC<HospitalFormProps> = ({
+export const HospitalForm = <T extends Record<string, any>>({
   onSubmit,
   onCancel,
   initialValues,
   isEdit = false,
   loading = false,
-}) => { 
-  
+}: HospitalFormProps<T>) => {
   // Funciones y variables en hook personalizado
   const {
     formRef,
@@ -64,17 +56,16 @@ export const HospitalForm: React.FC<HospitalFormProps> = ({
       country: selectedCountry,
       state: selectedState,
       city: selectedCity,
-      ubication: completeLocation,
       location: completeLocation,
       details: details,
     };
 
-    // Remover campos temporales si es necesario
+    // Remover campos temporales del DTO final
     delete submitValues.country;
     delete submitValues.state;
     delete submitValues.city;
 
-    await onSubmit(submitValues);
+    await onSubmit(submitValues as T);
   };
 
   return (

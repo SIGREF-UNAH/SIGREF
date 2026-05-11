@@ -1,16 +1,23 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Services.Reports;
+using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
 using SIGREF.Common.Dtos.Report;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
 using SIGREF.Infrastructure.Reporting.Interfaces;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace SIGREF.API.Controllers.Reports;
 
 
 [Route("reports/[controller]")]
 [ApiController]
-//[Authorize(Roles = $"{RolesConstants.admin},{RolesConstants.auditor}")]
+[SwaggerTag("Reportes - Gestión de Reportes")]
+[Authorize(AuthenticationSchemes = "Bearer")]
+[Produces(MediaTypeNames.Application.Json)]
+[Consumes(MediaTypeNames.Application.Json)]
 public class ReportsController : ControllerBase
 {
     private readonly IReportQueryService _reportQueryService;
@@ -32,9 +39,13 @@ public class ReportsController : ControllerBase
     /// Pensado para carga rápida de dashboard.
     /// </summary>
     [HttpGet("summary")]
+    [SwaggerOperation(
+        OperationId = "GetReportSummary",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Reports" }
+    )]
     [ProducesResponseType(typeof(ResponseDto<ReportSummaryResponseDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ResponseDto<ReportSummaryResponseDto>), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetReportSummary([FromQuery] ReportFilterDto filter)
     {
         var response = await _reportQueryService.GetReportSummaryAsync(filter);
@@ -48,9 +59,13 @@ public class ReportsController : ControllerBase
     /// Para ello utilizar el JOB de Exportacion
     /// </summary>
     [HttpGet("detail")]
+    [SwaggerOperation(
+        OperationId = "GetReportDetail",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Reports" }
+    )]
     [ProducesResponseType(typeof(ResponseDto<ReportDetailPageResponseDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ResponseDto<ReportDetailPageResponseDto>), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetReportDetailPage([FromQuery] ReportFilterDto filter)
     {
         var response = await _reportQueryService.GetReportDetailPageAsync(filter);
@@ -62,9 +77,13 @@ public class ReportsController : ControllerBase
     /// La UI usa el JobId devuelto para hacer polling al endpoint de status.
     /// </summary>
     [HttpPost("generate")]
+    [SwaggerOperation(
+        OperationId = "CreateReportEnqueue",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Reports" }
+    )]
     [ProducesResponseType(typeof(EnqueueReportResponseDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(EnqueueReportResponseDto), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     
     public async Task<IActionResult> Enqueue(
         [FromBody] ReportFilterDto filter,
@@ -82,6 +101,12 @@ public class ReportsController : ControllerBase
     /// La UI llama a este endpoint cada ~3 segundos hasta Status = "Completed" o "Failed".
     /// </summary>
     [HttpGet("{jobId:guid}/status")]
+    [SwaggerOperation(
+        OperationId = "GetReportEnqueueStatus",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Reports" }
+    )]
     public async Task<IActionResult> GetStatus(Guid jobId, CancellationToken cancellationToken)
     {
         var status = await _queue.GetStatusAsync(jobId, cancellationToken);
@@ -92,6 +117,12 @@ public class ReportsController : ControllerBase
     /// Historial de reportes del usuario autenticado.
     /// </summary>
     [HttpGet("history")]
+    [SwaggerOperation(
+        OperationId = "GetReportListHistory",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Reports" }
+    )]
     public async Task<IActionResult> GetHistory(
         [FromQuery] int page     = 1,
         [FromQuery] int pageSize = 20,
@@ -106,6 +137,12 @@ public class ReportsController : ControllerBase
     /// Descarga el PDF. Solo disponible cuando Status = "Completed".
     /// </summary>
     [HttpGet("{jobId:guid}/download")]
+    [SwaggerOperation(
+        OperationId = "GetReportDownload",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Reports" }
+    )]
     public async Task<IActionResult> Download(Guid jobId, CancellationToken cancellationToken)
     {
         var status = await _queue.GetStatusAsync(jobId, cancellationToken);

@@ -1,20 +1,20 @@
 import { message } from 'antd';
-import { useGetApiUsersByIdId } from '../../../api/users/users';
-import { useGetApiPractitionerId } from '../../../api/practitioner/practitioner';
+import { useGetUserById} from '../../../api/users/users';
+import { useGetPractitionerById } from '../../../api/practitioner/practitioner';
 
 export const useUserDetail = (userId: string | null) => {
   // Fetch de datos del usuario
-  const { data: userDetail } = useGetApiUsersByIdId(userId!, {
+  const { data: userDetail } = useGetUserById(userId!, {
     query: { enabled: !!userId },
   });
 
-  const detailedUserData = userDetail?.data;
+  const detailedUserData = userDetail?? null;
 
   // Fetch de datos de empleado (si existe practitionerId en el usuario)
   const practitionerId = detailedUserData?.practitionerId ?? null;
 
   const { data: practitionerData, isLoading: practitionerLoading } =
-    useGetApiPractitionerId(practitionerId!, {
+    useGetPractitionerById(practitionerId!, {
       query: { enabled: !!practitionerId },
     });
 

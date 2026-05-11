@@ -1,16 +1,21 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Services.Organization;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace SIGREF.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
+[Authorize(AuthenticationSchemes = "Bearer")]
+[Produces(MediaTypeNames.Application.Json)]
+[Consumes(MediaTypeNames.Application.Json)]
+[SwaggerTag("Organizaciones - Gestion de Organizaciones")]
 public class OrganizationsController : ControllerBase
 {
     private readonly IOrganizationService _organizationService;
@@ -23,7 +28,13 @@ public class OrganizationsController : ControllerBase
     }
 
     [HttpGet()]
-    [Produces(typeof(PagedResultDto<OrganizationDto>))]
+    [SwaggerOperation(
+        OperationId = "GetOrganizationList",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Organizations" }
+    )]
+    [ProducesResponseType( typeof(PagedResultDto<OrganizationDto>), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.auditor} , {RolesConstants.ti}")]
     public async Task<IActionResult> GetFilteredOrganizations([FromQuery] OrganizationFilterDto filter)
     {
@@ -39,7 +50,13 @@ public class OrganizationsController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [Produces<OrganizationDto>()]
+    [SwaggerOperation(
+        OperationId = "GetOrganizationById",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Organizations" }
+    )]
+    [ProducesResponseType( typeof(OrganizationDto) , StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.auditor} , {RolesConstants.ti}")]
     public async Task<ActionResult<OrganizationDto>> GetOrganizationById(string id)
     {
@@ -60,7 +77,13 @@ public class OrganizationsController : ControllerBase
     }
 
     [HttpPost]
-    [Produces<OrganizationDto>()]
+    [SwaggerOperation(
+        OperationId = "CreateOrganization",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Organizations" }
+    )]
+    [ProducesResponseType( typeof(OrganizationDto), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.ti}")]
     public async Task<ActionResult<OrganizationDto>> CreateOrganization([FromBody] CreateOrganizationDto createDto)
     {
@@ -82,7 +105,13 @@ public class OrganizationsController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Produces<OrganizationDto>()]
+    [SwaggerOperation(
+        OperationId = "UpdateOrganizationById",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Organizations" }
+    )]
+    [ProducesResponseType( typeof(OrganizationDto), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.admin}, {RolesConstants.ti}")]
     public async Task<ActionResult<OrganizationDto>> UpdateOrganization(string id, [FromBody] UpdateOrganizationDto updateDto)
     {
@@ -108,11 +137,14 @@ public class OrganizationsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [SwaggerOperation(
+        OperationId = "DeleteOrganizationById",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Organizations" }
+    )]
     [Authorize(Roles = $"{RolesConstants.admin}, {RolesConstants.ti}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
     public async Task<IActionResult> DeleteOrganization(string id)
     {
         // El Middleware captura todo y Orval recibe el status code correcto.

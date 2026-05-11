@@ -1,5 +1,4 @@
 import { Spin } from "antd";
-import type { OrganizationDto } from "../../../api/models";
 import { PageHeaderTabs } from "../../../shared/components";
 import OrganizationsForm from "../components/OrganizationsForm";
 import { useUpdateOrganization } from "../hooks/useUpdateOrganizations";
@@ -10,7 +9,8 @@ export const UpdateOrganizationPage = () => {
     initialValues, 
     isPending, 
     isLoading, 
-    handleFinish, 
+    handleFinish,
+    organizationTypeToFhirMap,
   } = useUpdateOrganization();
   const ability = useAbility();
 
@@ -42,11 +42,12 @@ export const UpdateOrganizationPage = () => {
           </div>
         ) : (
           <OrganizationsForm
-            initialValues={initialValues as Partial<OrganizationDto>} // se define asi para quitar error de tipado
+            initialValues={initialValues}
             onFinish={handleFinish}
             onCancel={() => window.history.back()}
             submitButtonText="Actualizar Organización"
             isPending={isPending}
+            organizationTypeToFhirMap={organizationTypeToFhirMap}
           />
         )}
       </div>

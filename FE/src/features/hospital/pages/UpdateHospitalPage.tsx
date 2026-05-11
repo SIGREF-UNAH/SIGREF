@@ -1,15 +1,14 @@
-import React from "react";
 import { HospitalForm } from "../components/HospitalForm";
 import { Button, Result, Spin } from "antd";
 import useUpdateHospital from "../hooks/useUpdateHospital";
+import type { UpdateHospitalPropertiesDto } from "../../../api/models";
 
-export const UpdateHospitalPage: React.FC = () => {
+export const UpdateHospitalPage = () => {
   const {
     hospital,
-    updateMutation,
+    isPending,
     isLoading,
     isError,
-    navigate,
     handleUpdate,
     handleCancel,
   } = useUpdateHospital();
@@ -30,10 +29,7 @@ export const UpdateHospitalPage: React.FC = () => {
           title="Error al cargar la información"
           subTitle="No se pudo cargar la información del hospital para editar."
           extra={
-            <Button
-              type="primary"
-              onClick={() => navigate("/hospital/details")}
-            >
+            <Button type="primary" onClick={handleCancel}>
               Volver a Detalles
             </Button>
           }
@@ -44,12 +40,12 @@ export const UpdateHospitalPage: React.FC = () => {
 
   return (
     <div className="primary-card">
-      <HospitalForm
+      <HospitalForm<UpdateHospitalPropertiesDto>
         initialValues={hospital}
         onSubmit={handleUpdate}
         onCancel={handleCancel}
         isEdit
-        loading={updateMutation.isPending}
+        loading={isPending}
       />
     </div>
   );

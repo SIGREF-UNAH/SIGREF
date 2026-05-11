@@ -4,8 +4,8 @@ import type {
   GetReportsReportsSummaryParams,
 } from "../../../api/models";
 import {
-  useGetReportsReportsDetail,
-  useGetReportsReportsSummary,
+  useGetReportDetail,
+  useGetReportSummary,
 } from "../../../api/reports/reports";
 
 export const useReportData = () => {
@@ -15,12 +15,12 @@ export const useReportData = () => {
   }>({ params: {}, enabled: false });
 
   // Summary
-  const summaryQuery = useGetReportsReportsSummary(committed.params, {
+  const summaryQuery = useGetReportSummary(committed.params, {
     query: { enabled: committed.enabled },
   });
 
   // Detail
-  const detailQuery = useGetReportsReportsDetail(committed.params, {
+  const detailQuery = useGetReportDetail(committed.params, {
     query: { enabled: committed.enabled },
   });
 

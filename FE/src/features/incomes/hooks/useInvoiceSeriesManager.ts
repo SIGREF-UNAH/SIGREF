@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useGetApiSeries } from "../../../api/series/series";
+import { useGetSerieList } from "../../../api/series/series";
 import type { SerieDto } from "../../../api/models";
 
 export function useInvoiceSeriesManager() {
@@ -8,7 +8,7 @@ export function useInvoiceSeriesManager() {
     isLoading,
     isError,
     refetch,
-  } = useGetApiSeries({}, {
+  } = useGetSerieList({}, {
     query: {
       staleTime: 1000 * 60 * 5, // 5 minutos
       refetchOnWindowFocus: false,
@@ -16,7 +16,7 @@ export function useInvoiceSeriesManager() {
   });
 
   // Extraer series del response
-  const series = data?.data?.items ?? [];
+  const series = data?.items ?? [];
 
   // Estados controlados
   const [serieId, setSerieId] = useState<string>("");

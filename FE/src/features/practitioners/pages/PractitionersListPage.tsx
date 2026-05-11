@@ -1,6 +1,6 @@
 
 import { Card, Col, Row, Spin, Statistic } from "antd";
-import { useGetApiPractitioner } from "../../../api/practitioner/practitioner";
+import { useGetPractitionerList } from "../../../api/practitioner/practitioner";
 import { PageHeaderTabs } from "../../../shared/components";
 import { PractitionersListForm } from "../components";
 import { useAbility } from "../../../config";
@@ -19,7 +19,7 @@ type Practitioner = {
 };
 
 export const PractitionersListPage = () => {
-  const { data, isLoading } = useGetApiPractitioner<{ items: Practitioner[]; }>();
+  const { data, isLoading } = useGetPractitionerList<{ items: Practitioner[]; }>();
   const practitioners = data?.items ?? [];
   const totalPractitioners = practitioners.length;
   const activePractitioners = practitioners.filter((emp) => emp.active)?.length || 0;

@@ -1,16 +1,21 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Practitioner;
 using SIGREF.API.Services.Practitioner;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace SIGREF.API.Controllers.PractitionerC;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize]
+[Authorize(AuthenticationSchemes = "Bearer")]
+[Produces(MediaTypeNames.Application.Json)]
+[Consumes(MediaTypeNames.Application.Json)]
+[SwaggerTag("Empleados - Gestión de Empleados")]
 public class PractitionerController : ControllerBase
 {
     private readonly IPractitionerService _practitionerService;
@@ -22,10 +27,14 @@ public class PractitionerController : ControllerBase
 
     // GET: api/practitioner
     [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [SwaggerOperation(
+        OperationId = "GetPractitionerList",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Practitioner" }
+    )]
+    [ProducesResponseType(typeof(PagedResultDto<PractitionerDto>) , StatusCodes.Status200OK)]
     [Authorize(Roles = $" {RolesConstants.admin} , {RolesConstants.auditor} , {RolesConstants.ti}")]
-    [Produces(typeof(PagedResultDto<PractitionerDto>))]
     public async Task<IActionResult> GetFiltered([FromQuery] PractitionerFilterDto filter)
     {
         var pagedPractitioners = await _practitionerService.GetFilteredPractitionersAsync(filter);
@@ -41,25 +50,30 @@ public class PractitionerController : ControllerBase
 
     // GET: api/practitioner/{id}
     [HttpGet("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [SwaggerOperation(
+        OperationId = "GetPractitionerById",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Practitioner" }
+    )]
+    [ProducesResponseType( typeof(PractitionerDto) , StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.auditor} , {RolesConstants.ti}")]
-    [Produces<PractitionerDto>()]
     public async Task<IActionResult> GetById(string id)
     {
         var prectitioner = await _practitionerService.GetPractitionerByIdAsync(id);
-        if (prectitioner == null)
-            return NotFound($"Patient with id '{id}' not found.");
-
         return Ok(prectitioner);
     }
 
     // POST: api/practitioner
     [HttpPost]
-    [ProducesResponseType(StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [SwaggerOperation(
+        OperationId = "CreatePractitioner",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Practitioner" }
+    )]
+    [ProducesResponseType( typeof(PractitionerDto) , StatusCodes.Status201Created)]
     [Authorize(Roles = $" {RolesConstants.admin} , {RolesConstants.ti}")]
-    [Produces<PractitionerDto>()]
     public async Task<IActionResult> CreatePractitioner([FromBody] CreatePractitionerDto createPractitionerDto)
     {
         if (!ModelState.IsValid)
@@ -71,33 +85,35 @@ public class PractitionerController : ControllerBase
 
     // PUT: api/practitioner/{id}
     [HttpPut("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [SwaggerOperation(
+        OperationId = "UpdatePractitionerById",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Practitioner" }
+    )]
+    [ProducesResponseType(typeof(PractitionerDto), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.ti}")]
-    [Produces<PractitionerDto>()]
     public async Task<IActionResult> UpdatePractitioner(string id, [FromBody] UpdatePractitionerDto updatePractitionerDto)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
         var updatedPractitioner = await _practitionerService.UpdatePractitionerAsync(id, updatePractitionerDto);
-        if (updatedPractitioner == null)
-            return NotFound($"Practitioner with id '{id}' not found.");
-
         return Ok(updatedPractitioner);
     }
 
     // DELETE: api/practitioner/{id}
     [HttpDelete("{id}")]
+    [SwaggerOperation(
+        OperationId = "DeletePractitionerById",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Practitioner" }
+    )]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.ti}")]
     public async Task<IActionResult> DeletePractitioner(string id)
     {
         // 1. Verificar que el paciente exista
         var existingPractitioner = await _practitionerService.GetPractitionerByIdAsync(id);
-        if (existingPractitioner == null)
+        if (existingPractitioner.Id == null)
             return NotFound($"Patient with id '{id}' not found.");
 
         // 2. Eliminar

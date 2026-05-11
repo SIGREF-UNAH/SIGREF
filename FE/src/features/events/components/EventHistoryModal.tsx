@@ -6,14 +6,19 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   UserOutlined,
+  GlobalOutlined,
+  LinkOutlined,
+  FilterOutlined,
+  KeyOutlined,
+  InfoCircleOutlined,
 } from "@ant-design/icons";
 import { ProDescriptions } from "@ant-design/pro-components";
 import { Button, Divider, Modal, Space, Tag, Alert } from "antd";
-import type { AuditLogDto } from "../../../api/models";
+import type { AuditLog } from "../../../api/models/auditLog";
 
 interface Props {
   modalOpen: boolean;
-  selectedRecord: AuditLogDto | null;
+  selectedRecord: AuditLog | null;
   setModalOpen: (open: boolean) => void;
   getStatusColor: (statusCode: number | undefined) => string;
   getActionColor: (action: string | null | undefined) => string;
@@ -86,11 +91,19 @@ export const EventHistoryModal = ({
           </Divider>
           <ProDescriptions column={2}>
             <ProDescriptions.Item label="Nombre de Usuario">
-              <strong>{(selectedRecord as any).userName || "N/A"}</strong>
+              <strong>{selectedRecord.userName || "N/A"}</strong>
             </ProDescriptions.Item>
             <ProDescriptions.Item label="ID de Usuario">
               <code>{selectedRecord.userId || "N/A"}</code>
             </ProDescriptions.Item>
+            {selectedRecord.ipAddress && (
+              <ProDescriptions.Item label="Dirección IP" span={2}>
+                <Space>
+                  <GlobalOutlined />
+                  <code>{selectedRecord.ipAddress}</code>
+                </Space>
+              </ProDescriptions.Item>
+            )}
           </ProDescriptions>
 
           {/* Información de la Acción */}
@@ -109,18 +122,23 @@ export const EventHistoryModal = ({
               </Tag>
             </ProDescriptions.Item>
             {selectedRecord.resourceType && (
-              <ProDescriptions.Item label="Tipo de Recurso" span={2}>
-                {selectedRecord.resourceType}
+              <ProDescriptions.Item label="Tipo de Recurso">
+                <Tag color="geekblue">{selectedRecord.resourceType}</Tag>
               </ProDescriptions.Item>
             )}
             {selectedRecord.resourceId && (
-              <ProDescriptions.Item label="ID de Recurso" span={2}>
+              <ProDescriptions.Item label="ID de Recurso">
                 <code>{selectedRecord.resourceId}</code>
               </ProDescriptions.Item>
             )}
-            {selectedRecord.errorMessage && (
-              <ProDescriptions.Item label="Mensaje de Error" span={2}>
-                <Tag color="error">{selectedRecord.errorMessage}</Tag>
+            {selectedRecord.httpMethod && (
+              <ProDescriptions.Item label="Método HTTP">
+                <Tag color="blue">{selectedRecord.httpMethod.toUpperCase()}</Tag>
+              </ProDescriptions.Item>
+            )}
+            {selectedRecord.statusCode && (
+              <ProDescriptions.Item label="Status Code">
+                <code>{selectedRecord.statusCode}</code>
               </ProDescriptions.Item>
             )}
           </ProDescriptions>
@@ -129,10 +147,10 @@ export const EventHistoryModal = ({
           <Divider orientation="left">
             <CodeOutlined /> Información Técnica
           </Divider>
-          <ProDescriptions column={2}>
-            <ProDescriptions.Item label="Endpoint" span={2}>
+          <ProDescriptions column={1}>
+            <ProDescriptions.Item label="Endpoint">
               <Tag color="blue">{selectedRecord.httpMethod}</Tag>{" "}
-              <code>{selectedRecord.endpoint}</code>
+              <code>{selectedRecord.endpoint || "N/A"}</code>
             </ProDescriptions.Item>
             <ProDescriptions.Item
               label={
@@ -141,67 +159,111 @@ export const EventHistoryModal = ({
                   Fecha y Hora
                 </Space>
               }
-              span={2}
             >
               {selectedRecord.timestamp
                 ? dayjs(selectedRecord.timestamp).format("DD/MM/YYYY HH:mm:ss")
                 : "N/A"}
             </ProDescriptions.Item>
+            {selectedRecord.traceId && (
+              <ProDescriptions.Item
+                label={
+                  <Space>
+                    <LinkOutlined />
+                    Trace ID
+                  </Space>
+                }
+              >
+                <code>{selectedRecord.traceId}</code>
+              </ProDescriptions.Item>
+            )}
           </ProDescriptions>
 
-          {/* Data Before */}
-          {selectedRecord.dataBefore && (
+          {/* Error Message */}
+          {selectedRecord.errorMessage && (
             <>
-              <Divider orientation="left">Datos Anteriores</Divider>
+              <Divider orientation="left">
+                <InfoCircleOutlined /> Mensaje de Error
+              </Divider>
               <ProDescriptions column={1}>
                 <ProDescriptions.Item>
-                  <pre
-                    style={{
-                      background: "#f5f5f5",
-                      padding: "12px",
-                      borderRadius: "4px",
-                      fontSize: "12px",
-                      overflow: "auto",
-                      maxHeight: "300px",
-                      margin: 0,
-                    }}
-                  >
-                    {formatJson(selectedRecord.dataBefore)}
-                  </pre>
+                  <Alert
+                    message={selectedRecord.errorMessage}
+                    type="error"
+                    showIcon
+                  />
                 </ProDescriptions.Item>
               </ProDescriptions>
             </>
           )}
 
-          {/* Data After */}
-          {selectedRecord.dataAfter && (
-            <>
-              <Divider orientation="left">Datos Posteriores</Divider>
-              <ProDescriptions column={1}>
-                <ProDescriptions.Item>
-                  <pre
-                    style={{
-                      background: "#f5f5f5",
-                      padding: "12px",
-                      borderRadius: "4px",
-                      fontSize: "12px",
-                      overflow: "auto",
-                      maxHeight: "300px",
-                      margin: 0,
-                    }}
-                  >
-                    {formatJson(selectedRecord.dataAfter)}
-                  </pre>
-                </ProDescriptions.Item>
-              </ProDescriptions>
-            </>
-          )}
+          {/* Affected Keys (rutas JSON modificadas) */}
+          {selectedRecord.affectedKeys &&
+            selectedRecord.affectedKeys.length > 0 && (
+              <>
+                <Divider orientation="left">
+                  <KeyOutlined /> Campos Afectados
+                </Divider>
+                <ProDescriptions column={1}>
+                  <ProDescriptions.Item>
+                    <div
+                      style={{
+                        background: "#f5f5f5",
+                        padding: "12px",
+                        borderRadius: "4px",
+                        fontSize: "12px",
+                        maxHeight: "200px",
+                        overflow: "auto",
+                      }}
+                    >
+                      {selectedRecord.affectedKeys.map((key, index) => (
+                        <Tag
+                          key={index}
+                          color="purple"
+                          style={{ marginBottom: 4 }}
+                        >
+                          {key}
+                        </Tag>
+                      ))}
+                    </div>
+                  </ProDescriptions.Item>
+                </ProDescriptions>
+              </>
+            )}
+
+          {/* Filters Used (parámetros de consulta) */}
+          {selectedRecord.filtersUsed &&
+            Object.keys(selectedRecord.filtersUsed).length > 0 && (
+              <>
+                <Divider orientation="left">
+                  <FilterOutlined /> Filtros Utilizados
+                </Divider>
+                <ProDescriptions column={1}>
+                  <ProDescriptions.Item>
+                    <pre
+                      style={{
+                        background: "#f5f5f5",
+                        padding: "12px",
+                        borderRadius: "4px",
+                        fontSize: "12px",
+                        overflow: "auto",
+                        maxHeight: "200px",
+                        margin: 0,
+                      }}
+                    >
+                      {formatJson(selectedRecord.filtersUsed)}
+                    </pre>
+                  </ProDescriptions.Item>
+                </ProDescriptions>
+              </>
+            )}
 
           {/* Additional Info */}
           {selectedRecord.additionalInfo &&
             Object.keys(selectedRecord.additionalInfo).length > 0 && (
               <>
-                <Divider orientation="left">Información Adicional</Divider>
+                <Divider orientation="left">
+                  <InfoCircleOutlined /> Información Adicional
+                </Divider>
                 <ProDescriptions column={1}>
                   <ProDescriptions.Item>
                     <pre

@@ -5,7 +5,7 @@ import { useKeycloak } from "@react-keycloak/web";
 import { RoutesByRole, useAbility } from "../../config";
 import { ShortcutsGuideModal } from "./modals";
 import { useState } from "react";
-import { useGetApiHospitalPropertiesDetails } from "../../api/hospital-properties/hospital-properties";
+import { useGetHospitalPropertiesDetails } from "../../api/hospital-properties/hospital-properties";
 import { USER_ROLE_OPTIONS } from "../constants";
 import useMediaFiles from "../../features/media-files/hooks/useMediaFiles";
 import {
@@ -24,7 +24,7 @@ export const Layout = () => {
   const ability = useAbility();
 
   // Obtener información del hospital con los logos
-  const { data: hospitalResponse } = useGetApiHospitalPropertiesDetails();
+  const { data: hospitalResponse } = useGetHospitalPropertiesDetails();
   const hospitalResponseData = hospitalResponse as any;
   const hospitalData = hospitalResponseData?.data;
 

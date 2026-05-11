@@ -1,16 +1,21 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos.Invoice;
 using SIGREF.API.Services.Billing;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
 using SIGREF.Common.Types;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace SIGREF.API.Controllers.Invoices;
 
 [ApiController]
 [Route("api/invoices")]
-[Authorize]
+[Authorize(AuthenticationSchemes = "Bearer")]
+[Produces(MediaTypeNames.Application.Json)]
+[Consumes(MediaTypeNames.Application.Json)]
+[SwaggerTag("Facturas - Gestión de Facturación")]
 public class InvoiceController : ControllerBase
 {
     private readonly IInvoiceService _service;
@@ -24,11 +29,13 @@ public class InvoiceController : ControllerBase
     // CREAR FACTURA
     // ============================================
     [HttpPost]
+    [SwaggerOperation(
+        OperationId = "CreateInvoice",
+        Summary = "Crear factura",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Invoice" }
+    )]
     [ProducesResponseType(StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces(typeof(ResponseDto<InvoiceDetailDto>))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin}")]
     public async Task<IActionResult> CreateInvoice([FromBody] InvoiceCreateDto dto)
@@ -41,11 +48,13 @@ public class InvoiceController : ControllerBase
     // OBTENER FACTURA POR ID
     // ============================================
     [HttpGet("{id:guid}")]
+    [SwaggerOperation(
+        OperationId = "GetInvoiceById",
+        Summary = "Obtener factura por ID",
+        Description = "Recupera el detalle completo de una factura específica utilizando su identificador único.",
+        Tags = new[] { "Invoice" }
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces(typeof(ResponseDto<InvoiceDetailDto?>))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
     public async Task<IActionResult> GetInvoiceById(
@@ -60,11 +69,13 @@ public class InvoiceController : ControllerBase
     // LISTAR FACTURAS
     // ============================================
     [HttpGet]
+    [SwaggerOperation(
+        OperationId = "GetInvoiceList",
+        Summary = "Listar facturas",
+        Description = "Obtiene una lista paginada y filtrada de las facturas registradas en el sistema.",
+        Tags = new[] { "Invoice" }
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces(typeof(ResponseDto<PagedResultDto<InvoiceGetDto>>))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
     public async Task<IActionResult> GetInvoices([FromQuery] InvoiceFilterDto filter)
@@ -77,11 +88,13 @@ public class InvoiceController : ControllerBase
     // CANCELAR FACTURA
     // ============================================
     [HttpPost("{id:guid}/cancel")]
+    [SwaggerOperation(
+        OperationId = "CreateInvoiceByIdCancellation",
+        Summary = "Crea una cancelacion factura",
+        Description = "Anula o cancela una factura existente en el sistema mediante su identificador.",
+        Tags = new[] { "Invoice" }
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces(typeof(ResponseDto<InvoiceDetailDto>))]
     [Authorize(Roles = $"{RolesConstants.admin},")]
     public async Task<IActionResult> CancelInvoice(Guid id)
@@ -94,11 +107,13 @@ public class InvoiceController : ControllerBase
     // PAGAR FACTURA
     // ============================================
     [HttpPost("{id:guid}/pay")]
+    [SwaggerOperation(
+        OperationId = "CreateInvoiceMarkAsPaid",
+        Summary = "Pagar factura",
+        Description = "Marca una factura como pagada registrando el monto abonado.",
+        Tags = new[] { "Invoice" }
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces(typeof(ResponseDto<InvoiceDetailDto>))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} ")]
     public async Task<IActionResult> MarkAsPaid(
@@ -113,11 +128,13 @@ public class InvoiceController : ControllerBase
     // CREAR NOTA DE CRÉDITO / DÉBITO
     // ============================================
     [HttpPost("{parentId:guid}/notes/{noteType}")]
+    [SwaggerOperation(
+        OperationId = "CreateInvoiceNote",
+        Summary = "Crear nota de crédito/débito",
+        Description = "Genera una nota de crédito o débito asociada a una factura padre específica.",
+        Tags = new[] { "Invoice" }
+    )]
     [ProducesResponseType(StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces(typeof(ResponseDto<InvoiceDetailDto>))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} ")]
     public async Task<IActionResult> CreateNote(
@@ -133,10 +150,13 @@ public class InvoiceController : ControllerBase
     // VERIFICAR SI TIENE NOTAS HIJAS
     // ============================================
     [HttpGet("{id:guid}/child-notes")]
+    [SwaggerOperation(
+        OperationId = "GetInvoiceHasChildNotes",
+        Summary = "Verificar notas hijas",
+        Description = "Comprueba y lista las notas de crédito o débito asociadas a una factura en particular.",
+        Tags = new[] { "Invoice" }
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces(typeof(ResponseDto<List<MinimalInvoiceDto>>))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
     public async Task<IActionResult> HasChildNotes(Guid id)
@@ -149,11 +169,13 @@ public class InvoiceController : ControllerBase
     // RECALCULAR TOTALES
     // ============================================
     [HttpPost("{id:guid}/recalculate")]
+    [SwaggerOperation(
+        OperationId = "CreateInvoiceByIdRecalculation",
+        Summary = "Na",
+        Description = "NA",
+        Tags = new[] { "Invoice" }
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces(typeof(ResponseDto<bool>))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
     public async Task<IActionResult> RecalculateTotals(Guid id)
@@ -164,10 +186,13 @@ public class InvoiceController : ControllerBase
     
     // SUMMARY DE NOTAS (CREDIT/DEBIT)
     [HttpGet("{id:guid}/notes-summary")]
+    [SwaggerOperation(
+        OperationId = "GetInvoiceRecalculateNotesSummary",
+        Summary = "Recalcular totales de factura",
+        Description = "Vuelve a calcular los totales de una factura específica.",
+        Tags = new[] { "Invoice" }
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces(typeof(ResponseDto<InvoiceNotesSummaryDto>))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
     public async Task<IActionResult> GetNotesSummary(Guid id)

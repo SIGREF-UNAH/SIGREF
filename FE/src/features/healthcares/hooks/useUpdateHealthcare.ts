@@ -3,10 +3,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useMessage } from "../../../shared/hooks";
 import type { UpdateHealthcareDto } from "../../../api/models";
 import {
-  getGetApiHealthcaresQueryKey,
-  getGetApiHealthcaresIdQueryKey,
-  useGetApiHealthcaresId,
-  usePutApiHealthcaresId,
+  getGetHealtcareListQueryKey,
+  getGetHealtcareByIdQueryKey,
+  useGetHealtcareById,
+  useUpdateHealtcareById,
 } from "../../../api/healthcares/healthcares";
 
 export function useUpdateHealthcare() {
@@ -16,48 +16,39 @@ export function useUpdateHealthcare() {
   const msg = useMessage();
 
   // Obtener datos del servicio a editar
-  const { data: healthcareData, isLoading } = useGetApiHealthcaresId(id!, {
+  const { data: healthcare, isLoading } = useGetHealtcareById(id!, {
     query: {
-      enabled: !!id, // Solo ejecuta si hay id
-      // Forzar refetch para evitar datos cacheados incorrectos
+      enabled: !!id,
       staleTime: 0,
       gcTime: 0,
     },
   });
 
-  const healthcare = healthcareData?.data;
-
   // Mutación para actualizar servicio
-  const { mutateAsync: updateHealthcare, isPending } = usePutApiHealthcaresId({
+  const { mutateAsync: updateHealthcare, isPending } = useUpdateHealtcareById({
     mutation: {
       onSuccess: () => {
-        // Invalidar la lista de healthcares
+        // Invalidar queries relacionadas
         queryClient.invalidateQueries({
-          queryKey: getGetApiHealthcaresQueryKey(),
+          queryKey: getGetHealtcareListQueryKey(),
         });
         
-        // Invalidar específicamente el healthcare que se acaba de actualizar
         if (id) {
           queryClient.invalidateQueries({
-            queryKey: getGetApiHealthcaresIdQueryKey(id),
+            queryKey: getGetHealtcareByIdQueryKey(id),
           });
         }
-        
-        // Remover todas las queries individuales de healthcares para evitar cache
-        queryClient.removeQueries({
-          queryKey: ['/api/Healthcares'],
-          exact: false,
-        });
         
         msg.success("Servicio médico actualizado correctamente");
         navigate("/healthcares");
       },
       onError: (error: any) => {
-        console.error("Error al actualizar el servicio médico:", error);
-        msg.error(
-          error?.response?.data?.message ||
-            "Error al actualizar el servicio médico"
-        );
+        // El middleware ya maneja la mayoría de errores, pero mostramos mensaje para errores de red
+        const errorMessage = error?.response?.data?.detail 
+          || error?.response?.data?.title 
+          || "Error al actualizar el servicio médico";
+        
+        msg.error(errorMessage);
       },
     },
   });
@@ -69,14 +60,10 @@ export function useUpdateHealthcare() {
       return;
     }
 
-    try {
-      await updateHealthcare({
-        id,
-        data: values,
-      });
-    } catch (error) {
-      console.error("Error en handleFinish:", error);
-    }
+    await updateHealthcare({
+      id,
+      data: values,
+    });
   };
 
   return {

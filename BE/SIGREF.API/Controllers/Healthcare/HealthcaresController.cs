@@ -1,15 +1,20 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos.Healthcare;
 using SIGREF.API.Services.Healthcare;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace SIGREF.API.Controllers.Healthcare;
 
+[ApiController]
 [Route("api/[controller]")]
-//[ApiController]
-//[Authorize(AuthenticationSchemes = "Bearer")]
+[Authorize(AuthenticationSchemes = "Bearer")]
+[Produces(MediaTypeNames.Application.Json)]
+[Consumes(MediaTypeNames.Application.Json)]
+[SwaggerTag("Servicios Medicos - Gestion de Servicios Medicos")]
 public class HealthcaresController : ControllerBase
 {
     private readonly IHealthcareService _healthcareService;
@@ -29,12 +34,14 @@ public class HealthcaresController : ControllerBase
     /// <response code="200">Lista de servicios de salud obtenida exitosamente.</response>
     /// <response code="400">Error en los parámetros de búsqueda.</response>
     [HttpGet]
+    [SwaggerOperation(
+        OperationId = "GetHealtcareList",
+        Summary = "Obtiene una lista de Servicios Medicos",
+        Description = "NA",
+        Tags = new[] { "Healthcares" }
+    )]
     [Authorize(Roles = $"{RolesConstants.auditor},{RolesConstants.admin},{RolesConstants.ti}")]
     [ProducesResponseType(typeof(PagedResultDto<HealthcareDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
     public async Task<ActionResult<PagedResultDto<HealthcareDto>>> GetFiltered([FromQuery] HealthcareFilterDto filter)
     {
         var result = await _healthcareService.GetFilteredAsync(filter);
@@ -52,10 +59,14 @@ public class HealthcaresController : ControllerBase
     /// <response code="200">Servicio de salud encontrado exitosamente.</response>
     /// <response code="404">No se encontró el servicio de salud solicitado.</response>
     [HttpGet("{id}")]
+    [SwaggerOperation(
+        OperationId = "GetHealtcareById",
+        Summary = "Obtiene un servicio medico por su Id",
+        Description = "NA",
+        Tags = new[] { "Healthcares" }
+    )]
     [Authorize(Roles = $"{RolesConstants.auditor},{RolesConstants.admin},{RolesConstants.ti}")]
     [ProducesResponseType(typeof(HealthcareDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
     public async Task<ActionResult<HealthcareDto>> GetById(string id)
     {
         var healthcareDto = await _healthcareService.GetByIdAsync(id);
@@ -72,11 +83,14 @@ public class HealthcaresController : ControllerBase
     /// <response code="201">Servicio creado y enriquecido exitosamente.</response>
     /// <response code="400">Datos de entrada inválidos.</response>
     [HttpPost]
+    [SwaggerOperation(
+        OperationId = "CreateHealtcare",
+        Summary = "Crea un nuevo servicio Medico",
+        Description = "NA",
+        Tags = new[] { "Healthcares" }
+    )]
     [Authorize(Roles = RolesConstants.admin)]
     [ProducesResponseType(typeof(HealthcareDto), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
     public async Task<ActionResult<HealthcareDto>> Create([FromBody] CreateHealthcareDto dto)
     {
         var result = await _healthcareService.CreateAsync(dto);
@@ -94,12 +108,14 @@ public class HealthcaresController : ControllerBase
     /// <response code="200">Servicio actualizado y sincronizado exitosamente.</response>
     /// <response code="404">El servicio no existe en el servidor médico.</response>
     [HttpPut("{id}")]
+    [SwaggerOperation(
+        OperationId = "UpdateHealtcareById",
+        Summary = "Actualiza un servicio medico por su Id",
+        Description = "NA",
+        Tags = new[] { "Healthcares" }
+    )]
     [Authorize(Roles = RolesConstants.admin)]
     [ProducesResponseType(typeof(HealthcareDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
     public async Task<ActionResult<HealthcareDto>> Update(string id, [FromBody] UpdateHealthcareDto dto)
     {
         var result = await _healthcareService.UpdateAsync(id, dto);
@@ -116,11 +132,14 @@ public class HealthcaresController : ControllerBase
     /// <response code="204">Servicio eliminado exitosamente de ambos sistemas.</response>
     /// <response code="404">El servicio no existe en el servidor médico.</response>
     [HttpDelete("{id}")]
+    [SwaggerOperation(
+        OperationId = "DeleteHealtcareById",
+        Summary = "Elimina un Servicio Medico por su Id",
+        Description = "NA",
+        Tags = new[] { "Healthcares" }
+    )]
     [Authorize(Roles = RolesConstants.admin)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
     public async Task<IActionResult> Delete(string id)
     {
         await _healthcareService.DeleteAsync(id);

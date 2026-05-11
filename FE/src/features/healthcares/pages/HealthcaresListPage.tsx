@@ -17,16 +17,22 @@ import {
   EyeOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import type { HealthcareDto } from "../../../api/models";
-import { useHealthcaresList } from "../hooks";
+import type {
+  HealthcareDto,
+  HealthcareScope as HealthcareScopeType,
+} from "../../../api/models";
+import { HealthcareScope } from "../../../api/models/healthcareScope";
+import { useHealthcaresList } from "../hooks/useHealthcaresList";
 import { PageHeaderTabs } from "../../../shared/components/ui";
 import { HealthcareDetailsModal } from "../components";
-import { Can } from "@casl/react";
+import { useAbility } from "../../../config";
 
 const { Search } = Input;
 const { Option } = Select;
 
 export const HealthcaresListPage = () => {
+  const ability = useAbility();
+
   const {
     filters,
     locations,
@@ -38,7 +44,6 @@ export const HealthcaresListPage = () => {
     selectedHealthcare,
     isModalOpen,
     searchInput,
-    ability,
     handleEdit,
     handleDelete,
     handleViewDetails,
@@ -56,43 +61,51 @@ export const HealthcaresListPage = () => {
       dataIndex: "abbreviation",
       key: "abbreviation",
       width: 120,
+      ellipsis: true,
     },
     {
       title: "Nombre",
       dataIndex: "name",
       key: "name",
       width: 200,
+      ellipsis: true,
     },
     {
       title: "Tipo",
       dataIndex: "scope",
       key: "scope",
       width: 120,
-      render: (scope: number) => {
-        if (scope === undefined || scope === null) return "-";
-        
-        const color = scope === 0 ? "blue" : "orange";
-        const text = scope === 0 ? "Interno" : "Externo";
-        return <Tag color={color}>{text}</Tag>;
+      render: (scope: HealthcareScopeType) => {
+        if (!scope) return <Tag>-</Tag>;
+
+        const isInternal = scope === HealthcareScope.internal;
+
+        return (
+          <Tag color={isInternal ? "blue" : "orange"}>
+            {isInternal ? "Interno" : "Externo"}
+          </Tag>
+        );
       },
     },
     {
       title: "Ubicación(es)",
-      key: "area",
+      key: "location",
       width: 200,
       render: (_, record) => {
-        const locations = record.location
+        const locationNames = record.location
           ?.map((loc) => loc?.display)
           .filter(Boolean);
-        
-        if (!locations?.length) return "-";
-        
+
+        if (!locationNames?.length) return <Tag>-</Tag>;
+
         return (
-          <div>
-            {locations.map((loc, index) => (
-              <div key={index}>{loc}</div>
+          <Space direction="vertical" size={0}>
+            {locationNames.map((loc, index) => (
+              <Tag key={index} color="purple">
+                {loc}
+              </Tag>
             ))}
-          </div>
+          </Space>
         );
       },
     },
@@ -103,7 +116,9 @@ export const HealthcaresListPage = () => {
             dataIndex: "cost",
             key: "cost",
             width: 120,
-            render: (cost: number) => `L. ${cost?.toFixed(2) || "0.00"}`,
+            align: "right" as const,
+            render: (cost: number) =>
+              cost != null ? `L. ${cost.toFixed(2)}` : <Tag>-</Tag>,
           },
         ]
       : []),
@@ -111,35 +126,41 @@ export const HealthcaresListPage = () => {
       title: "Estado",
       dataIndex: "active",
       key: "active",
-      width: 60,
+      width: 100,
+      align: "center" as const,
       render: (status: boolean) => {
-        const color = status === true ? "green" : "error";
-        const text = status === true ? "✓ Activo" : "✗ Inactivo";
-        return <Tag color={color}>{text}</Tag>;
+        const isActive = status === true;
+        return (
+          <Tag color={isActive ? "success" : "error"}>
+            {isActive ? "Activo" : "Inactivo"}
+          </Tag>
+        );
       },
     },
     {
       title: "Acciones",
       key: "actions",
-      width: 120,
+      width: 150,
+      fixed: "right" as const,
       render: (_, record) => (
         <Space size="small">
-          <Can I="read" a="healthcares" ability={ability}>
+          {ability.can("read", "healthcares") && (
             <Button
               type="text"
               icon={<EyeOutlined />}
               onClick={() => handleViewDetails(record)}
               title="Ver detalles"
             />
-          </Can>
-          <Can I="update" a="healthcares" ability={ability}>
+          )}
+          {ability.can("update", "healthcares") && (
             <Button
               type="text"
               icon={<EditOutlined />}
               onClick={() => handleEdit(record.id || "")}
+              title="Editar servicio"
             />
-          </Can>
-          <Can I="delete" a="healthcares" ability={ability}>
+          )}
+          {ability.can("delete", "healthcares") && (
             <Popconfirm
               title="Eliminar servicio"
               description="¿Desea eliminar este servicio médico?"
@@ -148,9 +169,14 @@ export const HealthcaresListPage = () => {
               cancelText="Cancelar"
               okButtonProps={{ danger: true }}
             >
-              <Button type="text" danger icon={<DeleteOutlined />} />
+              <Button
+                type="text"
+                danger
+                icon={<DeleteOutlined />}
+                title="Eliminar servicio"
+              />
             </Popconfirm>
-          </Can>
+          )}
         </Space>
       ),
     },
@@ -159,12 +185,17 @@ export const HealthcaresListPage = () => {
   // Pantalla de error
   if (isError) {
     return (
-      <div>
+      <div className="primary-card">
         <Alert
           message="Error al cargar los servicios"
           description="No se pudieron cargar los servicios médicos. Por favor, intente nuevamente."
           type="error"
           showIcon
+          action={
+            <Button size="small" onClick={() => window.location.reload()}>
+              Reintentar
+            </Button>
+          }
         />
       </div>
     );
@@ -174,7 +205,7 @@ export const HealthcaresListPage = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-100">
-        <Spin size="large" />
+        <Spin size="large" tip="Cargando servicios médicos..." />
       </div>
     );
   }
@@ -228,7 +259,7 @@ export const HealthcaresListPage = () => {
       {/* Contenido */}
       <div className="primary-card">
         {/* Búsqueda y filtros */}
-        <div className="flex justify-end gap-3 mb-4">
+        <div className="flex flex-wrap justify-end gap-3 mb-4">
           <Search
             placeholder="Buscar por nombre"
             allowClear
@@ -246,20 +277,19 @@ export const HealthcaresListPage = () => {
             style={{ width: 225 }}
             value={filters.location}
             onChange={(value) => setFilter("location", value)}
-            optionFilterProp="children"
+            filterOption={(input, option) =>
+              (option?.label as string)
+                ?.toLowerCase()
+                .includes(input.toLowerCase())
+            }
           >
             {locations.map((location: any) => (
-              <Option key={location.id} value={location.id}>
-                <div className="flex items-center py-1">
-                  <div>
-                    <div className="font-medium">{location.name}</div>
-                    {location.description && (
-                      <div className="text-xs text-gray-500">
-                        {location.description}
-                      </div>
-                    )}
-                  </div>
-                </div>
+              <Option
+                key={location.id}
+                value={location.id}
+                label={location.name || location.display || "Sin nombre"}
+              >
+                {location.name || location.display || "Sin nombre"}
               </Option>
             ))}
           </Select>
@@ -271,8 +301,14 @@ export const HealthcaresListPage = () => {
             value={filters.scope}
             onChange={(value) => setFilter("scope", value)}
             options={[
-              { label: "Interno", value: "internal" },
-              { label: "Externo", value: "external" },
+              {
+                label: "Interno",
+                value: HealthcareScope.internal,
+              },
+              {
+                label: "Externo",
+                value: HealthcareScope.external,
+              },
             ]}
           />
           <Select
@@ -280,15 +316,15 @@ export const HealthcaresListPage = () => {
             allowClear
             suffixIcon={<FilterOutlined />}
             style={{ width: 150 }}
-            value={filters.status}
-            onChange={(value) => setFilter("status", value)}
+            value={filters.active}
+            onChange={(value) => setFilter("active", value)}
             options={[
-              { label: "Activo", value: "active" },
-              { label: "Inactivo", value: "inactive" },
+              { label: "Activo", value: true },
+              { label: "Inactivo", value: false },
             ]}
           />
-          <div className="flex items-center gap-2 px-3 border border-gray-300 bg-white text-[#c9c9c9] rounded">
-            <span className="text-sm">Mostrar Costo</span>
+          <div className="flex items-center gap-2 px-3 border border-gray-300 bg-white rounded">
+            <span className="text-sm text-gray-600">Mostrar Costo</span>
             <Switch
               checked={filters.includeCost}
               onChange={(checked) => setFilter("includeCost", checked)}
@@ -296,7 +332,8 @@ export const HealthcaresListPage = () => {
             />
           </div>
         </div>
-        {/* Lista de servicios */}
+
+        {/* Tabla de servicios */}
         <Table
           columns={columns}
           dataSource={healthcares}
@@ -304,6 +341,10 @@ export const HealthcaresListPage = () => {
           pagination={paginationConfig}
           bordered
           loading={isFetching}
+          scroll={{ x: 1000 }}
+          locale={{
+            emptyText: "No se encontraron servicios médicos",
+          }}
         />
       </div>
 

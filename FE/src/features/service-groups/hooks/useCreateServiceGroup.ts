@@ -3,25 +3,27 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useMessage } from "../../../shared/hooks";
 import type { CreateServiceGroupDto } from "../../../api/models";
 import {
-  getGetApiServiceGroupQueryKey,
-  usePostApiServiceGroup,
+  getGetServiceGroupListQueryKey,
+  useCreateServiceGroup as useCreateServiceGroupMutation,
 } from "../../../api/service-group/service-group";
 
+/**
+ * Hook personalizado para crear un paquete de servicios
+ */
 export function useCreateServiceGroup() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const msg = useMessage();
 
-  const { mutateAsync, isPending } = usePostApiServiceGroup({
+  const { mutateAsync, isPending } = useCreateServiceGroupMutation({
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({
-          queryKey: getGetApiServiceGroupQueryKey(),
+          queryKey: getGetServiceGroupListQueryKey(),
         });
         msg.success("Paquete creado correctamente");
         navigate("/service-groups/list");
       },
-      mutationKey:[],
       onError: (error: any) => {
         const errorMessage =
           error?.response?.data?.detail ||
@@ -32,6 +34,11 @@ export function useCreateServiceGroup() {
     },
   });
 
+  /**
+   * Maneja la finalización del formulario de creación
+   * 
+   * @param values - Datos del paquete de servicios a crear
+   */
   const handleFinish = async (values: CreateServiceGroupDto) => {
     await mutateAsync({ data: values });
   };

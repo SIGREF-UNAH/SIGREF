@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { getApiHealthcares } from "../../../api/healthcares/healthcares";
+import { getHealtcareList } from "../../../api/healthcares/healthcares";
 
 interface HealthcareOption {
   label: string;
@@ -13,7 +13,7 @@ export function useHealthcareSearch() {
   const searchHealthcares = useCallback(async (searchText: string) => {
     setLoading(true);
     try {
-      const response = await getApiHealthcares({
+      const response = await getHealtcareList({
         Name: searchText || undefined,
         PageNumber: 1,
         PageSize: searchText ? 20 : 10,

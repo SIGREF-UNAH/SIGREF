@@ -1,4 +1,6 @@
+using Microsoft.Extensions.FileProviders;
 using SIGREF.API.Middleware;
+using Swashbuckle.AspNetCore.SwaggerUI;
 
 namespace SIGREF.API;
 
@@ -35,8 +37,49 @@ public partial class Startup
         app.UseMiddleware<GlobalExceptionMiddleware>();
         if (env.IsDevelopment())
         {
+            app.UseDeveloperExceptionPage();
+            //Middleware temporal para debuggear Swagger
+            app.Use(async (context, next) =>
+            {
+                if (context.Request.Path.StartsWithSegments("/swagger"))
+                {
+                    try
+                    {
+                        await next();
+                    }
+                    catch (Exception ex)
+                    {
+                        context.Response.ContentType = "text/plain";
+                        await context.Response.WriteAsync($"ERROR SWAGGER: {ex.Message}\n\n{ex.StackTrace}");
+                    }
+                }
+                else
+                {
+                    await next();
+                }
+            });
+        
             app.UseSwagger();
-            app.UseSwaggerUI();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "SIGREF API v1");
+    
+                // Colapsar grupos por defecto (como HAPI FHIR)
+                c.DocExpansion(DocExpansion.List);
+    
+                //  Activar barra de búsqueda/filtro nativa (filtra por tag, path, summary)
+                c.EnableFilter();
+                //  Profundidad de modelos
+                c.DefaultModelsExpandDepth(1);
+                c.DefaultModelExpandDepth(1);
+    
+                // UX adicional
+                c.DisplayRequestDuration();
+                c.DisplayOperationId();
+                c.EnableDeepLinking();
+                // (Opcional) Inyectar JS para ordenamiento custom si lo necesitas
+                // c.InjectJavascript("/swagger-ui/custom-sort.js", "text/javascript");
+            });
         }
        
         app.UseRouting();

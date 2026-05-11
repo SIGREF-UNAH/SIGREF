@@ -1,5 +1,5 @@
-import { message } from "antd";
-import { usePostApiInvoices } from "../../../api/invoice/invoice";
+import { useMessage } from "../../../shared/hooks";
+import { useCreateInvoice } from "../../../api/invoice/invoice";
 import {
   InvoiceType,
   PaymentMethodType,
@@ -12,7 +12,7 @@ interface SelectedService {
   nombre: string;
   precio: number;
   tipo: string;
-  items?: any[]; // Para paquetes
+  items?: any[];
 }
 
 interface SelectedPatient {
@@ -30,36 +30,27 @@ export const useCreateIncome = ({
   onSuccess,
   onError,
 }: UseCreateIncomeProps = {}) => {
-  const [messageApi, contextHolder] = message.useMessage();
+  const msg = useMessage();
 
-  const createInvoice = usePostApiInvoices({
+  const { mutateAsync: createInvoice, isPending } = useCreateInvoice({
     mutation: {
       onSuccess: () => {
-        messageApi.success("Ingreso creado exitosamente");
+        msg.success("Ingreso creado exitosamente");
         onSuccess?.();
       },
       onError: (error: any) => {
-        console.error("[useCreateIncome] Error al crear invoice:", {
-          status: error?.response?.status,
-          message: error?.response?.data?.message,
-          payload: error?.config?.data, // qué se envió
-          timestamp: new Date().toISOString(),
-        });
-        const backendMessage =
-          error?.response?.data?.message || error?.response?.data?.title;
-        const statusCode = error?.response?.status;
+        const errorMessage =
+          error?.response?.data?.detail ||
+          error?.response?.data?.title ||
+          "Error al crear el ingreso. Verifique los datos e intente nuevamente.";
 
-        messageApi.error(
-          backendMessage
-            ? `Error ${statusCode}: ${backendMessage}`
-            : `Error ${statusCode ?? "desconocido"} al crear el ingreso. Verifique los datos e intente nuevamente.`,
-        );
+        msg.error(errorMessage);
         onError?.(error);
       },
     },
   });
 
-  const createIncome = ({
+  const createIncome = async ({
     selectedPaciente,
     selectedServicio,
     numeroRecibo,
@@ -78,21 +69,25 @@ export const useCreateIncome = ({
   }) => {
     // Validaciones
     if (!selectedPaciente) {
-      return messageApi.warning("Por favor selecciona un paciente");
+      msg.warning("Por favor selecciona un paciente");
+      return;
     }
     if (!selectedServicio) {
-      return messageApi.warning("Por favor selecciona un servicio o paquete");
+      msg.warning("Por favor selecciona un servicio o paquete");
+      return;
     }
     if (!serieId) {
-      return messageApi.warning("Por favor selecciona una serie válida");
+      msg.warning("Por favor selecciona una serie válida");
+      return;
     }
     if (!numeroRecibo.trim()) {
-      return messageApi.warning("Por favor ingresa un número de recibo");
+      msg.warning("Por favor ingresa un número de recibo");
+      return;
     }
 
     const precioOriginal = selectedServicio.precio;
 
-    // Calcular descuento: 100% si esta exonerado O si es tramite de emergencia
+    // Calcular descuento: 100% si está exonerado O si es trámite de emergencia
     const discount = exonerado || tramiteEmergencia ? precioOriginal : 0;
     const totalAmount = precioOriginal - discount;
 
@@ -100,59 +95,53 @@ export const useCreateIncome = ({
     const items: InvoiceItemCreateDto[] = [];
 
     if (selectedServicio.tipo === "servicio") {
-      // Si es un servicio individual
       items.push({
         serviceId: selectedServicio.id,
         nameService: selectedServicio.nombre,
         quantity: 1,
         unitPrice: precioOriginal,
-        discount: discount,
-        totalAmount: totalAmount,
       });
     } else if (selectedServicio.tipo === "paquete") {
-      // Si es un paquete, agregar todos los items del paquete
       if (selectedServicio.items && Array.isArray(selectedServicio.items)) {
-        // Calcular items para paquete
         selectedServicio.items.forEach((item: any) => {
           const itemUnitPrice = item.unitPrice || item.precio || 0;
           const itemQuantity = item.quantity || 1;
-          const itemSubtotal = itemUnitPrice * itemQuantity;
-
-          const itemDiscount =
-            exonerado || tramiteEmergencia ? itemSubtotal : 0;
-          const itemTotal = itemSubtotal - itemDiscount;
 
           items.push({
             serviceId: item.id || item.serviceId,
             nameService: item.name || item.nameService || item.nombre,
             quantity: itemQuantity,
             unitPrice: itemUnitPrice,
-            discount: itemDiscount,
-            totalAmount: itemTotal,
           });
         });
       } else {
-        // Si el paquete no tiene items definidos, crear uno generico
         items.push({
           serviceId: selectedServicio.id,
           nameService: selectedServicio.nombre,
           quantity: 1,
           unitPrice: precioOriginal,
-          discount: discount,
-          totalAmount: totalAmount,
         });
       }
     }
 
+    // Determinar tipo de factura
     const invoiceType = tramiteEmergencia
-      ? InvoiceType.NUMBER_1
-      : InvoiceType.NUMBER_0;
+      ? InvoiceType.emergency
+      : exonerado
+        ? InvoiceType.exempt
+        : InvoiceType.normal;
 
-    const paymentType = exonerado
-      ? PaymentMethodType.NUMBER_2
-      : tramiteEmergencia
-        ? PaymentMethodType.NUMBER_1
-        : PaymentMethodType.NUMBER_0;
+    // TODO: [Mantenimiento] Actualmente solo se permite pago en efectivo.
+    // Cuando se habiliten más métodos de pago en la UI:
+    // 1. Agregar un selector de método de pago en el formulario de ingreso
+    // 2. Pasar el valor seleccionado como parámetro a createIncome
+    // 3. Mapear la selección al enum:
+    //    - "card"     → PaymentMethodType.card
+    //    - "transfer" → PaymentMethodType.transfer
+    //    - "mixed"    → PaymentMethodType.mixed
+    //    - default    → PaymentMethodType.cash
+    // 4. Agregar validación de método de pago requerido
+    const paymentType = PaymentMethodType.cash;
 
     const invoiceData: InvoiceCreateDto = {
       patientIdFhir: selectedPaciente.id,
@@ -171,15 +160,12 @@ export const useCreateIncome = ({
       initialPayment: exonerado || tramiteEmergencia ? 0 : aPagarEfectivo,
       parentInvoiceId: null,
     };
-    createInvoice.mutate({ data: invoiceData });
+
+    await createInvoice({ data: invoiceData });
   };
 
   return {
     createIncome,
-    isLoading: createInvoice.isPending,
-    isSuccess: createInvoice.isSuccess,
-    isError: createInvoice.isError,
-    error: createInvoice.error,
-    contextHolder,
+    isLoading: isPending,
   };
 };

@@ -2,12 +2,12 @@ import { useMemo } from "react";
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
 import {
-  useGetApiDashboardLocationIncome,
-  useGetApiDashboardPackageUsage,
-  useGetApiDashboardServiceUsage,
-  useGetApiDashboardShiftIncome,
-  useGetApiDashboardSummary,
-  useGetApiDashboardWeeklyIncome,
+  useGetDashboardLocationIncome,
+  useGetDashboardPackageUsage,
+  useGetDashboardServiceUsage,
+  useGetDashboardShiftIncome,
+  useGetDashboardSummary,
+  useGetDashboardWeeklyIncome,
 } from "../../../api/dashboard/dashboard";
 
 dayjs.extend(isoWeek);
@@ -43,12 +43,12 @@ export function useDashboardData(
     return finalParams;
   }, [periodo, fechaInicio, fechaFin]);
 
-  const qSummary = useGetApiDashboardSummary(params);
-  const qServices = useGetApiDashboardServiceUsage(params);
-  const qPackages = useGetApiDashboardPackageUsage(params);
-  const qWeekly = useGetApiDashboardWeeklyIncome(params);
-  const qShifts = useGetApiDashboardShiftIncome(params);
-  const qLocations = useGetApiDashboardLocationIncome(params);
+  const qSummary = useGetDashboardSummary(params);
+  const qServices = useGetDashboardServiceUsage(params);
+  const qPackages = useGetDashboardPackageUsage(params);
+  const qWeekly = useGetDashboardWeeklyIncome(params);
+  const qShifts = useGetDashboardShiftIncome(params);
+  const qLocations = useGetDashboardLocationIncome(params);
 
   // TODO: Agregar qServices.isLoading y qServices.error cuando el endpoint esté arreglado
   const isLoading =

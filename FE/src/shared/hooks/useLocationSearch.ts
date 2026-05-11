@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { getApiLocations } from "../../api/locations/locations";
+import { getLocationList } from "../../api/locations/locations";
 
 interface LocationOption {
   label: string;
@@ -13,7 +13,7 @@ export function useLocationSearch() {
   const searchLocations = useCallback(async (searchText: string) => {
     setLoading(true);
     try {
-      const response = await getApiLocations({
+      const response = await getLocationList({
         Name: searchText || undefined,
         PageNumber: 1,
         PageSize: searchText ? 20 : 10,
