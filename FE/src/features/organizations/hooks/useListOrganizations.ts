@@ -5,9 +5,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { TablePaginationConfig } from "antd";
 import type { OrganizationDto } from "../../../api/models";
 import {
-  getGetApiOrganizationsQueryKey,
-  useGetApiOrganizations,
-  useDeleteApiOrganizationsId,
+  getGetOrganizationListQueryKey,
+  useGetOrganizationList,
+  useDeleteOrganizationById,
 } from "../../../api/organizations/organizations";
 
 export function useOrganizationsList() {
@@ -61,7 +61,7 @@ export function useOrganizationsList() {
     isLoading,
     isFetching,
     isError,
-  } = useGetApiOrganizations(queryParams, {
+  } = useGetOrganizationList(queryParams, {
     query: { placeholderData: (prev) => prev },
   });
 
@@ -70,11 +70,11 @@ export function useOrganizationsList() {
   const pagination = response?.pagination;
 
   // Eliminar organización
-  const { mutate: deleteOrganization } = useDeleteApiOrganizationsId({
+  const { mutate: deleteOrganization } = useDeleteOrganizationById({
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({
-          queryKey: getGetApiOrganizationsQueryKey(),
+          queryKey: getGetOrganizationListQueryKey(),
         });
         msg.success("Organización eliminada correctamente");
       },

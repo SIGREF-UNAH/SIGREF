@@ -7,10 +7,10 @@ import {
   DeleteOutlined,
   ArrowLeftOutlined,
 } from "@ant-design/icons";
-import { useGetApiLocationsId } from "../../../api/locations/locations";
+import { useGetLocationById } from "../../../api/locations/locations";
 import {
-  useDeleteApiLocationsId,
-  getGetApiLocationsQueryKey,
+  useDeleteLocationById,
+  getGetLocationListQueryKey,
 } from "../../../api/locations/locations";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -19,20 +19,20 @@ import {
   BsPersonFill,
   BsPinMapFill,
 } from "react-icons/bs";
-import { ContactPointSystem } from "../../../api/models";
+import type { ContactPointSystem } from "../../../api/models";
 import { PageHeaderTabs } from "../../../shared/components/ui";
 import { useAbility } from "../../../config";
 import { Can } from "@casl/react";
 
 // Mapeo de ContactPointSystem a etiquetas legibles
-const TelecomLabels: Record<number, string> = {
-  [ContactPointSystem.NUMBER_0]: "Teléfono",
-  [ContactPointSystem.NUMBER_1]: "Fax",
-  [ContactPointSystem.NUMBER_2]: "Correo Electrónico",
-  [ContactPointSystem.NUMBER_3]: "Pager",
-  [ContactPointSystem.NUMBER_4]: "URL",
-  [ContactPointSystem.NUMBER_5]: "SMS",
-  [ContactPointSystem.NUMBER_6]: "Otro",
+const TelecomLabels: Record<ContactPointSystem, string> = {
+  phone: "Teléfono",
+  fax: "Fax",
+  email: "Correo Electrónico",
+  pager: "Pager",
+  url: "URL",
+  sms: "SMS",
+  other: "Otro",
 };
 
 // Paleta de colores para los alias
@@ -54,17 +54,18 @@ const LocationDetailsPage: React.FC = () => {
   const ability = useAbility();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  
   const {
     data: location,
     isLoading,
     isError,
-  } = useGetApiLocationsId(Number(id));
+  } = useGetLocationById(id!);
 
-  const { mutate: deleteLocation } = useDeleteApiLocationsId({
+  const { mutateAsync: deleteLocation } = useDeleteLocationById({
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({
-          queryKey: getGetApiLocationsQueryKey(),
+          queryKey: getGetLocationListQueryKey(),
         });
         message.success("Ubicación eliminada exitosamente");
         navigate("/locations/list");
@@ -73,35 +74,36 @@ const LocationDetailsPage: React.FC = () => {
     },
   });
 
-  const handleDelete = async (locationId: number) => {
+  const handleDelete = async (locationId: string): Promise<void> => {
     try {
       await deleteLocation({ id: locationId });
-      return true;
     } catch {
-      return false;
+      message.error("Error al eliminar la ubicación");
     }
   };
 
   const getModeLabel = (mode?: string | null): string => {
     if (!mode) return "—";
-    return mode === "Kind" ? "Tipo" : mode === "Instance" ? "Instancia" : mode;
+    if (mode === "kind") return "Tipo";
+    if (mode === "instance") return "Instancia";
+    return mode;
   };
 
-  const renderStatusTag = (status?: string | null) => {
+  const renderStatusTag = (status?: string | null): React.ReactNode => {
     if (status === undefined || status === null) return <Tag>—</Tag>;
     switch (status) {
-      case "Active":
+      case "active":
         return <Tag color="success">Activo</Tag>;
-      case "Suspended":
+      case "suspended":
         return <Tag color="warning">Suspendido</Tag>;
-      case "Inactive":
+      case "inactive":
         return <Tag color="error">Inactivo</Tag>;
       default:
         return <Tag color="default">Desconocido</Tag>;
     }
   };
 
-  const renderModeTag = (mode?: string | null) => {
+  const renderModeTag = (mode?: string | null): React.ReactNode => {
     const label = getModeLabel(mode);
     if (label === "Tipo") return <Tag color="blue">Tipo</Tag>;
     if (label === "Instancia") return <Tag color="geekblue">Instancia</Tag>;
@@ -177,7 +179,7 @@ const LocationDetailsPage: React.FC = () => {
             <ProDescriptions.Item label="Alias" span={2}>
               {location.alias && location.alias.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {location.alias.map((alias, index) => (
+                  {location.alias.map((alias: string, index: number) => (
                     <Tag
                       key={index}
                       color={ALIAS_COLORS[index % ALIAS_COLORS.length]}
@@ -199,10 +201,6 @@ const LocationDetailsPage: React.FC = () => {
             <ProDescriptions.Item label="Modo">
               {renderModeTag(location.mode)}
             </ProDescriptions.Item>
-
-            {/* <ProDescriptions.Item label="Tipo de función" span={2}>
-              {location.type || "—"}
-            </ProDescriptions.Item> */}
 
             <ProDescriptions.Item label="Descripción" span={2}>
               <div className="whitespace-pre-wrap text-gray-700">
@@ -274,10 +272,9 @@ const LocationDetailsPage: React.FC = () => {
                 labelStyle={{ fontWeight: 600, backgroundColor: "#fafafa" }}
               >
                 {location.telecom.map((t, index) => {
-                  const label =
-                    t.system !== undefined && TelecomLabels[t.system]
-                      ? TelecomLabels[t.system]
-                      : `Contacto (${t.system ?? "desconocido"})`;
+                  const label = t.system 
+                    ? TelecomLabels[t.system] || `Contacto (${t.system})`
+                    : `Contacto (desconocido)`;
                   return (
                     <ProDescriptions.Item key={index} label={label}>
                       {t.value || "—"}
@@ -360,23 +357,23 @@ const LocationDetailsPage: React.FC = () => {
                 <Popconfirm
                   title="¿Eliminar ubicación?"
                   description="Esta acción no se puede deshacer"
-                  onConfirm={() => handleDelete(Number(location.id!))}
+                  onConfirm={() => location.id && handleDelete(location.id)}
                   okText="Sí, eliminar"
                   cancelText="Cancelar"
                   okButtonProps={{ danger: true }}
                 >
                   <Button
-                  type="primary"
-                  size="large"
-                  icon={<DeleteOutlined />}
-                  danger
-                  style={{
-                    borderRadius: 6,
-                    boxShadow: "0 2px 8px rgba(245, 34, 45, 0.3)",
-                  }}
-                >
-                  Eliminar
-                </Button>
+                    type="primary"
+                    size="large"
+                    icon={<DeleteOutlined />}
+                    danger
+                    style={{
+                      borderRadius: 6,
+                      boxShadow: "0 2px 8px rgba(245, 34, 45, 0.3)",
+                    }}
+                  >
+                    Eliminar
+                  </Button>
                 </Popconfirm>
               </Can>
             </Space>

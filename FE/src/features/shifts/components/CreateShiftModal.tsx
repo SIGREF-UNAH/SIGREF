@@ -1,7 +1,7 @@
 import { Modal, Form, Input, TimePicker, Select, message } from "antd";
 import { useQueryClient } from "@tanstack/react-query";
 import type { LocationDto } from "../../../api/models";
-import { getGetApiShiftsQueryKey, usePostApiShifts } from "../../../api/shifts/shifts";
+import { getGetShiftListQueryKey, useCreateShift } from "../../../api/shifts/shifts";
 
 interface CreateShiftModalProps {
   open: boolean;
@@ -18,10 +18,10 @@ export const CreateShiftModal = ({
   const queryClient = useQueryClient();
   const [messageApi, contextHolder] = message.useMessage();
 
-  const { mutateAsync: createShift, isPending } = usePostApiShifts({
+  const { mutateAsync: createShift, isPending } = useCreateShift({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetApiShiftsQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetShiftListQueryKey() });
         messageApi.success("Turno creado correctamente");
         form.resetFields();
         onClose();

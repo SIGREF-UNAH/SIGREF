@@ -1,3 +1,7 @@
+// TODO Refactorizar este componente, está muy grande. Posiblemente dividir en subcomponentes para cada sección (selección de servicio/paquete, selección de paciente, resumen del ingreso)
+
+
+
 import { useEffect, useState } from "react";
 import {
   Input,

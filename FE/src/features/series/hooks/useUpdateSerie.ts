@@ -1,20 +1,23 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useMessage } from "../../../shared/hooks";
 import {
-  getGetApiSeriesQueryKey,
-  usePutApiSeriesId,
+  getGetSerieListQueryKey,
+  useUpdateSerieById,
 } from "../../../api/series/series";
 import type { UpdateSeriesDto } from "../../../api/models";
 
+/**
+ * Hook personalizado para actualizar una serie
+ */
 export const useUpdateSerie = () => {
   const queryClient = useQueryClient();
   const msg = useMessage();
 
   // Actualizar serie
-  const { mutateAsync: updateSerie, isPending } = usePutApiSeriesId({
+  const { mutateAsync: updateSerie, isPending } = useUpdateSerieById({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetApiSeriesQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetSerieListQueryKey() });
         msg.success("Serie actualizada correctamente");
       },
       onError: (error: any) => {
@@ -35,7 +38,13 @@ export const useUpdateSerie = () => {
     },
   });
 
-  // Manejar la finalización del formulario de edición
+  /**
+   * Maneja la finalización del formulario de edición
+   * 
+   * @param id - ID de la serie a actualizar
+   * @param values - Datos actualizados de la serie
+   * @returns true si la actualización fue exitosa, false en caso contrario
+   */
   const handleEdit = async (id: string, values: UpdateSeriesDto) => {
     if (!id) {
       msg.error("ID de serie no encontrado");

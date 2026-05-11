@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { useGetApiHealthcares } from "../../../api/healthcares/healthcares";
-import { useGetApiLocations } from "../../../api/locations/locations";
+import { useGetHealtcareList } from "../../../api/healthcares/healthcares";
+import { useGetLocationList } from "../../../api/locations/locations";
 
 export function useServiceGroupForm() {
   const navigate = useNavigate();
@@ -36,14 +36,14 @@ export function useServiceGroupForm() {
     data: healthcaresResponse,
     isLoading: isLoadingHealthcares,
     isFetching: isFetchingHealthcares,
-  } = useGetApiHealthcares(healthcareParams);
+  } = useGetHealtcareList(healthcareParams);
 
   // Cargar ubicaciones con paginación
   const {
     data: locationsResponse,
     isLoading: isLoadingLocations,
     isFetching: isFetchingLocations,
-  } = useGetApiLocations({
+  } = useGetLocationList({
     PageNumber: locationPageNumber,
     PageSize: locationPageSize,
     Name: locationSearch || undefined,
@@ -55,8 +55,8 @@ export function useServiceGroupForm() {
 
   return {
     // Datos de servicios de salud
-    healthcares: healthcaresResponse?.data?.items || [],
-    healthcarePagination: healthcaresResponse?.data?.pagination,
+    healthcares: healthcaresResponse?.items || [],
+    healthcarePagination: healthcaresResponse?.pagination,
     isLoadingHealthcares,
     isFetchingHealthcares,
     healthcarePageNumber,

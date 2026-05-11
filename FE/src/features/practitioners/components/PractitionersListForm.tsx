@@ -30,10 +30,10 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import {
-  useDeleteApiPractitionerId,
-  useGetApiPractitioner,
+  useDeletePractitionerById,
+  useGetPractitionerList,
 } from "../../../api/practitioner/practitioner";
-import { useGetApiLocations } from "../../../api/locations/locations";
+import { useGetLocationList } from "../../../api/locations/locations";
 import { ROLE_OPTIONS } from "../../../shared/constants/RolesConstants";
 import { useAbility } from "../../../config";
 import { Can } from "@casl/react";
@@ -66,7 +66,7 @@ export const PractitionersListForm = () => {
     navigate(`/practitioners/details/${id}`);
   };
 
-  const { data, isLoading, isError } = useGetApiPractitioner<{
+  const { data, isLoading, isError } = useGetPractitionerList<{
     items: Practitioner[];
     pagination: {
       currentPage: number;
@@ -78,7 +78,7 @@ export const PractitionersListForm = () => {
     };
   }>();
 
-  const deleteMutation = useDeleteApiPractitionerId({
+  const deleteMutation = useDeletePractitionerById({
     mutation: {
       onSuccess: () => {
         message.success("Empleado eliminado correctamente");
@@ -282,7 +282,7 @@ export const PractitionersListForm = () => {
     },
   ];
 
-  const { data: locations } = useGetApiLocations<{
+  const { data: locations } = useGetLocationList<{
     items: { name: string }[];
   }>();
 

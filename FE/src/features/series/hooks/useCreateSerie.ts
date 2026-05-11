@@ -1,20 +1,25 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { useMessage } from "../../../shared/hooks";
-import { getGetApiSeriesQueryKey, usePostApiSeries } from "../../../api/series/series";
+import {
+  getGetSerieListQueryKey,
+  useCreateSerie as useCreateSerieMutation,
+} from "../../../api/series/series";
 import type { CreateSeriesDto } from "../../../api/models";
 
-
+/**
+ * Hook personalizado para crear una serie
+ */
 export function useCreateSerie() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const msg = useMessage();
 
   // Crear serie
-  const { mutateAsync: createSerie, isPending } = usePostApiSeries({
+  const { mutateAsync: createSerie, isPending } = useCreateSerieMutation({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetApiSeriesQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetSerieListQueryKey() });
         msg.success("Serie creada correctamente");
         navigate("/series");
       },

@@ -1,14 +1,19 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos.Administration;
 using SIGREF.API.Services.AdministrationHospital;
 using SIGREF.Common.Constants;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace SIGREF.API.Controllers.HospitalProperties;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize]
+[Authorize(AuthenticationSchemes = "Bearer")]
+[Produces(MediaTypeNames.Application.Json)]
+[Consumes(MediaTypeNames.Application.Json)]
+[SwaggerTag("Informacion Hospital - Gestion de Datos de Hospital")]
 public class HospitalPropertiesController : ControllerBase
 {
     private readonly IHospitalPropertiesService _hospitalService;
@@ -22,8 +27,13 @@ public class HospitalPropertiesController : ControllerBase
     //       GET PUBLICO  (Nombre + logos) - SIN TOKEN
     // ============================================================
     [HttpGet("public")]
+    [SwaggerOperation(
+        OperationId = "GetHospitalPropertiesPublic",
+        Summary = "Obtiene una imagen al servidor",
+        Description = "NA",
+        Tags = new[] { "HospitalProperties" }
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Produces<HospitalPublicDto>()]
     [Authorize(Roles = $"{RolesConstants.auditor},{RolesConstants.admin},{RolesConstants.ti},{RolesConstants.cashier}")]
     public async Task<IActionResult> GetPublic()
@@ -33,8 +43,13 @@ public class HospitalPropertiesController : ControllerBase
     }
     
     [HttpGet("details")]
+    [SwaggerOperation(
+        OperationId = "GetHospitalPropertiesDetails",
+        Summary = "Obtiene una imagen al servidor",
+        Description = "NA",
+        Tags = new[] { "HospitalProperties" }
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Produces<HospitalDetailsDto>()]
     [Authorize(Roles = $"{RolesConstants.auditor},{RolesConstants.admin},{RolesConstants.ti},{RolesConstants.cashier}")]
     public async Task<IActionResult> GetAllDetails()
@@ -46,8 +61,13 @@ public class HospitalPropertiesController : ControllerBase
     //                 CREAR (solo 1 vez)
     // ============================================================
     [HttpPost]
+    [SwaggerOperation(
+        OperationId = "CreateHospitalProperties",
+        Summary = "Obtiene una imagen al servidor",
+        Description = "NA",
+        Tags = new[] { "HospitalProperties" }
+    )]
     [ProducesResponseType(StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [Produces<HospitalDetailsDto>()]
     [Authorize(Roles = $"{RolesConstants.ti}")]
     public async Task<IActionResult> Create([FromBody] CreateHospitalPropertiesDto dto)
@@ -60,8 +80,13 @@ public class HospitalPropertiesController : ControllerBase
     //                 UPDATE
     // ============================================================
     [HttpPut]
+    [SwaggerOperation(
+        OperationId = "UpdateHospitalProperties",
+        Summary = "Obtiene una imagen al servidor",
+        Description = "NA",
+        Tags = new[] { "HospitalProperties" }
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Produces<HospitalDetailsDto>()]
     [Authorize(Roles = $"{RolesConstants.ti}")]
     public async Task<IActionResult> Update([FromBody] UpdateHospitalPropertiesDto dto)

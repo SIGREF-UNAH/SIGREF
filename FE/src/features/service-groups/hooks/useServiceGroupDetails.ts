@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router";
 import { useAbility } from "../../../config";
-import { useGetApiServiceGroupId } from "../../../api/service-group/service-group";
+import { useGetServiceGroupById } from "../../../api/service-group/service-group";
 
 export function useServiceGroupDetails() {
   const { id } = useParams<{ id: string }>();
@@ -11,7 +11,7 @@ export function useServiceGroupDetails() {
     data: serviceGroup,
     isLoading,
     error,
-  } = useGetApiServiceGroupId(id || "", {
+  } = useGetServiceGroupById(id || "", {
     query: {
       enabled: !!id,
     },

@@ -1,20 +1,31 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos.Dashboard;
 using SIGREF.API.Services.Dashboard;
+using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace SIGREF.API.Controllers.Dashboard;
 
 [Route("api/[controller]")]
 [ApiController]
-//[Authorize(Roles = $"{RolesConstants.admin},{RolesConstants.auditor}")]
+[Authorize(Roles = $"{RolesConstants.admin},{RolesConstants.auditor}")]
+[Authorize(AuthenticationSchemes = "Bearer")]
+[Produces(MediaTypeNames.Application.Json)]
+[Consumes(MediaTypeNames.Application.Json)]
+[SwaggerTag("Dashboard - Resumen de Estadisticas")]
 public class DashboardController(IDashboardReportingService dashboardReportingService) : ControllerBase
 {
     [HttpGet("summary")]
+    [SwaggerOperation(
+        OperationId = "GetDashboardSummary",
+        Summary = "Obtiene el Resumen general de estadisticas de ingresos",
+        Description = "NA",
+        Tags = new[] { "Dashboard" }
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces(typeof(ResponseDto<DashboardSummaryDto>))]
     public async Task<IActionResult> GetSummary([FromQuery] DashboardFilterDto filter)
     {
@@ -25,9 +36,13 @@ public class DashboardController(IDashboardReportingService dashboardReportingSe
     }
 
     [HttpGet("service-usage")]
+    [SwaggerOperation(
+        OperationId = "GetDashboardServiceUsage",
+        Summary = "Obtiene el Resumen de servicios usados",
+        Description = "NA",
+        Tags = new[] { "Dashboard" }
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces(typeof(ResponseDto<ServiceUsageResultDto>))]
     public async Task<IActionResult> GetServiceUsage([FromQuery] DashboardFilterDto filter)
     {
@@ -38,9 +53,13 @@ public class DashboardController(IDashboardReportingService dashboardReportingSe
     }
 
     [HttpGet("package-usage")]
+    [SwaggerOperation(
+        OperationId = "GetDashboardPackageUsage",
+        Summary = "Obtiene el Resumen de paquetes usados",
+        Description = "NA",
+        Tags = new[] { "Dashboard" }
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces(typeof(ResponseDto<PackageUsageResultDto>))]
     public async Task<IActionResult> GetPackageUsage([FromQuery] DashboardFilterDto filter)
     {
@@ -51,9 +70,13 @@ public class DashboardController(IDashboardReportingService dashboardReportingSe
     }
 
     [HttpGet("weekly-income")]
+    [SwaggerOperation(
+        OperationId = "GetDashboardWeeklyIncome",
+        Summary = "Obtiene el Resumen de ingresos semanales",
+        Description = "NA",
+        Tags = new[] { "Dashboard" }
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces(typeof(ResponseDto<List<WeeklyIncomeDto>>))]
     public async Task<IActionResult> GetWeeklyIncome([FromQuery] DashboardFilterDto filter)
     {
@@ -64,9 +87,13 @@ public class DashboardController(IDashboardReportingService dashboardReportingSe
     }
 
     [HttpGet("shift-income")]
+    [SwaggerOperation(
+        OperationId = "GetDashboardShiftIncome",
+        Summary = "Obtiene el Resumen de ingresos por turnos",
+        Description = "NA",
+        Tags = new[] { "Dashboard" }
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces(typeof(ResponseDto<List<ShiftIncomeDto>>))]
     public async Task<IActionResult> GetShiftIncome([FromQuery] DashboardFilterDto filter)
     {
@@ -77,9 +104,13 @@ public class DashboardController(IDashboardReportingService dashboardReportingSe
     }
 
     [HttpGet("location-income")]
+    [SwaggerOperation(
+        OperationId = "GetDashboardLocationIncome",
+        Summary = "Obtiene el Resumen de servicios usados",
+        Description = "NA",
+        Tags = new[] { "Dashboard" }
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces(typeof(ResponseDto<List<LocationIncomeDto>>))]
     public async Task<IActionResult> GetLocationIncome([FromQuery] DashboardFilterDto filter)
     {

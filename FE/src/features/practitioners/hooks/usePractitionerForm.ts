@@ -10,9 +10,9 @@ import type {
   UpdatePractitionerDto,
 } from "../../../api/models";
 import {
-  useGetApiPractitionerId,
-  usePostApiPractitioner,
-  usePutApiPractitionerId,
+  useGetPractitionerById,
+  useCreatePractitioner,
+  useUpdatePractitionerById,
 } from "../../../api/practitioner/practitioner";
 
 export function usePractitionerForm() {
@@ -28,7 +28,7 @@ export function usePractitionerForm() {
     data: practitionerData,
     isLoading: isFetching,
     isError,
-  } = useGetApiPractitionerId<PractitionerDto>(id!, {
+  } = useGetPractitionerById<PractitionerDto>(id!, {
     query: {
       enabled: isEditMode,
       staleTime: 0,
@@ -37,7 +37,7 @@ export function usePractitionerForm() {
 
   // Crear
   const { mutateAsync: createPractitioner, isPending: isCreating } =
-    usePostApiPractitioner({
+    useCreatePractitioner({
       mutation: {
         onSuccess: () => {
           msg.success("Empleado creado correctamente");
@@ -54,7 +54,7 @@ export function usePractitionerForm() {
 
   // Actualizar
   const { mutateAsync: updatePractitioner, isPending: isUpdating } =
-    usePutApiPractitionerId({
+    useUpdatePractitionerById({
       mutation: {
         onSuccess: () => {
           msg.success("Empleado actualizado correctamente");

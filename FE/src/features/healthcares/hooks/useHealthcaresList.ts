@@ -1,181 +1,174 @@
-import { useState, useMemo } from "react";
-import { useNavigate } from "react-router";
+import { useState, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { useUrlFilters } from "../../../shared/hooks";
 import { useMessage } from "../../../shared/hooks";
 import { useAbility } from "../../../config";
-import { useGetApiLocations } from "../../../api/locations/locations";
-import type { TablePaginationConfig } from "antd";
-import type { HealthcareDto } from "../../../api/models";
+import type {
+  HealthcareDto,
+  GetHealtcareListParams,
+  HealthcareScope,
+} from "../../../api/models";
 import {
-  getGetApiHealthcaresQueryKey,
-  useDeleteApiHealthcaresId,
-  useGetApiHealthcares,
+  getGetHealtcareListQueryKey,
+  useGetHealtcareList,
+  useDeleteHealtcareById,
 } from "../../../api/healthcares/healthcares";
+import { useGetLocationList } from "../../../api/locations/locations";
+
+interface FiltersState {
+  location?: string;
+  scope?: HealthcareScope;
+  active?: boolean;
+  includeCost: boolean;
+  name?: string;
+}
 
 export function useHealthcaresList() {
   const navigate = useNavigate();
-  const ability = useAbility();
   const queryClient = useQueryClient();
   const msg = useMessage();
+  const ability = useAbility();
 
-  // Estado para el modal de detalles
-  const [selectedHealthcare, setSelectedHealthcare] = useState<HealthcareDto | null>(null);
+  // Estados locales
+  const [filters, setFilters] = useState<FiltersState>({
+    includeCost: false,
+  });
+  const [searchInput, setSearchInput] = useState("");
+  const [selectedHealthcare, setSelectedHealthcare] =
+    useState<HealthcareDto | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Estado local para el input de búsqueda (antes de aplicar el filtro)
-  const [searchInput, setSearchInput] = useState("");
-
-  // Manejar todos los filtros en la URL
-  const { filters, setFilter, setFilters } = useUrlFilters({
-    defaultValues: {
-      search: "",
-      location: undefined as string | undefined,
-      status: undefined as string | undefined,
-      scope: undefined as string | undefined,
-      includeCost: false,
-      pageNumber: 1,
-      pageSize: 10,
-    },
+  // Paginación
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 20,
   });
 
-  // Construir parámetros para la petición al backend
-  const queryParams = useMemo(() => {
-    const params: any = {
-      pageNumber: filters.pageNumber,
-      pageSize: filters.pageSize,
+  // Obtener ubicaciones para el filtro
+  const { data: locationsData } = useGetLocationList();
+  const locations = locationsData?.items || [];
+
+  // Construir parámetros para la API con los nombres correctos
+  const buildParams = useCallback((): GetHealtcareListParams => {
+    const params: GetHealtcareListParams = {
+      PageNumber: pagination.current,
+      PageSize: pagination.pageSize,
     };
 
-    // Filtro de búsqueda por nombre
-    if (filters.search) {
-      params.name = filters.search;
+    // Solo agregar filtros que tengan valor
+    if (filters.name?.trim()) {
+      params.Name = filters.name.trim();
     }
-
-    // Filtro por ubicación
     if (filters.location) {
-      params.location = filters.location;
+      params.Location = filters.location;
     }
-
-    // Filtro por estado
-    if (filters.status === "active") {
-      params.active = true;
-    } else if (filters.status === "inactive") {
-      params.active = false;
-    }
-
-    // Filtro por tipo
     if (filters.scope) {
-      params.scope = filters.scope;
+      params.Scope = filters.scope;
     }
-
-    // Filtro por costo
+    if (filters.active !== undefined && filters.active !== null) {
+      params.Active = filters.active;
+    }
     if (filters.includeCost) {
-      params.includeCost = filters.includeCost;
+      params.IncludeCost = filters.includeCost;
     }
 
     return params;
-  }, [filters]);
+  }, [filters, pagination]);
 
-  // Obtener datos de la API con filtros
-  const { data: response, isLoading, isFetching, isError } = useGetApiHealthcares(queryParams, {
+  // Consulta principal
+  const {
+    data: healthcaresData,
+    isLoading,
+    isFetching,
+    isError,
+  } = useGetHealtcareList(buildParams(), {
     query: {
-      placeholderData: (previousData) => previousData, // Mantener datos previos mientras se cargan los nuevos
-    }
-  });
-
-  // Obtener todas las ubicaciones para el filtro
-  const { data: locationsData, isLoading: isLoadingLocations } = useGetApiLocations();
-
-  // Extraer datos de la respuesta
-  const healthcares = (response as any)?.data?.items || [];
-  const pagination = (response as any)?.data?.pagination;
-
-  // Procesar los datos - ahora abbreviation, scope y cost vienen directamente
-  const processedHealthcares = useMemo(() => {
-    return healthcares.map((healthcare : HealthcareDto) => {
-      return {
-        ...healthcare,
-      };
-    });
-  }, [healthcares]);
-
-  // Mutación para eliminar
-  const { mutate: deleteHealthcare } = useDeleteApiHealthcaresId({
-    mutation: {
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: getGetApiHealthcaresQueryKey(),
-        });
-        msg.success("Servicio médico eliminado correctamente");
-      },
-      onError: () => msg.error("Error al eliminar el servicio médico"),
+      placeholderData: (prev) => prev,
     },
   });
 
-  // Crear
-  const handleCreate = () => {
-    navigate("/healthcares/create");
-  };
+  const healthcares = healthcaresData?.items || [];
+  const paginationData = healthcaresData?.pagination;
 
-  // Editar
+  // Configuración de paginación para Ant Design Table
+  const paginationConfig = useMemo(
+    () => ({
+      current: paginationData?.currentPage || pagination.current,
+      pageSize: paginationData?.pageSize || pagination.pageSize,
+      total: paginationData?.totalItems || 0,
+      showTotal: (total: number) => `Total ${total} servicios`,
+      showSizeChanger: true,
+      pageSizeOptions: ["10", "20", "50", "100"],
+      onChange: (page: number, pageSize: number) => {
+        setPagination({ current: page, pageSize });
+      },
+      showQuickJumper: true,
+    }),
+    [paginationData, pagination]
+  );
+
+  // Mutación para eliminar
+  const { mutateAsync: deleteHealthcare } = useDeleteHealtcareById({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: getGetHealtcareListQueryKey(),
+        });
+        msg.success("Servicio médico eliminado correctamente");
+      },
+      onError: (error: any) => {
+        const errorMessage =
+          error?.response?.data?.detail ||
+          error?.response?.data?.title ||
+          "Error al eliminar el servicio médico";
+        msg.error(errorMessage);
+      },
+    },
+  });
+
+  // Handlers
   const handleEdit = (id: string) => {
-    navigate(`/healthcares/update/${id}`);
+    navigate(`/healthcares/edit/${id}`);
   };
 
-  // Eliminar
-  const handleDelete = (id: string) => {
-    deleteHealthcare({ id });
+  const handleDelete = async (id: string) => {
+    await deleteHealthcare({ id });
   };
 
-  // Ver detalles
-  const handleViewDetails = (healthcare: HealthcareDto) => {
-    setSelectedHealthcare(healthcare);
+  const handleViewDetails = (record: HealthcareDto) => {
+    setSelectedHealthcare(record);
     setIsModalOpen(true);
   };
 
-  // Cerrar modal
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedHealthcare(null);
   };
 
-  // Manejar cambio en el input de búsqueda
+  const setFilter = (key: keyof FiltersState, value: any) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    setPagination((prev) => ({ ...prev, current: 1 })); // Reset a primera página
+  };
+
   const handleSearchInputChange = (value: string) => {
     setSearchInput(value);
   };
 
-  // Aplicar búsqueda al presionar el botón
-  const handleSearch = () => {
-    setFilter("search", searchInput);
+  const handleSearch = (value: string) => {
+    setFilters((prev) => ({ ...prev, name: value }));
+    setPagination((prev) => ({ ...prev, current: 1 }));
   };
 
-  // Limpiar búsqueda al presionar el icono X
   const handleClearSearch = () => {
     setSearchInput("");
-    setFilter("search", "");
+    setFilters((prev) => ({ ...prev, name: undefined }));
+    setPagination((prev) => ({ ...prev, current: 1 }));
   };
-
-  // Configuración de paginación con datos del backend
-  const paginationConfig: TablePaginationConfig = {
-    current: pagination?.currentPage || 1,
-    pageSize: pagination?.pageSize || 10,
-    showSizeChanger: true,
-    pageSizeOptions: ["10", "20", "50", "100"],
-    total: pagination?.totalItems || 0,
-    onChange: (page, pageSize) => {
-      setFilters({ pageNumber: page, pageSize });
-    },
-    showTotal: (total, range) => `${range[0]}-${range[1]} de ${total}`,
-  };
-
-  // Obtener las ubicaciones para filtro desde el endpoint de locations
-  const locations = locationsData?.items || [];
 
   return {
     filters,
     locations,
-    isLoadingLocations,
-    healthcares: processedHealthcares,
+    healthcares,
     paginationConfig,
     isLoading,
     isFetching,
@@ -184,11 +177,10 @@ export function useHealthcaresList() {
     isModalOpen,
     searchInput,
     ability,
-    handleCreate,
     handleEdit,
     handleDelete,
-    setFilter,
     handleViewDetails,
+    setFilter,
     handleCloseModal,
     handleSearchInputChange,
     handleSearch,

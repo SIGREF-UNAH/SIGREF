@@ -6,9 +6,9 @@ import { useMessage } from "../../../shared/hooks";
 import type { TablePaginationConfig } from "antd";
 import type { ShiftDto } from "../../../api/models";
 import {
-  getGetApiShiftsQueryKey,
-  useDeleteApiShiftsId,
-  useGetApiShifts,
+  getGetShiftListQueryKey,
+  useDeleteShiftById,
+  useGetShiftList,
 } from "../../../api/shifts/shifts";
 
 export function useShiftsList() {
@@ -56,7 +56,7 @@ export function useShiftsList() {
     isLoading,
     isFetching,
     isError,
-  } = useGetApiShifts(queryParams, {
+  } = useGetShiftList(queryParams, {
     query: {
       placeholderData: (previousData) =>
         previousData ?? {
@@ -76,10 +76,10 @@ export function useShiftsList() {
 
   const pagination = response?.data?.pagination;
 
-  const { mutate: deleteShift } = useDeleteApiShiftsId({
+  const { mutate: deleteShift } = useDeleteShiftById({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetApiShiftsQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetShiftListQueryKey() });
         msg.success("Turno desactivado correctamente");
       },
       onError: () => msg.error("Error al desactivar el turno"),

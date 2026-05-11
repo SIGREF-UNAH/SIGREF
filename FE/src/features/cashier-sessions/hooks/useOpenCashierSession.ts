@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useCashierSessionStore } from "../store";
-import { useGetApiLocations } from "../../../api/locations/locations";
-import { useGetApiShifts } from "../../../api/shifts/shifts";
-import { usePostApiCashierSessionsOpen } from "../../../api/cashier-sessions/cashier-sessions";
+import { useGetLocationList } from "../../../api/locations/locations";
+import { useGetShiftList } from "../../../api/shifts/shifts";
+import { useCreateSessionOpen } from "../../../api/cashier-sessions/cashier-sessions";
 import { useMessage } from "../../../shared/hooks";
 import { useAbility } from "../../../config";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -21,10 +21,10 @@ export default function useOpenCashierSession() {
   const { session, setSession } = useCashierSessionStore();
 
   // Cargar Ubicaciones
-  const { data: locationsData, isLoading: isLoadingLocations } = useGetApiLocations();
+  const { data: locationsData, isLoading: isLoadingLocations } = useGetLocationList();
 
   // Cargar los turnos cuando se selecciona una ubicación
-  const { data: shiftsData, isLoading: isLoadingShifts } = useGetApiShifts(
+  const { data: shiftsData, isLoading: isLoadingShifts } = useGetShiftList(
     selectedLocationId ? { LocationId: selectedLocationId } : undefined,
     {
       query: {
@@ -35,7 +35,7 @@ export default function useOpenCashierSession() {
 
   // Mutación para crear la CashierSession
   const { mutate: openSession, isPending: isOpeningSession } =
-    usePostApiCashierSessionsOpen({
+    useCreateSessionOpen({
       mutation: {
         onSuccess: (response: any) => {
           if (response?.data) {

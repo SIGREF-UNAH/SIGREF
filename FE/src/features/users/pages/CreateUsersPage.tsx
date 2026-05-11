@@ -2,9 +2,9 @@ import { List, Tag, Space } from "antd";
 import { useMessage } from "../../../shared/hooks/useMessage";
 import { useEffect, useRef, useState } from "react";
 import { PageHeaderTabs } from "../../../shared/components";
-import { useGetApiPractitioner } from "../../../api/practitioner/practitioner";
+import { useGetPractitionerList } from "../../../api/practitioner/practitioner";
 import { ROLE_OPTIONS } from "../../../shared/constants/RolesConstants";
-import { useGetApiLocations } from "../../../api/locations/locations";
+import { useGetLocationList } from "../../../api/locations/locations";
 import { USER_ROLE_OPTIONS } from "../../../shared/constants/UserRolesConstants";
 import { FaCheck } from "react-icons/fa";
 import { useAbility } from "../../../config";
@@ -16,7 +16,7 @@ import {
   ProFormSelect,
   type ProFormInstance,
 } from "@ant-design/pro-components";
-import { useGetApiUsersList, usePostApiUsersCreate } from "../../../api/users/users";
+import { useGetUserList, useCreateUser } from "../../../api/users/users";
 
 type Practitioner = {
   id: number;
@@ -59,20 +59,20 @@ export default function CreateUsersPage() {
   const ability = useAbility();
 
   // Para los mensajes de error y éxito
-  const createUserMutation = usePostApiUsersCreate();
+  const createUserMutation = useCreateUser();
   const { success, error } = useMessage();
 
   // Obtener nombres de usuarios existentes desde backend
-  const { data: allUsers } = useGetApiUsersList({
+  const { data: allUsers } = useGetUserList({
       PageNumber: 1,
       PageSize: 999,
     });
 
-  const existingUsernames = allUsers?.data?.items?.map((u : any) => u.username) ?? [];
+  const existingUsernames = allUsers?.items?.map((u : any) => u.username) ?? [];
 
   const currentUserRole = keycloak.tokenParsed?.realm_access?.roles || [];
 
-  const { data } = useGetApiPractitioner<{
+  const { data } = useGetPractitionerList<{
     items: Practitioner[];
     pagination: {
       currentPage: number;
@@ -113,7 +113,7 @@ export default function CreateUsersPage() {
       return nameMatch && roleMatch && areaMatch && statusMatch;
     });
 
-  const { data: locations } = useGetApiLocations<{items: { name: string }[];}>();
+  const { data: locations } = useGetLocationList<{items: { name: string }[];}>();
 
   const locationOptions = locations?.items?.map((loc) => 
     ({

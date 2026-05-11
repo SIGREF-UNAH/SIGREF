@@ -3,6 +3,7 @@ using SIGREF.API.Database;
 using SIGREF.API.Dtos.Series;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
+using SIGREF.Common.Exceptions;
 using SIGREF.Core.Entity.Billing;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
 using SIGREF.Infrastructure.Persistence;
@@ -14,53 +15,37 @@ public class SerieService : ISerieService
     private readonly SIGREFContext _context;
     private readonly IUserContextService _userContextService;
 
-
     public SerieService(SIGREFContext context, IUserContextService userContextService)
     {
         _context = context;
         _userContextService = userContextService;
     }
 
-    public async Task<ResponseDto<SerieDto>> CreateSerieAsync(CreateSeriesDto dto)
+    public async Task<SerieDto> CreateSerieAsync(CreateSeriesDto dto)
     {
         var user = _userContextService.GetUserId();
+
         // Validación StartNumber <= EndNumber
         if (dto.StartNumber > dto.EndNumber)
         {
-            return new ResponseDto<SerieDto>
+            throw new ValidationException("START_NUMBER_GREATER_THAN_END_NUMBER", new Dictionary<string, object>
             {
-                Status = false,
-                StatusCode = 400,
-                Message = "El número de inicio no puede ser mayor al número final.",
-            };
+                { "startNumber", dto.StartNumber },
+                { "endNumber", dto.EndNumber }
+            });
         }
 
-        //  No permitir nombres duplicados
+        // No permitir nombres duplicados
         var nameExists = await _context.InvoiceSeries
             .AnyAsync(x => x.Name.ToLower() == dto.Name.ToLower());
 
         if (nameExists)
         {
-            return new ResponseDto<SerieDto>
+            throw new ConflictException("SERIE_NAME_ALREADY_EXISTS", new Dictionary<string, object>
             {
-                Status = false,
-                StatusCode = 400,
-                Message = "Ya existe una serie con ese nombre.",
-            };
+                { "name", dto.Name }
+            });
         }
-
-        //======================  REVISAR  ===========================
-        //  No permitir prefijos duplicados ?? Segun entiendo si se puede pero po si en un futuro resulta que no
-        //var prefixExists = await _context.InvoiceSeries
-        //    .AnyAsync(x => x.Prefix.ToLower() == dto.Prefix.ToLower());
-
-        //if (prefixExists)
-        //{
-        //    response.Status = false;
-        //    response.StatusCode = 400;
-        //    response.Message = "Ya existe una serie con ese prefijo.";
-        //    return response;
-        //}
 
         // Crear entidad
         var entity = new InvoiceSerieEntity
@@ -69,35 +54,29 @@ public class SerieService : ISerieService
             Prefix = dto.Prefix,
             StartNumber = dto.StartNumber,
             EndNumber = dto.EndNumber,
-            CurrentNumber = dto.StartNumber, // arranca en el inicio del rango
+            CurrentNumber = dto.StartNumber,
             CreatedById = user,
             CreatedDate = DateTime.UtcNow,
-            IsActive =  dto.IsActive ?? true 
+            IsActive = dto.IsActive ?? true
         };
 
         _context.InvoiceSeries.Add(entity);
         await _context.SaveChangesAsync();
 
-        return new ResponseDto<SerieDto>
+        return new SerieDto
         {
-            Status = true,
-            StatusCode = 201,
-            Message = "Serie creada correctamente.",
-            Data = new SerieDto
-            {
-                Id = entity.Id,
-                Name = entity.Name,
-                Prefix = entity.Prefix,
-                StartNumber = entity.StartNumber,
-                EndNumber = entity.EndNumber,
-                CurrentNumber = entity.CurrentNumber,
-                CreatedDate = entity.CreatedDate,
-                IsActive = entity.IsActive,
-            }
+            Id = entity.Id,
+            Name = entity.Name,
+            Prefix = entity.Prefix,
+            StartNumber = entity.StartNumber,
+            EndNumber = entity.EndNumber,
+            CurrentNumber = entity.CurrentNumber,
+            CreatedDate = entity.CreatedDate,
+            IsActive = entity.IsActive,
         };
     }
 
-    public async Task<ResponseDto<SerieDto>> UpdateSerieAsync(UpdateSeriesDto dto, Guid id)
+    public async Task<SerieDto> UpdateSerieAsync(UpdateSeriesDto dto, Guid id)
     {
         var user = _userContextService.GetUserId();
 
@@ -113,29 +92,24 @@ public class SerieService : ISerieService
 
             if (entity == null)
             {
-                return new ResponseDto<SerieDto>
+                throw new NotFoundException("SERIE_NOT_FOUND", new Dictionary<string, object>
                 {
-                    Status = false,
-                    StatusCode = 404,
-                    Message = "La serie no existe."
-                };
+                    { "serieId", id }
+                });
             }
 
-            // ======================
-            // VALIDACIONES (PARCIALES)
-            // ======================
-
+            // Validación parcial: StartNumber <= EndNumber si ambos vienen
             if (dto.StartNumber.HasValue && dto.EndNumber.HasValue &&
                 dto.StartNumber.Value > dto.EndNumber.Value)
             {
-                return new ResponseDto<SerieDto>
+                throw new ValidationException("START_NUMBER_GREATER_THAN_END_NUMBER", new Dictionary<string, object>
                 {
-                    Status = false,
-                    StatusCode = 400,
-                    Message = "El número de inicio no puede ser mayor al número final."
-                };
+                    { "startNumber", dto.StartNumber.Value },
+                    { "endNumber", dto.EndNumber.Value }
+                });
             }
 
+            // Validar nombre duplicado
             if (!string.IsNullOrWhiteSpace(dto.Name))
             {
                 var nameNormalized = dto.Name.Trim().ToLower();
@@ -145,66 +119,58 @@ public class SerieService : ISerieService
 
                 if (exists)
                 {
-                    return new ResponseDto<SerieDto>
+                    throw new ConflictException("SERIE_NAME_ALREADY_EXISTS", new Dictionary<string, object>
                     {
-                        Status = false,
-                        StatusCode = 400,
-                        Message = "Ya existe una serie con ese nombre."
-                    };
+                        { "name", dto.Name }
+                    });
                 }
             }
 
-            // ======================
-            // CAMBIOS (SOLO SI VIENEN)
-            // ======================
-
-            // 1. Determinar valores efectivos (candidatos a ser guardados)
+            // Determinar valores efectivos
             long newStart = dto.StartNumber ?? entity.StartNumber;
             long newEnd = dto.EndNumber ?? entity.EndNumber;
             bool startChanging = dto.StartNumber.HasValue && dto.StartNumber.Value != entity.StartNumber;
             bool endChanging = dto.EndNumber.HasValue && dto.EndNumber.Value != entity.EndNumber;
 
-            // 2. Regla: StartNumber no puede ser mayor que EndNumber (Rango Coherente)
+            // Regla: StartNumber no puede ser mayor que EndNumber (Rango Coherente)
             if (newStart > newEnd)
             {
-                return new ResponseDto<SerieDto>
+                throw new ValidationException("START_NUMBER_GREATER_THAN_END_NUMBER", new Dictionary<string, object>
                 {
-                    Status = false,
-                    StatusCode = 400,
-                    Message = "El número de inicio no puede ser mayor al número final."
-                };
+                    { "startNumber", newStart },
+                    { "endNumber", newEnd }
+                });
             }
 
-            // 3. Regla: No permitir modificar el inicio si la serie ya tuvo movimiento
+            // Regla: No permitir modificar el inicio si la serie ya tuvo movimiento
             if (startChanging && entity.CurrentNumber != entity.StartNumber)
             {
-                return new ResponseDto<SerieDto>
+                throw new BusinessRuleException("CANNOT_CHANGE_START_WHEN_SERIE_IN_USE", new Dictionary<string, object>
                 {
-                    Status = false,
-                    StatusCode = 400,
-                    Message = "No se puede cambiar el inicio porque la serie ya fue usada."
-                };
+                    { "serieId", id },
+                    { "currentNumber", entity.CurrentNumber },
+                    { "startNumber", entity.StartNumber }
+                });
             }
 
-            // 4. Regla: El nuevo número final no puede ser menor al progreso actual de la serie
-            // Si el inicio cambia, el "progreso actual" se reinicia al nuevo inicio.
+            // Regla: El nuevo número final no puede ser menor al progreso actual de la serie
             long effectiveCurrent = startChanging ? newStart : entity.CurrentNumber;
 
             if (newEnd < effectiveCurrent)
             {
-                return new ResponseDto<SerieDto>
+                throw new BusinessRuleException("END_NUMBER_LESS_THAN_CURRENT", new Dictionary<string, object>
                 {
-                    Status = false,
-                    StatusCode = 400,
-                    Message = "El número final no puede ser menor al número actual correlativo."
-                };
+                    { "serieId", id },
+                    { "newEnd", newEnd },
+                    { "effectiveCurrent", effectiveCurrent }
+                });
             }
 
-            // 5. Aplicar cambios a la entidad
+            // Aplicar cambios a la entidad
             if (startChanging)
             {
                 entity.StartNumber = newStart;
-                entity.CurrentNumber = newStart; // Reiniciar correlativo al nuevo inicio
+                entity.CurrentNumber = newStart;
             }
 
             if (endChanging)
@@ -227,29 +193,22 @@ public class SerieService : ISerieService
             await _context.SaveChangesAsync();
             await tx.CommitAsync();
 
-            return new ResponseDto<SerieDto>
+            return new SerieDto
             {
-                Status = true,
-                StatusCode = 200,
-                Message = "Serie actualizada correctamente.",
-                Data = new SerieDto
-                {
-                    Id = entity.Id,
-                    Name = entity.Name,
-                    Prefix = entity.Prefix,
-                    StartNumber = entity.StartNumber,
-                    EndNumber = entity.EndNumber,
-                    CurrentNumber = entity.CurrentNumber,
-                    CreatedDate = entity.CreatedDate,
-                    ModifiedDate = entity.UpdatedDate,
-                    IsActive = entity.IsActive
-                }
+                Id = entity.Id,
+                Name = entity.Name,
+                Prefix = entity.Prefix,
+                StartNumber = entity.StartNumber,
+                EndNumber = entity.EndNumber,
+                CurrentNumber = entity.CurrentNumber,
+                CreatedDate = entity.CreatedDate,
+                ModifiedDate = entity.UpdatedDate,
+                IsActive = entity.IsActive
             };
         });
     }
 
-
-    public async Task<ResponseDto<PagedResultDto<SerieDto>>> GetSeriesAsync(FilterSerieDto dto)
+    public async Task<PagedResultDto<SerieDto>> GetSeriesAsync(FilterSerieDto dto)
     {
         var userRole = _userContextService.GetUserRoles();
 
@@ -259,10 +218,7 @@ public class SerieService : ISerieService
 
         var query = _context.InvoiceSeries.AsQueryable().AsNoTracking();
 
-        // ==========================
-        // FILTROS
-
-        // FILTROS STRING
+        // Filtros
         if (!string.IsNullOrWhiteSpace(dto.Name))
             query = query.Where(x => EF.Functions.ILike(x.Name, $"%{dto.Name}%"));
 
@@ -278,14 +234,11 @@ public class SerieService : ISerieService
         if (dto.IsActive.HasValue)
             query = query.Where(x => x.IsActive == dto.IsActive.Value);
 
-        // Si el usuario es cajero  solo ver series activas
+        // Si el usuario es cajero solo ver series activas
         if (userRole.Contains(RolesConstants.cashier))
             query = query.Where(x => x.IsActive);
 
-        // ==========================
-        //        PAGINACION
-        // ==========================
-
+        // Paginación
         int totalItems = await query.CountAsync();
         int totalPages = (int)Math.Ceiling(totalItems / (double)size);
 
@@ -307,35 +260,29 @@ public class SerieService : ISerieService
             })
             .ToListAsync();
 
-        return new ResponseDto<PagedResultDto<SerieDto>>
+        return new PagedResultDto<SerieDto>
         {
-            Status = true,
-            StatusCode = 200,
-            Message = "Listado de series obtenido correctamente.",
-            Data = new PagedResultDto<SerieDto>
+            Items = dtoList,
+            Pagination = new PaginationDto
             {
-                Items = dtoList,
-                Pagination = new PaginationDto
-                {
-                    CurrentPage = page,
-                    PageSize = size,
-                    TotalItems = totalItems,
-                    TotalPages = totalPages,
-                    HasPrevious = page > 1,
-                    HasNext = page < totalPages
-                }
+                CurrentPage = page,
+                PageSize = size,
+                TotalItems = totalItems,
+                TotalPages = totalPages,
+                HasPrevious = page > 1,
+                HasNext = page < totalPages
             }
         };
     }
 
-
-    public async Task<ResponseDto<SerieDto>> GetSerieById(Guid id)
+    public async Task<SerieDto> GetSerieById(Guid id)
     {
         var dto = await _context.InvoiceSeries
             .AsNoTracking()
             .Where(x => x.Id == id)
             .Select(x => new SerieDto
             {
+                Id = x.Id,
                 Name = x.Name,
                 Prefix = x.Prefix,
                 StartNumber = x.StartNumber,
@@ -349,25 +296,16 @@ public class SerieService : ISerieService
 
         if (dto == null)
         {
-            return new ResponseDto<SerieDto>
+            throw new NotFoundException("SERIE_NOT_FOUND", new Dictionary<string, object>
             {
-                Status = false,
-                StatusCode = 404,
-                Message = "La serie no existe."
-            };
+                { "serieId", id }
+            });
         }
 
-        return new ResponseDto<SerieDto>
-        {
-            Status = true,
-            StatusCode = 200,
-            Message = "Serie encontrada.",
-            Data = dto
-        };
+        return dto;
     }
 
-
-    public async Task<ResponseDto<SerieDto>> SoftDeleteSerieAsync(Guid id)
+    public async Task<SerieDto> SoftDeleteSerieAsync(Guid id)
     {
         var userId = _userContextService.GetUserId();
 
@@ -382,50 +320,16 @@ public class SerieService : ISerieService
 
             if (entity == null)
             {
-                return new ResponseDto<SerieDto>
+                throw new NotFoundException("SERIE_NOT_FOUND", new Dictionary<string, object>
                 {
-                    Status = false,
-                    StatusCode = 404,
-                    Message = "La serie no existe."
-                };
+                    { "serieId", id }
+                });
             }
 
             if (!entity.IsActive)
             {
-                // Ya estaba desactivada (idempotente)
-                return new ResponseDto<SerieDto>
-                {
-                    Status = true,
-                    StatusCode = 200,
-                    Message = "La serie ya estaba desactivada.",
-                    Data = new SerieDto
-                    {
-                        Id = entity.Id,
-                        Name = entity.Name,
-                        Prefix = entity.Prefix,
-                        StartNumber = entity.StartNumber,
-                        EndNumber = entity.EndNumber,
-                        CurrentNumber = entity.CurrentNumber,
-                        CreatedDate = entity.CreatedDate,
-                        ModifiedDate = entity.UpdatedDate,
-                        IsActive = entity.IsActive
-                    }
-                };
-            }
-
-            entity.IsActive = false;
-            entity.UpdatedById = userId;
-            entity.UpdatedDate = DateTime.UtcNow;
-
-            await _context.SaveChangesAsync();
-            await tx.CommitAsync();
-
-            return new ResponseDto<SerieDto>
-            {
-                Status = true,
-                StatusCode = 200,
-                Message = "Serie desactivada correctamente.",
-                Data = new SerieDto
+                // Idempotente: ya estaba desactivada, devolvemos sin error
+                return new SerieDto
                 {
                     Id = entity.Id,
                     Name = entity.Name,
@@ -436,7 +340,27 @@ public class SerieService : ISerieService
                     CreatedDate = entity.CreatedDate,
                     ModifiedDate = entity.UpdatedDate,
                     IsActive = entity.IsActive
-                }
+                };
+            }
+
+            entity.IsActive = false;
+            entity.UpdatedById = userId;
+            entity.UpdatedDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            await tx.CommitAsync();
+
+            return new SerieDto
+            {
+                Id = entity.Id,
+                Name = entity.Name,
+                Prefix = entity.Prefix,
+                StartNumber = entity.StartNumber,
+                EndNumber = entity.EndNumber,
+                CurrentNumber = entity.CurrentNumber,
+                CreatedDate = entity.CreatedDate,
+                ModifiedDate = entity.UpdatedDate,
+                IsActive = entity.IsActive
             };
         });
     }

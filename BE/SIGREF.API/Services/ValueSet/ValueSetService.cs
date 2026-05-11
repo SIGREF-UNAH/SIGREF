@@ -1,4 +1,5 @@
-﻿using Hl7.Fhir.Rest;
+﻿using Hl7.Fhir.Model;
+using Hl7.Fhir.Rest;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Helpers;
 using SIGREF.API.Services.Common;
@@ -17,31 +18,48 @@ public class ValueSetService : IValueSetService
         _client = fhirService.GetFhirClient();
     }
 
-    public async Task<ResponseDto<ValueSetDto>> GetCatalogAsync(CatalogType type)
+    public async Task<PagedResultDto<ValueSetItemDto>> GetCatalogAsync(CatalogType type, int page = 1,
+        int pageSize = 100)
     {
-        var url = CatalogValueSetResolver.Resolve(type);
+        var canonicalUrl = CatalogValueSetResolver.Resolve(type);
 
-        var expanded = await _client.ExpandValueSetAsync(new Uri(url));
+        // FHIR usa offset (0-based), nosotros recibimos page (1-based)
+        int offset = (page - 1) * pageSize;
+        var inputParams = new Parameters();
+        var expandUrl = $"ValueSet/$expand?url={canonicalUrl}&offset={offset}&count={pageSize}";
+        var fullUri = new Uri(new Uri(_client.Endpoint.ToString()), expandUrl);
+        Console.WriteLine($"[FHIR REQUEST]: {fullUri}");
+        var result = await _client.GetAsync(expandUrl);
 
-        var items = expanded.Expansion.Contains
+        // Mapeo de ítems desde expansion.contains
+        var valueSet = result as Hl7.Fhir.Model.ValueSet
+                       ?? throw new InvalidOperationException("FHIR server did not return a ValueSet.");
+
+        // Mapeo de ítems desde expansion.contains
+        var items = valueSet.Expansion?.Contains?
             .Select(c => new ValueSetItemDto
             {
                 Code = c.Code,
                 Display = c.Display
-            })
-            .ToList();
+            }).ToList() ?? new List<ValueSetItemDto>();
 
-        return new ResponseDto<ValueSetDto>
+        // Cálculos para el PaginationDto
+        long totalItems = valueSet.Expansion?.Total ?? 0;
+        int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+
+        return new PagedResultDto<ValueSetItemDto>
         {
-            Status = true,
-            StatusCode = 200,
-            Data = new ValueSetDto
+            Items = items,
+            Pagination = new PaginationDto
             {
-                Url = url,
-                Name = expanded.Name,
-                Items = items
-            },
-            Message = "Catálogo cargado correctamente"
+                CurrentPage = page,
+                PageSize = pageSize,
+                TotalItems = totalItems,
+                TotalPages = totalPages,
+                HasPrevious = page > 1,
+                HasNext = page < totalPages
+            }
         };
     }
 }

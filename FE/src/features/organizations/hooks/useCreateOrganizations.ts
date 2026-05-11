@@ -1,23 +1,41 @@
 import { useNavigate } from "react-router";
 import type { CreateOrganizationDto } from "../../../api/models";
+import { 
+  OrganizationTypeEnum,
+  ContactPointSystem,
+  ContactPointUse,
+  AddressUse,
+  AddressType,
+} from "../../../api/models";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  getGetApiOrganizationsQueryKey,
-  usePostApiOrganizations,
+  getGetOrganizationListQueryKey,
+  useCreateOrganization as useCreateOrganizationMutation,
 } from "../../../api/organizations/organizations";
 import { useMessage } from "../../../shared/hooks";
 
+/**
+ * Hook personalizado para crear organizaciones
+ * 
+ * Utiliza la terminología estándar HL7 FHIR v4.3.0 para tipos de organización
+ * @see http://hl7.org/fhir/R4/valueset-organization-type.html
+ * @see http://terminology.hl7.org/CodeSystem/organization-type
+ * @see http://hl7.org/fhir/R4/valueset-contact-point-system.html
+ * @see http://hl7.org/fhir/R4/valueset-contact-point-use.html
+ * 
+ * Los códigos y displays están sujetos a cambios según los ValueSets de HL7 FHIR
+ */
 export function useCreateOrganization() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const msg = useMessage();
 
   const { mutateAsync: createOrganization, isPending } =
-    usePostApiOrganizations({
+    useCreateOrganizationMutation({
       mutation: {
         onSuccess: () => {
           queryClient.invalidateQueries({
-            queryKey: getGetApiOrganizationsQueryKey(),
+            queryKey: getGetOrganizationListQueryKey(),
           });
           msg.success("Organización creada correctamente");
           navigate("/organizations");
@@ -34,7 +52,7 @@ export function useCreateOrganization() {
   type FormValues = {
     name: string;
     identifier: string;
-    type: OrgTypeKey;
+    type: OrganizationTypeEnum;
     active: boolean;
     description?: string;
     phone?: string;
@@ -46,49 +64,122 @@ export function useCreateOrganization() {
     country?: string;
   };
 
-  type OrgTypeKey =
-    | "prov"
-    | "dept"
-    | "team"
-    | "govt"
-    | "ins"
-    | "pay"
-    | "edu"
-    | "reli"
-    | "crs"
-    | "cg"
-    | "bus"
-    | "other";
+  /**
+   * Mapeo de tipos de organización de FHIR a códigos HL7 estándar
+   * 
+   * Mapea los valores del OrganizationTypeEnum generado por Orval
+   * a los códigos estándar de HL7 FHIR v4.3.0
+   * 
+   * @see http://terminology.hl7.org/CodeSystem/organization-type
+   * 
+   * NOTA: Los códigos HL7 son los valores canónicos para la API FHIR.
+   * Los nombres en español son para la interfaz de usuario (UI).
+   * Este mapeo está sujeto a cambios según evolucionen los ValueSets.
+   */
+  const organizationTypeToFhirMap: Record<OrganizationTypeEnum, { 
+    code: string;           // Código HL7 FHIR estándar
+    display: string;        // Display oficial HL7 FHIR (inglés)
+    displayEs: string;      // Nombre en español para la UI
+    definition: string;     // Definición del tipo según HL7
+  }> = {
+    [OrganizationTypeEnum.provider]: { 
+      code: "prov", 
+      display: "Healthcare Provider",
+      displayEs: "Proveedor de Salud",
+      definition: "An organization that provides healthcare services."
+    },
+    [OrganizationTypeEnum.department]: { 
+      code: "dept", 
+      display: "Hospital Department",
+      displayEs: "Departamento Hospitalario",
+      definition: "A department or ward within a hospital"
+    },
+    [OrganizationTypeEnum.team]: { 
+      code: "team", 
+      display: "Organizational team",
+      displayEs: "Equipo Organizacional",
+      definition: "An organizational team is usually a grouping of practitioners"
+    },
+    [OrganizationTypeEnum.government]: { 
+      code: "govt", 
+      display: "Government",
+      displayEs: "Gobierno",
+      definition: "A political body"
+    },
+    [OrganizationTypeEnum.insurer]: { 
+      code: "ins", 
+      display: "Insurance Company",
+      displayEs: "Compañía de Seguros",
+      definition: "A company that provides insurance to its subscribers"
+    },
+    [OrganizationTypeEnum.payer]: { 
+      code: "pay", 
+      display: "Payer",
+      displayEs: "Pagador",
+      definition: "A company, charity, or governmental organization, which processes claims"
+    },
+    [OrganizationTypeEnum.educational]: { 
+      code: "edu", 
+      display: "Educational Institute",
+      displayEs: "Instituto Educativo",
+      definition: "An educational institution that provides education or research facilities"
+    },
+    [OrganizationTypeEnum.regligious]: { 
+      code: "reli", 
+      display: "Religious Institution",
+      displayEs: "Institución Religiosa",
+      definition: "An organization that is identified as a part of a religious institution"
+    },
+    [OrganizationTypeEnum.clinicalResearchSponsor]: { 
+      code: "crs", 
+      display: "Clinical Research Sponsor",
+      displayEs: "Patrocinador de Investigación Clínica",
+      definition: "An organization that is identified as a Pharmaceutical/Clinical Research Sponsor"
+    },
+    [OrganizationTypeEnum.communityGroup]: { 
+      code: "cg", 
+      display: "Community Group",
+      displayEs: "Grupo Comunitario",
+      definition: "An un-incorporated community group"
+    },
+    [OrganizationTypeEnum.nonHealthcareBusiness]: { 
+      code: "bus", 
+      display: "Non-Healthcare Business or Corporation",
+      displayEs: "Negocio o Corporación No Sanitaria",
+      definition: "An organization that is a registered business or corporation"
+    },
+    [OrganizationTypeEnum.network]: { 
+      code: "other", 
+      display: "Other",
+      displayEs: "Otro",
+      definition: "Other type of organization not already specified"
+    },
+  };
 
   const handleFinish = async (values: FormValues) =>  {
-    const typeMap: Record<OrgTypeKey, { code: string; display: string }> = {
-      prov: { code: "prov", display: "Proveedor de salud" },
-      dept: { code: "dept", display: "Departamento" },
-      team: { code: "team", display: "Equipo" },
-      govt: { code: "govt", display: "Gobierno" },
-      ins: { code: "ins", display: "Aseguradora" },
-      pay: { code: "pay", display: "Pagador" },
-      edu: { code: "edu", display: "Educativo" },
-      reli: { code: "reli", display: "Religioso" },
-      crs: { code: "crs", display: "Investigación clínica" },
-      cg: { code: "cg", display: "Comunidad" },
-      bus: { code: "bus", display: "Negocio no médico" },
-      other: { code: "other", display: "Otro" },
-    };
+    const typeMapping = organizationTypeToFhirMap[values.type];
 
-    if (!values.type) {
-      values.type = "prov";
-    }
-
-    const payload: CreateOrganizationDto & { type?: any } = {
+    /**
+     * Construcción del payload FHIR para crear organización
+     * 
+     * Sistemas de terminología utilizados:
+     * - Identificador: http://terminology.hl7.org/CodeSystem/v2-0203 (HL7 v2 Identifier Type)
+     * - Tipo de organización: http://terminology.hl7.org/CodeSystem/organization-type (FHIR v4.3.0)
+     * - Tipo de contacto: http://terminology.hl7.org/CodeSystem/contactentity-type (FHIR v4.3.0)
+     * 
+     * @see https://www.hl7.org/fhir/organization.html
+     * @see https://www.hl7.org/fhir/datatypes.html#Identifier
+     * @see https://www.hl7.org/fhir/datatypes.html#ContactPoint
+     */
+    const payload: CreateOrganizationDto = {
       identifier: [
         {
-          use: 1,
+          use: "official" as const,
           type: {
             coding: [
               {
                 system: "http://terminology.hl7.org/CodeSystem/v2-0203",
-                code: "PRN",
+                code: "PRN", // Provider Number
                 display: "Provider Number",
                 userSelected: false,
               },
@@ -107,13 +198,13 @@ export function useCreateOrganization() {
           coding: [
             {
               system: "http://terminology.hl7.org/CodeSystem/organization-type",
-              version: "1.0",
-              code: typeMap[values.type].code,
-              display: typeMap[values.type].display,
+              version: "4.3.0",
+              code: typeMapping.code,
+              display: typeMapping.display,
               userSelected: true,
             },
           ],
-          text: typeMap[values.type].display,
+          text: typeMapping.displayEs, // Mostrar en español en la UI
         },
       ],
       name: values.name,
@@ -125,11 +216,10 @@ export function useCreateOrganization() {
           purpose: {
             coding: [
               {
-                system:
-                  "http://terminology.hl7.org/CodeSystem/contactentity-type",
-                version: "1.0",
-                code: "ADMIN",
-                display: "Administrativo",
+                system: "http://terminology.hl7.org/CodeSystem/contactentity-type",
+                version: "4.3.0",
+                code: "ADMIN", // Administrative contact
+                display: "Administrative",
                 userSelected: true,
               },
             ],
@@ -137,12 +227,22 @@ export function useCreateOrganization() {
           },
           name: "Contacto principal",
           telecom: [
-            { system: 0, value: values.phone || null, use: 0, rank: 1 },
-            { system: 2, value: values.email || null, use: 0, rank: 2 },
+            { 
+              system: ContactPointSystem.phone,
+              value: values.phone || null, 
+              use: ContactPointUse.work,
+              rank: 1 
+            },
+            { 
+              system: ContactPointSystem.email,
+              value: values.email || null, 
+              use: ContactPointUse.work,
+              rank: 2 
+            },
           ],
           address: {
-            use: 0,
-            type: 0,
+            use: AddressUse.work,
+            type: AddressType.both,
             text: values.address || null,
             line: [values.address || ""],
             city: values.city || null,
@@ -159,5 +259,6 @@ export function useCreateOrganization() {
   return {
     handleFinish,
     isPending,
+    organizationTypeToFhirMap, // Exportamos para usar en la UI (nombres en español)
   };
 }

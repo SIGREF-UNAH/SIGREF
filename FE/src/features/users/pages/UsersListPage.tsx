@@ -17,9 +17,9 @@ import { useState } from "react";
 import { PageHeaderTabs } from "../../../shared/components";
 import { useAbility } from "../../../config";
 import { useQueryClient } from "@tanstack/react-query";
-import { usePatchApiUsersIdToggleStatus } from "../../../api/users/users";
-import { useGetApiUsersList } from "../../../api/users/users";
-import { getGetApiUsersListQueryKey } from "../../../api/users/users";
+import { useUpdateUserToggleStatus } from "../../../api/users/users";
+import { useGetUserList } from "../../../api/users/users";
+import { getGetUserListQueryKey } from "../../../api/users/users";
 import UserDetailDrawer from "../components/UserDetailDrawer";
 
 export const UsersListPage = () => {
@@ -32,16 +32,16 @@ export const UsersListPage = () => {
 
   const pageSize = 5;
 
-  const { data, isLoading } = useGetApiUsersList({
+  const { data, isLoading } = useGetUserList({
     PageNumber: pageNumber,
     PageSize: pageSize,
   });
 
-  const { mutateAsync: toggleUserStatus } = usePatchApiUsersIdToggleStatus();
+  const { mutateAsync: toggleUserStatus } = useUpdateUserToggleStatus();
   const { success, error } = useMessage();
 
-  const users = data?.data?.items ?? [];
-  const pagination = data?.data?.pagination;
+  const users = data?.items ?? [];
+  const pagination = data?.pagination;
 
   const hasNext = pagination?.hasNext ?? false;
   const hasPrevious = pagination?.hasPrevious ?? false;
@@ -59,7 +59,7 @@ export const UsersListPage = () => {
       );
 
       queryClient.invalidateQueries({
-        queryKey: getGetApiUsersListQueryKey({
+        queryKey: getGetUserListQueryKey({
           PageNumber: pageNumber,
           PageSize: pageSize,
         }),

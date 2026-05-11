@@ -1,6 +1,6 @@
 import {
-  usePostApiPatients,
-  getGetApiPatientsQueryKey,
+  useCreatePatient,
+  getGetPatientListQueryKey,
 } from "../../../api/patients/patients";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -16,11 +16,11 @@ export default function useCreatePatientForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { mutateAsync: createPatient } = usePostApiPatients({
+  const { mutateAsync: createPatient } = useCreatePatient({
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({
-          queryKey: getGetApiPatientsQueryKey(),
+          queryKey: getGetPatientListQueryKey(),
         });
         msg.success("Paciente creado correctamente");
         navigate("/patients/list");

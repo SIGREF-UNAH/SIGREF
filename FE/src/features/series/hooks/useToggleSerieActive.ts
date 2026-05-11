@@ -1,10 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useMessage } from "../../../shared/hooks";
 import {
-  getGetApiSeriesQueryKey,
-  usePutApiSeriesId,        
-  usePutApiSeriesDeleteId,  
+  getGetSerieListQueryKey,
+  useUpdateSerieById,
+  useDeleteSerieById,
 } from "../../../api/series/series";
+import type { UpdateSeriesDto } from "../../../api/models";
 
 interface ToggleSerieData {
   name: string;
@@ -15,15 +16,18 @@ interface ToggleSerieData {
   isActive?: boolean;
 }
 
+/**
+ * Hook personalizado para activar/desactivar una serie
+ */
 export const useToggleSerieActive = () => {
   const queryClient = useQueryClient();
   const msg = useMessage();
 
-  // Hook para activar serie
-  const { mutateAsync: activateSerie, isPending: isActivating } = usePutApiSeriesId({
+  // Hook para actualizar (activar/reactivar) serie
+  const { mutateAsync: activateSerie, isPending: isActivating } = useUpdateSerieById({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetApiSeriesQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetSerieListQueryKey() });
         msg.success("Serie activada correctamente");
       },
       onError: (error: any) => {
@@ -37,11 +41,11 @@ export const useToggleSerieActive = () => {
     },
   });
 
-  // Hook para desactivar serie
-  const { mutateAsync: deactivateSerie, isPending: isDeactivating } = usePutApiSeriesDeleteId({
+  // Hook para desactivar (soft delete) serie
+  const { mutateAsync: deactivateSerie, isPending: isDeactivating } = useDeleteSerieById({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetApiSeriesQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetSerieListQueryKey() });
         msg.success("Serie desactivada correctamente");
       },
       onError: (error: any) => {
@@ -57,6 +61,12 @@ export const useToggleSerieActive = () => {
 
   const isPending = isActivating || isDeactivating;
 
+  /**
+   * Alterna el estado activo/inactivo de una serie
+   * 
+   * Si la serie está activa, la desactiva (soft delete)
+   * Si la serie está inactiva, la reactiva con sus datos
+   */
   const handleToggle = async (id: string, currentData: ToggleSerieData) => {
     if (!id) {
       msg.error("ID de serie no encontrado");
@@ -64,29 +74,30 @@ export const useToggleSerieActive = () => {
     }
 
     try {
-      // 
       const isCurrentlyActive = currentData.isActive ?? true;
 
       if (isCurrentlyActive) {
-        // Está activa → desactivar
+        // Está activa → desactivar (soft delete)
         await deactivateSerie({ id });
       } else {
-        // Está inactiva → activar
+        // Está inactiva → activar (actualizar)
+        const updateData: UpdateSeriesDto = {
+          name: currentData.name,
+          prefix: currentData.prefix,
+          startNumber: currentData.startNumber,
+          endNumber: currentData.endNumber,
+          isActive: true,
+        };
+
         await activateSerie({
           id,
-          data: {
-            name: currentData.name,
-            prefix: currentData.prefix,
-            startNumber: currentData.startNumber,
-            endNumber: currentData.endNumber,
-            isActive: true, 
-          },
+          data: updateData,
         });
       }
 
       // Refrescar la lista
       await queryClient.invalidateQueries({ 
-        queryKey: getGetApiSeriesQueryKey() 
+        queryKey: getGetSerieListQueryKey() 
       });
     } catch (error: any) {
       console.error("Error en handleToggle:", error);

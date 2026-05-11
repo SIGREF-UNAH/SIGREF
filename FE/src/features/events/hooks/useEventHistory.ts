@@ -1,130 +1,157 @@
-import { useState, useMemo } from "react";
-import { useUrlFilters } from "../../../shared/hooks";
-import { useGetApiAudit } from "../../../api/audit/audit";
-import type { AuditLogDto } from "../../../api/models";
-import dayjs, { Dayjs } from "dayjs";
+// useEventHistory.ts
+import { useState, useCallback } from "react";
+import type { DatabaseAction } from "../../../api/models/databaseAction";
 import { Form } from "antd";
+import type { Dayjs } from "dayjs";
+import type { AuditLog } from "../../../api/models/auditLog";
+import type { AuditLogPagedResultDto } from "../../../api/models/auditLogPagedResultDto";
+import { useGetAuditLogs } from "../../../api/audit/audit";
+import type { GetAuditLogsParams } from "../../../api/models/getAuditLogsParams";
 
-export default function useEventHistory() {
+interface FormValues {
+  userName?: string;
+  userId?: string;
+  action?: string;
+  httpMethod?: string;
+  resourceType?: string;
+  traceId?: string;
+  ipAddress?: string;
+  success?: boolean;
+  dateRange: [Dayjs, Dayjs] | null;
+}
+
+const initialFormValues: FormValues = {
+  userName: "",
+  userId: "",
+  action: undefined,
+  httpMethod: undefined,
+  resourceType: "",
+  traceId: "",
+  ipAddress: "",
+  success: undefined,
+  dateRange: null,
+};
+
+export const useEventHistory = () => {
   const [form] = Form.useForm();
-  const [selectedRecord, setSelectedRecord] = useState<AuditLogDto | null>(null);
+  const [formValues, setFormValues] = useState<FormValues>(initialFormValues);
+  const [selectedRecord, setSelectedRecord] = useState<AuditLog | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-
-  // Filtros en la URL
-  const { filters, setFilters, resetFilters } = useUrlFilters({
-    defaultValues: {
-      action: undefined as string | undefined,
-      userName: undefined as string | undefined,
-      from: undefined as string | undefined,
-      to: undefined as string | undefined,
-      page: 1,
-      pageSize: 10,
-    },
+  const [filters, setFilters] = useState<GetAuditLogsParams>({
+    CurrentPage: 1,
+    PageSize: 20,
   });
 
-  const [formValues, setFormValues] = useState({
-    action: filters.action,
-    userName: filters.userName || "",
-    dateRange:
-      filters.from && filters.to
-        ? ([dayjs(filters.from), dayjs(filters.to)] as [Dayjs, Dayjs])
-        : null,
-  });
-
-  // Query params para backend
-  const queryParams = useMemo(
-    () => ({
-      page: filters.page,
-      pageSize: filters.pageSize,
-      action: filters.action,
-      userName: filters.userName,
-      from: filters.from,
-      to: filters.to,
-    }),
-    [filters]
-  );
-
-  // Fetch data
-  const { data: response, isLoading } = useGetApiAudit(queryParams);
-
-  const responseData = response as any;
-  const data = responseData?.data || [];
-  const pagination = responseData;
-
-  // Busqueda
-  const handleSearch = () => {
-    const newFilters: any = {
-      action: formValues.action,
-      userName: formValues.userName || undefined,
-      page: 1, // Resetear a página 1 al buscar
+  const buildParams = useCallback((): GetAuditLogsParams => {
+    const params: GetAuditLogsParams = {
+      CurrentPage: filters.CurrentPage || 1,
+      PageSize: filters.PageSize || 20,
     };
 
-    if (formValues.dateRange) {
-      newFilters.from = formValues.dateRange[0].toISOString();
-      newFilters.to = formValues.dateRange[1].toISOString();
-    } else {
-      newFilters.from = undefined;
-      newFilters.to = undefined;
+    if (formValues.userName?.trim()) params.UserName = formValues.userName.trim();
+    if (formValues.userId?.trim()) params.UserId = formValues.userId.trim();
+    // Action debe ser del tipo DatabaseAction, no string
+    if (formValues.action) params.Action = formValues.action as DatabaseAction;
+    if (formValues.httpMethod) params.HttpMethod = formValues.httpMethod;
+    if (formValues.resourceType?.trim()) params.ResourceType = formValues.resourceType.trim();
+    if (formValues.traceId?.trim()) params.TraceId = formValues.traceId.trim();
+    if (formValues.ipAddress?.trim()) params.IpAddress = formValues.ipAddress.trim();
+    if (formValues.success !== undefined) params.Success = formValues.success;
+    // Las propiedades correctas son FromDate y ToDate, no From/To
+    if (formValues.dateRange?.[0]) params.FromDate = formValues.dateRange[0].toISOString();
+    if (formValues.dateRange?.[1]) params.ToDate = formValues.dateRange[1].toISOString();
+
+    return params;
+  }, [filters, formValues]);
+
+  const { data, isLoading } = useGetAuditLogs(
+    buildParams(),
+    {
+      query: {
+        placeholderData: (prev) => prev,
+        select: (response): AuditLogPagedResultDto => ({
+          items: response.items ?? [],
+          pagination: response.pagination ?? {
+            currentPage: 1,
+            pageSize: 20,
+            totalItems: 0,
+            totalPages: 0,
+            hasPrevious: false,
+            hasNext: false,
+          },
+        }),
+      },
     }
+  );
 
-    setFilters(newFilters);
+  const handleSearch = () => {
+    setFilters((prev) => ({
+      ...prev,
+      CurrentPage: 1,
+    }));
   };
 
-  // Limpiar filtros
   const handleClearFilters = () => {
-    // Limpiar formulario
-    setFormValues({
-      action: undefined,
-      userName: "",
-      dateRange: null,
-    });
+    setFormValues(initialFormValues);
     form.resetFields();
-    // Limpiar filtros de URL
-    resetFilters();
+    setFilters({
+      CurrentPage: 1,
+      PageSize: 20,
+    });
   };
 
-  // Ver de detalles
-  const handleViewDetails = (record: AuditLogDto) => {
+  const handleViewDetails = (record: AuditLog) => {
     setSelectedRecord(record);
     setModalOpen(true);
   };
 
-  // Colores
-  const getActionColor = (action: string | null | undefined) => {
+  const getActionColor = (action: string | null | undefined): string => {
     if (!action) return "default";
-    const actionLower = action.toLowerCase();
-    if (actionLower.includes("create")) return "cyan";
-    if (actionLower.includes("read")) return "green";
-    if (actionLower.includes("update")) return "orange";
-    if (actionLower.includes("delete")) return "red";
-    return "blue";
+    const colors: Record<string, string> = {
+      read: "blue",
+      create: "green",
+      update: "orange",
+      delete: "red",
+    };
+    return colors[action.toLowerCase()] || "default";
+};
+
+  const getHttpMethodColor = (method: string): string => {
+    const colors: Record<string, string> = {
+      get: "blue",
+      post: "green",
+      put: "orange",
+      patch: "purple",
+      delete: "red",
+    };
+    return colors[method?.toLowerCase()] || "default";
   };
 
-  const getStatusColor = (statusCode: number | undefined) => {
+  const getStatusColor = (statusCode?: number): string => {
     if (!statusCode) return "default";
     if (statusCode >= 200 && statusCode < 300) return "success";
-    if (statusCode >= 400 && statusCode < 500) return "warning";
-    if (statusCode >= 500) return "error";
+    if (statusCode >= 300 && statusCode < 400) return "warning";
+    if (statusCode >= 400 && statusCode < 500) return "error";
+    if (statusCode >= 500) return "magenta";
     return "default";
   };
 
   return {
-    data,
+    data: data ?? { items: [], pagination: { currentPage: 1, pageSize: 20, totalItems: 0, totalPages: 0, hasPrevious: false, hasNext: false } },
     form,
-    filters,
     formValues,
+    filters,
     selectedRecord,
     modalOpen,
-    pagination,
     isLoading,
     setFilters,
     handleSearch,
     handleClearFilters,
     handleViewDetails,
     getActionColor,
+    getHttpMethodColor,
     getStatusColor,
     setFormValues,
-    setSelectedRecord,
     setModalOpen,
   };
-}
+};

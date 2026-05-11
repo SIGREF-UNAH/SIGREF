@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   Form,
   Input,
@@ -7,6 +7,9 @@ import {
   Space,
   Radio,
   Image,
+  type UploadFile,
+  type UploadProps,
+  type RadioChangeEvent,
 } from "antd";
 import {
   InboxOutlined,
@@ -16,17 +19,70 @@ import {
   MedicineBoxOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
-import type { UploadFile, UploadProps } from "antd";
-import type { MediaFileType } from "../../../api/models";
+import { MediaFileType } from "../../../api/models";
+import type { UseMutationResult } from "@tanstack/react-query";
 
 const { TextArea } = Input;
 
-interface UploadMediaFormProps {
-  uploadMutation: any;
-  onSuccess: () => void;
-  onCancel: () => void;
-  handleUpload: (file: File, type: MediaFileType, description?: string) => void;
+interface UploadMediaFormValues {
+  readonly type: MediaFileType;
+  readonly description?: string;
 }
+
+interface UploadMediaFormProps {
+  readonly uploadMutation: UseMutationResult<
+    unknown,
+    Error,
+    { data: FormData },
+    unknown
+  >;
+  readonly onSuccess: () => void;
+  readonly onCancel: () => void;
+  readonly handleUpload: (
+    file: File,
+    type: MediaFileType,
+    description?: string
+  ) => void;
+}
+
+interface RadioOption {
+  readonly value: MediaFileType;
+  readonly label: React.ReactNode;
+}
+
+const RADIO_OPTIONS: readonly RadioOption[] = [
+  {
+    value: MediaFileType.appHospital,
+    label: (
+      <Space>
+        <BankOutlined className="text-blue-600" />
+        <div>
+          <div className="font-medium">Logo del Hospital</div>
+        </div>
+      </Space>
+    ),
+  },
+  {
+    value: MediaFileType.healthGuilt,
+    label: (
+      <Space>
+        <MedicineBoxOutlined className="text-green-600" />
+        <div>
+          <div className="font-medium">Logo de Salud</div>
+        </div>
+      </Space>
+    ),
+  },
+] as const;
+
+const MAX_FILE_SIZE_MB = 5;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+const MAX_DESCRIPTION_LENGTH = 200;
+const ACCEPTED_IMAGE_TYPES = "image/*";
+
+const DEFAULT_FORM_VALUES: UploadMediaFormValues = {
+  type: MediaFileType.appHospital,
+};
 
 export const UploadMediaForm: React.FC<UploadMediaFormProps> = ({
   uploadMutation,
@@ -34,86 +90,92 @@ export const UploadMediaForm: React.FC<UploadMediaFormProps> = ({
   onCancel,
   handleUpload,
 }) => {
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<UploadMediaFormValues>();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [previewUrl, setPreviewUrl] = useState<string>("");
+
+  const handleRemoveFile = useCallback((): void => {
+    setFileList([]);
+    setPreviewUrl("");
+  }, []);
+
+  const handleBeforeUpload = useCallback((file: File): boolean | typeof Upload.LIST_IGNORE => {
+    const isImage = file.type.startsWith("image/");
+    if (!isImage) {
+      return Upload.LIST_IGNORE;
+    }
+
+    const isWithinSizeLimit = file.size <= MAX_FILE_SIZE_BYTES;
+    if (!isWithinSizeLimit) {
+      return Upload.LIST_IGNORE;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e: ProgressEvent<FileReader>): void => {
+      if (e.target?.result) {
+        setPreviewUrl(e.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+
+    setFileList([file as unknown as UploadFile]);
+    return false;
+  }, []);
 
   const uploadProps: UploadProps = {
     name: "file",
     multiple: false,
-    accept: "image/*",
+    accept: ACCEPTED_IMAGE_TYPES,
     maxCount: 1,
     fileList,
-    beforeUpload: (file) => {
-      const isImage = file.type.startsWith("image/");
-      if (!isImage) {
-        return Upload.LIST_IGNORE;
-      }
-      const isLt5M = file.size / 1024 / 1024 < 5;
-      if (!isLt5M) {
-        return Upload.LIST_IGNORE;
-      }
-
-      // Crear preview URL
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPreviewUrl(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-
-      setFileList([file as UploadFile]);
-      return false;
-    },
-    onRemove: () => {
-      setFileList([]);
-      setPreviewUrl("");
-    },
+    beforeUpload: handleBeforeUpload,
+    onRemove: handleRemoveFile,
   };
 
-  const handleSubmit = async (values: any) => {
-    if (fileList.length === 0) {
-      return;
-    }
+  const handleSubmit = useCallback(
+    (values: UploadMediaFormValues): void => {
+      if (fileList.length === 0) {
+        return;
+      }
 
-    // Obtener el archivo correctamente
-    const uploadFile = fileList[0];
-    const file = (uploadFile.originFileObj || uploadFile) as File;
+      const uploadFile = fileList[0];
+      const file = (uploadFile.originFileObj || uploadFile) as File | undefined;
 
-    if (!file) {
-      console.error("No se pudo obtener el archivo");
-      return;
-    }
+      if (!file) {
+        console.error("No se pudo obtener el archivo");
+        return;
+      }
 
-    const type = Number(values.type) as MediaFileType;
+      handleUpload(file, values.type, values.description);
+    },
+    [fileList, handleUpload]
+  );
 
-    // Llamar handleUpload
-    handleUpload(file, type, values.description);
-  };
+  const handleTypeChange = useCallback((e: RadioChangeEvent): void => {
+    form.setFieldsValue({ type: e.target.value as MediaFileType });
+  }, [form]);
 
   // Resetear el formulario cuando la mutación sea exitosa
-  React.useEffect(() => {
+  useEffect(() => {
     if (uploadMutation.isSuccess) {
       form.resetFields();
       setFileList([]);
       setPreviewUrl("");
       onSuccess();
-      // Resetear el estado de la mutación para permitir nuevas subidas
       uploadMutation.reset();
     }
-  }, [uploadMutation.isSuccess, form, onSuccess]);
+  }, [uploadMutation.isSuccess, form, onSuccess, uploadMutation]);
 
-  const handleRemoveFile = () => {
-    setFileList([]);
-    setPreviewUrl("");
-  };
+  const isPending = uploadMutation.isPending;
+  const hasNoFiles = fileList.length === 0;
 
   return (
     <div className="border-0">
-      <Form
+      <Form<UploadMediaFormValues>
         form={form}
         layout="vertical"
         onFinish={handleSubmit}
-        initialValues={{ type: 0 }} 
+        initialValues={DEFAULT_FORM_VALUES}
       >
         {/* Imagen */}
         <Form.Item
@@ -121,16 +183,15 @@ export const UploadMediaForm: React.FC<UploadMediaFormProps> = ({
           required
           rules={[
             {
-              validator: () => {
+              validator: (): Promise<void> => {
                 if (fileList.length === 0) {
-                  return Promise.reject("Por favor seleccione una imagen");
+                  return Promise.reject(new Error("Por favor seleccione una imagen"));
                 }
                 return Promise.resolve();
               },
             },
           ]}
         >
-          {/* Mostrar solo vista previa cuando hay imagen */}
           {previewUrl ? (
             <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
               <div className="flex flex-col items-center justify-center">
@@ -138,10 +199,10 @@ export const UploadMediaForm: React.FC<UploadMediaFormProps> = ({
                   <Image
                     src={previewUrl}
                     alt="Vista previa"
-                    style={{ 
-                      maxHeight: 200, 
+                    style={{
+                      maxHeight: 200,
                       maxWidth: "100%",
-                      objectFit: "contain"
+                      objectFit: "contain",
                     }}
                     preview={{
                       mask: "Ver imagen completa",
@@ -158,16 +219,17 @@ export const UploadMediaForm: React.FC<UploadMediaFormProps> = ({
               </div>
             </div>
           ) : (
-            // Mostrar contenedor de subida solo cuando NO hay imagen
             <Upload.Dragger {...uploadProps}>
               <p className="ant-upload-drag-icon">
                 <InboxOutlined className="text-blue-500" />
               </p>
-              <p className="ant-upload-text">Click o arrastra una imagen aquí</p>
+              <p className="ant-upload-text">
+                Click o arrastra una imagen aquí
+              </p>
               <p className="ant-upload-hint">
                 Formatos permitidos: JPG, PNG, GIF, SVG
                 <br />
-                Tamaño máximo: 5MB
+                Tamaño máximo: {MAX_FILE_SIZE_MB}MB
               </p>
             </Upload.Dragger>
           )}
@@ -177,13 +239,18 @@ export const UploadMediaForm: React.FC<UploadMediaFormProps> = ({
         <Form.Item
           name="description"
           label="Descripción"
-          rules={[{ max: 200, message: "Máximo 200 caracteres" }]}
+          rules={[
+            {
+              max: MAX_DESCRIPTION_LENGTH,
+              message: `Máximo ${MAX_DESCRIPTION_LENGTH} caracteres`,
+            },
+          ]}
         >
           <TextArea
             rows={3}
             placeholder="Descripción de la imagen (opcional)"
             showCount
-            maxLength={200}
+            maxLength={MAX_DESCRIPTION_LENGTH}
           />
         </Form.Item>
 
@@ -193,24 +260,17 @@ export const UploadMediaForm: React.FC<UploadMediaFormProps> = ({
           label="Tipo de Logo"
           rules={[{ required: true, message: "Seleccione el tipo de logo" }]}
         >
-          <Radio.Group className="w-full">
+          <Radio.Group className="w-full" onChange={handleTypeChange}>
             <Space direction="vertical" className="w-full">
-              <Radio value={0} className="w-full">
-                <Space>
-                  <BankOutlined className="text-blue-600" />
-                  <div>
-                    <div className="font-medium">Logo del Hospital</div>
-                  </div>
-                </Space>
-              </Radio>
-              <Radio value={1} className="w-full">
-                <Space>
-                  <MedicineBoxOutlined className="text-green-600" />
-                  <div>
-                    <div className="font-medium">Logo de Salud</div>
-                  </div>
-                </Space>
-              </Radio>
+              {RADIO_OPTIONS.map((option) => (
+                <Radio
+                  key={option.value}
+                  value={option.value}
+                  className="w-full"
+                >
+                  {option.label}
+                </Radio>
+              ))}
             </Space>
           </Radio.Group>
         </Form.Item>
@@ -221,7 +281,7 @@ export const UploadMediaForm: React.FC<UploadMediaFormProps> = ({
             <Button
               icon={<ArrowLeftOutlined />}
               onClick={onCancel}
-              disabled={uploadMutation.isPending}
+              disabled={isPending}
             >
               Cancelar
             </Button>
@@ -229,8 +289,8 @@ export const UploadMediaForm: React.FC<UploadMediaFormProps> = ({
               type="primary"
               icon={<UploadOutlined />}
               htmlType="submit"
-              loading={uploadMutation.isPending}
-              disabled={fileList.length === 0}
+              loading={isPending}
+              disabled={hasNoFiles}
             >
               Subir Imagen
             </Button>

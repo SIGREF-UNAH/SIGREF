@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useGetApiOrganizations } from "../../../api/organizations/organizations";
-import { useGetApiLocations } from "../../../api/locations/locations";
+import { useGetOrganizationList } from "../../../api/organizations/organizations";
+import { useGetLocationList } from "../../../api/locations/locations";
 import type { ProFormInstance } from "@ant-design/pro-components";
 import { ROLE_OPTIONS } from "../../../shared/constants";
 import { useState, useRef, useEffect } from "react";
@@ -8,14 +8,14 @@ import { useMessage } from '../../../shared/hooks';
 import { useAbility } from "../../../config";
 import dayjs from "dayjs";
 import {
-  useDeleteApiPractitionerId,
-  useGetApiPractitionerId,
+  useDeletePractitionerById,
+  useGetPractitionerById,
 } from "../../../api/practitioner/practitioner";
 import {
-  useDeleteApiPractitionerRoleId,
-  useGetApiPractitionerRolePractitionerId,
-  usePostApiPractitionerRole,
-  usePutApiPractitionerRoleId,
+  useDeletePractitionerRoleById,
+  useGetPractitionerRoleByPractitionerId,
+  useCreatePractitionerRole,
+  useUpdatePractitionerRoleById,
 } from "../../../api/practitioner-role/practitioner-role";
 import type {
   PractitionerDto,
@@ -24,6 +24,13 @@ import type {
   LocationDto,
 } from "../../../api/models";
 
+/**
+ * Hook personalizado para gestionar la información de un profesional de salud
+ * 
+ * Utiliza la terminología estándar HL7 FHIR para profesionales y roles
+ * @see https://www.hl7.org/fhir/practitioner.html
+ * @see https://www.hl7.org/fhir/practitionerrole.html
+ */
 export default function usePractitionerInfo() {
   const navigate = useNavigate();
   const ability = useAbility();
@@ -33,36 +40,40 @@ export default function usePractitionerInfo() {
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<PractitionerRoleDto | null>(null);
 
-  // Fetch data
+  // Obtener profesional por ID
   const {
     data: practitioner,
     isLoading: practitionerLoading,
     isError: practitionerError,
-  } = useGetApiPractitionerId<PractitionerDto>(id!, {
+  } = useGetPractitionerById<PractitionerDto>(id!, {
     query: {
       enabled: !!id,
     },
   });
 
+  // Obtener roles del profesional
   const {
     data: practitionerRoles,
     isLoading: rolesLoading,
     refetch: refetchRoles,
-  } = useGetApiPractitionerRolePractitionerId<PractitionerRoleDto[]>(id!, {
+  } = useGetPractitionerRoleByPractitionerId<PractitionerRoleDto[]>(id!, {
     query: {
       enabled: !!id,
     },
   });
 
-  const { data: orgsData } = useGetApiOrganizations<{
+  // Obtener organizaciones
+  const { data: orgsData } = useGetOrganizationList<{
     items: OrganizationDto[];
   }>();
-  const { data: locationsData } = useGetApiLocations<{
+
+  // Obtener ubicaciones
+  const { data: locationsData } = useGetLocationList<{
     items: LocationDto[];
   }>();
 
-  // Mutations
-  const createRoleMutation = usePostApiPractitionerRole({
+  // Mutación para crear rol
+  const createRoleMutation = useCreatePractitionerRole({
     mutation: {
       onSuccess: () => {
         message.success("Cargo asignado correctamente");
@@ -79,7 +90,8 @@ export default function usePractitionerInfo() {
     },
   });
 
-  const updateRoleMutation = usePutApiPractitionerRoleId({
+  // Mutación para actualizar rol
+  const updateRoleMutation = useUpdatePractitionerRoleById({
     mutation: {
       onSuccess: () => {
         message.success("Cargo actualizado correctamente");
@@ -96,7 +108,8 @@ export default function usePractitionerInfo() {
     },
   });
 
-  const deleteRoleMutation = useDeleteApiPractitionerRoleId({
+  // Mutación para eliminar rol
+  const deleteRoleMutation = useDeletePractitionerRoleById({
     mutation: {
       onSuccess: () => {
         message.success("Cargo eliminado correctamente");
@@ -109,7 +122,8 @@ export default function usePractitionerInfo() {
     },
   });
 
-  const deletePractitionerMutation = useDeleteApiPractitionerId({
+  // Mutación para eliminar profesional
+  const deletePractitionerMutation = useDeletePractitionerById({
     mutation: {
       onSuccess: () => {
         message.success("Empleado eliminado correctamente");
@@ -122,7 +136,7 @@ export default function usePractitionerInfo() {
     },
   });
 
-  // Reset form when modal opens/closes
+  // Reset form cuando el modal se abre/cierra
   useEffect(() => {
     if (!roleModalOpen) {
       setEditingRole(null);
@@ -133,7 +147,9 @@ export default function usePractitionerInfo() {
     }
   }, [roleModalOpen, editingRole]);
 
-  // Helper functions
+  /**
+   * Obtiene los valores del formulario desde un rol existente
+   */
   const getRoleFormValues = (role: PractitionerRoleDto) => {
     return {
       roleName: role.code?.[0]?.text || "",
@@ -147,22 +163,35 @@ export default function usePractitionerInfo() {
     };
   };
 
+  /**
+   * Formatea una fecha para mostrar en la UI
+   */
   const formatDate = (dateString?: string | null) => {
     if (!dateString) return "-";
     return dayjs(dateString).format("DD/MM/YYYY");
   };
 
-  const getGenderLabel = (gender?: number | string | null) => {
-    const genderMap: Record<number, string> = {
-      0: "Desconocido",
-      1: "Masculino",
-      2: "Femenino",
-      3: "Otro",
-    };
-    return genderMap[Number(gender)] || "N/A";
+  /**
+ * Obtiene la etiqueta del género según código FHIR
+ * @see https://www.hl7.org/fhir/valueset-administrative-gender.html
+ */
+const getGenderLabel = (gender?: string | null) => {
+  const genderMap: Record<string, string> = {
+    "male": "Masculino",
+    "female": "Femenino",
+    "other": "Otro",
+    "unknown": "Desconocido",
   };
+  
+  // Verificar que gender sea un string antes de llamar a toLowerCase
+  if (!gender || typeof gender !== 'string') return "N/A";
+  
+  return genderMap[gender.toLowerCase()] || gender;
+};
 
-  // Handle role submission
+  /**
+   * Maneja el envío del formulario de rol
+   */
   const handleRoleSubmit = async (values: any) => {
     if (!id) return false;
 
@@ -222,6 +251,7 @@ export default function usePractitionerInfo() {
         },
       ];
     }
+
     try {
       if (editingRole) {
         await updateRoleMutation.mutateAsync({
@@ -238,12 +268,16 @@ export default function usePractitionerInfo() {
     }
   };
 
-  // Handle edit practitioner
+  /**
+   * Navega a la página de edición del profesional
+   */
   const handleEdit = () => {
     if (id) navigate(`/practitioners/update/${id}`);
   };
 
-  // Handle delete role
+  /**
+   * Elimina un rol del profesional
+   */
   const handleDeleteRole = async (roleId: string) => {
     try {
       await deleteRoleMutation.mutateAsync({ id: roleId });
@@ -252,7 +286,9 @@ export default function usePractitionerInfo() {
     }
   };
 
-  // Handle delete practitioner
+  /**
+   * Elimina al profesional
+   */
   const handleDeletePractitioner = async () => {
     if (!id) return;
     try {

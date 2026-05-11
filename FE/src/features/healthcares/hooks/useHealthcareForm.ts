@@ -1,22 +1,28 @@
-import { useNavigate } from "react-router";
-import { useGetApiOrganizations } from "../../../api/organizations/organizations";
-import { useGetApiLocations } from "../../../api/locations/locations";
+import { useNavigate } from "react-router-dom";
+import { useGetOrganizationList } from "../../../api/organizations/organizations";
+import { useGetLocationList } from "../../../api/locations/locations";
 
 export function useHealthcareForm() {
   const navigate = useNavigate();
 
   // Obtener las organizaciones desde la API
-  const { data: organizationsResponse, isLoading: isLoadingOrganizations } = useGetApiOrganizations();
+  const {
+    data: organizationsResponse,
+    isLoading: isLoadingOrganizations,
+  } = useGetOrganizationList();
 
   // Obtener las ubicaciones desde la API
-  const { data: locationsData, isLoading: isLoadingLocations } = useGetApiLocations();
+  const {
+    data: locationsResponse,
+    isLoading: isLoadingLocations,
+  } = useGetLocationList();
 
-  // Extraer los items de las respuestas
+  // Extraer los items de las respuestas (asumiendo estructura paginada)
   const organizations = organizationsResponse?.items || [];
-  const locations = locationsData?.items || [];
+  const locations = locationsResponse?.items || [];
 
   const handleCancel = () => {
-    navigate("/healthcares");
+    navigate("/healthcares/list");
   };
 
   return {

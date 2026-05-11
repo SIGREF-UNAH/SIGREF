@@ -6,9 +6,9 @@ namespace SIGREF.API.Services.Serie;
 
 public interface ISerieService
 {
-    Task<ResponseDto<SerieDto>> CreateSerieAsync(CreateSeriesDto dto);
-    Task<ResponseDto<SerieDto>> UpdateSerieAsync(UpdateSeriesDto dto , Guid guid);
-    Task<ResponseDto<PagedResultDto<SerieDto>>> GetSeriesAsync(FilterSerieDto dto);
-    Task<ResponseDto<SerieDto>> GetSerieById(Guid id);
-    Task<ResponseDto<SerieDto>> SoftDeleteSerieAsync (Guid id);
+    Task<SerieDto> CreateSerieAsync(CreateSeriesDto dto);
+    Task<SerieDto> UpdateSerieAsync(UpdateSeriesDto dto , Guid guid);
+    Task<PagedResultDto<SerieDto>> GetSeriesAsync(FilterSerieDto dto);
+    Task<SerieDto> GetSerieById(Guid id);
+    Task<SerieDto> SoftDeleteSerieAsync (Guid id);
 }

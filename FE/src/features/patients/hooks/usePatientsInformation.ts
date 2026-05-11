@@ -1,8 +1,8 @@
 import {
-  getGetApiPatientsQueryKey,
-  useDeleteApiPatientsId,
-  useGetApiPatients,
-  useGetApiPatientsId,
+  getGetPatientListQueryKey,
+  useDeletePatientById,
+  useGetPatientList,
+  useGetPatientById,
 } from "../../../api/patients/patients";
 import type { TablePaginationConfig } from "antd";
 import type { PatientDto } from "../../../api/models";
@@ -45,7 +45,7 @@ export function usePatientsInformation() {
     data,
     isLoading: loadingPatientDetail,
     error,
-  } = useGetApiPatientsId(selectedPatientId, {
+  } = useGetPatientById(selectedPatientId, {
     query: {
       enabled: !!selectedPatientId, // Solo hacer la petición si hay un ID
     },
@@ -141,7 +141,7 @@ export function usePatientsInformation() {
     data: response,
     isLoading: loadingPatients,
     refetch,
-  } = useGetApiPatients<PatientsResponse>(queryParams, {
+  } = useGetPatientList<PatientsResponse>(queryParams, {
     query: {
       placeholderData: (prev) => prev,
     },
@@ -321,11 +321,11 @@ export function usePatientsInformation() {
   };
 
   // Eliminar paciente
-  const { mutate: deletePatient } = useDeleteApiPatientsId({
+  const { mutate: deletePatient } = useDeletePatientById({
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({
-          queryKey: getGetApiPatientsQueryKey(),
+          queryKey: getGetPatientListQueryKey(),
         });
         msg.success("Paciente eliminado correctamente");
         setSelectedPatientId("");

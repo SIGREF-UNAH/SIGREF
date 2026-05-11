@@ -1,15 +1,20 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos.PractitionerRole;
 using SIGREF.API.Services.PractitionerRole;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace SIGREF.API.Controllers.PractitionerC;
 
 [Route("api/[controller]")]
 [ApiController]
 [Authorize(AuthenticationSchemes = "Bearer")]
+[Produces(MediaTypeNames.Application.Json)]
+[Consumes(MediaTypeNames.Application.Json)]
+[SwaggerTag("Roles Empleados - Gestión de Roles Empleados")]
 public class PractitionerRoleController : ControllerBase
 {
     private readonly IPractitionerRoleService _prService;
@@ -21,13 +26,14 @@ public class PractitionerRoleController : ControllerBase
 
     // GET ALL
     [HttpGet]
+    [SwaggerOperation(
+        OperationId = "GetPractitionerRoleList",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "PractitionerRole" }
+    )]
     // Éxito: Especificamos el DTO de paginación con su tipo genérico
     [ProducesResponseType(typeof(PagedResultDto<PractitionerRoleDto>), StatusCodes.Status200OK)]
-    // Errores estándar con ProblemDetails
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor},{RolesConstants.ti}")]
     public async Task<ActionResult<PagedResultDto<PractitionerRoleDto>>> GetFiltered([FromQuery] PractitionerRoleFilterDto filters)
     {
@@ -37,14 +43,14 @@ public class PractitionerRoleController : ControllerBase
 
     // GET BY ID 
     [HttpGet("{id}")]
+    [SwaggerOperation(
+        OperationId = "GetPractitionerRoleById",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "PractitionerRole" }
+    )]
     // Éxito: Retorna un solo objeto DTO
     [ProducesResponseType(typeof(PractitionerRoleDto), StatusCodes.Status200OK)]
-    // Errores:
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)] // Vital para un Get por ID
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     [Authorize(Roles = $"{RolesConstants.admin},{RolesConstants.auditor},{RolesConstants.ti}")]
     public async Task<ActionResult<PractitionerRoleDto>> GetById(string id)
     {
@@ -54,13 +60,14 @@ public class PractitionerRoleController : ControllerBase
 
     // GET BY PRACTITIONER ID 
     [HttpGet("practitioner/{id}")]
+    [SwaggerOperation(
+        OperationId = "GetPractitionerRoleByPractitionerId",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "PractitionerRole" }
+    )]
     // Especificamos que devuelve una colección (IEnumerable o List)
     [ProducesResponseType(typeof(IEnumerable<PractitionerRoleDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     [Authorize(Roles = $"{RolesConstants.admin},{RolesConstants.auditor},{RolesConstants.ti}")]
     public async Task<ActionResult<IEnumerable<PractitionerRoleDto>>> GetByPractitionerId(string id)
     {
@@ -70,15 +77,13 @@ public class PractitionerRoleController : ControllerBase
 
     //CREATE 
     [HttpPost]
-    // Éxito: Orval generará una función que retorna PractitionerRoleDto
+    [SwaggerOperation(
+        OperationId = "CreatePractitionerRole",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "PractitionerRole" }
+    )]
     [ProducesResponseType(typeof(PractitionerRoleDto), StatusCodes.Status201Created)]
-    // Errores: Orval mapeará esto a un objeto de error (ProblemDetails)
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     [Authorize(Roles = $"{RolesConstants.admin}, {RolesConstants.ti}")]
     public async Task<ActionResult<PractitionerRoleDto>> Create([FromBody] CreatePractitionerRoleDto dto)
     {
@@ -89,14 +94,13 @@ public class PractitionerRoleController : ControllerBase
 
     // UPDATE
     [HttpPut("{id}")]
+    [SwaggerOperation(
+        OperationId = "UpdatePractitionerRoleById",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "PractitionerRole" }
+    )]
     [ProducesResponseType(typeof(PractitionerRoleDto), StatusCodes.Status200OK)]
-    // Errores: Orval mapeará esto a un objeto de error (ProblemDetails)
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     [Authorize(Roles = $"{RolesConstants.admin}, {RolesConstants.ti}")]
     [Produces<PractitionerRoleDto>()]
     public async Task<IActionResult> Update(string id, [FromBody] UpdatePractitionerRoleDto dto)
@@ -107,14 +111,14 @@ public class PractitionerRoleController : ControllerBase
 
     // DELETE 
     [HttpDelete("{id}")]
-    // Éxito: 204 No Content es el estándar de oro para borrados exitosos
+    [SwaggerOperation(
+        OperationId = "DeletePractitionerRoleById",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "PractitionerRole" }
+    )]
+    // Éxito: 204
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    // Errores:
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     [Authorize(Roles = $"{RolesConstants.admin}, {RolesConstants.ti}")]
     public async Task<IActionResult> Delete(string id)
     {

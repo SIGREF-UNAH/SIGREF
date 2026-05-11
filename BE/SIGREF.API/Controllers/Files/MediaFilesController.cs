@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos.Files;
 using SIGREF.API.Services.Files;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Types;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace SIGREF.API.Controllers.Files;
 
@@ -11,6 +13,10 @@ namespace SIGREF.API.Controllers.Files;
 // TODO APLICAR AUTORIZACIONES DE ROLES
 [ApiController]
 [Authorize(AuthenticationSchemes = "Bearer")]
+// A nivel de clase: TODOS los endpoints responden con JSON
+[Produces(MediaTypeNames.Application.Json)]
+[SwaggerTag("MediaFiles - Archivos Media")]
+
 public class MediaFilesController : ControllerBase
 {
     private readonly IMediaFileService _mediaService;
@@ -24,8 +30,14 @@ public class MediaFilesController : ControllerBase
     //                   UPLOAD (Solo imagenes)
     // ============================================================
     [HttpPost("upload")]
+    [SwaggerOperation(
+        OperationId = "CreateMediaFileUpload",
+        Summary = "Sube una imagen al servidor",
+        Description = "NA",
+        Tags = new[] { "MediaFiles" }
+    )]
+    [Consumes("multipart/form-data")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [Produces<MediaFileDto>()]
     public async Task<IActionResult> Upload([FromForm] UploadMediaFileDto dto)
     {
@@ -37,9 +49,14 @@ public class MediaFilesController : ControllerBase
     //             GET BY ID  (URL + info del archivo)
     // ============================================================
     [HttpGet("{id:guid}")]
+    [SwaggerOperation(
+        OperationId = "GetMediaFileById",
+        Summary = "Obtiene una imagen al servidor",
+        Description = "NA",
+        Tags = new[] { "MediaFiles" }
+    )]
     [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor},{RolesConstants.ti}")] // Para que clientes y FE puedan cargar logos
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Produces<MediaFileDto>()]
     public async Task<IActionResult> GetById(Guid id)
     {
@@ -51,8 +68,13 @@ public class MediaFilesController : ControllerBase
     //                DELETE 
     // ============================================================
     [HttpDelete("{id:guid}")]
+    [SwaggerOperation(
+        OperationId = "DeleteMediaFileById",
+        Summary = "Elimina una imagen al servidor",
+        Description = "NA",
+        Tags = new[] { "MediaFiles" }
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Authorize(Roles = $"{RolesConstants.ti}")]
     public async Task<IActionResult> Delete(Guid id)
     {
@@ -68,6 +90,12 @@ public class MediaFilesController : ControllerBase
     //           ASIGNAR LOGO / LOGO DE SALUD AL HOSPITAL
     // ============================================================
     [HttpPost("{mediaId:guid}/assign")]
+    [SwaggerOperation(
+        OperationId = "CreateMediaFileAssignment",
+        Summary = "Asigna una imagen a Salud o logo de Hospital",
+        Description = "NA",
+        Tags = new[] { "MediaFiles" }
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.ti}")]
     [Produces<MediaFileDto>()]
@@ -84,6 +112,12 @@ public class MediaFilesController : ControllerBase
     //     LISTA PAGINADA DE ARCHIVOS (solo TI podria)
     // ============================================================
     [HttpGet]
+    [SwaggerOperation(
+        OperationId = "GetMediaFileList",
+        Summary = "Obtiene imagenes paginadas",
+        Description = "NA",
+        Tags = new[] { "MediaFiles" }
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [Produces<MediaFileDto>()]
     [Authorize(Roles = $"{RolesConstants.ti}")]

@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Net.Mime;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
 using SIGREF.Infrastructure.Keycloak.Dtos.Auth;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace SIGREF.API.Controllers.Auth;
 
@@ -19,6 +21,9 @@ namespace SIGREF.API.Controllers.Auth;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(AuthenticationSchemes = "Bearer")]
+[Produces(MediaTypeNames.Application.Json)]
+[Consumes(MediaTypeNames.Application.Json)]
+[SwaggerTag("Usuarios - Gestión en Keycloak")]
 public class UsersController : ControllerBase
 {
     private readonly IKeycloakAdminService _kcAdmin;
@@ -43,14 +48,13 @@ public class UsersController : ControllerBase
     /// <param name="ct">Token de cancelación.</param>
     [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}")]
     [HttpPost]
+    [SwaggerOperation(
+        OperationId = "CreateUser",
+        Summary = "Crear un nuevo usuario en Keycloak",
+        Description = "Crea un nuevo usuario en Keycloak vinculado a un Practitioner FHIR. Valida permisos del creador, existencia del Practitioner en FHIR y que dicho Practitioner no esté ya vinculado a otro usuario.",
+        Tags = new[] { "Users" }
+    )]
     [ProducesResponseType(typeof(KeycloakUserDto),  StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status409Conflict)]
-    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status422UnprocessableEntity)]
-    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status502BadGateway)]
     public async Task<IActionResult> CreateUser(
         [FromBody] UserCreateDto dto,
         CancellationToken ct)
@@ -63,7 +67,6 @@ public class UsersController : ControllerBase
             dto.Password,
             dto.Roles,
             ct);
-
         return CreatedAtAction(
             nameof(GetUserById),
             new { id = created.Id },
@@ -81,20 +84,18 @@ public class UsersController : ControllerBase
     /// <param name="ct">Token de cancelación.</param>
     [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}")]
     [HttpGet("{id}")]
+    [SwaggerOperation(
+        OperationId = "GetUserById",
+        Summary = "Obtener usuario por ID",
+        Description = "Obtiene un usuario específico utilizando su UUID de Keycloak.",
+        Tags = new[] { "Users" }
+    )]
     [ProducesResponseType(typeof(KeycloakUserDto),  StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status502BadGateway)]
     public async Task<ActionResult<KeycloakUserDto>> GetUserById(
         string id,
         CancellationToken ct)
     {
         var user = await _kcAdmin.GetUserByIdAsync(id, ct);
-
-        if (user is null)
-            return NotFound();
-
         return Ok(user);
     }
 
@@ -113,11 +114,13 @@ public class UsersController : ControllerBase
     /// <param name="ct">Token de cancelación.</param>
     [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}")]
     [HttpGet("by-ids")]
+    [SwaggerOperation(
+        OperationId = "GetUserListByIds",
+        Summary = "Obtener múltiples usuarios por sus IDs",
+        Description = "Obtiene en una sola petición varios usuarios a partir de una lista de IDs. Usa la sintaxis nativa id:uuid1 uuid2 … de Keycloak 26.3+. Los IDs no encontrados son ignorados silenciosamente.",
+        Tags = new[] { "Users" }
+    )]
     [ProducesResponseType(typeof(List<KeycloakUserDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails),        StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails),        StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ProblemDetails),        StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ProblemDetails),        StatusCodes.Status502BadGateway)]
     public async Task<ActionResult<List<KeycloakUserDto>>> GetUsersByIds(
         [FromQuery, Required] List<string> ids,
         CancellationToken ct)
@@ -137,20 +140,19 @@ public class UsersController : ControllerBase
     /// <param name="ct">Token de cancelación.</param>
     [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}")]
     [HttpGet("by-practitioner/{practitionerId}")]
+    [SwaggerOperation(
+        OperationId = "GetUserByPractitionerId",
+        Summary = "Obtener usuario por Practitioner ID",
+        Description = "Busca el usuario de Keycloak que se encuentra vinculado a un Practitioner FHIR específico.",
+        Tags = new[] { "Users" }
+    )]
     [ProducesResponseType(typeof(KeycloakUserDto),  StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails),   StatusCodes.Status502BadGateway)]
+
     public async Task<ActionResult<KeycloakUserDto>> GetUserByPractitionerId(
         string practitionerId,
         CancellationToken ct)
     {
         var user = await _kcAdmin.GetUserByPractitionerIdAsync(practitionerId, ct);
-
-        if (user is null)
-            return NotFound();
-
         return Ok(user);
     }
 
@@ -165,10 +167,13 @@ public class UsersController : ControllerBase
     /// <param name="ct">Token de cancelación.</param>
     [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}")]
     [HttpGet("exists/practitioner/{practitionerId}")]
+    [SwaggerOperation(
+        OperationId = "GetUserPractitionerHasUser",
+        Summary = "Verificar vinculación de un Practitioner",
+        Description = "Verifica si un Practitioner FHIR ya está vinculado a algún usuario existente en Keycloak.",
+        Tags = new[] { "Users" }
+    )]
     [ProducesResponseType(typeof(bool),           StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
     public async Task<ActionResult<bool>> PractitionerHasUser(
         string practitionerId,
         CancellationToken ct)
@@ -193,11 +198,13 @@ public class UsersController : ControllerBase
     /// <param name="ct">Token de cancelación.</param>
     [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin},{RolesConstants.auditor}")]
     [HttpGet("exists/username")]
+    [SwaggerOperation(
+        OperationId = "GetUserVerifyUsernames",
+        Summary = "Verificar disponibilidad de Username",
+        Description = "Verifica si un username ya está en uso y retorna usernames similares. La búsqueda interna de Keycloak es amplia (nombre, email, username). La propiedad ExistName indica únicamente coincidencia exacta.",
+        Tags = new[] { "Users" }
+    )]
     [ProducesResponseType(typeof(KeycloakUsernameDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails),      StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails),      StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ProblemDetails),      StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ProblemDetails),      StatusCodes.Status502BadGateway)]
     public async Task<ActionResult<KeycloakUsernameDto>> ExistUsername(
         [FromQuery, Required] string username,
         CancellationToken ct)
@@ -222,11 +229,14 @@ public class UsersController : ControllerBase
     /// <param name="ct">Token de cancelación.</param>
     [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin},{RolesConstants.auditor}")]
     [HttpGet]
+    [SwaggerOperation(
+        OperationId = "GetUserList",
+        Summary = "Obtener usuarios paginados",
+        Description = "Obtiene una lista paginada de usuarios con filtro opcional por username o término de búsqueda.",
+        Tags = new[] { "Users" }
+    )]
     [ProducesResponseType(typeof(PagedResultDto<KeycloakUserDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails),                  StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails),                  StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ProblemDetails),                  StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ProblemDetails),                  StatusCodes.Status502BadGateway)]
+    
     public async Task<ActionResult<PagedResultDto<KeycloakUserDto>>> GetUsersList(
         [FromQuery] KeycloakFilter filter,
         CancellationToken ct)
@@ -250,12 +260,13 @@ public class UsersController : ControllerBase
     /// <param name="ct">Token de cancelación.</param>
     [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}")]
     [HttpPatch("{id}/toggle-status")]
+    [SwaggerOperation(
+        OperationId = "UpdateUserToggleStatus",
+        Summary = "Activar o desactivar usuario",
+        Description = "Alterna el estado activo/inactivo de un usuario. Un usuario no puede cambiar su propio estado. Requiere rol 'ti' o 'admin'.",
+        Tags = new[] { "Users" }
+    )]
     [ProducesResponseType(typeof(bool),           StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
     public async Task<ActionResult<bool>> ToggleUserStatus(
         string id,
         CancellationToken ct)
@@ -281,12 +292,13 @@ public class UsersController : ControllerBase
     /// <param name="ct">Token de cancelación.</param>
     [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}")]
     [HttpPut("{id}")]
+    [SwaggerOperation(
+        OperationId = "UpdateUser",
+        Summary = "Actualizar datos de un usuario",
+        Description = "Actualiza los datos de un usuario existente. Solo se modifican los campos no nulos. Si se incluye NewRoleName, el rol actual se reemplaza respetando la jerarquía.",
+        Tags = new[] { "Users" }
+    )]
     [ProducesResponseType(typeof(KeycloakUserDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails),  StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails),  StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ProblemDetails),  StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ProblemDetails),  StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails),  StatusCodes.Status502BadGateway)]
     public async Task<ActionResult<KeycloakUserDto>> UpdateUser(
         string id,
         [FromBody] KeycloakUpdateUserDto dto,
@@ -311,12 +323,13 @@ public class UsersController : ControllerBase
     /// <param name="ct">Token de cancelación.</param>
     [Authorize(Roles = $"{RolesConstants.ti},{RolesConstants.admin}")]
     [HttpDelete("{id}")]
+    [SwaggerOperation(
+        OperationId = "DeleteUser",
+        Summary = "Eliminar un usuario",
+        Description = "Elimina permanentemente un usuario del realm de Keycloak. Un usuario no puede eliminarse a sí mismo.",
+        Tags = new[] { "Users" }
+    )]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
     public async Task<IActionResult> DeleteUser(
         string id,
         CancellationToken ct)

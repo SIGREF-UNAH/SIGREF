@@ -1,15 +1,34 @@
+// TODO : Refactorizar para separar lógica de contactos en un hook aparte
+
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ProFormInstance } from "@ant-design/pro-components";
 import {
-  useGetApiLocations,
-  useGetApiLocationsId,
-  usePostApiLocations,
-  usePutApiLocationsId,
-  getGetApiLocationsQueryKey,
+  useGetLocationList,
+  useGetLocationById,
+  useCreateLocation,
+  useUpdateLocationById,
+  getGetLocationListQueryKey,
+  type GetLocationByIdQueryResult,
+  type GetLocationListQueryResult,
 } from "../../../api/locations/locations";
-import { useGetApiOrganizations } from "../../../api/organizations/organizations";
+import {
+  useGetOrganizationList,
+  type GetOrganizationListQueryResult,
+} from "../../../api/organizations/organizations";
+import type {
+  LocationDto,
+  OrganizationDto,
+  ContactPointDto,
+  AddressDto,
+  ReferenceDto,
+  ContactPointSystem,
+  LocationStatus,
+  LocationMode,
+  CreateLocationDto,
+  UpdateLocationDto,
+} from "../../../api/models";
 import { useMessage } from "../../../shared/hooks";
 import {
   getCityOptionsByCountryAndState,
@@ -23,59 +42,92 @@ interface UseLocationFormProps {
   mode: Mode;
 }
 
+interface Contact {
+  id: string;
+  system?: ContactPointSystem;
+  value: string;
+}
+
+interface SelectOption {
+  label: string;
+  value: string | number;
+}
+
+interface LocationFormValues {
+  name: string;
+  alias?: string[] | null;
+  description?: string | null;
+  status: LocationStatus;
+  mode?: LocationMode;
+  address: {
+    line?: string[] | null;
+    city?: string | null;
+    state?: string | null;
+    postalCode?: string | null;
+    country?: string | null;
+  };
+  type?: string | null;
+  telecom?: ContactPointDto[] | null;
+  partOf?: string | null;
+  managingOrganization?: string | null;
+}
+
+type ContactTypesMap = Record<string, ContactPointSystem>;
+
 export default function useLocationForm({ mode }: UseLocationFormProps) {
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const numericId = id ? Number(id) : null;
   const isEdit = mode === "edit" && numericId !== null;
   const queryClient = useQueryClient();
   const formRef = useRef<ProFormInstance>(null);
   const message = useMessage();
 
-  const [contacts, setContacts] = useState<
-    { id: string; system?: number; value?: string }[]
-  >([{ id: "1", system: undefined, value: "" }]);
+  const [contacts, setContacts] = useState<Contact[]>([
+    { id: "1", system: undefined, value: "" },
+  ]);
 
-  const [countryOptions] = useState(() =>
-    getCountryOptions()
-  );
-  const [stateOptions, setStateOptions] = useState<
-    { label: string; value: string }[]
-  >([]);
-  const [cityOptions, setCityOptions] = useState<
-    { label: string; value: string }[]
-  >([]);
+  const [countryOptions] = useState<SelectOption[]>(() => getCountryOptions());
+  const [stateOptions, setStateOptions] = useState<SelectOption[]>([]);
+  const [cityOptions, setCityOptions] = useState<SelectOption[]>([]);
+  const [contactTypes, setContactTypes] = useState<ContactTypesMap>({});
 
   // Queries
   const {
     data: location,
     isLoading: locationLoading,
     isError: locationError,
-  } = useGetApiLocationsId(numericId!, { query: { enabled: isEdit } });
+  } = useGetLocationById(String(numericId!), { 
+    query: { enabled: isEdit } 
+  }) as { 
+    data: GetLocationByIdQueryResult; 
+    isLoading: boolean; 
+    isError: boolean;
+  };
 
   const {
     data: orgsData,
     isLoading: orgsLoading,
     isError: orgsError,
-  } = useGetApiOrganizations(undefined, {
-    query: { select: (data) => data.items || [] },
+  } = useGetOrganizationList(undefined, {
+    query: { select: (data: GetOrganizationListQueryResult) => data?.items || [] },
   });
 
   const {
     data: locationsData,
     isLoading: locationsLoading,
     isError: locationsError,
-  } = useGetApiLocations(undefined, {
-    query: { select: (data) => data.items || [] },
+  } = useGetLocationList(undefined, {
+    query: { select: (data: GetLocationListQueryResult) => data?.items || [] },
   });
 
   // Mutations
   const { mutateAsync: createLocation, isPending: isCreating } =
-    usePostApiLocations({
+    useCreateLocation({
       mutation: {
         onSuccess: () => {
           queryClient.invalidateQueries({
-            queryKey: getGetApiLocationsQueryKey(),
+            queryKey: getGetLocationListQueryKey(),
           });
           message.success("Ubicación creada correctamente");
           navigate("/locations/list");
@@ -85,11 +137,11 @@ export default function useLocationForm({ mode }: UseLocationFormProps) {
     });
 
   const { mutate: updateLocation, isPending: isUpdating } =
-    usePutApiLocationsId({
+    useUpdateLocationById({
       mutation: {
         onSuccess: () => {
           queryClient.invalidateQueries({
-            queryKey: getGetApiLocationsQueryKey(),
+            queryKey: getGetLocationListQueryKey(),
           });
           message.success("Ubicación actualizada correctamente");
           navigate("/locations/list");
@@ -98,77 +150,94 @@ export default function useLocationForm({ mode }: UseLocationFormProps) {
       },
     });
 
-  // Opciones
-  const organizationOptions =
-    orgsData?.map((org) => ({
-      label: org.name,
-      value: org.id,
+  // Opciones tipadas
+  const organizationOptions: SelectOption[] =
+    orgsData?.map((org: OrganizationDto) => ({
+      label: org.name || "",
+      value: org.id || "",
     })) || [];
 
-  const locationOptions = (locationsData || [])
-    .filter((loc) => !isEdit || String(loc.id) !== String(numericId))
-    .map((loc) => ({
-      label: loc.name,
-      value: loc.id,
+  const locationOptions: SelectOption[] = (locationsData || [])
+    .filter((loc: LocationDto) => !isEdit || String(loc.id) !== String(numericId))
+    .map((loc: LocationDto) => ({
+      label: loc.name || "",
+      value: loc.id || "",
     }));
 
   // Cargar datos en edición
   useEffect(() => {
     if (isEdit && location && formRef.current) {
-      const telecoms = location.telecom || [];
+      const telecoms: ContactPointDto[] = location.telecom || [];
       setContacts(
         telecoms.length > 0
-          ? telecoms.map((t: any, i: number) => ({
+          ? telecoms.map((t: ContactPointDto, i: number) => ({
               id: Date.now().toString() + i,
               system: t.system,
-              value: t.value,
+              value: t.value || "",
             }))
           : [{ id: "1", system: undefined, value: "" }]
       );
 
-      if (location.address?.country) {
-        setStateOptions(getStateOptionsByCountry(location.address.country));
+      const address: AddressDto | undefined = location.address;
 
-        if (location.address?.state) {
+      if (address?.country) {
+        setStateOptions(getStateOptionsByCountry(address.country));
+
+        if (address?.state) {
           setCityOptions(
             getCityOptionsByCountryAndState(
-              location.address.country,
-              location.address.state
+              address.country,
+              address.state
             )
           );
         }
       }
 
-      const partOfId = location.partOf?.reference?.split("/")?.[1] || null;
-      const managingOrgId =
-        location.managingOrganization?.reference?.split("/")?.[1] || null;
+      const partOfReference: ReferenceDto | undefined = location.partOf;
+      const managingOrgReference: ReferenceDto | undefined = location.managingOrganization;
+
+      const partOfId: string | null = partOfReference?.reference?.split("/")?.[1] || null;
+      const managingOrgId: string | null = managingOrgReference?.reference?.split("/")?.[1] || null;
 
       formRef.current.setFieldsValue({
         name: location.name || "",
         alias: location.alias || [],
         description: location.description || null,
         status: location.status,
-        mode: location.mode,
+        mode: location.mode || undefined,
         address: {
-          line: location.address?.line || [""],
-          city: location.address?.city || null,
-          state: location.address?.state || null,
-          postalCode: location.address?.postalCode || null,
-          country: location.address?.country || null,
+          line: address?.line || [""],
+          city: address?.city || null,
+          state: address?.state || null,
+          postalCode: address?.postalCode || null,
+          country: address?.country || null,
         },
         type: location.type || null,
         partOf: partOfId,
         managingOrganization: managingOrgId,
-        telecom: telecoms.map((t: any) => ({
+        telecom: telecoms.map((t: ContactPointDto) => ({
           system: t.system,
-          value: t.value,
+          value: t.value || "",
         })),
       });
     }
   }, [location, isEdit]);
 
+  // Inicializar tipos de contacto cuando se cargan los contactos
+  useEffect(() => {
+    if (contacts.length > 0) {
+      const initialContactTypes: ContactTypesMap = {};
+      contacts.forEach((contact: Contact) => {
+        if (contact.system) {
+          initialContactTypes[contact.id] = contact.system;
+        }
+      });
+      setContactTypes(initialContactTypes);
+    }
+  }, [contacts]);
+
   // Handlers
-  const handleCountryChange = (countryShort?: string) => {
+  const handleCountryChange = (countryShort?: string): void => {
     if (!countryShort) {
       setStateOptions([]);
       setCityOptions([]);
@@ -182,8 +251,8 @@ export default function useLocationForm({ mode }: UseLocationFormProps) {
     formRef.current?.setFieldValue(["address", "city"], null);
   };
 
-  const handleStateChange = (stateName?: string) => {
-    const countryShort = formRef.current?.getFieldValue(["address", "country"]);
+  const handleStateChange = (stateName?: string): void => {
+    const countryShort = formRef.current?.getFieldValue(["address", "country"]) as string | undefined;
     if (!countryShort || !stateName) {
       setCityOptions([]);
       formRef.current?.setFieldValue(["address", "city"], null);
@@ -192,43 +261,78 @@ export default function useLocationForm({ mode }: UseLocationFormProps) {
     setCityOptions(getCityOptionsByCountryAndState(countryShort, stateName));
   };
 
-  const addContact = () => {
-    setContacts((prev) => [
+  const addContact = (): void => {
+    setContacts((prev: Contact[]) => [
       ...prev,
       { id: Date.now().toString(), system: undefined, value: "" },
     ]);
   };
 
-  const removeContact = (id: string) => {
+  const removeContact = (id: string): void => {
     if (contacts.length > 1) {
-      setContacts((prev) => prev.filter((c) => c.id !== id));
+      setContacts((prev: Contact[]) => prev.filter((c: Contact) => c.id !== id));
     }
   };
 
-  const updateContact = (id: string, field: "system" | "value", value: any) => {
-    setContacts((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, [field]: value } : c))
+  const updateContact = (
+    id: string, 
+    field: "system" | "value", 
+    value: ContactPointSystem | string
+  ): void => {
+    setContacts((prev: Contact[]) =>
+      prev.map((c: Contact) => (c.id === id ? { ...c, [field]: value } : c))
     );
   };
 
-  const onFinish = async (values: any) => {
-    let partOf: { reference: string; display: string; type?: string } | null =
-      null;
+  const handleContactTypeChange = (contactId: string, system: ContactPointSystem): void => {
+    setContactTypes((prev: ContactTypesMap) => ({
+      ...prev,
+      [contactId]: system,
+    }));
+    updateContact(contactId, "system", system);
+  };
 
-    let managingOrganization: {
-      reference: string;
-      display: string;
-      type?: string;
-    } | null = null;
+  const getPlaceholderByType = (type: ContactPointSystem): string => {
+    switch (type) {
+      case "pager":
+        return "Ej. Número de biper";
+      case "sms":
+        return "Ej. Número para SMS";
+      case "other":
+        return "Ej. Información de contacto";
+      case "phone":
+        return "Ej. Número de teléfono";
+      case "fax":
+        return "Ej. Número de fax";
+      case "email":
+        return "Ej. Correo electrónico";
+      case "url":
+        return "Ej. URL de contacto";
+    }
+  };
+
+  const buildAddressDto = (address: LocationFormValues["address"]): AddressDto => {
+    return {
+      line: address.line,
+      city: address.city,
+      state: address.state,
+      postalCode: address.postalCode,
+      country: address.country,
+    };
+  };
+
+  const onFinish = async (values: LocationFormValues): Promise<void> => {
+    let partOf: ReferenceDto | undefined;
+    let managingOrganization: ReferenceDto | undefined;
 
     if (values.managingOrganization) {
       const selectedOrg = orgsData?.find(
-        (org) => String(org.id) === String(values.managingOrganization)
+        (org: OrganizationDto) => String(org.id) === String(values.managingOrganization)
       );
       if (selectedOrg) {
         managingOrganization = {
           reference: `Organization/${selectedOrg.id}`,
-          display: selectedOrg.name as string,
+          display: selectedOrg.name || "",
           type: "Organization",
         };
       }
@@ -236,76 +340,67 @@ export default function useLocationForm({ mode }: UseLocationFormProps) {
 
     if (values.partOf) {
       const selectedLoc = locationsData?.find(
-        (loc) => String(loc.id) === String(values.partOf)
+        (loc: LocationDto) => String(loc.id) === String(values.partOf)
       );
       if (selectedLoc) {
         partOf = {
           reference: `Location/${selectedLoc.id}`,
-          display: selectedLoc.name,
+          display: selectedLoc.name || "",
           type: "Location",
         };
       }
     }
 
-    const payload = {
-      ...values,
-      partOf,
-      managingOrganization,
-      telecom: contacts
-        .filter((c) => c.system !== undefined && c.value)
-        .map((c) => ({ system: c.system, value: c.value })),
-    };
+    const telecomPayload: ContactPointDto[] = contacts
+      .filter((c: Contact) => c.system && c.value)
+      .map((c: Contact) => ({ 
+        system: c.system!, 
+        value: c.value 
+      }));
 
-    if (isEdit) {
-      updateLocation({ id: numericId!, data: payload });
+    const addressDto = buildAddressDto(values.address);
+
+    if (isEdit && numericId) {
+      const updatePayload: UpdateLocationDto = {
+        name: values.name || undefined,
+        alias: values.alias,
+        description: values.description,
+        status: values.status,
+        mode: values.mode,
+        address: addressDto,
+        telecom: telecomPayload.length > 0 ? telecomPayload : undefined,
+        type: values.type,
+        partOf,
+        managingOrganization,
+      };
+      updateLocation({ id: String(numericId), data: updatePayload });
     } else {
-      if (!payload.name) return message.error("Nombre obligatorio");
-      if (!payload.address?.line?.[0])
-        return message.error("Dirección obligatoria");
-      await createLocation({ data: payload });
+      if (!values.name) {
+        message.error("Nombre obligatorio");
+        return;
+      }
+      if (!values.address?.line?.[0]) {
+        message.error("Dirección obligatoria");
+        return;
+      }
+
+      const createPayload: CreateLocationDto = {
+        name: values.name,
+        status: values.status,
+        alias: values.alias,
+        description: values.description,
+        mode: values.mode,
+        address: addressDto,
+        telecom: telecomPayload.length > 0 ? telecomPayload : undefined,
+        type: values.type,
+        partOf,
+        managingOrganization,
+      };
+      await createLocation({ data: createPayload });
     }
   };
 
   const isSubmitting = isCreating || isUpdating;
-
-  // Estado para manejar los tipos de contacto seleccionados
-  const [contactTypes, setContactTypes] = useState<{ [key: string]: number }>(
-    {}
-  );
-
-  // Función para manejar el cambio de tipo de contacto
-  const handleContactTypeChange = (contactId: string, system: number) => {
-    setContactTypes((prev) => ({
-      ...prev,
-      [contactId]: system,
-    }));
-    updateContact(contactId, "system", system);
-  };
-
-  // Función auxiliar para obtener placeholder según el tipo
-  const getPlaceholderByType = (type: number) => {
-    switch (type) {
-      case 3: // Pager
-        return "Ej. Número de biper";
-      case 5: // SMS
-        return "Ej. Número para SMS";
-      case 6: // Otro
-        return "Ej. Información de contacto";
-      default:
-        return "Ej. Valor del contacto";
-    }
-  };
-
-  // Inicializar tipos de contacto cuando se cargan los contactos
-  useEffect(() => {
-    if (contacts.length > 0) {
-      const initialContactTypes: { [key: string]: number } = {};
-      contacts.forEach((contact) => {
-        initialContactTypes[contact.id] = contact.system || 0;
-      });
-      setContactTypes(initialContactTypes);
-    }
-  }, [contacts]);
 
   return {
     // Form

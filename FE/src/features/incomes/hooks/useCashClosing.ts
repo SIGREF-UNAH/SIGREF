@@ -1,19 +1,21 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import { useKeycloak } from "@react-keycloak/web";
-import { useGetApiHospitalPropertiesDetails } from "../../../api/hospital-properties/hospital-properties";
+import { useGetHospitalPropertiesDetails } from "../../../api/hospital-properties/hospital-properties";
 import { useCashierSessionStore } from "../../cashier-sessions/store";
-import { usePostApiCashierSessionsSessionIdClose } from "../../../api/cashier-sessions/cashier-sessions";
+import { useCreateSessionCloseById } from "../../../api/cashier-sessions/cashier-sessions";
 import useMediaFiles from "../../media-files/hooks/useMediaFiles";
 import { useExport } from "../../../shared/utils";
 import { useMessage } from "../../../shared/hooks";
 import dayjs from "dayjs";
 
 export default function useCashClosing() {
-  const message = useMessage();
+  const msg = useMessage();
   const navigate = useNavigate();
   const { keycloak } = useKeycloak();
   const { getMediaUrl } = useMediaFiles();
+
+  // Estados locales
   const [amount, setAmount] = useState<number | null>(null);
   const [isLocked, setIsLocked] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -25,33 +27,35 @@ export default function useCashClosing() {
   const { session, clearSession } = useCashierSessionStore();
 
   // Información del hospital
-  const { data: hospitalResponse, isLoading: isLoadingHospital } =
-    useGetApiHospitalPropertiesDetails();
+  const { data: hospitalData, isLoading: isLoadingHospital } =
+    useGetHospitalPropertiesDetails();
 
-  // Mutation para cerrar sesión
-  const { mutate: closeSession, isPending: isClosingSession } =
-    usePostApiCashierSessionsSessionIdClose({
+  // Mutación para cerrar sesión
+  const { mutateAsync: closeSession, isPending: isClosingSession } =
+    useCreateSessionCloseById({
       mutation: {
-        onSuccess: (response: any) => {
-          setClosedSessionId(response?.data?.id || session?.id || "");
-          message.success("Sesión cerrada exitosamente");
-          setSystemAmount(response?.data?.systemAmount);
+        onSuccess: (response) => {
+          // CashierSessionDtoResponseDto tiene wrapper .data
+          // TODO Cuando BE deje de usar wrapper, eliminar .data
+          const sessionData = response?.data;
+          setClosedSessionId(sessionData?.id || session?.id || "");
+          setSystemAmount(sessionData?.systemAmount || 0);
+          msg.success("Sesión cerrada exitosamente");
           setShowConfirmation(false);
           setShowResult(true);
         },
         onError: (error: any) => {
-          message.error(
-            error?.response?.data?.message || "Error al cerrar caja",
-          );
+          const errorMessage =
+            error?.response?.data?.detail ||
+            error?.response?.data?.title ||
+            "Error al cerrar caja";
+          msg.error(errorMessage);
           setIsLocked(false);
         },
       },
     });
 
-  // Datos del hospital
-  const hospitalResponseData = hospitalResponse as any;
-  const hospitalData = hospitalResponseData?.data;
-
+  // Datos del hospital (HospitalDetailsDto no tiene wrapper)
   const logoHealthUrl = hospitalData?.urlLogoHealth
     ? getMediaUrl(hospitalData.urlLogoHealth)
     : "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Logo_de_SESAL.svg/1200px-Logo_de_SESAL.svg.png";
@@ -61,7 +65,7 @@ export default function useCashClosing() {
     : "https://krti.cl/wp-content/uploads/2021/04/Logo-Hospital-Final.png";
 
   const hospitalName = hospitalData?.name || "Hospital";
-  const hospitalAddress = hospitalData?.ubication || "";
+  const hospitalAddress = hospitalData?.location || "";
   const hospitalCurrency = hospitalData?.currency || "LPS";
 
   const userName = keycloak.tokenParsed?.name || "Usuario";
@@ -71,22 +75,26 @@ export default function useCashClosing() {
   const currentDate = dayjs().format("DD [de] MMMM [de] YYYY");
   const currentTime = dayjs().format("hh:mm:ss A");
 
+  // Diferencia entre monto declarado y del sistema
+  const difference = amount !== null ? amount - systemAmount : 0;
+  const isMatch = difference === 0;
+
   const handleSave = () => {
     if (!session?.id) {
-      message.error("No hay sesión activa para cerrar");
+      msg.error("No hay sesión activa para cerrar");
       return;
     }
     setShowConfirmation(true);
     setIsLocked(true);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!session?.id || amount === null) {
-      message.error("Datos incompletos para cerrar la sesión");
+      msg.error("Datos incompletos para cerrar la sesión");
       return;
     }
 
-    closeSession({
+    await closeSession({
       sessionId: session.id,
       data: {
         declaredAmount: amount,
@@ -100,20 +108,17 @@ export default function useCashClosing() {
   };
 
   const handleFinish = () => {
-    navigate("/");
     clearSession();
+    navigate("/");
   };
-
-  const difference = amount !== null ? amount - systemAmount : 0;
-  const isMatch = difference === 0;
 
   // Ref para exportación
   const printRef = useRef<HTMLDivElement>(null);
   const { exportData } = useExport();
 
+  // Limpiar sesión al desmontar si se mostró resultado
   useEffect(() => {
     return () => {
-      // limpiar sesión si no presiona Finalizar
       if (showResult) {
         clearSession();
       }

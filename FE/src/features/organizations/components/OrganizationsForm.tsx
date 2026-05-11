@@ -11,7 +11,7 @@ import {
   CloseOutlined,
   PhoneOutlined,
 } from "@ant-design/icons";
-import type { CreateOrganizationDto } from "../../../api/models";
+import { OrganizationTypeEnum } from "../../../api/models";
 import type { ProFormInstance } from "@ant-design/pro-components";
 import { Button, Form } from "antd";
 import { useRef, useState } from "react";
@@ -23,26 +23,43 @@ import {
   getStateOptionsByCountry,
 } from "../../../shared/utils";
 
-type OrganizationFormValues = {
+/**
+ * Valores del formulario de organización
+ * Alineados con los hooks useCreateOrganization y useUpdateOrganization
+ */
+export type OrganizationFormValues = {
   name: string;
   identifier: string;
-  type: string[];
+  type: OrganizationTypeEnum;
   active: boolean;
   description?: string;
   phone?: string;
   email?: string;
   apiLink?: string;
-  address: string;
+  address: string;  // Requerido en el formulario
   city: string;
   state: string;
   country?: string;
+  postalCode?: string;  // Agregado para mantener consistencia
 };
+
+/**
+ * Mapa de tipos de organización para mostrar en la UI
+ * Convierte OrganizationTypeEnum a opciones del select con nombres en español
+ */
+export type OrganizationTypeMap = Record<OrganizationTypeEnum, { 
+  code: string;
+  display: string;
+  displayEs: string;
+  definition: string;
+}>;
 
 interface OrganizationsFormProps {
   initialValues?: OrganizationFormValues;
   isPending?: boolean;
   submitButtonText?: string;
-  onFinish: (values: CreateOrganizationDto) => Promise<void>;
+  organizationTypeToFhirMap?: OrganizationTypeMap;
+  onFinish: (values: OrganizationFormValues) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -50,25 +67,103 @@ export default function OrganizationsForm({
   initialValues,
   isPending = false,
   submitButtonText,
+  organizationTypeToFhirMap,
   onFinish,
   onCancel,
 }: OrganizationsFormProps) {
   
-  const handleFinish = async (values: any) => {
-    const payload: CreateOrganizationDto = {
-      name: values.name,
-      identifier: values.identifier,
-      type: values.type,
-      active: values.active,
-      email: values.email,
-      phone: values.phone,
-      address: values.address,
-      country: values.country,
-      city: values.city,
-      state: values.state,
-      description: values.description,
-    };
-    await onFinish(payload);
+  /**
+   * Mapa por defecto si no se proporciona uno
+   * Asegura que siempre tengamos opciones para el select de tipos
+   */
+  const defaultTypeMap: OrganizationTypeMap = {
+    [OrganizationTypeEnum.provider]: { 
+      code: "prov", 
+      display: "Healthcare Provider",
+      displayEs: "Proveedor de Salud",
+      definition: "An organization that provides healthcare services."
+    },
+    [OrganizationTypeEnum.department]: { 
+      code: "dept", 
+      display: "Hospital Department",
+      displayEs: "Departamento Hospitalario",
+      definition: "A department or ward within a hospital"
+    },
+    [OrganizationTypeEnum.team]: { 
+      code: "team", 
+      display: "Organizational team",
+      displayEs: "Equipo Organizacional",
+      definition: "An organizational team is usually a grouping of practitioners"
+    },
+    [OrganizationTypeEnum.government]: { 
+      code: "govt", 
+      display: "Government",
+      displayEs: "Gobierno",
+      definition: "A political body"
+    },
+    [OrganizationTypeEnum.insurer]: { 
+      code: "ins", 
+      display: "Insurance Company",
+      displayEs: "Compañía de Seguros",
+      definition: "A company that provides insurance to its subscribers"
+    },
+    [OrganizationTypeEnum.payer]: { 
+      code: "pay", 
+      display: "Payer",
+      displayEs: "Pagador",
+      definition: "A company, charity, or governmental organization, which processes claims"
+    },
+    [OrganizationTypeEnum.educational]: { 
+      code: "edu", 
+      display: "Educational Institute",
+      displayEs: "Instituto Educativo",
+      definition: "An educational institution that provides education or research facilities"
+    },
+    [OrganizationTypeEnum.regligious]: { 
+      code: "reli", 
+      display: "Religious Institution",
+      displayEs: "Institución Religiosa",
+      definition: "An organization that is identified as a part of a religious institution"
+    },
+    [OrganizationTypeEnum.clinicalResearchSponsor]: { 
+      code: "crs", 
+      display: "Clinical Research Sponsor",
+      displayEs: "Patrocinador de Investigación Clínica",
+      definition: "An organization that is identified as a Pharmaceutical/Clinical Research Sponsor"
+    },
+    [OrganizationTypeEnum.communityGroup]: { 
+      code: "cg", 
+      display: "Community Group",
+      displayEs: "Grupo Comunitario",
+      definition: "An un-incorporated community group"
+    },
+    [OrganizationTypeEnum.nonHealthcareBusiness]: { 
+      code: "bus", 
+      display: "Non-Healthcare Business or Corporation",
+      displayEs: "Negocio o Corporación No Sanitaria",
+      definition: "An organization that is a registered business or corporation"
+    },
+    [OrganizationTypeEnum.network]: { 
+      code: "other", 
+      display: "Other",
+      displayEs: "Otro",
+      definition: "Other type of organization not already specified"
+    },
+  };
+
+  const typeMap = organizationTypeToFhirMap || defaultTypeMap;
+
+  /**
+   * Genera las opciones para el select de tipo de organización
+   * usando los nombres en español del mapa
+   */
+  const organizationTypeOptions = Object.entries(typeMap).map(([key, value]) => ({
+    label: value.displayEs,
+    value: key as OrganizationTypeEnum,
+  }));
+
+  const handleFinish = async (values: OrganizationFormValues) => {
+    await onFinish(values);
   };
 
   const formRef = useRef<ProFormInstance>(null);
@@ -180,20 +275,8 @@ export default function OrganizationsForm({
               name="type"
               label="Tipo"
               placeholder="Seleccionar"
-              options={[
-                { label: "Proveedor de salud", value: "prov" },
-                { label: "Departamento", value: "dept" },
-                { label: "Equipo", value: "team" },
-                { label: "Gobierno", value: "govt" },
-                { label: "Aseguradora", value: "ins" },
-                { label: "Pagador", value: "pay" },
-                { label: "Educativo", value: "edu" },
-                { label: "Religioso", value: "reli" },
-                { label: "Investigación clínica", value: "crs" },
-                { label: "Comunidad", value: "cg" },
-                { label: "Negocio no médico", value: "bus" },
-                { label: "Otro", value: "other" },
-              ]}
+              options={organizationTypeOptions}
+              rules={[{ required: true, message: "Este campo es requerido" }]}
               fieldProps={{ className: "bg-gray-100" }}
             />
             <ProFormSelect

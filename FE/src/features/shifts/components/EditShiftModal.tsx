@@ -12,7 +12,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import React from "react";
 import type { LocationDto, ShiftDto } from "../../../api/models";
-import { getGetApiShiftsQueryKey, usePutApiShiftsId } from "../../../api/shifts/shifts";
+import { getGetShiftListQueryKey, useUpdateShiftById } from "../../../api/shifts/shifts";
 
 interface EditShiftModalProps {
   open: boolean;
@@ -31,10 +31,10 @@ export const EditShiftModal = ({
   const queryClient = useQueryClient();
   const [messageApi, contextHolder] = message.useMessage();
 
-  const { mutateAsync: updateShift, isPending } = usePutApiShiftsId({
+  const { mutateAsync: updateShift, isPending } = useUpdateShiftById({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetApiShiftsQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetShiftListQueryKey() });
         messageApi.success("Turno actualizado correctamente");
         onClose();
       },

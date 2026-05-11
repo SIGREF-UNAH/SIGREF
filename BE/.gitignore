@@ -6,6 +6,9 @@
 SIGREF.API/appsettings.Development.json
 SIGREF.API.AppHost/appsettings.Development.json
 
+# Archivos de lucene
+SIGREF.API.AppHost/hapi-lucene-data
+
 # Ignorar los datos de la aplicación
 SIGREF.API.AppHost/data
 

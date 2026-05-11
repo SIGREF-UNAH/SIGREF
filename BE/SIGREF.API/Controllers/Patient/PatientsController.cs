@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Constants;
 using SIGREF.API.Dtos.Common;
@@ -6,6 +7,7 @@ using SIGREF.API.Dtos.Patient;
 using SIGREF.API.Services.Patient;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace SIGREF.API.Controllers.PatientC;
 
@@ -15,7 +17,10 @@ namespace SIGREF.API.Controllers.PatientC;
 /// </summary>
 [Route("api/[controller]")]
 [ApiController]
-//[Authorize]
+[Authorize(AuthenticationSchemes = "Bearer")]
+[Produces(MediaTypeNames.Application.Json)]
+[Consumes(MediaTypeNames.Application.Json)]
+[SwaggerTag("Pacientes - Gestión de Pacientes")]
 public class PatientsController : ControllerBase
 {
     private readonly IPatientService _patientService;
@@ -34,10 +39,15 @@ public class PatientsController : ControllerBase
     /// Obtiene todos los pacientes registrados.
     /// </summary>
     [HttpGet]
+    [SwaggerOperation(
+        OperationId = "GetPatientList",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Patients" }
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    //[Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
-    [Produces("application/json")]
+    [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
+
     public async Task<IActionResult> GetFiltered([FromQuery] PatientFilterDto filter)
     {
         var pagedPatients = await _patientService.GetFilteredPatientsAsync(filter);
@@ -57,10 +67,13 @@ public class PatientsController : ControllerBase
     /// </summary>
     /// <param name="id">ID del paciente.</param>
     [HttpGet("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [Produces("application/json")]
-    [Produces<IEnumerable<PatientDto>>()]
+    [SwaggerOperation(
+        OperationId = "GetPatientById",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Patients" }
+    )]
+    [ProducesResponseType(typeof(PatientDto) , StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.cashier}, {RolesConstants.admin} , {RolesConstants.auditor}")]
     public async Task<IActionResult> GetById(string id)
     {
@@ -77,11 +90,14 @@ public class PatientsController : ControllerBase
     /// </summary>
     /// <param name="createPatientDto">Datos del paciente a crear.</param>
     [HttpPost]
-    [ProducesResponseType(StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [SwaggerOperation(
+        OperationId = "CreatePatient",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Patients" }
+    )]
+    [ProducesResponseType(typeof(PatientDto), StatusCodes.Status201Created)]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} ")]
-    [Produces("application/json")]
-    [Produces<IEnumerable<PatientDto>>()]
     public async Task<IActionResult> CreatePatient([FromBody] CreatePatientDto createPatientDto)
     {
         if (!ModelState.IsValid)
@@ -98,12 +114,15 @@ public class PatientsController : ControllerBase
     /// <param name="id">ID del paciente a actualizar.</param>
     /// <param name="updatePatientDto">Datos a actualizar.</param>
     [HttpPut("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [SwaggerOperation(
+        OperationId = "UpdatePatientById",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Patients" }
+    )]
+    [ProducesResponseType( typeof(PatientDto), StatusCodes.Status200OK)]
     [Produces("application/json")]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} ")]
-    [Produces<IEnumerable<PatientDto>>()]
     public async Task<IActionResult> UpdatePatient(string id, [FromBody] UpdatePatientDto updatePatientDto)
     {
         if (!ModelState.IsValid)
@@ -127,8 +146,13 @@ public class PatientsController : ControllerBase
     /// </summary>
     /// <param name="id">ID del paciente a eliminar.</param>
     [HttpDelete("{id}")]
+    [SwaggerOperation(
+        OperationId = "DeletePatientById",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Patients" }
+    )]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Authorize(Roles = $"{RolesConstants.admin}")]
     public async Task<IActionResult> DeletePatient(string id)
     {

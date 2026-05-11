@@ -1,3 +1,4 @@
+using System.Net.Mime;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos.Common;
@@ -6,12 +7,16 @@ using SIGREF.API.Extensions;
 using SIGREF.API.Services.Location;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace SIGREF.API.Controllers.Location;
 
 [Route("api/[controller]")]
 [ApiController]
 [Authorize(AuthenticationSchemes = "Bearer")]
+[Produces(MediaTypeNames.Application.Json)]
+[Consumes(MediaTypeNames.Application.Json)]
+[SwaggerTag("Espacios Fisicos - Gestión de Espacios Fisicos")]
 public class LocationsController(ILocationService locationService) : ControllerBase
 {
     // GET: api/locations
@@ -22,12 +27,14 @@ public class LocationsController(ILocationService locationService) : ControllerB
     /// <response code="200">Lista de ubicaciones obtenida exitosamente.</response>
     /// <response code="400">Parámetros de búsqueda inválidos.</response>
     [HttpGet]
+    [SwaggerOperation(
+        OperationId = "GetLocationList",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Locations" }
+    )]
     [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor}")]
-    [ProducesResponseType(typeof(PagedResultDto<LocationDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
+    [ProducesResponseType( typeof(PagedResultDto<LocationDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResultDto<LocationDto>>> Get([FromQuery] LocationFilterDto filter)
     {
         // El servicio ya se encarga de:
@@ -47,10 +54,14 @@ public class LocationsController(ILocationService locationService) : ControllerB
     /// <response code="200">Ubicación encontrada y devuelta con éxito.</response>
     /// <response code="404">No se encontró ninguna ubicación con el ID proporcionado.</response>
     [HttpGet("{id}")]
+    [SwaggerOperation(
+        OperationId = "GetLocationById",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Locations" }
+    )]
     [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor}")]
     [ProducesResponseType(typeof(LocationDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
     public async Task<ActionResult<LocationDto>> GetById(string id) 
     {
         // 1. El servicio ahora recibe un 'string' (estándar FHIR).
@@ -69,11 +80,14 @@ public class LocationsController(ILocationService locationService) : ControllerB
     /// <response code="400">Datos de entrada inválidos o formato incorrecto.</response>
     /// <response code="422">Regla de negocio violada (ej. organización padre inexistente).</response>
     [HttpPost]
+    [SwaggerOperation(
+        OperationId = "CreateLocation",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Locations" }
+    )]
     [Authorize(Roles = RolesConstants.admin)]
     [ProducesResponseType(typeof(LocationDto), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
     public async Task<ActionResult<LocationDto>> CreateLocation([FromBody] CreateLocationDto dto)
     {
         var result = await locationService.CreateLocationAsync(dto);
@@ -89,12 +103,14 @@ public class LocationsController(ILocationService locationService) : ControllerB
     /// <response code="404">La ubicación no existe.</response>
     /// <response code="409">Conflicto de concurrencia o de integridad en el servidor FHIR.</response>
     [HttpPut("{id}")]
+    [SwaggerOperation(
+        OperationId = "UpdateLocationById",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Locations" }
+    )]
     [Authorize(Roles = RolesConstants.admin)]
     [ProducesResponseType(typeof(LocationDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
     public async Task<ActionResult<LocationDto>> UpdateLocation(string id, [FromBody] UpdateLocationDto dto)
     {
         var result = await locationService.UpdateLocationAsync(id, dto);
@@ -110,11 +126,14 @@ public class LocationsController(ILocationService locationService) : ControllerB
     /// <response code="404">La ubicación no existe.</response>
     /// <response code="409">Conflicto: La ubicación tiene registros vinculados que impiden su borrado.</response>
     [HttpDelete("{id}")]
+    [SwaggerOperation(
+        OperationId = "DeleteLocationById",
+        Summary = "Obtener Ubicaciones",
+        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
+        Tags = new[] { "Locations" }
+    )]
     [Authorize(Roles = RolesConstants.admin)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
     public async Task<IActionResult> DeleteLocation(string id)
     {
         await locationService.DeleteLocationAsync(id);

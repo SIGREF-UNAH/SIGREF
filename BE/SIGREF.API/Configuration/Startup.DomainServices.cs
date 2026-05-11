@@ -1,5 +1,6 @@
 using SIGREF.API.Helpers;
 using SIGREF.API.Services.AdministrationHospital;
+using SIGREF.API.Services.Audit;
 using SIGREF.API.Services.Billing;
 using SIGREF.API.Services.Cashier;
 using SIGREF.API.Services.Files;
@@ -58,10 +59,14 @@ public partial class Startup
         // ================= Reportes =================
         services.AddScoped<IReportQueryService, ReportQueryService>();
         services.AddScoped<IReportExportService, ReportExportService>();
-
+        //=============== LOGS ========================
+        services.AddScoped<IAuditLogService, AuditLogService>();
         
         //   LIBRERIAS INTERNAS
         // ================= PDFs =====================
         applicationBuilder.AddReportingInfrastructure();
+        
+
+
     }
 }
