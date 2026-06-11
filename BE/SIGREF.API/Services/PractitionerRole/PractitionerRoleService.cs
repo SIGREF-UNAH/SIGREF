@@ -8,6 +8,7 @@ using SIGREF.API.Extensions;
 using SIGREF.API.Fhir;
 using SIGREF.API.Helpers;
 using SIGREF.API.Middleware;
+using SIGREF.API.Services.FhirUtils;
 using SIGREF.Common.Dtos;
 using SIGREF.Common.Exceptions;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
@@ -19,7 +20,8 @@ namespace SIGREF.API.Services.PractitionerRole;
 public class PractitionerRoleService(
     FhirClient _fhirClient,
     IUserContextService userContext,
-    IFhirNamespaceService ns)
+    IFhirNamespaceService ns,
+    IIdentifierValidationService _identifierValidation)
     : BaseFhirService(userContext, ns), IPractitionerRoleService
 {
     public async Task<PagedResultDto<PractitionerRoleDto>> GetFilteredAsync(PractitionerRoleFilterDto filters)
@@ -96,24 +98,8 @@ public class PractitionerRoleService(
         // no contenga duplicados (mismo System y Value) en este y otros DTOs, 
         // delegando la validación estructural al framework antes de llegar al servicio.
         
-        // validacion en la DB
-        foreach (var idDto in dto.Identifier)
-        {
-            if (string.IsNullOrEmpty(idDto.System) || string.IsNullOrEmpty(idDto.Value))
-                continue;
-            var conflictingId = await GetConflictingIdentifierId(idDto.System.Trim(), idDto.Value.Trim());
-
-            // TODO Se dispara ???
-            if (conflictingId != null)
-            {
-                throw new ConflictException(MessageCodes.DbUniqueConstraint, new Dictionary<string, object>
-                {
-                    { "System", idDto.System },
-                    { "Value", idDto.Value },
-                    { "ConflictingResourceId", conflictingId } 
-                });
-            }
-        }
+        // Validación batch: una sola consulta FHIR, todos los conflictos reportados juntos
+        await _identifierValidation.ValidateUniquenessAsync<FhirPractitionerRole>(dto.Identifier);
 
         // Validar unicidad de asignación (Regla de negocio SIGREF)
         // Dentro de CreateAsync
@@ -233,28 +219,8 @@ public class PractitionerRoleService(
             });
         }
 
-        // 3. Validar identificadores únicos (excluyendo el recurso actual)
-        foreach (var idDto in dto.Identifier)
-        {
-            if (string.IsNullOrEmpty(idDto.System) || string.IsNullOrEmpty(idDto.Value))
-                continue;
-
-            var searchParams = new SearchParams()
-                .Add("identifier", $"{idDto.System.Trim()}|{idDto.Value.Trim()}");
-
-            var bundle = await _fhirClient.SearchAsync<FhirPractitionerRole>(searchParams);
-
-            // Si hay un resultado y no es el que estamos editando
-            if (bundle?.Entry?.Any(e => e.Resource.Id != id) == true)
-            {
-                throw new ConflictException(MessageCodes.DbUniqueConstraint, new Dictionary<string, object>
-                {
-                    { "System", idDto.System },
-                    { "Value", idDto.Value },
-                    { "ConflictWithId", bundle.Entry.First(e => e.Resource.Id != id).Resource.Id }
-                });
-            }
-        }
+        // 3. Validar identificadores únicos batch (excluye el propio recurso para no auto-conflictar)
+        await _identifierValidation.ValidateUniquenessAsync<FhirPractitionerRole>(dto.Identifier, excludeId: id);
 
         // 4. Si el rol será activo, validar unicidad de asignación
         if (dto.Active)
@@ -370,25 +336,6 @@ public class PractitionerRoleService(
     
         // Retornamos el ID del primer conflicto que encontremos
         return bundle?.Entry?.FirstOrDefault()?.Resource?.Id;
-    }
-
-    
-    private async Task<string?> GetConflictingIdentifierId(string system, string value)
-    {
-        try
-        {
-            var searchParams = new SearchParams()
-                .Add("identifier", $"{system.Trim()}|{value.Trim()}");
-
-            var bundle = await _fhirClient.SearchAsync<FhirPractitionerRole>(searchParams);
-    
-            // Retornamos el ID del primer recurso que coincida con ese identificador
-            return bundle?.Entry?.FirstOrDefault()?.Resource?.Id;
-        }
-        catch (FhirOperationException ex)
-        {
-            throw FhirExceptionMapper.Map(ex, $"{system}|{value}", "VALIDATE_DUPLICATE_IDENTIFIER");
-        }
     }
 
     // TODO MEJORAR ESTE METODO

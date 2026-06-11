@@ -14,6 +14,7 @@ using SIGREF.API.Services.PractitionerRole;
 using SIGREF.API.Services.Reports;
 using SIGREF.API.Services.Serie;
 using SIGREF.API.Services.ServiceGroup;
+using SIGREF.API.Services.FhirUtils;
 using SIGREF.API.Services.ValueSet;
 using SIGREF.Common.Bridges;
 using SIGREF.Common.Constants;
@@ -29,6 +30,7 @@ public partial class Startup
     {
         services.Configure<HospitalOptions>(applicationBuilder.Configuration.GetSection("HospitalOptions"));
         services.AddScoped<IFhirNamespaceService, FhirNamespaceService>();
+        services.AddScoped<IIdentifierValidationService, IdentifierValidationService>();
         // ================= HEALTH =================
         services.AddScoped<ILocationService ,LocationService>();
         services.AddScoped<IPatientService, PatientService>();
