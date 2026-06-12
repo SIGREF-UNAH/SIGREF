@@ -36,12 +36,12 @@ public class InvoiceController : ControllerBase
         Tags = new[] { "Invoice" }
     )]
     [ProducesResponseType(StatusCodes.Status201Created)]
-    [Produces(typeof(ResponseDto<InvoiceDetailDto>))]
+    [Produces(typeof(InvoiceDetailDto))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin}")]
     public async Task<IActionResult> CreateInvoice([FromBody] InvoiceCreateDto dto)
     {
         var result = await _service.CreateInvoiceAsync(dto);
-        return StatusCode(result.StatusCode, result);
+        return CreatedAtAction(nameof(GetInvoiceById), new { id = result.Id }, result);
     }
 
     // ============================================
@@ -55,14 +55,14 @@ public class InvoiceController : ControllerBase
         Tags = new[] { "Invoice" }
     )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces(typeof(ResponseDto<InvoiceDetailDto?>))]
+    [Produces(typeof(InvoiceDetailDto))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
     public async Task<IActionResult> GetInvoiceById(
         Guid id,
         [FromQuery] GetInvoiceParameters parameters)
     {
         var result = await _service.GetInvoiceByIdAsync(id, parameters);
-        return StatusCode(result.StatusCode, result);
+        return Ok(result);
     }
 
     // ============================================
@@ -76,12 +76,12 @@ public class InvoiceController : ControllerBase
         Tags = new[] { "Invoice" }
     )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces(typeof(ResponseDto<PagedResultDto<InvoiceGetDto>>))]
+    [Produces(typeof(PagedResultDto<InvoiceGetDto>))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
     public async Task<IActionResult> GetInvoices([FromQuery] InvoiceFilterDto filter)
     {
         var result = await _service.GetInvoicesAsync(filter);
-        return StatusCode(result.StatusCode, result);
+        return Ok(result);
     }
 
     // ============================================
@@ -95,12 +95,12 @@ public class InvoiceController : ControllerBase
         Tags = new[] { "Invoice" }
     )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces(typeof(ResponseDto<InvoiceDetailDto>))]
+    [Produces(typeof(InvoiceDetailDto))]
     [Authorize(Roles = $"{RolesConstants.admin},")]
     public async Task<IActionResult> CancelInvoice(Guid id)
     {
         var result = await _service.CancelInvoiceAsync(id);
-        return StatusCode(result.StatusCode, result);
+        return Ok(result);
     }
 
     // ============================================
@@ -114,14 +114,14 @@ public class InvoiceController : ControllerBase
         Tags = new[] { "Invoice" }
     )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces(typeof(ResponseDto<InvoiceDetailDto>))]
+    [Produces(typeof(InvoiceDetailDto))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} ")]
     public async Task<IActionResult> MarkAsPaid(
         Guid id,
         [FromBody] decimal amountPaid)
     {
         var result = await _service.MarkAsPaidAsync(id, amountPaid);
-        return StatusCode(result.StatusCode, result);
+        return Ok(result);
     }
 
     // ============================================
@@ -135,7 +135,7 @@ public class InvoiceController : ControllerBase
         Tags = new[] { "Invoice" }
     )]
     [ProducesResponseType(StatusCodes.Status201Created)]
-    [Produces(typeof(ResponseDto<InvoiceDetailDto>))]
+    [Produces(typeof(InvoiceDetailDto))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} ")]
     public async Task<IActionResult> CreateNote(
         Guid parentId,
@@ -143,7 +143,7 @@ public class InvoiceController : ControllerBase
         [FromBody] InvoiceCreateDto dto)
     {
         var result = await _service.CreateNoteAsync(parentId, dto, noteType);
-        return StatusCode(result.StatusCode, result);
+        return CreatedAtAction(nameof(GetInvoiceById), new { id = parentId }, result);
     }
 
     // ============================================
@@ -157,12 +157,12 @@ public class InvoiceController : ControllerBase
         Tags = new[] { "Invoice" }
     )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces(typeof(ResponseDto<List<MinimalInvoiceDto>>))]
+    [Produces(typeof(List<MinimalInvoiceDto>))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
     public async Task<IActionResult> HasChildNotes(Guid id)
     {
         var result = await _service.HasChildNotesAsync(id);
-        return StatusCode(result.StatusCode, result);
+        return Ok(result);
     }
 
     // ============================================
@@ -176,12 +176,11 @@ public class InvoiceController : ControllerBase
         Tags = new[] { "Invoice" }
     )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces(typeof(ResponseDto<bool>))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
     public async Task<IActionResult> RecalculateTotals(Guid id)
     {
-        var result = await _service.RecalculateInvoiceTotalsAsync(id);
-        return StatusCode(result.StatusCode, result);
+        await _service.RecalculateInvoiceTotalsAsync(id);
+        return Ok();
     }
     
     // SUMMARY DE NOTAS (CREDIT/DEBIT)
@@ -193,11 +192,11 @@ public class InvoiceController : ControllerBase
         Tags = new[] { "Invoice" }
     )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces(typeof(ResponseDto<InvoiceNotesSummaryDto>))]
+    [Produces(typeof(InvoiceNotesSummaryDto))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
     public async Task<IActionResult> GetNotesSummary(Guid id)
     {
         var result = await _service.GetNotesSummaryAsync(id);
-        return StatusCode(result.StatusCode, result);
+        return Ok(result);
     }
 }

@@ -22,15 +22,14 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
-  BooleanResponseDto,
   GetInvoiceByIdParams,
   GetInvoiceListParams,
   InvoiceCreateDto,
-  InvoiceDetailDtoResponseDto,
-  InvoiceGetDtoPagedResultDtoResponseDto,
-  InvoiceNotesSummaryDtoResponseDto,
+  InvoiceDetailDto,
+  InvoiceGetDtoPagedResultDto,
+  InvoiceNotesSummaryDto,
   InvoiceType,
-  MinimalInvoiceDtoListResponseDto,
+  MinimalInvoiceDto,
   ProblemDetails,
 } from ".././models";
 
@@ -44,7 +43,7 @@ export const getInvoiceList = (
   params?: GetInvoiceListParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<InvoiceGetDtoPagedResultDtoResponseDto>({
+  return customInstance<InvoiceGetDtoPagedResultDto>({
     url: `/api/invoices`,
     method: "GET",
     params,
@@ -183,7 +182,7 @@ export const createInvoice = (
   invoiceCreateDto: InvoiceCreateDto,
   signal?: AbortSignal,
 ) => {
-  return customInstance<InvoiceDetailDtoResponseDto | void>({
+  return customInstance<InvoiceDetailDto | void>({
     url: `/api/invoices`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -267,7 +266,7 @@ export const getInvoiceById = (
   params?: GetInvoiceByIdParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<InvoiceDetailDtoResponseDto>({
+  return customInstance<InvoiceDetailDto>({
     url: `/api/invoices/${id}`,
     method: "GET",
     params,
@@ -417,7 +416,7 @@ export function useGetInvoiceById<
  * @summary Verificar notas hijas
  */
 export const getInvoiceHasChildNotes = (id: string, signal?: AbortSignal) => {
-  return customInstance<MinimalInvoiceDtoListResponseDto>({
+  return customInstance<MinimalInvoiceDto[]>({
     url: `/api/invoices/${id}/child-notes`,
     method: "GET",
     signal,
@@ -581,7 +580,7 @@ export const getInvoiceRecalculateNotesSummary = (
   id: string,
   signal?: AbortSignal,
 ) => {
-  return customInstance<InvoiceNotesSummaryDtoResponseDto>({
+  return customInstance<InvoiceNotesSummaryDto>({
     url: `/api/invoices/${id}/notes-summary`,
     method: "GET",
     signal,
@@ -748,7 +747,7 @@ export const createInvoiceByIdCancellation = (
   id: string,
   signal?: AbortSignal,
 ) => {
-  return customInstance<InvoiceDetailDtoResponseDto>({
+  return customInstance<InvoiceDetailDto>({
     url: `/api/invoices/${id}/cancel`,
     method: "POST",
     signal,
@@ -834,7 +833,7 @@ export const createInvoiceMarkAsPaid = (
   createInvoiceMarkAsPaidBody: number,
   signal?: AbortSignal,
 ) => {
-  return customInstance<InvoiceDetailDtoResponseDto>({
+  return customInstance<InvoiceDetailDto>({
     url: `/api/invoices/${id}/pay`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -920,7 +919,7 @@ export const createInvoiceByIdRecalculation = (
   id: string,
   signal?: AbortSignal,
 ) => {
-  return customInstance<BooleanResponseDto>({
+  return customInstance<void>({
     url: `/api/invoices/${id}/recalculate`,
     method: "POST",
     signal,
@@ -1007,7 +1006,7 @@ export const createInvoiceNote = (
   invoiceCreateDto: InvoiceCreateDto,
   signal?: AbortSignal,
 ) => {
-  return customInstance<InvoiceDetailDtoResponseDto | void>({
+  return customInstance<InvoiceDetailDto | void>({
     url: `/api/invoices/${parentId}/notes/${noteType}`,
     method: "POST",
     headers: { "Content-Type": "application/json" },

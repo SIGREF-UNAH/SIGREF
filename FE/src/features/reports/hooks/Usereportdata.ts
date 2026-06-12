@@ -50,8 +50,8 @@ export const useReportData = () => {
   const isError = summaryQuery.isError || detailQuery.isError;
   const hasData = committed.enabled && !isLoading;
 
-  const summaryData = summaryQuery.data?.data;
-  const detailData = detailQuery.data?.data;
+  const summaryData = summaryQuery.data;
+  const detailData = detailQuery.data;
 
   const summaryStats = summaryData?.summary;
   const hospitalInfo = summaryData?.hospital;

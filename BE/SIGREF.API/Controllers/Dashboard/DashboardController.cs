@@ -25,8 +25,7 @@ public class DashboardController(IDashboardReportingService dashboardReportingSe
         Description = "NA",
         Tags = new[] { "Dashboard" }
     )]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces(typeof(ResponseDto<DashboardSummaryDto>))]
+    [ProducesResponseType(typeof(DashboardSummaryDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSummary([FromQuery] DashboardFilterDto filter)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -42,8 +41,7 @@ public class DashboardController(IDashboardReportingService dashboardReportingSe
         Description = "NA",
         Tags = new[] { "Dashboard" }
     )]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces(typeof(ResponseDto<ServiceUsageResultDto>))]
+    [ProducesResponseType( typeof(ServiceUsageResultDto) , StatusCodes.Status200OK)]
     public async Task<IActionResult> GetServiceUsage([FromQuery] DashboardFilterDto filter)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -59,8 +57,7 @@ public class DashboardController(IDashboardReportingService dashboardReportingSe
         Description = "NA",
         Tags = new[] { "Dashboard" }
     )]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces(typeof(ResponseDto<PackageUsageResultDto>))]
+    [ProducesResponseType(typeof(PackageUsageResultDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPackageUsage([FromQuery] DashboardFilterDto filter)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -76,8 +73,7 @@ public class DashboardController(IDashboardReportingService dashboardReportingSe
         Description = "NA",
         Tags = new[] { "Dashboard" }
     )]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces(typeof(ResponseDto<List<WeeklyIncomeDto>>))]
+    [ProducesResponseType(typeof(List<WeeklyIncomeDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetWeeklyIncome([FromQuery] DashboardFilterDto filter)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -93,8 +89,7 @@ public class DashboardController(IDashboardReportingService dashboardReportingSe
         Description = "NA",
         Tags = new[] { "Dashboard" }
     )]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces(typeof(ResponseDto<List<ShiftIncomeDto>>))]
+    [ProducesResponseType(typeof(List<ShiftIncomeDto>) , StatusCodes.Status200OK)]
     public async Task<IActionResult> GetShiftIncome([FromQuery] DashboardFilterDto filter)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -110,8 +105,7 @@ public class DashboardController(IDashboardReportingService dashboardReportingSe
         Description = "NA",
         Tags = new[] { "Dashboard" }
     )]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces(typeof(ResponseDto<List<LocationIncomeDto>>))]
+    [ProducesResponseType(typeof(List<LocationIncomeDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetLocationIncome([FromQuery] DashboardFilterDto filter)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);

@@ -33,13 +33,12 @@ public class HospitalPropertiesController : ControllerBase
         Description = "NA",
         Tags = new[] { "HospitalProperties" }
     )]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces<HospitalPublicDto>()]
+    [ProducesResponseType(typeof(HospitalPublicDto), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.auditor},{RolesConstants.admin},{RolesConstants.ti},{RolesConstants.cashier}")]
     public async Task<IActionResult> GetPublic()
     {
         var result = await _hospitalService.GetPublicAsync();
-        return StatusCode(result.StatusCode, result);
+        return Ok(result);
     }
     
     [HttpGet("details")]
@@ -49,13 +48,12 @@ public class HospitalPropertiesController : ControllerBase
         Description = "NA",
         Tags = new[] { "HospitalProperties" }
     )]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces<HospitalDetailsDto>()]
+    [ProducesResponseType(typeof(HospitalDetailsDto), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.auditor},{RolesConstants.admin},{RolesConstants.ti},{RolesConstants.cashier}")]
     public async Task<IActionResult> GetAllDetails()
     {
         var result = await _hospitalService.GetAllDetailsAsync();
-        return StatusCode(result.StatusCode, result);
+        return Ok(result);
     }
     // ============================================================
     //                 CREAR (solo 1 vez)
@@ -73,7 +71,7 @@ public class HospitalPropertiesController : ControllerBase
     public async Task<IActionResult> Create([FromBody] CreateHospitalPropertiesDto dto)
     {
         var result = await _hospitalService.CreateAsync(dto);
-        return StatusCode(result.StatusCode, result);
+        return CreatedAtAction(nameof(GetAllDetails), result);
     }
 
     // ============================================================
@@ -86,12 +84,11 @@ public class HospitalPropertiesController : ControllerBase
         Description = "NA",
         Tags = new[] { "HospitalProperties" }
     )]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces<HospitalDetailsDto>()]
+    [ProducesResponseType(typeof(HospitalDetailsDto), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.ti}")]
     public async Task<IActionResult> Update([FromBody] UpdateHospitalPropertiesDto dto)
     {
         var result = await _hospitalService.UpdateAsync(dto);
-        return StatusCode(result.StatusCode, result);
+        return Ok(result);
     }
 }

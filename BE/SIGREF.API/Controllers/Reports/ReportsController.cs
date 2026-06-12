@@ -45,12 +45,12 @@ public class ReportsController : ControllerBase
         Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
         Tags = new[] { "Reports" }
     )]
-    [ProducesResponseType(typeof(ResponseDto<ReportSummaryResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ReportSummaryResponseDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetReportSummary([FromQuery] ReportFilterDto filter)
     {
         var response = await _reportQueryService.GetReportSummaryAsync(filter);
 
-        return StatusCode(response.StatusCode, response);
+        return Ok(response);
     }
 
     /// <summary>
@@ -65,12 +65,12 @@ public class ReportsController : ControllerBase
         Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
         Tags = new[] { "Reports" }
     )]
-    [ProducesResponseType(typeof(ResponseDto<ReportDetailPageResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ReportDetailPageResponseDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetReportDetailPage([FromQuery] ReportFilterDto filter)
     {
         var response = await _reportQueryService.GetReportDetailPageAsync(filter);
 
-        return StatusCode(response.StatusCode, response);
+        return Ok(response);
     }
     /// <summary>
     /// Encola un nuevo reporte. Respuesta inmediata (202 Accepted).

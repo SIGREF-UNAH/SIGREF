@@ -1,12 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Hl7.Fhir.Rest;
+using Microsoft.EntityFrameworkCore;
 using SIGREF.API.Dtos.Files;
+using SIGREF.API.Middleware;
 using SIGREF.Common.Dtos;
+using SIGREF.Common.Exceptions;
 using SIGREF.Common.Helpers;
 using SIGREF.Common.Types;
 using SIGREF.Core.Entity.Files;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
 using SIGREF.Infrastructure.Persistence;
-
 
 namespace SIGREF.API.Services.Files;
 
@@ -23,162 +25,139 @@ public class MediaFileService : IMediaFileService
         _userContextService = userContextService;
     }
 
-
-    // este enpoint seria solo para logo y logo de salud
-    public async Task<ResponseDto<MediaFileDto>> UploadAsync(UploadMediaFileDto dto)
+    public async Task<MediaFileDto> UploadAsync(UploadMediaFileDto dto)
     {
-        var response = new ResponseDto<MediaFileDto>();
+        var file = dto.File;
 
-        try
-        {
-            var file = dto.File;
+        // ================= VALIDACIONES =================
 
-            // ================= VALIDACIONES =================
-
-            if (!Enum.IsDefined(typeof(MediaFileType), dto.Type))
+        if (!Enum.IsDefined(typeof(MediaFileType), dto.Type))
+            throw new ValidationException("MEDIA_INVALID_TYPE", new Dictionary<string, object>
             {
-                response.Status = false;
-                response.Message = "Tipo de media inválido.";
-                response.StatusCode = 400;
-                return response;
-            }
-
-            var systemFolder = MediaPathHelper.GetFolder(dto.Type);
-
-            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (string.IsNullOrWhiteSpace(ext) || !MediaHelper.AllowedImageExtensions.Contains(ext))
-            {
-                response.Status = false;
-                response.Message = "Solo se aceptan imágenes JPG o PNG.";
-                response.StatusCode = 400;
-                return response;
-            }
-
-            var allowedContentTypes = new[] { "image/jpeg", "image/png" };
-            if (!allowedContentTypes.Contains(file.ContentType))
-            {
-                response.Status = false;
-                response.Message = "Content-Type inválido. Solo JPG o PNG.";
-                response.StatusCode = 400;
-                return response;
-            }
-
-            const long MAX_SIZE_BYTES = 25 * 1024 * 1024;
-            if (file.Length > MAX_SIZE_BYTES)
-            {
-                response.Status = false;
-                response.Message = "El archivo excede los 25 MB permitidos.";
-                response.StatusCode = 400;
-                return response;
-            }
-
-            // ================= TRANSACCIÓN CON EXECUTION STRATEGY =================
-
-            var strategy = _context.Database.CreateExecutionStrategy();
-
-            await strategy.ExecuteAsync(async () =>
-            {
-                using var transaction = await _context.Database.BeginTransactionAsync();
-
-                var entity = new MediaFileEntity
-                {
-                    FileName = file.FileName,
-                    ContentType = file.ContentType,
-                    Type = dto.Type,
-                    Description = dto.Description,
-                    SizeBytes = file.Length,
-                    SystemDescription = "PENDING",
-                    RelativePath = "Pending"
-                };
-
-                _context.MediaFiles.Add(entity);
-                await _context.SaveChangesAsync(); // genera ID
-
-                var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
-                var finalFileName = $"{entity.Id}{timestamp}{dto.Type}{ext}";
-
-                var basePath = Path.Combine(_env.ContentRootPath, "media", systemFolder);
-                if (!Directory.Exists(basePath))
-                    Directory.CreateDirectory(basePath);
-
-                var finalPhysicalPath = Path.Combine(basePath, finalFileName);
-
-                try
-                {
-                    using var stream = new FileStream(finalPhysicalPath, FileMode.Create);
-                    await file.CopyToAsync(stream);
-                }
-                catch
-                {
-                    _context.MediaFiles.Remove(entity);
-                    await _context.SaveChangesAsync();
-                    await transaction.RollbackAsync();
-
-                    response.Status = false;
-                    response.Message = "No se pudo guardar la imagen en el servidor.";
-                    response.StatusCode = 500;
-                    return;
-                }
-
-                entity.RelativePath = $"/media/{systemFolder}/{finalFileName}";
-                entity.SystemDescription = $"{entity.Id}-{timestamp}-{file.FileName}";
-
-                await _context.SaveChangesAsync();
-
-                // ================= Actualizar hospital =================
-
-                var hospital = await _context.HospitalProperties
-                    .FirstOrDefaultAsync(x => x.IsSingleton);
-
-                if (hospital != null)
-                {
-                    if (dto.Type == MediaFileType.AppHospital)
-                    {
-                        hospital.LogoMediaId = entity.Id;
-                        hospital.UrlLogo = entity.RelativePath;
-                    }
-                    else if (dto.Type == MediaFileType.HealthGuilt)
-                    {
-                        hospital.HealthLogoMediaId = entity.Id;
-                        hospital.UrlLogoHealth = entity.RelativePath;
-                    }
-
-                    await _context.SaveChangesAsync();
-                }
-
-                await transaction.CommitAsync();
-
-                // respuesta final
-                response.Status = true;
-                response.StatusCode = 200;
-                response.Message = "Archivo subido correctamente.";
-                response.Data = new MediaFileDto
-                {
-                    Id = entity.Id,
-                    FileName = entity.FileName,
-                    ContentType = entity.ContentType,
-                    Description = entity.Description,
-                    SystemDescription = entity.SystemDescription,
-                    Type = entity.Type,
-                    RelativePath = entity.RelativePath,
-                    SizeBytes = entity.SizeBytes
-                };
+                { "ProvidedType", dto.Type },
+                { "AllowedTypes", Enum.GetNames(typeof(MediaFileType)) }
             });
 
-            return response;
-        }
-        catch (Exception ex)
+        var systemFolder = MediaPathHelper.GetFolder(dto.Type);
+
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(ext) || !MediaHelper.AllowedImageExtensions.Contains(ext))
+            throw new ValidationException("MEDIA_INVALID_EXTENSION", new Dictionary<string, object>
+            {
+                { "ProvidedExtension", ext },
+                { "AllowedExtensions", MediaHelper.AllowedImageExtensions }
+            });
+
+        var allowedContentTypes = new[] { "image/jpeg", "image/png" };
+        if (!allowedContentTypes.Contains(file.ContentType))
+            throw new ValidationException("MEDIA_INVALID_CONTENT_TYPE", new Dictionary<string, object>
+            {
+                { "ProvidedContentType", file.ContentType },
+                { "AllowedContentTypes", allowedContentTypes }
+            });
+
+        const long MAX_SIZE_BYTES = 25 * 1024 * 1024;
+        if (file.Length > MAX_SIZE_BYTES)
+            throw new ValidationException("MEDIA_FILE_TOO_LARGE", new Dictionary<string, object>
+            {
+                { "MaxSizeBytes", MAX_SIZE_BYTES },
+                { "ProvidedSizeBytes", file.Length },
+                { "MaxSizeMB", 25 }
+            });
+
+        // ================= TRANSACCIÓN CON EXECUTION STRATEGY =================
+
+        var strategy = _context.Database.CreateExecutionStrategy();
+
+        return await strategy.ExecuteAsync(async () =>
         {
-            response.Status = false;
-            response.Message = $"Error inesperado: {ex.Message} ";
-            //| {ex.StackTrace} | {ex.InnerException?.Message}
-            response.StatusCode = 500;
-            return response;
-        }
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            var entity = new MediaFileEntity
+            {
+                FileName = file.FileName,
+                ContentType = file.ContentType,
+                Type = dto.Type,
+                Description = dto.Description,
+                SizeBytes = file.Length,
+                SystemDescription = "PENDING",
+                RelativePath = "Pending"
+            };
+
+            _context.MediaFiles.Add(entity);
+            await _context.SaveChangesAsync(); // genera ID
+
+            var timestamp = DateTimeOffset.UtcNow.ToString("yyyyMMddHHmmss");
+            var finalFileName = $"{entity.Id}{timestamp}{dto.Type}{ext}";
+
+            var basePath = Path.Combine(_env.ContentRootPath, "media", systemFolder);
+            if (!Directory.Exists(basePath))
+                Directory.CreateDirectory(basePath);
+
+            var finalPhysicalPath = Path.Combine(basePath, finalFileName);
+
+            try
+            {
+                await using var stream = new FileStream(finalPhysicalPath, FileMode.Create);
+                await file.CopyToAsync(stream);
+            }
+            catch (IOException ioEx)
+            {
+                _context.MediaFiles.Remove(entity);
+                await _context.SaveChangesAsync();
+                await transaction.RollbackAsync();
+
+                throw new ExternalServiceException("MEDIA_FILE_SAVE_ERROR", 500, new Dictionary<string, object>
+                {
+                    { "FileName", file.FileName },
+                    { "PhysicalPath", finalPhysicalPath },
+                    { "OriginalException", ioEx.Message }
+                });
+            }
+
+            entity.RelativePath = $"/media/{systemFolder}/{finalFileName}";
+            entity.SystemDescription = $"{entity.Id}-{timestamp}-{file.FileName}";
+
+            await _context.SaveChangesAsync();
+
+            // ================= Actualizar hospital =================
+
+            var hospital = await _context.HospitalProperties
+                .FirstOrDefaultAsync(x => x.IsSingleton);
+
+            if (hospital != null)
+            {
+                if (dto.Type == MediaFileType.AppHospital)
+                {
+                    hospital.LogoMediaId = entity.Id;
+                    hospital.UrlLogo = entity.RelativePath;
+                }
+                else if (dto.Type == MediaFileType.HealthGuilt)
+                {
+                    hospital.HealthLogoMediaId = entity.Id;
+                    hospital.UrlLogoHealth = entity.RelativePath;
+                }
+
+                await _context.SaveChangesAsync();
+            }
+
+            await transaction.CommitAsync();
+
+            return new MediaFileDto
+            {
+                Id = entity.Id,
+                FileName = entity.FileName,
+                ContentType = entity.ContentType,
+                Description = entity.Description,
+                SystemDescription = entity.SystemDescription,
+                Type = entity.Type,
+                RelativePath = entity.RelativePath,
+                SizeBytes = entity.SizeBytes
+            };
+        });
     }
 
-
-    public async Task<ResponseDto<MediaFileDto>> GetByIdAsync(Guid id)
+    public async Task<MediaFileDto> GetByIdAsync(Guid id)
     {
         try
         {
@@ -187,54 +166,65 @@ public class MediaFileService : IMediaFileService
                 .FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity == null)
-            {
-                return new ResponseDto<MediaFileDto>
+                throw new NotFoundException("MEDIA_NOT_FOUND", new Dictionary<string, object>
                 {
-                    Status = false,
-                    StatusCode = 404,
-                    Message = "Archivo no encontrado.",
-                    Data = null
-                };
-            }
+                    { "MediaId", id }
+                });
 
-            return new ResponseDto<MediaFileDto>
+            return new MediaFileDto
             {
-                Status = true,
-                StatusCode = 200,
-                Message = "Archivo encontrado.",
-                Data = new MediaFileDto
-                {
-                    Id = entity.Id,
-                    FileName = entity.FileName,
-                    ContentType = entity.ContentType,
-                    RelativePath = entity.RelativePath,
-                    SizeBytes = entity.SizeBytes,
-                    Description = entity.Description,
-                    Type = entity.Type,
-                    SystemDescription = entity.SystemDescription
-                }
+                Id = entity.Id,
+                FileName = entity.FileName,
+                ContentType = entity.ContentType,
+                RelativePath = entity.RelativePath,
+                SizeBytes = entity.SizeBytes,
+                Description = entity.Description,
+                Type = entity.Type,
+                SystemDescription = entity.SystemDescription
             };
+        }
+        catch (FhirOperationException fhirEx)
+        {
+            throw FhirExceptionMapper.Map(fhirEx, id.ToString(), nameof(GetByIdAsync));
+        }
+        catch (DbUpdateException dbEx)
+        {
+            throw new ExternalServiceException("DB_QUERY_ERROR", 502, new Dictionary<string, object>
+            {
+                { "OriginalException", dbEx.Message },
+                { "Operation", nameof(GetByIdAsync) },
+                { "MediaId", id }
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (AppException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
-            return new ResponseDto<MediaFileDto>
+            throw new ExternalServiceException("INTERNAL_MEDIA_ERROR", 500, new Dictionary<string, object>
             {
-                Status = false,
-                StatusCode = 500,
-                Message = $"Error al buscar archivo: {ex.Message}",
-                Data = null
-            };
+                { "OriginalException", ex.Message },
+                { "Operation", nameof(GetByIdAsync) },
+                { "MediaId", id }
+            });
         }
     }
 
-
-    public async Task<bool> DeleteAsync(Guid id)
+    public async Task DeleteAsync(Guid id)
     {
         try
         {
             var entity = await _context.MediaFiles.FindAsync(id);
             if (entity == null)
-                return false;
+                throw new NotFoundException("MEDIA_NOT_FOUND", new Dictionary<string, object>
+                {
+                    { "MediaId", id }
+                });
 
             // =============================
             // 1. ELIMINAR REFERENCIAS EN HOSPITAL PROPERTIES
@@ -264,7 +254,6 @@ public class MediaFileService : IMediaFileService
                 {
                     hospital.UpdatedById = _userContextService.GetUserId();
                     hospital.UpdatedDate = DateTime.UtcNow;
-                    await _context.SaveChangesAsync();
                 }
             }
 
@@ -281,70 +270,80 @@ public class MediaFileService : IMediaFileService
             // =============================
             _context.MediaFiles.Remove(entity);
             await _context.SaveChangesAsync();
-
-            return true;
+        }
+        catch (FhirOperationException fhirEx)
+        {
+            throw FhirExceptionMapper.Map(fhirEx, id.ToString(), nameof(DeleteAsync));
+        }
+        catch (DbUpdateException dbEx)
+        {
+            throw new ExternalServiceException("DB_DELETE_ERROR", 502, new Dictionary<string, object>
+            {
+                { "OriginalException", dbEx.Message },
+                { "Operation", nameof(DeleteAsync) },
+                { "MediaId", id }
+            });
+        }
+        catch (IOException ioEx)
+        {
+            throw new ExternalServiceException("MEDIA_FILE_DELETE_ERROR", 500, new Dictionary<string, object>
+            {
+                { "OriginalException", ioEx.Message },
+                { "Operation", nameof(DeleteAsync) },
+                { "MediaId", id }
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (AppException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
-            // Aquí podés logear si querés
-            // _logger.LogError(ex, "Error al eliminar MediaFile");
-
-            Console.WriteLine($"Error eliminando media: {ex.Message} | {ex.StackTrace}");
-
-            return false;
+            throw new ExternalServiceException("INTERNAL_MEDIA_ERROR", 500, new Dictionary<string, object>
+            {
+                { "OriginalException", ex.Message },
+                { "Operation", nameof(DeleteAsync) },
+                { "MediaId", id }
+            });
         }
     }
 
-
-    public async Task<ResponseDto<bool>> SetHospitalMediaAsync(Guid mediaId, MediaFileType type)
+    public async Task SetHospitalMediaAsync(Guid mediaId, MediaFileType type)
     {
+        // Validar tipo permitido
+        if (type != MediaFileType.AppHospital && type != MediaFileType.HealthGuilt)
+            throw new ValidationException("MEDIA_INVALID_HOSPITAL_TYPE", new Dictionary<string, object>
+            {
+                { "ProvidedType", type },
+                { "AllowedTypes", new[] { MediaFileType.AppHospital, MediaFileType.HealthGuilt } }
+            });
+
         try
         {
-            // Validar tipo permitido
-            if (type != MediaFileType.AppHospital && type != MediaFileType.HealthGuilt)
-            {
-                return new ResponseDto<bool>
-                {
-                    Status = false,
-                    StatusCode = 400,
-                    Message = "Tipo de archivo inválido para el hospital.",
-                    Data = false
-                };
-            }
-
             // Validar que el archivo exista
             var media = await _context.MediaFiles
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == mediaId);
 
             if (media == null)
-            {
-                return new ResponseDto<bool>
+                throw new NotFoundException("MEDIA_NOT_FOUND", new Dictionary<string, object>
                 {
-                    Status = false,
-                    StatusCode = 404,
-                    Message = "El archivo no existe.",
-                    Data = false
-                };
-            }
+                    { "MediaId", mediaId }
+                });
 
             // Obtener configuración del hospital (singleton)
             var hospital = await _context.HospitalProperties
                 .FirstOrDefaultAsync(x => x.IsSingleton);
 
             if (hospital == null)
-            {
-                return new ResponseDto<bool>
-                {
-                    Status = false,
-                    StatusCode = 404,
-                    Message = "No existe una configuración del hospital.",
-                    Data = false
-                };
-            }
+                throw new NotFoundException("HOSPITAL_CONFIG_NOT_FOUND");
 
             // Actualizar segun tipo
-            string publicUrl = media.RelativePath; // aqui ya es /media/...
+            string publicUrl = media.RelativePath;
 
             if (type == MediaFileType.AppHospital)
             {
@@ -357,38 +356,59 @@ public class MediaFileService : IMediaFileService
                 hospital.UrlLogoHealth = publicUrl;
             }
 
-            // Guardar cambios
             await _context.SaveChangesAsync();
-
-            return new ResponseDto<bool>
+        }
+        catch (FhirOperationException fhirEx)
+        {
+            throw FhirExceptionMapper.Map(fhirEx, mediaId.ToString(), nameof(SetHospitalMediaAsync));
+        }
+        catch (DbUpdateException dbEx)
+        {
+            throw new ExternalServiceException("DB_UPDATE_ERROR", 502, new Dictionary<string, object>
             {
-                Status = true,
-                StatusCode = 200,
-                Message = "Archivo asignado correctamente al hospital.",
-                Data = true
-            };
+                { "OriginalException", dbEx.Message },
+                { "Operation", nameof(SetHospitalMediaAsync) },
+                { "MediaId", mediaId }
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (AppException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
-            return new ResponseDto<bool>
+            throw new ExternalServiceException("INTERNAL_MEDIA_ERROR", 500, new Dictionary<string, object>
             {
-                Status = false,
-                StatusCode = 500,
-                Message = $"Error inesperado: {ex.Message}",
-                Data = false
-            };
+                { "OriginalException", ex.Message },
+                { "Operation", nameof(SetHospitalMediaAsync) },
+                { "MediaId", mediaId }
+            });
         }
     }
 
-
-    public async Task<ResponseDto<PagedResultDto<MediaFileDto>>> GetPagedAsync(MediaFileFilterDto filter)
+    public async Task<PagedResultDto<MediaFileDto>> GetPagedAsync(MediaFileFilterDto filter)
     {
+        // Validaciones básicas
+        if (filter.PageNumber <= 0)
+            throw new ValidationException("MEDIA_INVALID_PAGE_NUMBER", new Dictionary<string, object>
+            {
+                { "ProvidedPageNumber", filter.PageNumber },
+                { "MinAllowed", 1 }
+            });
+
+        if (filter.PageSize <= 0)
+            throw new ValidationException("MEDIA_INVALID_PAGE_SIZE", new Dictionary<string, object>
+            {
+                { "ProvidedPageSize", filter.PageSize },
+                { "MinAllowed", 1 }
+            });
+
         try
         {
-            // Validaciones básicas
-            if (filter.PageNumber <= 0) filter.PageNumber = 1;
-            if (filter.PageSize <= 0) filter.PageSize = 20;
-
             var query = _context.MediaFiles.AsNoTracking().AsQueryable();
 
             // Filtro por tipo
@@ -410,14 +430,18 @@ public class MediaFileService : IMediaFileService
             var totalItems = await query.CountAsync();
 
             // Calcular paginado
-            var totalPages = (int)Math.Ceiling(totalItems / (double)filter.PageSize);
-            if (totalPages == 0) totalPages = 1;
-            if (filter.PageNumber > totalPages) filter.PageNumber = totalPages;
+            var totalPages = totalItems > 0
+                ? (int)Math.Ceiling(totalItems / (double)filter.PageSize)
+                : 0;
+
+            var currentPage = filter.PageNumber;
+            if (totalPages > 0 && currentPage > totalPages)
+                currentPage = totalPages;
 
             // Aplicar paginación
             var items = await query
                 .OrderByDescending(x => x.CreatedDate)
-                .Skip((filter.PageNumber - 1) * filter.PageSize)
+                .Skip((currentPage - 1) * filter.PageSize)
                 .Take(filter.PageSize)
                 .Select(x => new MediaFileDto
                 {
@@ -432,36 +456,47 @@ public class MediaFileService : IMediaFileService
                 })
                 .ToListAsync();
 
-            // respons
-            return new ResponseDto<PagedResultDto<MediaFileDto>>
+            return new PagedResultDto<MediaFileDto>
             {
-                Status = true,
-                StatusCode = 200,
-                Message = "Imágenes obtenidas correctamente.",
-                Data = new PagedResultDto<MediaFileDto>
+                Items = items,
+                Pagination = new PaginationDto
                 {
-                    Items = items,
-                    Pagination = new PaginationDto
-                    {
-                        CurrentPage = filter.PageNumber,
-                        PageSize = filter.PageSize,
-                        TotalItems = totalItems,
-                        TotalPages = totalPages,
-                        HasPrevious = filter.PageNumber > 1,
-                        HasNext = filter.PageNumber < totalPages
-                    }
+                    CurrentPage = currentPage,
+                    PageSize = filter.PageSize,
+                    TotalItems = totalItems,
+                    TotalPages = totalPages,
+                    HasPrevious = currentPage > 1,
+                    HasNext = currentPage < totalPages
                 }
             };
         }
+        catch (FhirOperationException fhirEx)
+        {
+            throw FhirExceptionMapper.Map(fhirEx, "MediaPaged", nameof(GetPagedAsync));
+        }
+        catch (DbUpdateException dbEx)
+        {
+            throw new ExternalServiceException("DB_QUERY_ERROR", 502, new Dictionary<string, object>
+            {
+                { "OriginalException", dbEx.Message },
+                { "Operation", nameof(GetPagedAsync) }
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (AppException)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
-            return new ResponseDto<PagedResultDto<MediaFileDto>>
+            throw new ExternalServiceException("INTERNAL_MEDIA_ERROR", 500, new Dictionary<string, object>
             {
-                Status = false,
-                StatusCode = 500,
-                Message = $"Error inesperado: {ex.Message}",
-                Data = null
-            };
+                { "OriginalException", ex.Message },
+                { "Operation", nameof(GetPagedAsync) }
+            });
         }
     }
 }

@@ -31,4 +31,6 @@ export interface HospitalDetailsDto {
   website?: string | null;
   /** @nullable */
   currency?: string | null;
+  updatedById?: string;
+  updatedDate?: string;
 }

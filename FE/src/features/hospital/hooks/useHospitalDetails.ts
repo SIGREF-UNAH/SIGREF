@@ -10,7 +10,7 @@ export default function useHospitalDetails() {
   const { data: response, isLoading, isError, error } = useGetHospitalPropertiesDetails();
 
   // Extraer los datos del objeto data
-  const hospital = response?.data?? null;
+  const hospital = response?? null;
 
   return {
     hospital,

@@ -22,9 +22,9 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
-  CashierSessionDtoPagedResultDtoResponseDto,
-  CashierSessionDtoResponseDto,
-  CashierSessionMinimalDtoResponseDto,
+  CashierSessionDto,
+  CashierSessionDtoPagedResultDto,
+  CashierSessionMinimalDto,
   CloseCashierSessionDto,
   CreateCashierSessionDto,
   GetSessionListParams,
@@ -43,7 +43,7 @@ export const getSessionList = (
   params?: GetSessionListParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<CashierSessionDtoPagedResultDtoResponseDto>({
+  return customInstance<CashierSessionDtoPagedResultDto>({
     url: `/api/CashierSessions`,
     method: "GET",
     params,
@@ -179,7 +179,7 @@ export function useGetSessionList<
  * @summary Obtener una sesión por su ID
  */
 export const getSessionById = (sessionId: string, signal?: AbortSignal) => {
-  return customInstance<CashierSessionDtoResponseDto>({
+  return customInstance<CashierSessionDto>({
     url: `/api/CashierSessions/${sessionId}`,
     method: "GET",
     signal,
@@ -324,7 +324,7 @@ export const createSessionCloseById = (
   closeCashierSessionDto: CloseCashierSessionDto,
   signal?: AbortSignal,
 ) => {
-  return customInstance<CashierSessionDtoResponseDto>({
+  return customInstance<CashierSessionDto>({
     url: `/api/CashierSessions/${sessionId}/close`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -411,7 +411,7 @@ export const createSessionCorrection = (
   requestCorrectionDto: RequestCorrectionDto,
   signal?: AbortSignal,
 ) => {
-  return customInstance<CashierSessionDtoResponseDto>({
+  return customInstance<CashierSessionDto>({
     url: `/api/CashierSessions/${sessionId}/request-correction`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -498,7 +498,7 @@ export const updateSessionResolveCorrection = (
   resolveCorrectionDto: ResolveCorrectionDto,
   signal?: AbortSignal,
 ) => {
-  return customInstance<CashierSessionDtoResponseDto>({
+  return customInstance<CashierSessionDto>({
     url: `/api/CashierSessions/${sessionId}/resolve-correction`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -585,7 +585,7 @@ export const createSessionOpen = (
   createCashierSessionDto: CreateCashierSessionDto,
   signal?: AbortSignal,
 ) => {
-  return customInstance<CashierSessionMinimalDtoResponseDto | void>({
+  return customInstance<CashierSessionMinimalDto>({
     url: `/api/CashierSessions/open`,
     method: "POST",
     headers: { "Content-Type": "application/json" },

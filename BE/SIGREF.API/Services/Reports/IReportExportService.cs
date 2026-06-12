@@ -14,13 +14,13 @@ public interface IReportExportService
     /// Crea un job de exportación de reporte (PDF / Excel / CSV).
     /// No genera el archivo en el request.
     /// </summary>
-    Task<ResponseDto<CreateReportExportResponseDto>> CreateReportExportAsync(
+    Task<CreateReportExportResponseDto> CreateReportExportAsync(
         CreateReportExportRequestDto request);
 
     /// <summary>
     /// Obtiene el estado actual de un job de exportación.
     /// </summary>
-    Task<ResponseDto<ReportExportStatusResponseDto>> GetReportExportStatusAsync(
+    Task<ReportExportStatusResponseDto> GetReportExportStatusAsync(
         Guid jobId);
 
     /// <summary>

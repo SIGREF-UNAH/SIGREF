@@ -13,31 +13,31 @@ public interface IDashboardReportingService
     /// - Total pacientes atendidos
     /// - Total de cierres de caja que requirieron corrección
     /// </summary>
-    Task<ResponseDto<DashboardSummaryDto>> GetSummaryAsync(DashboardFilterDto filter);
+    Task<DashboardSummaryDto> GetSummaryAsync(DashboardFilterDto filter);
 
     /// <summary>
     /// Top 5 servicios más usados y bottom 5 menos usados.
     /// </summary>
-    Task<ResponseDto<ServiceUsageResultDto>> GetServiceUsageAsync(DashboardFilterDto filter);
+    Task<ServiceUsageResultDto> GetServiceUsageAsync(DashboardFilterDto filter);
 
     /// <summary>
     /// Top 5 paquetes más solicitados + agrupación de "Otros".
     /// </summary>
-    Task<ResponseDto<PackageUsageResultDto>> GetPackageUsageAsync(DashboardFilterDto filter);
+    Task<PackageUsageResultDto> GetPackageUsageAsync(DashboardFilterDto filter);
 
     /// <summary>
     /// Ingresos distribuidos por semana dentro del rango seleccionado.
     /// </summary>
-    Task<ResponseDto<List<WeeklyIncomeDto>>> GetWeeklyIncomeAsync(DashboardFilterDto filter);
+    Task<List<WeeklyIncomeDto>> GetWeeklyIncomeAsync(DashboardFilterDto filter);
 
     /// <summary>
     /// Ingresos agrupados por turno (Shift) y por location.
     /// Permite n turnos y n locations.
     /// </summary>
-    Task<ResponseDto<List<ShiftIncomeDto>>> GetShiftIncomeAsync(DashboardFilterDto filter);
+    Task<List<ShiftIncomeDto>> GetShiftIncomeAsync(DashboardFilterDto filter);
 
     /// <summary>
     /// Ingresos totales agrupados por location.
     /// </summary>
-    Task<ResponseDto<List<LocationIncomeDto>>> GetLocationIncomeAsync(DashboardFilterDto filter);
+    Task<List<LocationIncomeDto>> GetLocationIncomeAsync(DashboardFilterDto filter);
 }

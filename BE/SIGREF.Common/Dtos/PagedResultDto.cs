@@ -19,14 +19,3 @@ public class PagedResultDto<T>
     public PaginationDto Pagination { get; set; } = new PaginationDto();
 }
 
-
-// Clasificacion sencilla de respuesta API INTERNA
-public class ResponseDto<T>
-{
-    public T Data { get; set; }
-    public string Message { get; set; } = string.Empty;
-
-    [JsonIgnore]
-    public int StatusCode { get; set; }
-    public bool Status { get; set; }
-}

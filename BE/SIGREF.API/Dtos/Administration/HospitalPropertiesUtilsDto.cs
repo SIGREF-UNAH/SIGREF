@@ -20,5 +20,9 @@ public class HospitalDetailsDto : HospitalPublicDto
     public string? RTN { get; set; }
     public string? Website { get; set; }
     public string? Currency { get; set; }
+    
+    public Guid UpdatedById { get; set; }
+    public DateTimeOffset UpdatedDate { get; set; }
+
 }
 

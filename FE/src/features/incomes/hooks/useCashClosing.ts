@@ -37,7 +37,7 @@ export default function useCashClosing() {
         onSuccess: (response) => {
           // CashierSessionDtoResponseDto tiene wrapper .data
           // TODO Cuando BE deje de usar wrapper, eliminar .data
-          const sessionData = response?.data;
+          const sessionData = response;
           setClosedSessionId(sessionData?.id || session?.id || "");
           setSystemAmount(sessionData?.systemAmount || 0);
           msg.success("Sesión cerrada exitosamente");

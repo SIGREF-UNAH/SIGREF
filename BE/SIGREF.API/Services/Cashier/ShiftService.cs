@@ -1,19 +1,18 @@
-using System.ComponentModel;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 using Microsoft.EntityFrameworkCore;
-using SIGREF.API.Database;
 using SIGREF.API.Dtos.Cashier;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Extensions;
 using SIGREF.API.Helpers;
+using SIGREF.API.Middleware;
 using SIGREF.Common.Dtos;
-using SIGREF.Common.Helpers;
+using SIGREF.Common.Exceptions;
 using SIGREF.Core.Entity.Cashier;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
-using SIGREF.Infrastructure.Keycloak.Services.Auth;
 using SIGREF.Infrastructure.Persistence;
 using FhirLocation = Hl7.Fhir.Model.Location;
+using Task = System.Threading.Tasks.Task;
 
 namespace SIGREF.API.Services.Cashier;
 
@@ -30,43 +29,30 @@ public class ShiftService : IShiftService
         _userContext = userContext;
     }
 
-    public async Task<ResponseDto<ShiftDto>> CreateShiftAsync(CreateShiftDto dto)
+    public async Task<ShiftDto> CreateShiftAsync(CreateShiftDto dto)
     {
         try
         {
             // =======================================================
-            // VALIDAR QUE EL LOCATION EXISTA EN FHIR 
+            // VALIDAR QUE EL LOCATION EXISTA EN FHIR
             // =======================================================
-            Bundle results = await _fhirClient.SearchByIdAsync<FhirLocation>(dto.LocationId);
-
-            if (results == null)
+            Bundle results;
+            try
             {
-                ResponseHelper.Fail<ShiftDto>(400, "La ubicación especificada no existe en el servidor FHIR.");
+                results = await _fhirClient.SearchByIdAsync<FhirLocation>(dto.LocationId);
             }
-            
-           // try
-           //{
-           //    await _fhirClient.ReadAsync<Hl7.Fhir.Model.Location>(
-           //        $"Location/{dto.LocationId}?_elements=id"
-           //    );
-           //}
-           // catch (FhirOperationException ex)
-           //    when (ex.Status == System.Net.HttpStatusCode.NotFound)
-           //{
-           //    return ResponseHelper.Fail<ShiftDto>(400, "La ubicación especificada no existe en el servidor FHIR.");
-           // //}
+            catch (FhirOperationException fhirEx)
+            {
+                throw FhirExceptionMapper.Map(fhirEx, dto.LocationId, nameof(CreateShiftAsync));
+            }
 
-            // try
-            //{
-            //    await _fhirClient.ReadAsync<Hl7.Fhir.Model.Location>(
-            //        $"Location/{dto.LocationId}?_elements=id"
-            //    );
-            //}
-            // catch (FhirOperationException ex)
-            //    when (ex.Status == System.Net.HttpStatusCode.NotFound)
-            //{
-            //    return ResponseHelper.Fail<ShiftDto>(400, "La ubicación especificada no existe en el servidor FHIR.");
-            // //}
+            if (results == null || !results.Entry.Any())
+            {
+                throw new NotFoundException("FHIR_LOCATION_NOT_FOUND", new Dictionary<string, object>
+                {
+                    { "LocationId", dto.LocationId }
+                });
+            }
 
             // =======================================================
             // VALIDAR EXISTENCIA DE NOMBRE DUPLICADO
@@ -79,10 +65,12 @@ public class ShiftService : IShiftService
                 s.Name.ToUpper() == normalizedName
             );
 
-
             if (existsSameName)
-                return ResponseHelper.Fail<ShiftDto>(400,
-                    "Ya existe un turno activo con este nombre en esta ubicación.");
+                throw new ConflictException("SHIFT_DUPLICATE_NAME", new Dictionary<string, object>
+                {
+                    { "Name", dto.Name },
+                    { "LocationId", dto.LocationId }
+                });
 
             // =======================================================
             // VALIDAR EXISTENCIA DE MISMA HORA DE INICIO
@@ -94,8 +82,11 @@ public class ShiftService : IShiftService
             );
 
             if (existsSameStartTime)
-                return ResponseHelper.Fail<ShiftDto>(400,
-                    "Ya existe un turno activo que inicia a la misma hora en esta ubicación.");
+                throw new ConflictException("SHIFT_DUPLICATE_START_TIME", new Dictionary<string, object>
+                {
+                    { "StartTime", dto.StartTime },
+                    { "LocationId", dto.LocationId }
+                });
 
             // =======================================================
             // CREAR ENTIDAD
@@ -106,39 +97,77 @@ public class ShiftService : IShiftService
                 Name = dto.Name,
                 StartTime = dto.StartTime,
                 EndTime = dto.EndTime,
-
                 IsActive = true,
                 CreatedById = _userContext.GetUserId(),
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = DateTimeOffset.UtcNow
             };
 
             _db.Shifts.Add(newShift);
             await _db.SaveChangesAsync();
 
-            return ResponseHelper.Success(201, "Turno creado exitosamente.", newShift.ToDto());
+            return newShift.ToDto();
+        }
+        catch (FhirOperationException fhirEx)
+        {
+            throw FhirExceptionMapper.Map(fhirEx, dto.LocationId, nameof(CreateShiftAsync));
+        }
+        catch (DbUpdateException dbEx)
+        {
+            throw new ExternalServiceException("DB_CREATE_SHIFT_ERROR", 502, new Dictionary<string, object>
+            {
+                { "OriginalException", dbEx.Message },
+                { "Operation", nameof(CreateShiftAsync) }
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (AppException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
-            return ResponseHelper.Fail<ShiftDto>(500, $"Error interno al crear el turno: {ex.Message} | {ex.StackTrace} | {ex.InnerException?.Message}");
+            throw new ExternalServiceException("INTERNAL_SHIFT_ERROR", 500, new Dictionary<string, object>
+            {
+                { "OriginalException", ex.Message },
+                { "Operation", nameof(CreateShiftAsync) }
+            });
         }
     }
 
-    public async Task<ResponseDto<ShiftDto>> UpdateShiftAsync(Guid id, UpdateShiftDto dto)
+    public async Task<ShiftDto> UpdateShiftAsync(Guid id, UpdateShiftDto dto)
     {
         try
         {
-            // 1. BUSCAR EL TURNO SIN IMPORTAR SI ESTÁ ACTIVO O NO
+            // 1. BUSCAR EL TURNO
             var shift = await _db.Shifts.FirstOrDefaultAsync(s => s.Id == id);
 
             if (shift == null)
-                return ResponseHelper.Fail<ShiftDto>(404, "El turno especificado no existe.");
+                throw new NotFoundException("SHIFT_NOT_FOUND", new Dictionary<string, object>
+                {
+                    { "ShiftId", id }
+                });
 
             // 2. VALIDAR LOCATION SI SE ESTÁ CAMBIANDO
             if (!string.IsNullOrWhiteSpace(dto.LocationId) && dto.LocationId != shift.LocationId)
             {
-                var results = await _fhirClient.SearchByIdAsync<FhirLocation>(dto.LocationId);
-                if (results?.Entry?.Any() != true)
-                    return ResponseHelper.Fail<ShiftDto>(400, "La ubicación especificada no existe en el servidor FHIR.");
+                Bundle results;
+                try
+                {
+                    results = await _fhirClient.SearchByIdAsync<FhirLocation>(dto.LocationId);
+                }
+                catch (FhirOperationException fhirEx)
+                {
+                    throw FhirExceptionMapper.Map(fhirEx, dto.LocationId, nameof(UpdateShiftAsync));
+                }
+
+                if (results == null || !results.Entry.Any())
+                    throw new NotFoundException("FHIR_LOCATION_NOT_FOUND", new Dictionary<string, object>
+                    {
+                        { "LocationId", dto.LocationId }
+                    });
             }
 
             var targetLocationId = dto.LocationId ?? shift.LocationId;
@@ -149,13 +178,16 @@ public class ShiftService : IShiftService
             {
                 bool nameExists = await _db.Shifts.AnyAsync(s =>
                     s.Id != shift.Id &&
-                    s.IsActive && // ← solo choca con turnos ACTIVOS
+                    s.IsActive &&
                     s.LocationId == targetLocationId &&
                     s.Name.Trim().ToUpper() == dto.Name.Trim().ToUpper());
 
                 if (nameExists)
-                    return ResponseHelper.Fail<ShiftDto>(400,
-                        "Ya existe un turno activo con este nombre en esta ubicación.");
+                    throw new ConflictException("SHIFT_DUPLICATE_NAME", new Dictionary<string, object>
+                    {
+                        { "Name", dto.Name },
+                        { "LocationId", targetLocationId }
+                    });
             }
 
             // 4. VALIDAR HORA DE INICIO DUPLICADA (solo entre turnos ACTIVOS)
@@ -163,13 +195,16 @@ public class ShiftService : IShiftService
             {
                 bool timeExists = await _db.Shifts.AnyAsync(s =>
                     s.Id != shift.Id &&
-                    s.IsActive && // ← solo con turnos activos
+                    s.IsActive &&
                     s.LocationId == targetLocationId &&
                     s.StartTime == dto.StartTime.Value);
 
                 if (timeExists)
-                    return ResponseHelper.Fail<ShiftDto>(400,
-                        "Ya existe un turno activo que inicia a la misma hora en esta ubicación.");
+                    throw new ConflictException("SHIFT_DUPLICATE_START_TIME", new Dictionary<string, object>
+                    {
+                        { "StartTime", dto.StartTime.Value },
+                        { "LocationId", targetLocationId }
+                    });
             }
 
             // 5. APLICAR LOS CAMBIOS
@@ -177,31 +212,49 @@ public class ShiftService : IShiftService
 
             shift.ApplyUpdate(dto, userId);
 
-            // Permitir reactivar o desactivar explícitamente
             if (dto.IsActive.HasValue)
-            {
                 shift.IsActive = dto.IsActive.Value;
-            }
 
-            // Siempre actualizamos auditoría al modificar
             shift.UpdatedById = userId;
-            shift.UpdatedDate = DateTime.UtcNow;
+            shift.UpdatedDate = DateTimeOffset.UtcNow;
 
             await _db.SaveChangesAsync();
 
-            return ResponseHelper.Success(200, "Turno actualizado exitosamente.", shift.ToDto());
+            return shift.ToDto();
         }
-        catch (UnauthorizedAccessException ex)
+        catch (FhirOperationException fhirEx)
         {
-            return ResponseHelper.Fail<ShiftDto>(401, ex.Message);
+            throw FhirExceptionMapper.Map(fhirEx, dto.LocationId ?? id.ToString(), nameof(UpdateShiftAsync));
+        }
+        catch (DbUpdateException dbEx)
+        {
+            throw new ExternalServiceException("DB_UPDATE_SHIFT_ERROR", 502, new Dictionary<string, object>
+            {
+                { "OriginalException", dbEx.Message },
+                { "Operation", nameof(UpdateShiftAsync) },
+                { "ShiftId", id }
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (AppException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
-            return ResponseHelper.Fail<ShiftDto>(500, $"Error interno al actualizar el turno: {ex.Message}");
+            throw new ExternalServiceException("INTERNAL_SHIFT_ERROR", 500, new Dictionary<string, object>
+            {
+                { "OriginalException", ex.Message },
+                { "Operation", nameof(UpdateShiftAsync) },
+                { "ShiftId", id }
+            });
         }
     }
 
-    public async Task<ResponseDto<bool>> DeleteShiftAsync(Guid id)
+    public async Task DeleteShiftAsync(Guid id)
     {
         try
         {
@@ -212,49 +265,55 @@ public class ShiftService : IShiftService
                 .FirstOrDefaultAsync(s => s.Id == id && s.IsActive);
 
             if (shift == null)
-            {
-                return ResponseHelper.Fail<bool>(
-                    404,
-                    "El turno especificado no existe o ya se encuentra inactivo."
-                );
-            }
-
-            // =======================================================
-            // OBTENER USUARIO 
-            // =======================================================
-            Guid userId;
-            try
-            {
-                userId = _userContext.GetUserId();
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return ResponseHelper.Fail<bool>(401, ex.Message);
-            }
+                throw new NotFoundException("SHIFT_NOT_FOUND", new Dictionary<string, object>
+                {
+                    { "ShiftId", id }
+                });
 
             // =======================================================
             // SOFT DELETE
             // =======================================================
+            Guid userId = _userContext.GetUserId();
+
             shift.IsActive = false;
             shift.UpdatedById = userId;
-            shift.UpdatedDate = DateTime.UtcNow;
+            shift.UpdatedDate = DateTimeOffset.UtcNow;
 
             await _db.SaveChangesAsync();
-
-
-            return ResponseHelper.Success(200, "Turno eliminado exitosamente.", true);
+        }
+        catch (FhirOperationException fhirEx)
+        {
+            throw FhirExceptionMapper.Map(fhirEx, id.ToString(), nameof(DeleteShiftAsync));
+        }
+        catch (DbUpdateException dbEx)
+        {
+            throw new ExternalServiceException("DB_DELETE_SHIFT_ERROR", 502, new Dictionary<string, object>
+            {
+                { "OriginalException", dbEx.Message },
+                { "Operation", nameof(DeleteShiftAsync) },
+                { "ShiftId", id }
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (AppException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
-            return ResponseHelper.Fail<bool>(
-                500,
-                $"Error interno al eliminar el turno: {ex.Message}"
-            );
+            throw new ExternalServiceException("INTERNAL_SHIFT_ERROR", 500, new Dictionary<string, object>
+            {
+                { "OriginalException", ex.Message },
+                { "Operation", nameof(DeleteShiftAsync) },
+                { "ShiftId", id }
+            });
         }
     }
 
-
-    public async Task<ResponseDto<ShiftDto>> GetShiftByIdAsync(Guid id)
+    public async Task<ShiftDto> GetShiftByIdAsync(Guid id)
     {
         try
         {
@@ -265,16 +324,11 @@ public class ShiftService : IShiftService
                 .FirstOrDefaultAsync(s => s.Id == id && s.IsActive);
 
             if (shift == null)
-            {
-                return ResponseHelper.Fail<ShiftDto>(
-                    404,
-                    "El turno especificado no existe o está inactivo."
-                );
-            }
+                throw new NotFoundException("SHIFT_NOT_FOUND", new Dictionary<string, object>
+                {
+                    { "ShiftId", id }
+                });
 
-            // =======================================================
-            // CREAR DTO BASE
-            // =======================================================
             var dto = shift.ToDto();
 
             // =======================================================
@@ -282,37 +336,56 @@ public class ShiftService : IShiftService
             // =======================================================
             try
             {
-                // Solo pedimos lo necesario: id y name
-                var location = await _fhirClient.ReadAsync<Hl7.Fhir.Model.Location>(
+                var location = await _fhirClient.ReadAsync<FhirLocation>(
                     $"Location/{shift.LocationId}?_elements=id,name"
                 );
-
-                dto.NameLocation = location.Name; // FHIR: Location.Name
+                dto.NameLocation = location.Name;
             }
-            catch (FhirOperationException ex)
-                when (ex.Status == System.Net.HttpStatusCode.NotFound)
+            catch (FhirOperationException fhirEx)
+                when (fhirEx.Status == System.Net.HttpStatusCode.NotFound)
             {
-                // Si no existe en FHIR  devolvemos null
                 dto.NameLocation = null;
             }
+            catch (FhirOperationException fhirEx)
+            {
+                throw FhirExceptionMapper.Map(fhirEx, shift.LocationId, nameof(GetShiftByIdAsync));
+            }
 
-            return ResponseHelper.Success(
-                200,
-                "Turno obtenido exitosamente.",
-                dto
-            );
+            return dto;
+        }
+        catch (FhirOperationException fhirEx)
+        {
+            throw FhirExceptionMapper.Map(fhirEx, id.ToString(), nameof(GetShiftByIdAsync));
+        }
+        catch (DbUpdateException dbEx)
+        {
+            throw new ExternalServiceException("DB_GET_SHIFT_ERROR", 502, new Dictionary<string, object>
+            {
+                { "OriginalException", dbEx.Message },
+                { "Operation", nameof(GetShiftByIdAsync) },
+                { "ShiftId", id }
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (AppException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
-            return ResponseHelper.Fail<ShiftDto>(
-                500,
-                $"Error interno al obtener el turno: {ex.Message}"
-            );
+            throw new ExternalServiceException("INTERNAL_SHIFT_ERROR", 500, new Dictionary<string, object>
+            {
+                { "OriginalException", ex.Message },
+                { "Operation", nameof(GetShiftByIdAsync) },
+                { "ShiftId", id }
+            });
         }
     }
 
-
-    public async Task<ResponseDto<PagedResultDto<ShiftDto>>> GetFilteredShiftsAsync(ShiftFilterDto filter)
+    public async Task<PagedResultDto<ShiftDto>> GetFilteredShiftsAsync(ShiftFilterDto filter)
     {
         try
         {
@@ -327,7 +400,6 @@ public class ShiftService : IShiftService
             // =======================================================
             // 2. FILTROS BÁSICOS (SIGREF)
             // =======================================================
-
             if (filter.IsActive.HasValue)
                 query = query.Where(s => s.IsActive == filter.IsActive.Value);
 
@@ -335,8 +407,6 @@ public class ShiftService : IShiftService
             {
                 var name = filter.Name.Trim().ToUpper();
                 query = query.Where(s => s.Name.ToUpper().Contains(name));
-                // Si usa PostgreSQL y querés case-insensitive real:
-                // query = query.Where(s => EF.Functions.ILike(s.Name, $"%{filter.Name.Trim()}%"));
             }
 
             if (!string.IsNullOrWhiteSpace(filter.LocationId))
@@ -351,17 +421,24 @@ public class ShiftService : IShiftService
                     .Where($"name:contains={filter.LocationName}")
                     .Select("_elements=id,name");
 
-                var fhirResults = await _fhirClient.SearchAsync<FhirLocation>(searchParams);
+                Bundle fhirResults;
+                try
+                {
+                    fhirResults = await _fhirClient.SearchAsync<FhirLocation>(searchParams);
+                }
+                catch (FhirOperationException fhirEx)
+                {
+                    throw FhirExceptionMapper.Map(fhirEx, filter.LocationName, nameof(GetFilteredShiftsAsync));
+                }
 
                 var fhirLocationIds = fhirResults.Entry
                     .Where(e => e.Resource is FhirLocation)
                     .Select(e => ((FhirLocation)e.Resource).Id)
                     .ToList();
 
-
                 if (fhirLocationIds.Count == 0)
                 {
-                    return ResponseHelper.Success(200, "No hay resultados.", new PagedResultDto<ShiftDto>
+                    return new PagedResultDto<ShiftDto>
                     {
                         Items = new List<ShiftDto>(),
                         Pagination = new PaginationDto
@@ -371,17 +448,19 @@ public class ShiftService : IShiftService
                             TotalItems = 0,
                             TotalPages = 0
                         }
-                    });
+                    };
                 }
 
                 query = query.Where(s => fhirLocationIds.Contains(s.LocationId));
             }
 
             // =======================================================
-            // 4. TOTAL DE REGISTROS (DESPUÉS DE LOS FILTROS)
+            // 4. TOTAL DE REGISTROS
             // =======================================================
             int totalItems = await query.CountAsync();
-            int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+            int totalPages = totalItems > 0
+                ? (int)Math.Ceiling(totalItems / (double)pageSize)
+                : 0;
 
             // =======================================================
             // 5. OBTENER SHIFTS PAGINADOS
@@ -416,33 +495,29 @@ public class ShiftService : IShiftService
                         .Select(e => e.Resource as FhirLocation)
                         .Where(loc => loc != null)
                         .ToDictionary(
-                            loc => loc.Id,   // string key
-                            loc => loc.Name  // display name
+                            loc => loc!.Id,
+                            loc => loc!.Name
                         );
-
                 }
-                catch
+                catch (FhirOperationException fhirEx)
                 {
-                    // En caso de error con FHIR devolvemos NameLocation = null
+                    throw FhirExceptionMapper.Map(fhirEx, string.Join(",", shiftLocationIds), nameof(GetFilteredShiftsAsync));
                 }
             }
 
             // =======================================================
-            // MAPEAR SHIFTS A DTO RECUPERANDO NOMBRE DEL NOMBRE LOCACION
+            // MAPEAR SHIFTS A DTO
             // =======================================================
             var dtoList = shifts.Select(shift =>
             {
                 var dto = shift.ToDto();
-
-                if (locationNames.TryGetValue(shift.LocationId, out var locName))
-                    dto.NameLocation = locName;
-                else
-                    dto.NameLocation = null;
-
+                dto.NameLocation = locationNames.TryGetValue(shift.LocationId, out var locName)
+                    ? locName
+                    : null;
                 return dto;
             }).ToList();
 
-            var paged = new PagedResultDto<ShiftDto>
+            return new PagedResultDto<ShiftDto>
             {
                 Items = dtoList,
                 Pagination = new PaginationDto
@@ -450,16 +525,39 @@ public class ShiftService : IShiftService
                     CurrentPage = pageNumber,
                     PageSize = pageSize,
                     TotalItems = totalItems,
-                    TotalPages = totalPages
+                    TotalPages = totalPages,
+                    HasPrevious = pageNumber > 1,
+                    HasNext = pageNumber < totalPages
                 }
             };
-
-            return ResponseHelper.Success(200, "Listado de turnos obtenido.", paged);
+        }
+        catch (FhirOperationException fhirEx)
+        {
+            throw FhirExceptionMapper.Map(fhirEx, "ShiftFilter", nameof(GetFilteredShiftsAsync));
+        }
+        catch (DbUpdateException dbEx)
+        {
+            throw new ExternalServiceException("DB_FILTER_SHIFTS_ERROR", 502, new Dictionary<string, object>
+            {
+                { "OriginalException", dbEx.Message },
+                { "Operation", nameof(GetFilteredShiftsAsync) }
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (AppException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
-            return ResponseHelper.Fail<PagedResultDto<ShiftDto>>(500,
-                $"Error interno al obtener los turnos: {ex.Message}");
+            throw new ExternalServiceException("INTERNAL_SHIFT_ERROR", 500, new Dictionary<string, object>
+            {
+                { "OriginalException", ex.Message },
+                { "Operation", nameof(GetFilteredShiftsAsync) }
+            });
         }
     }
 }

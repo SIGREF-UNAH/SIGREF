@@ -27,9 +27,9 @@ import type {
   GetReportListHistoryParams,
   GetReportSummaryParams,
   ProblemDetails,
-  ReportDetailPageResponseDtoResponseDto,
+  ReportDetailPageResponseDto,
   ReportFilterDto,
-  ReportSummaryResponseDtoResponseDto,
+  ReportSummaryResponseDto,
 } from ".././models";
 
 import { customInstance } from ".././mutator/customInstance";
@@ -364,7 +364,7 @@ export const getReportDetail = (
   params?: GetReportDetailParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<ReportDetailPageResponseDtoResponseDto>({
+  return customInstance<ReportDetailPageResponseDto>({
     url: `/reports/Reports/detail`,
     method: "GET",
     params,
@@ -685,7 +685,7 @@ export const getReportSummary = (
   params?: GetReportSummaryParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<ReportSummaryResponseDtoResponseDto>({
+  return customInstance<ReportSummaryResponseDto>({
     url: `/reports/Reports/summary`,
     method: "GET",
     params,

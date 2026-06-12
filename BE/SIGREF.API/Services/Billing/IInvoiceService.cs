@@ -10,12 +10,12 @@ public interface IInvoiceService
     // ================================
     //      CREAR FACTURAS
     // ================================
-    Task<ResponseDto<InvoiceDetailDto>> CreateInvoiceAsync(InvoiceCreateDto dto);
+    Task<InvoiceDetailDto> CreateInvoiceAsync(InvoiceCreateDto dto);
 
     // ================================
     //      OBTENER FACTURAS
     // ================================
-    Task<ResponseDto<InvoiceDetailDto?>> GetInvoiceByIdAsync(
+    Task<InvoiceDetailDto> GetInvoiceByIdAsync(
         Guid id,
         GetInvoiceParameters parameters);
 
@@ -23,29 +23,29 @@ public interface IInvoiceService
     // ================================
     //      LISTAR FACTURAS
     // ================================
-    Task<ResponseDto<PagedResultDto<InvoiceGetDto>>> GetInvoicesAsync(InvoiceFilterDto filter);
+    Task<PagedResultDto<InvoiceGetDto>> GetInvoicesAsync(InvoiceFilterDto filter);
 
     // ================================
     //   ESTADO, PAGO Y CANCELACIÓN
     // ================================
-    Task<ResponseDto<InvoiceDetailDto>> CancelInvoiceAsync(Guid id);
-    Task<ResponseDto<InvoiceDetailDto>> MarkAsPaidAsync(Guid id, decimal amountPaid);
+    Task<InvoiceDetailDto> CancelInvoiceAsync(Guid id);
+    Task<InvoiceDetailDto> MarkAsPaidAsync(Guid id, decimal amountPaid);
 
     // ================================
     //     NOTAS DE CRÉDITO / DÉBITO
     // ================================
-    Task<ResponseDto<InvoiceDetailDto>> CreateNoteAsync(Guid parentInvoiceId, InvoiceCreateDto dto,InvoiceType noteType);
+    Task<InvoiceDetailDto> CreateNoteAsync(Guid parentInvoiceId, InvoiceCreateDto dto,InvoiceType noteType);
 
     /// <summary>
     /// Verifica si una factura tiene notas hijas.
     /// </summary>
-    Task<ResponseDto<List<MinimalInvoiceDto>>> HasChildNotesAsync(Guid invoiceId);
+    Task<List<MinimalInvoiceDto>> HasChildNotesAsync(Guid invoiceId);
 
     /// <summary>
     /// Recalcula totales de la factura PADRE tomando en cuenta notas hijas.
     /// (credit notes / debit notes)
     /// </summary>
-    Task<ResponseDto<bool>> RecalculateInvoiceTotalsAsync(Guid invoiceId);
+    Task RecalculateInvoiceTotalsAsync(Guid invoiceId);
 
     // ================================
     //   SUMMARY DE NOTAS (Ajustes)
@@ -53,6 +53,6 @@ public interface IInvoiceService
     /// <summary>
     /// Obtiene un resumen de notas de crédito/débito para una factura.
     /// </summary>
-    Task<ResponseDto<InvoiceNotesSummaryDto>> GetNotesSummaryAsync(Guid invoiceId);
+    Task<InvoiceNotesSummaryDto> GetNotesSummaryAsync(Guid invoiceId);
 }
 
