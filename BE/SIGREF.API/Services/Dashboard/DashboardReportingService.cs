@@ -515,7 +515,10 @@ public class DashboardReportingService : IDashboardReportingService
                 facts = facts.Where(f => f.ShiftId != null && filter.ShiftIds.Contains(f.ShiftId.Value));
 
             if (filter.ServiceId.HasValue)
-                facts = facts.Where(f => f.ServiceId == filter.ServiceId.Value);
+            {
+                var serviceId = filter.ServiceId.Value;
+                facts = facts.Where(f => f.ServiceId == serviceId);
+            }
 
             // ===============================
             // DEDUP POR INVOICE
