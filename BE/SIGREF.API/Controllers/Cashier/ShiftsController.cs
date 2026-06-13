@@ -28,12 +28,11 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
         Tags = new[] { "Shifts" }
     )]
     [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces(typeof(ResponseDto<PagedResultDto<ShiftDto>>))]
+    [ProducesResponseType(typeof(PagedResultDto<ShiftDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetFiltered([FromQuery] ShiftFilterDto filter)
     {
         var response = await shiftService.GetFilteredShiftsAsync(filter);
-        return StatusCode(response.StatusCode, response);
+        return Ok(response);
     }
 
     // ============================================================
@@ -47,12 +46,11 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
         Tags = new[] { "Shifts" }
     )]
     [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces(typeof(ResponseDto<ShiftDto>))]
+    [ProducesResponseType( typeof(ShiftDto) , StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById(Guid id)
     {
         var response = await shiftService.GetShiftByIdAsync(id);
-        return StatusCode(response.StatusCode, response);
+        return Ok(response);
     }
 
     // ============================================================
@@ -66,15 +64,12 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
         Tags = new[] { "Shifts" }
     )]
     [Authorize(Roles = $"{RolesConstants.admin}")]
-    [ProducesResponseType(StatusCodes.Status201Created)]
-    [Produces(typeof(ResponseDto<ShiftDto>))]
+    [ProducesResponseType(typeof(ShiftDto), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create([FromBody] CreateShiftDto dto)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
 
-        var response = await shiftService.CreateShiftAsync(dto);
-        return StatusCode(response.StatusCode, response);
+        var result = await shiftService.CreateShiftAsync(dto);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
     // ============================================================
@@ -88,15 +83,14 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
         Tags = new[] { "Shifts" }
     )]
     [Authorize(Roles = $"{RolesConstants.admin}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces(typeof(ResponseDto<ShiftDto>))]
+    [ProducesResponseType(typeof(ShiftDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateShiftDto dto)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
         var response = await shiftService.UpdateShiftAsync(id, dto);
-        return StatusCode(response.StatusCode, response);
+        return Ok(response);
     }
 
     // ============================================================
@@ -110,11 +104,10 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
         Tags = new[] { "Shifts" }
     )]
     [Authorize(Roles = $"{RolesConstants.admin}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces(typeof(ResponseDto<bool>))]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var response = await shiftService.DeleteShiftAsync(id);
-        return StatusCode(response.StatusCode, response);
+        await shiftService.DeleteShiftAsync(id);
+        return NoContent();
     }
 }

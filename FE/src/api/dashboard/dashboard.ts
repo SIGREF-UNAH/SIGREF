@@ -19,19 +19,19 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
-  DashboardSummaryDtoResponseDto,
+  DashboardSummaryDto,
   GetDashboardLocationIncomeParams,
   GetDashboardPackageUsageParams,
   GetDashboardServiceUsageParams,
   GetDashboardShiftIncomeParams,
   GetDashboardSummaryParams,
   GetDashboardWeeklyIncomeParams,
-  LocationIncomeDtoListResponseDto,
-  PackageUsageResultDtoResponseDto,
+  LocationIncomeDto,
+  PackageUsageResultDto,
   ProblemDetails,
-  ServiceUsageResultDtoResponseDto,
-  ShiftIncomeDtoListResponseDto,
-  WeeklyIncomeDtoListResponseDto,
+  ServiceUsageResultDto,
+  ShiftIncomeDto,
+  WeeklyIncomeDto,
 } from ".././models";
 
 import { customInstance } from ".././mutator/customInstance";
@@ -44,7 +44,7 @@ export const getDashboardLocationIncome = (
   params?: GetDashboardLocationIncomeParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<LocationIncomeDtoListResponseDto>({
+  return customInstance<LocationIncomeDto[]>({
     url: `/api/Dashboard/location-income`,
     method: "GET",
     params,
@@ -212,7 +212,7 @@ export const getDashboardPackageUsage = (
   params?: GetDashboardPackageUsageParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<PackageUsageResultDtoResponseDto>({
+  return customInstance<PackageUsageResultDto>({
     url: `/api/Dashboard/package-usage`,
     method: "GET",
     params,
@@ -374,7 +374,7 @@ export const getDashboardServiceUsage = (
   params?: GetDashboardServiceUsageParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<ServiceUsageResultDtoResponseDto>({
+  return customInstance<ServiceUsageResultDto>({
     url: `/api/Dashboard/service-usage`,
     method: "GET",
     params,
@@ -536,7 +536,7 @@ export const getDashboardShiftIncome = (
   params?: GetDashboardShiftIncomeParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<ShiftIncomeDtoListResponseDto>({
+  return customInstance<ShiftIncomeDto[]>({
     url: `/api/Dashboard/shift-income`,
     method: "GET",
     params,
@@ -698,7 +698,7 @@ export const getDashboardSummary = (
   params?: GetDashboardSummaryParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<DashboardSummaryDtoResponseDto>({
+  return customInstance<DashboardSummaryDto>({
     url: `/api/Dashboard/summary`,
     method: "GET",
     params,
@@ -860,7 +860,7 @@ export const getDashboardWeeklyIncome = (
   params?: GetDashboardWeeklyIncomeParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<WeeklyIncomeDtoListResponseDto>({
+  return customInstance<WeeklyIncomeDto[]>({
     url: `/api/Dashboard/weekly-income`,
     method: "GET",
     params,

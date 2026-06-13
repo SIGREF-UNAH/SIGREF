@@ -22,12 +22,11 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
-  BooleanResponseDto,
   CreateShiftDto,
   GetShiftListParams,
   ProblemDetails,
-  ShiftDtoPagedResultDtoResponseDto,
-  ShiftDtoResponseDto,
+  ShiftDto,
+  ShiftDtoPagedResultDto,
   UpdateShiftDto,
 } from ".././models";
 
@@ -38,10 +37,7 @@ import { customInstance } from ".././mutator/customInstance";
  * @summary Eliminar un turno
  */
 export const deleteShiftById = (id: string) => {
-  return customInstance<BooleanResponseDto>({
-    url: `/api/Shifts/${id}`,
-    method: "DELETE",
-  });
+  return customInstance<void>({ url: `/api/Shifts/${id}`, method: "DELETE" });
 };
 
 export const getDeleteShiftByIdMutationOptions = <
@@ -115,7 +111,7 @@ export const useDeleteShiftById = <TError = ProblemDetails, TContext = unknown>(
  * @summary Obtener un turno por su ID
  */
 export const getShiftById = (id: string, signal?: AbortSignal) => {
-  return customInstance<ShiftDtoResponseDto>({
+  return customInstance<ShiftDto>({
     url: `/api/Shifts/${id}`,
     method: "GET",
     signal,
@@ -255,7 +251,7 @@ export function useGetShiftById<
  * @summary Actualizar un turno existente
  */
 export const updateShiftById = (id: string, updateShiftDto: UpdateShiftDto) => {
-  return customInstance<ShiftDtoResponseDto>({
+  return customInstance<ShiftDto>({
     url: `/api/Shifts/${id}`,
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -337,7 +333,7 @@ export const getShiftList = (
   params?: GetShiftListParams,
   signal?: AbortSignal,
 ) => {
-  return customInstance<ShiftDtoPagedResultDtoResponseDto>({
+  return customInstance<ShiftDtoPagedResultDto>({
     url: `/api/Shifts`,
     method: "GET",
     params,
@@ -476,7 +472,7 @@ export const createShift = (
   createShiftDto: CreateShiftDto,
   signal?: AbortSignal,
 ) => {
-  return customInstance<ShiftDtoResponseDto | void>({
+  return customInstance<ShiftDto>({
     url: `/api/Shifts`,
     method: "POST",
     headers: { "Content-Type": "application/json" },

@@ -1,22 +1,19 @@
 using Microsoft.EntityFrameworkCore;
-using SIGREF.API.Database;
 using SIGREF.API.Dtos.Cashier;
-using SIGREF.API.Dtos.Common;
 using SIGREF.API.Extensions;
+using SIGREF.API.Middleware;
 using SIGREF.Common.Constants;
-using SIGREF.Common.Dtos;
+using SIGREF.Common.Exceptions;
 using SIGREF.Common.Types;
 using SIGREF.Core.Entity.Cashier;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
-using SIGREF.Infrastructure.Keycloak.Services.Auth;
-using SIGREF.Infrastructure.Keycloak.Services.Auth.Keycloak;
 using SIGREF.Infrastructure.Persistence;
+using Hl7.Fhir.Rest;
+using SIGREF.Common.Dtos;
 
 namespace SIGREF.API.Services.Cashier;
 
-
-// TODO : IMPLEMENTAR METODO DE VERIFICACION DE RECIBOS
-
+// TODO: IMPLEMENTAR METODO DE VERIFICACION DE RECIBOS
 public class CashierSessionService : ICashierSessionService
 {
     private readonly SIGREFContext _db;
@@ -25,412 +22,444 @@ public class CashierSessionService : ICashierSessionService
 
     public CashierSessionService(SIGREFContext db, IUserContextService userContext, IKeycloakAdminService keycloakClient)
     {
-        _userContext = userContext;
-        this._keycloakClient = keycloakClient;
         _db = db;
+        _userContext = userContext;
+        _keycloakClient = keycloakClient;
     }
 
-    public async Task<ResponseDto<CashierSessionMinimalDto>> OpenSessionAsync(CreateCashierSessionDto dto)
+    public async Task<CashierSessionMinimalDto> OpenSessionAsync(CreateCashierSessionDto dto)
     {
-        var userId = _userContext.GetUserId();
-        var activeSession = await _db.CashierSessions
-            .Where(x => x.UserId == userId && x.IsOpen)
-            .FirstOrDefaultAsync();
-
-        if (activeSession != null)
+        try
         {
-            return new ResponseDto<CashierSessionMinimalDto>
-            {
-                Status = false,
-                Message = "Session already opened.",
-                StatusCode = 400,
-                Data = activeSession.ToMinimalDto()
-            };
-        }
+            var userId = _userContext.GetUserId();
+            var activeSession = await _db.CashierSessions
+                .Where(x => x.UserId == userId && x.IsOpen)
+                .FirstOrDefaultAsync();
 
-        var session = new CashierSessionEntity
-        {
-            UserId = userId,
-            ShiftId = dto.ShiftId,
-            OpenAt = DateTime.UtcNow,
-            IsOpen = true,
-            SystemAmount = 0,
-            CreatedById = userId
-        };
-
-        _db.CashierSessions.Add(session);
-        await _db.SaveChangesAsync();
-
-        return new ResponseDto<CashierSessionMinimalDto>
-        {
-            Status = true,
-            Message = "Session opened successfully.",
-            StatusCode = 201,
-            Data = session.ToMinimalDto()
-        };
-    }
-
-    public async Task<ResponseDto<CashierSessionDto>> GetActiveSessionByUserAsync(Guid userId)
-    {
-        var activeSession = await _db.CashierSessions
-            .Where(x => x.UserId == userId && x.IsOpen)
-            .FirstOrDefaultAsync();
-        if (activeSession == null)
-        {
-            return new ResponseDto<CashierSessionDto>
-            {
-                Status = false,
-                Message = "No active cashier session found.",
-                StatusCode = 404,
-                Data = null
-            };
-        }
-
-        return new ResponseDto<CashierSessionDto>
-        {
-            Status = true,
-            Message = "Active cashier session found.",
-            StatusCode = 200,
-            Data = activeSession.ToDto()
-        };
-    }
-
-    public async Task<ResponseDto<CashierSessionDto>> CloseSessionAsync(Guid sessionId, CloseCashierSessionDto dto)
-    {
-        var userId = _userContext.GetUserId();
-        var session = await _db.CashierSessions
-            .FirstOrDefaultAsync(x => x.Id == sessionId);
-
-        if (session == null)
-        {
-            return new ResponseDto<CashierSessionDto>
-            {
-                Status = false,
-                Message = "Cashier session not found.",
-                StatusCode = 404,
-                Data = null
-            };
-        }
-
-        //Validar que esté abierta
-        if (!session.IsOpen)
-        {
-            return new ResponseDto<CashierSessionDto>
-            {
-                Status = false,
-                Message = "The session is already closed.",
-                StatusCode = 400,
-                Data = session.ToDto()
-            };
-        }
-
-        if (dto.DeclaredAmount < 0)
-        {
-            return new ResponseDto<CashierSessionDto>
-            {
-                Status = false,
-                Message = "El monto declarado no puede ser negativo.",
-                StatusCode = 400,
-                Data = session.ToDto()
-            };
-        }
-
-        // Calcular el monto real del sistema sumando las facturas pagadas de esta sesión
-        var systemAmount = await _db.Invoices
-            .Where(i => i.CashierSessionId == sessionId && i.Status == InvoiceStatus.Paid)
-            .SumAsync(i => (decimal?)i.FinalTotal) ?? 0;
-
-        // Validar que no se cierre con monto 0 si se espera recaudación (opcional pero recomendado)
-        if (systemAmount == 0)
-        {
-            // Verificar si existen facturas pero no están pagas o no están asociadas
-            var hasInvoices = await _db.Invoices
-                .AnyAsync(i => i.CashierSessionId == sessionId);
-                
-            if (hasInvoices)
-            {
-                return new ResponseDto<CashierSessionDto>
+            if (activeSession != null)
+                throw new ConflictException("CASHIER_SESSION_ALREADY_OPEN", new Dictionary<string, object>
                 {
-                    Status = false,
-                    Message = "Existen facturas asociadas pero el monto calculado es 0. Verifique el estado de las facturas.",
-                    StatusCode = 400,
-                    Data = session.ToDto()
-                };
+                    { "UserId", userId },
+                    { "ActiveSessionId", activeSession.Id }
+                });
+
+            var session = new CashierSessionEntity
+            {
+                UserId = userId,
+                ShiftId = dto.ShiftId,
+                OpenAt = DateTimeOffset.UtcNow,
+                IsOpen = true,
+                SystemAmount = 0,
+                CreatedById = userId,
+                CreatedDate = DateTimeOffset.UtcNow
+            };
+
+            _db.CashierSessions.Add(session);
+            await _db.SaveChangesAsync();
+
+            return session.ToMinimalDto();
+        }
+        catch (DbUpdateException dbEx)
+        {
+            throw new ExternalServiceException("DB_OPEN_SESSION_ERROR", 502, new Dictionary<string, object>
+            {
+                { "OriginalException", dbEx.Message },
+                { "Operation", nameof(OpenSessionAsync) }
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (AppException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new ExternalServiceException("INTERNAL_CASHIER_ERROR", 500, new Dictionary<string, object>
+            {
+                { "OriginalException", ex.Message },
+                { "Operation", nameof(OpenSessionAsync) }
+            });
+        }
+    }
+
+    public async Task<CashierSessionDto> GetActiveSessionByUserAsync(Guid userId)
+    {
+        try
+        {
+            var activeSession = await _db.CashierSessions
+                .Where(x => x.UserId == userId && x.IsOpen)
+                .FirstOrDefaultAsync();
+
+            if (activeSession == null)
+                throw new NotFoundException("CASHIER_NO_ACTIVE_SESSION", new Dictionary<string, object>
+                {
+                    { "UserId", userId }
+                });
+
+            return activeSession.ToDto();
+        }
+        catch (DbUpdateException dbEx)
+        {
+            throw new ExternalServiceException("DB_GET_SESSION_ERROR", 502, new Dictionary<string, object>
+            {
+                { "OriginalException", dbEx.Message },
+                { "Operation", nameof(GetActiveSessionByUserAsync) },
+                { "UserId", userId }
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (AppException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new ExternalServiceException("INTERNAL_CASHIER_ERROR", 500, new Dictionary<string, object>
+            {
+                { "OriginalException", ex.Message },
+                { "Operation", nameof(GetActiveSessionByUserAsync) },
+                { "UserId", userId }
+            });
+        }
+    }
+
+    // TODO : Verificar la sesion mandada con la sesion abierta son la misma
+    // TODO: Ver si es necesario mandar la session al cerrar , o si se puede hacer de una sola vez
+    public async Task<CashierSessionDto> CloseSessionAsync(Guid sessionId, CloseCashierSessionDto dto)
+    {
+        try
+        {
+            var userId = _userContext.GetUserId();
+            var session = await _db.CashierSessions
+                .FirstOrDefaultAsync(x => x.Id == sessionId);
+
+            if (session == null)
+                throw new NotFoundException("CASHIER_SESSION_NOT_FOUND", new Dictionary<string, object>
+                {
+                    { "SessionId", sessionId }
+                });
+
+            if (!session.IsOpen)
+                throw new BusinessRuleException("CASHIER_SESSION_ALREADY_CLOSED", new Dictionary<string, object>
+                {
+                    { "SessionId", sessionId }
+                });
+
+            if (dto.DeclaredAmount < 0)
+                throw new ValidationException("CASHIER_NEGATIVE_DECLARED_AMOUNT", new Dictionary<string, object>
+                {
+                    { "DeclaredAmount", dto.DeclaredAmount }
+                });
+
+            // Calcular el monto real del sistema
+            var systemAmount = await _db.Invoices
+                .Where(i => i.CashierSessionId == sessionId && i.Status == InvoiceStatus.Paid)
+                .SumAsync(i => (decimal?)i.FinalTotal) ?? 0;
+
+            // Validar monto 0 con facturas existentes
+            if (systemAmount == 0)
+            {
+                var hasInvoices = await _db.Invoices
+                    .AnyAsync(i => i.CashierSessionId == sessionId);
+
+                if (hasInvoices)
+                    throw new BusinessRuleException("CASHIER_ZERO_AMOUNT_WITH_INVOICES", new Dictionary<string, object>
+                    {
+                        { "SessionId", sessionId }
+                    });
             }
+
+            // Cálculo del cierre
+            session.DeclaredAmount = dto.DeclaredAmount;
+            session.SystemAmount = systemAmount;
+            session.Difference = dto.DeclaredAmount - systemAmount;
+            session.IsOpen = false;
+            session.ClosedAt = DateTimeOffset.UtcNow;
+            session.UpdatedById = userId;
+            session.UpdatedDate = DateTimeOffset.UtcNow;
+
+            bool isCorrect = session.Difference == 0;
+            session.RequiresCorrection = !isCorrect;
+
+            await _db.SaveChangesAsync();
+
+            var resultDto = session.ToDto();
+            resultDto.IsClosedCorrectly = isCorrect;
+
+            return resultDto;
         }
-
-        // cálculo del cierre
-        session.DeclaredAmount = dto.DeclaredAmount;
-        session.SystemAmount = systemAmount;
-        session.Difference = dto.DeclaredAmount - systemAmount;
-
-        // Marcar estado de la sesión
-        session.IsOpen = false;
-        session.ClosedAt = DateTime.UtcNow;
-        session.UpdatedById = userId;
-        session.UpdatedDate = DateTime.UtcNow;
-
-        // Calcular si quedó correcta o incorrecta
-        bool isCorrect = session.Difference == 0;
-        // Marcar si requiere corrección
-        session.RequiresCorrection = session.Difference != 0;
-
-        // Guardar cambios
-        await _db.SaveChangesAsync();
-
-        // Retornar DTO COMPLETO
-        var resultDto = session.ToDto();
-        resultDto.IsClosedCorrectly = isCorrect;
-
-        return new ResponseDto<CashierSessionDto>
+        catch (DbUpdateException dbEx)
         {
-            Status = true,
-            Message = "Cashier session closed successfully.",
-            StatusCode = 200,
-            Data = resultDto
-        };
+            throw new ExternalServiceException("DB_CLOSE_SESSION_ERROR", 502, new Dictionary<string, object>
+            {
+                { "OriginalException", dbEx.Message },
+                { "Operation", nameof(CloseSessionAsync) },
+                { "SessionId", sessionId }
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (AppException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new ExternalServiceException("INTERNAL_CASHIER_ERROR", 500, new Dictionary<string, object>
+            {
+                { "OriginalException", ex.Message },
+                { "Operation", nameof(CloseSessionAsync) },
+                { "SessionId", sessionId }
+            });
+        }
     }
 
-
-    public async Task<ResponseDto<CashierSessionDto>> RequestCorrectionAsync(Guid sessionId, RequestCorrectionDto dto)
+    public async Task<CashierSessionDto> RequestCorrectionAsync(Guid sessionId, RequestCorrectionDto dto)
     {
-        var userId = _userContext.GetUserId();
-        // Obtener la sesion de caja
-        var session = await _db.CashierSessions
-            .FirstOrDefaultAsync(x => x.Id == sessionId);
-
-        if (session == null)
+        try
         {
-            return new ResponseDto<CashierSessionDto>
-            {
-                Status = false,
-                Message = "Cashier session not found.",
-                StatusCode = 404,
-                Data = null
-            };
+            var userId = _userContext.GetUserId();
+            var session = await _db.CashierSessions
+                .FirstOrDefaultAsync(x => x.Id == sessionId);
+
+            if (session == null)
+                throw new NotFoundException("CASHIER_SESSION_NOT_FOUND", new Dictionary<string, object>
+                {
+                    { "SessionId", sessionId }
+                });
+
+            if (session.IsOpen)
+                throw new BusinessRuleException("CASHIER_SESSION_STILL_OPEN", new Dictionary<string, object>
+                {
+                    { "SessionId", sessionId }
+                });
+
+            if (session.Difference == 0 || session.Difference == null)
+                throw new BusinessRuleException("CASHIER_NO_CORRECTION_NEEDED", new Dictionary<string, object>
+                {
+                    { "SessionId", sessionId },
+                    { "Difference", session.Difference }
+                });
+
+            session.Notes = dto.Notes;
+            session.UpdatedById = userId;
+            session.UpdatedDate = DateTimeOffset.UtcNow;
+            session.RequiresCorrection = true;
+
+            await _db.SaveChangesAsync();
+
+            return session.ToDto();
         }
-
-        //Validar que este cerrada
-        if (session.IsOpen)
+        catch (DbUpdateException dbEx)
         {
-            return new ResponseDto<CashierSessionDto>
+            throw new ExternalServiceException("DB_CORRECTION_REQUEST_ERROR", 502, new Dictionary<string, object>
             {
-                Status = false,
-                Message = "Cannot request correction while the session is still open.",
-                StatusCode = 400,
-                Data = session.ToDto()
-            };
+                { "OriginalException", dbEx.Message },
+                { "Operation", nameof(RequestCorrectionAsync) },
+                { "SessionId", sessionId }
+            });
         }
-
-        // Validar que exista una diferencia
-        if (session.Difference == 0 || session.Difference == null)
+        catch (OperationCanceledException)
         {
-            return new ResponseDto<CashierSessionDto>
+            throw;
+        }
+        catch (AppException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new ExternalServiceException("INTERNAL_CASHIER_ERROR", 500, new Dictionary<string, object>
             {
-                Status = false,
-                Message = "The session does not require correction.",
-                StatusCode = 400,
-                Data = session.ToDto()
-            };
+                { "OriginalException", ex.Message },
+                { "Operation", nameof(RequestCorrectionAsync) },
+                { "SessionId", sessionId }
+            });
         }
-
-        // Actualizar notas y marcar que requiere correccion
-        session.Notes = dto.Notes;
-        session.UpdatedById = userId;
-        session.UpdatedDate = DateTime.UtcNow;
-        session.RequiresCorrection = true; // cuando se cierra, se cambia a true si no coincide pero aseguro de nuevo
-
-        // Guardar cambios
-        await _db.SaveChangesAsync();
-
-        // Retornar DTO completo
-        return new ResponseDto<CashierSessionDto>
-        {
-            Status = true,
-            Message = "Correction request updated successfully.",
-            StatusCode = 200,
-            Data = session.ToDto()
-        };
     }
 
-    public async Task<ResponseDto<CashierSessionDto>> ResolveCorrectionAsync(Guid sessionId, ResolveCorrectionDto dto)
+    public async Task<CashierSessionDto> ResolveCorrectionAsync(Guid sessionId, ResolveCorrectionDto dto)
     {
-        var userId = _userContext.GetUserId();
-        var session = await _db.CashierSessions
-            .FirstOrDefaultAsync(x => x.Id == sessionId);
-
-        if (session == null)
+        try
         {
-            return new ResponseDto<CashierSessionDto>
-            {
-                Status = false,
-                Message = "Cashier session not found.",
-                StatusCode = 404,
-                Data = null
-            };
+            var userId = _userContext.GetUserId();
+            var session = await _db.CashierSessions
+                .FirstOrDefaultAsync(x => x.Id == sessionId);
+
+            if (session == null)
+                throw new NotFoundException("CASHIER_SESSION_NOT_FOUND", new Dictionary<string, object>
+                {
+                    { "SessionId", sessionId }
+                });
+
+            if (session.IsOpen)
+                throw new BusinessRuleException("CASHIER_SESSION_STILL_OPEN", new Dictionary<string, object>
+                {
+                    { "SessionId", sessionId }
+                });
+
+            if (!string.IsNullOrWhiteSpace(dto.AdminNotes))
+                session.Notes = dto.AdminNotes;
+
+            var systemAmount = session.SystemAmount ?? 0;
+            var declared = session.DeclaredAmount ?? 0;
+
+            session.Difference = declared - systemAmount;
+            bool isCorrect = session.Difference == 0;
+            session.RequiresCorrection = !isCorrect;
+            session.UpdatedById = userId;
+            session.CorrectionDate = DateTimeOffset.UtcNow;
+
+            await _db.SaveChangesAsync();
+
+            return session.ToDto();
         }
-
-        // Validar que este cerrada
-        if (session.IsOpen)
+        catch (DbUpdateException dbEx)
         {
-            return new ResponseDto<CashierSessionDto>
+            throw new ExternalServiceException("DB_RESOLVE_CORRECTION_ERROR", 502, new Dictionary<string, object>
             {
-                Status = false,
-                Message = "Session must be closed before resolving correction.",
-                StatusCode = 400,
-                Data = session.ToDto()
-            };
+                { "OriginalException", dbEx.Message },
+                { "Operation", nameof(ResolveCorrectionAsync) },
+                { "SessionId", sessionId }
+            });
         }
-
-        // Validar que realmente requería corrección
-        //if (session.Difference == 0 || session.Difference == null || session.RequiresCorrection == false)
-        //{
-        //    return new ResponseDto<CashierSessionDto>
-        //    {
-        //        Status = false,
-        //        Message = "This session does not require correction.",
-        //        StatusCode = 400,
-        //        Data = session.ToDto()
-        //    };
-        //}
-
-        // Actualizar notas (si vienen)
-        if (!string.IsNullOrWhiteSpace(dto.AdminNotes))
-            session.Notes = dto.AdminNotes;
-
-        var systemAmount = session.SystemAmount ?? 0;
-        var declared = session.DeclaredAmount ?? 0;
-
-        session.Difference = declared - systemAmount;
-        bool isCorrect = session.Difference == 0;
-        session.RequiresCorrection = !isCorrect;
-        session.UpdatedById = userId;
-        session.CorrectionDate = DateTime.UtcNow;
-        await _db.SaveChangesAsync();
-
-        return new ResponseDto<CashierSessionDto>
+        catch (OperationCanceledException)
         {
-            Status = true,
-            Message = "Correction resolved successfully.",
-            StatusCode = 200,
-            Data = session.ToDto()
-        };
+            throw;
+        }
+        catch (AppException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new ExternalServiceException("INTERNAL_CASHIER_ERROR", 500, new Dictionary<string, object>
+            {
+                { "OriginalException", ex.Message },
+                { "Operation", nameof(ResolveCorrectionAsync) },
+                { "SessionId", sessionId }
+            });
+        }
     }
 
-    public async Task<ResponseDto<PagedResultDto<CashierSessionDto>>> GetFilteredSessionsAsync(CashierSessionFilterDto filter)
+    public async Task<PagedResultDto<CashierSessionDto>> GetFilteredSessionsAsync(CashierSessionFilterDto filter)
     {
-        // Paginacion
-        int pageNumber = filter.PageNumber <= 0 ? 1 : filter.PageNumber;
-        int pageSize = filter.PageSize <= 0 ? 10 : Math.Clamp(filter.PageSize, 1, 50);
-        pageNumber = Math.Clamp(pageNumber, 1, int.MaxValue);
-
-        // Obtener usuario y roles
-        var userId = _userContext.GetUserId();
-        var roles = _userContext.GetUserRoles();
-        bool isAdmin = roles.Contains(RolesConstants.admin);
-        bool isAuditor = roles.Contains(RolesConstants.auditor);
-        bool canViewAll = isAdmin || isAuditor;
-
-        // Query base
-        var query = _db.CashierSessions.AsQueryable().AsNoTracking();
-
-        // Rol: solo Admin/Auditor pueden ver todo
-        if (!canViewAll)
-            query = query.Where(x => x.UserId == userId);
-
-        // Filtro: IsOpen
-        if (filter.IsOpen.HasValue)
-            query = query.Where(x => x.IsOpen == filter.IsOpen.Value);
-
-        // Filtro: IsClosedCorrectly (Difference == 0)
-        if (filter.IsClosedCorrectly.HasValue)
+        try
         {
-            if (filter.IsClosedCorrectly.Value)
+            // Paginación
+            int pageNumber = filter.PageNumber <= 0 ? 1 : filter.PageNumber;
+            int pageSize = filter.PageSize <= 0 ? 10 : Math.Clamp(filter.PageSize, 1, 50);
+            pageNumber = Math.Clamp(pageNumber, 1, int.MaxValue);
+
+            // Obtener usuario y roles
+            var userId = _userContext.GetUserId();
+            var roles = _userContext.GetUserRoles();
+            bool isAdmin = roles.Contains(RolesConstants.admin);
+            bool isAuditor = roles.Contains(RolesConstants.auditor);
+            bool canViewAll = isAdmin || isAuditor;
+
+            // Query base
+            var query = _db.CashierSessions.AsNoTracking().AsQueryable();
+
+            // Rol: solo Admin/Auditor pueden ver todo
+            if (!canViewAll)
+                query = query.Where(x => x.UserId == userId);
+
+            // Filtro: IsOpen
+            // Filtro: IsOpen
+            if (filter.IsOpen == true)
+                query = query.Where(x => x.IsOpen);
+            else if (filter.IsOpen == false)
+                query = query.Where(x => !x.IsOpen);
+
+            // Filtro: IsClosedCorrectly (Difference == 0)
+            if (filter.IsClosedCorrectly == true)
                 query = query.Where(x => x.Difference == 0);
-            else
+            else if (filter.IsClosedCorrectly == false)
                 query = query.Where(x => x.Difference != 0);
-        }
 
-        // Filtro: fechas
-        if (filter.FromDate.HasValue)
-            query = query.Where(x => x.OpenAt >= filter.FromDate.Value);
+            // Filtro: fechas (DateTimeOffset)
+            // Filtro: fechas (DateTimeOffset)
+            if (filter.FromDate is { } fromDate)
+                query = query.Where(x => x.OpenAt >= fromDate);
 
-        if (filter.ToDate.HasValue)
-            query = query.Where(x => x.OpenAt <= filter.ToDate.Value);
+            if (filter.ToDate is { } toDate)
+                query = query.Where(x => x.OpenAt <= toDate);
+            
 
-        // Filtro: turno
-        if (filter.ShiftId.HasValue)
-            query = query.Where(x => x.ShiftId == filter.ShiftId.Value);
+            // Filtro: turno
+            if (filter.ShiftId is { } shiftId)
+                query = query.Where(x => x.ShiftId == shiftId);
+            // Contar total
+            int totalItems = await query.CountAsync();
+            int totalPages = totalItems > 0
+                ? (int)Math.Ceiling(totalItems / (double)pageSize)
+                : 0;
 
-        // Contar total
-        int totalItems = await query.CountAsync();
+            // Paginación
+            int skip = (pageNumber - 1) * pageSize;
 
-        // Paginacion
-        int skip = (pageNumber - 1) * pageSize;
+            // Mapeo directo en la BD
+            var sessionDtos = await query
+                .OrderByDescending(x => x.OpenAt)
+                .Skip(skip)
+                .Take(pageSize)
+                .Select(x => new CashierSessionDto
+                {
+                    Id = x.Id,
+                    UserId = x.UserId,
+                    ShiftId = x.ShiftId,
+                    OpenAt = x.OpenAt,
+                    ClosedAt = x.ClosedAt,
+                    DeclaredAmount = x.DeclaredAmount,
+                    SystemAmount = x.SystemAmount,
+                    Difference = x.Difference,
+                    IsOpen = x.IsOpen,
+                    IsClosedCorrectly = (x.Difference == 0 || x.Difference == null),
+                    Notes = x.Notes,
+                    CorrectionClosure = x.CorrectionDate
+                })
+                .ToListAsync();
 
-        // Mapeo directo en la BD para no cargar en Memoeeria
-        var sessionDtos = await query
-            .OrderByDescending(x => x.OpenAt)
-            .Skip(skip)
-            .Take(pageSize)
-            .Select(x => new CashierSessionDto
-            {
-                Id = x.Id,
-                UserId = x.UserId,
-                ShiftId = x.ShiftId,
-                OpenAt = x.OpenAt,
-                ClosedAt = x.ClosedAt,
-                DeclaredAmount = x.DeclaredAmount,
-                SystemAmount = x.SystemAmount,
-                Difference = x.Difference,
-                IsOpen = x.IsOpen,
-                IsClosedCorrectly = (x.Difference == 0 || x.Difference == null),
-                Notes = x.Notes,
-                CorrectionClosure = x.CorrectionDate
-            })
-            .ToListAsync();
+            // ============= Nombres de usuario desde Keycloak ===============
+            var uniqueUserIds = sessionDtos
+                .Select(s => s.UserId)
+                .Distinct()
+                .ToList();
 
-        // ============= Nombres de usuario desde Keycloak ===============
+            var userNameTasks = uniqueUserIds.ToDictionary(
+                id => id,
+                id => _keycloakClient.GetUserByIdAsync(id.ToString(), CancellationToken.None)
+            );
 
-        var uniqueUserIds = sessionDtos
-            .Select(s => s.UserId)
-            .Where(id => !string.IsNullOrWhiteSpace(id.ToString()))
-            .Distinct()
-            .ToList();
+            await Task.WhenAll(userNameTasks.Values);
 
-        var userNameTasks = uniqueUserIds.ToDictionary(
-            id => id,
-            id => _keycloakClient.GetUserByIdAsync(id.ToString(), CancellationToken.None)
-        );
+            var userNameMap = userNameTasks.ToDictionary(
+                kvp => kvp.Key,
+                kvp =>
+                {
+                    var kcUser = kvp.Value.Result;
+                    if (kcUser is null) return null;
 
-        await Task.WhenAll(userNameTasks.Values);
+                    if (!string.IsNullOrWhiteSpace(kcUser.DisplayName))
+                        return kcUser.DisplayName;
 
-        // Construir diccionario userId -> username para lookup O(1)
-        var userNameMap = userNameTasks.ToDictionary(
-            kvp => kvp.Key,
-            kvp =>
-            {
-                var kcUser = kvp.Value.Result;
-                if (kcUser is null) return null;
+                    return kcUser.Username;
+                }
+            );
 
-                // Prioridad: DisplayName (atributo custom) → Username
-                if (!string.IsNullOrWhiteSpace(kcUser.DisplayName))
-                    return kcUser.DisplayName;
+            foreach (var session in sessionDtos)
+                session.UserName = userNameMap.GetValueOrDefault(session.UserId);
 
-                return kcUser.Username;
-            }
-        );
-
-        foreach (var session in sessionDtos)
-            session.UserName = userNameMap.GetValueOrDefault(session.UserId);
-
-        // Respuesta final
-        return new ResponseDto<PagedResultDto<CashierSessionDto>>
-        {
-            Status = true,
-            Message = "Cashier sessions retrieved successfully.",
-            StatusCode = 200,
-            Data = new PagedResultDto<CashierSessionDto>
+            return new PagedResultDto<CashierSessionDto>
             {
                 Items = sessionDtos,
                 Pagination = new PaginationDto
@@ -438,77 +467,109 @@ public class CashierSessionService : ICashierSessionService
                     CurrentPage = pageNumber,
                     PageSize = pageSize,
                     TotalItems = totalItems,
-                    TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize),
+                    TotalPages = totalPages,
                     HasPrevious = pageNumber > 1,
-                    HasNext = pageNumber < (int)Math.Ceiling(totalItems / (double)pageSize)
+                    HasNext = pageNumber < totalPages
                 }
-            }
-        };
-    }
-
-    public async Task<ResponseDto<CashierSessionDto>> GetByIdAsync(Guid sessionId)
-    {
-        var userId = _userContext.GetUserId();
-        var roles = _userContext.GetUserRoles();
-
-        bool isAdmin = roles.Contains(RolesConstants.admin);
-        bool isAuditor = roles.Contains(RolesConstants.auditor);
-        bool canViewAll = isAdmin || isAuditor;
-
-        // peticion entity a DTO directamente desde la BD
-        var sessionDto = await _db.CashierSessions
-            .Where(x => x.Id == sessionId)
-            .Select(x => new CashierSessionDto
-            {
-                Id = x.Id,
-                UserId = x.UserId,
-                ShiftId = x.ShiftId,
-                OpenAt = x.OpenAt,
-                ClosedAt = x.ClosedAt,
-                DeclaredAmount = x.DeclaredAmount,
-                SystemAmount = x.SystemAmount,
-                Difference = x.Difference,
-                IsOpen = x.IsOpen,
-                IsClosedCorrectly = (x.Difference == 0 || x.Difference == null),
-                Notes = x.Notes,
-                CorrectionClosure = x.CorrectionDate
-            })
-            .FirstOrDefaultAsync();
-
-        // No existe
-        if (sessionDto == null)
-        {
-            return new ResponseDto<CashierSessionDto>
-            {
-                Status = false,
-                Message = "Cashier session not found.",
-                StatusCode = 404,
-                Data = null
             };
         }
-        
-        if (!canViewAll)
+        catch (DbUpdateException dbEx)
         {
-            // Cajero solo sus propias sesiones
-            if (sessionDto.UserId != userId)
+            throw new ExternalServiceException("DB_FILTER_SESSIONS_ERROR", 502, new Dictionary<string, object>
             {
-                return new ResponseDto<CashierSessionDto>
-                {
-                    Status = false,
-                    Message = "You do not have permission to view this session.",
-                    StatusCode = 403,
-                    Data = null
-                };
-            }
+                { "OriginalException", dbEx.Message },
+                { "Operation", nameof(GetFilteredSessionsAsync) }
+            });
         }
-        
-        return new ResponseDto<CashierSessionDto>
+        catch (OperationCanceledException)
         {
-            Status = true,
-            Message = "Cashier session retrieved successfully.",
-            StatusCode = 200,
-            Data = sessionDto
-        };
+            throw;
+        }
+        catch (AppException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new ExternalServiceException("INTERNAL_CASHIER_ERROR", 500, new Dictionary<string, object>
+            {
+                { "OriginalException", ex.Message },
+                { "Operation", nameof(GetFilteredSessionsAsync) }
+            });
+        }
     }
 
+    public async Task<CashierSessionDto> GetByIdAsync(Guid sessionId)
+    {
+        try
+        {
+            var userId = _userContext.GetUserId();
+            var roles = _userContext.GetUserRoles();
+
+            bool isAdmin = roles.Contains(RolesConstants.admin);
+            bool isAuditor = roles.Contains(RolesConstants.auditor);
+            bool canViewAll = isAdmin || isAuditor;
+
+            var sessionDto = await _db.CashierSessions
+                .Where(x => x.Id == sessionId)
+                .Select(x => new CashierSessionDto
+                {
+                    Id = x.Id,
+                    UserId = x.UserId,
+                    ShiftId = x.ShiftId,
+                    OpenAt = x.OpenAt,
+                    ClosedAt = x.ClosedAt,
+                    DeclaredAmount = x.DeclaredAmount,
+                    SystemAmount = x.SystemAmount,
+                    Difference = x.Difference,
+                    IsOpen = x.IsOpen,
+                    IsClosedCorrectly = (x.Difference == 0 || x.Difference == null),
+                    Notes = x.Notes,
+                    CorrectionClosure = x.CorrectionDate
+                })
+                .FirstOrDefaultAsync();
+
+            if (sessionDto == null)
+                throw new NotFoundException("CASHIER_SESSION_NOT_FOUND", new Dictionary<string, object>
+                {
+                    { "SessionId", sessionId }
+                });
+
+            if (!canViewAll && sessionDto.UserId != userId)
+                throw new ForbiddenException("CASHIER_SESSION_ACCESS_DENIED", new Dictionary<string, object>
+                {
+                    { "SessionId", sessionId },
+                    { "RequestedBy", userId },
+                    { "SessionOwner", sessionDto.UserId }
+                });
+
+            return sessionDto;
+        }
+        catch (DbUpdateException dbEx)
+        {
+            throw new ExternalServiceException("DB_GET_SESSION_ERROR", 502, new Dictionary<string, object>
+            {
+                { "OriginalException", dbEx.Message },
+                { "Operation", nameof(GetByIdAsync) },
+                { "SessionId", sessionId }
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (AppException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new ExternalServiceException("INTERNAL_CASHIER_ERROR", 500, new Dictionary<string, object>
+            {
+                { "OriginalException", ex.Message },
+                { "Operation", nameof(GetByIdAsync) },
+                { "SessionId", sessionId }
+            });
+        }
+    }
 }

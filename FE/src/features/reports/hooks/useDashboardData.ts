@@ -71,12 +71,12 @@ export function useDashboardData(
     if (isLoading || error) return {};
 
     return {
-      totalIncome: qSummary.data?.data?.totalIncome ?? 0,
-      totalServices: qSummary.data?.data?.totalServices ?? 0,
-      totalPatients: qSummary.data?.data?.totalPatients ?? 0,
-      totalCashierClosuresWithErrors: qSummary.data?.data?.totalCashierClosuresWithErrors ?? 0,
+      totalIncome: qSummary.data?.totalIncome ?? 0,
+      totalServices: qSummary.data?.totalServices ?? 0,
+      totalPatients: qSummary.data?.totalPatients ?? 0,
+      totalCashierClosuresWithErrors: qSummary.data?.totalCashierClosuresWithErrors ?? 0,
 
-      serviciosMasSolicitados: (qServices.data?.data?.topUsed ?? []).map(
+      serviciosMasSolicitados: (qServices.data?.topUsed ?? []).map(
         (item) => ({
           serviceId: item.serviceId,
           fhirServiceId: item.fhirServiceId,
@@ -87,7 +87,7 @@ export function useDashboardData(
         }),
       ),
 
-      serviciosMenosSolicitados: (qServices.data?.data?.bottomUsed ?? []).map(
+      serviciosMenosSolicitados: (qServices.data?.bottomUsed ?? []).map(
         (item) => ({
           serviceId: item.serviceId,
           fhirServiceId: item.fhirServiceId,
@@ -98,7 +98,7 @@ export function useDashboardData(
         }),
       ),
 
-      paquetesMasUtilizados: (qPackages.data?.data?.top5 ?? []).map((p) => ({
+      paquetesMasUtilizados: (qPackages.data?.top5 ?? []).map((p) => ({
         fhirPackageId: p.fhirPackageId,
         packageName: p.packageName || "Sin nombre",
         count: p.count ?? 0,
@@ -107,7 +107,7 @@ export function useDashboardData(
       })),
 
       paquetesMenosUtilizados: (() => {
-        const others = qPackages.data?.data?.others;
+        const others = qPackages.data?.others;
         if (!others) return [];
 
         return [
@@ -121,7 +121,7 @@ export function useDashboardData(
         ];
       })(),
 
-      ingresosDiarios: (qWeekly.data?.data ?? []).map((w) => ({
+      ingresosDiarios: (qWeekly.data ?? []).map((w) => ({
         weekStart: w.weekStart,
         weekEnd: w.weekEnd,
         totalIncome: w.totalIncome ?? 0,
@@ -130,7 +130,7 @@ export function useDashboardData(
 
       // MODIFICADO: Ahora retorna array para el gráfico comparativo
       totalIngresosSemanalMensual: (() => {
-        const data = qWeekly.data?.data ?? [];
+        const data = qWeekly.data ?? [];
         if (data.length === 0) return [];
 
         // Para período semanal: mostrar por día de la semana
@@ -171,14 +171,14 @@ export function useDashboardData(
         return [];
       })(),
 
-      ingresosPorModulo: (qLocations.data?.data ?? []).map((loc) => ({
+      ingresosPorModulo: (qLocations.data ?? []).map((loc) => ({
         locationId: loc.locationId,
         locationName: loc.locationName || "Ubicación",
         totalIncome: loc.totalIncome ?? 0,
         totalInvoices: loc.totalInvoices ?? 0,
       })),
 
-      ingresosPorTurno: (qShifts.data?.data ?? []).map((s) => ({
+      ingresosPorTurno: (qShifts.data ?? []).map((s) => ({
         shiftId: s.shiftId,
         shiftName: s.shiftName || "Turno",
         locationId: s.locationId,

@@ -37,12 +37,11 @@ public class MediaFilesController : ControllerBase
         Tags = new[] { "MediaFiles" }
     )]
     [Consumes("multipart/form-data")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces<MediaFileDto>()]
+    [ProducesResponseType(typeof(MediaFileDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> Upload([FromForm] UploadMediaFileDto dto)
     {
         var result = await _mediaService.UploadAsync(dto);
-        return StatusCode(result.StatusCode, result);
+        return Ok(result);
     }
 
     // ============================================================
@@ -56,12 +55,11 @@ public class MediaFilesController : ControllerBase
         Tags = new[] { "MediaFiles" }
     )]
     [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor},{RolesConstants.ti}")] // Para que clientes y FE puedan cargar logos
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces<MediaFileDto>()]
+    [ProducesResponseType(typeof(MediaFileDto) ,StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById(Guid id)
     {
         var result = await _mediaService.GetByIdAsync(id);
-        return StatusCode(result.StatusCode, result);
+        return Ok(result);
     }
 
     // ============================================================
@@ -74,16 +72,13 @@ public class MediaFilesController : ControllerBase
         Description = "NA",
         Tags = new[] { "MediaFiles" }
     )]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [Authorize(Roles = $"{RolesConstants.ti}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var ok = await _mediaService.DeleteAsync(id);
+         await _mediaService.DeleteAsync(id);
 
-        if (!ok)
-            return NotFound(new { message = "Archivo no encontrado." });
-
-        return Ok(new { message = "Archivo eliminado correctamente." });
+         return NoContent();
     }
 
     // ============================================================
@@ -96,16 +91,14 @@ public class MediaFilesController : ControllerBase
         Description = "NA",
         Tags = new[] { "MediaFiles" }
     )]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(MediaFileDto) , StatusCodes.Status204NoContent)]
     [Authorize(Roles = $"{RolesConstants.ti}")]
-    [Produces<MediaFileDto>()]
-    
     public async Task<IActionResult> SetHospitalMedia(
         Guid mediaId,
         [FromQuery] MediaFileType type)
     {
-        var result = await _mediaService.SetHospitalMediaAsync(mediaId, type);
-        return StatusCode(result.StatusCode, result);
+        await _mediaService.SetHospitalMediaAsync(mediaId, type);
+        return NoContent();
     }
 
     // ============================================================
@@ -118,12 +111,11 @@ public class MediaFilesController : ControllerBase
         Description = "NA",
         Tags = new[] { "MediaFiles" }
     )]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces<MediaFileDto>()]
+    [ProducesResponseType(typeof(MediaFileDto), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.ti}")]
     public async Task<IActionResult> GetPaged([FromQuery] MediaFileFilterDto filter)
     {
         var result = await _mediaService.GetPagedAsync(filter);
-        return StatusCode(result.StatusCode, result);
+        return Ok(result);
     }
 }

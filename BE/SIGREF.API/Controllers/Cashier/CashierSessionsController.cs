@@ -2,12 +2,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos.Cashier;
-using SIGREF.API.Dtos.Common;
 using SIGREF.API.Services.Cashier;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
 using Swashbuckle.AspNetCore.Annotations;
-
 namespace SIGREF.API.Controllers.Cashier;
 
 [Route("api/[controller]")]
@@ -36,12 +34,11 @@ public class CashierSessionsController : ControllerBase
         Tags = new[] { "CashierSessions" }
     )]
     [Authorize(Roles = $"{RolesConstants.cashier}")]
-    [ProducesResponseType(StatusCodes.Status201Created)]
-    [Produces(typeof(ResponseDto<CashierSessionMinimalDto>))]
+    [ProducesResponseType( typeof(CashierSessionMinimalDto), StatusCodes.Status201Created)]
     public async Task<IActionResult> OpenSession([FromBody] CreateCashierSessionDto dto)
     {
         var result = await _cashierSessionService.OpenSessionAsync(dto);
-        return StatusCode(result.StatusCode, result);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
     // ============================================================
@@ -55,14 +52,13 @@ public class CashierSessionsController : ControllerBase
         Tags = new[] { "CashierSessions" }
     )]
     [Authorize(Roles = $"{RolesConstants.cashier}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces(typeof(ResponseDto<CashierSessionDto>))]
+    [ProducesResponseType(typeof(CashierSessionDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> CloseSession(
         Guid sessionId,
         [FromBody] CloseCashierSessionDto dto)
     {
         var result = await _cashierSessionService.CloseSessionAsync(sessionId, dto);
-        return StatusCode(result.StatusCode, result);
+        return Ok(result);
     }
 
     // ============================================================
@@ -76,14 +72,13 @@ public class CashierSessionsController : ControllerBase
         Tags = new[] { "CashierSessions" }
     )]
     [Authorize(Roles = $"{RolesConstants.cashier}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces(typeof(ResponseDto<CashierSessionDto>))]
+    [ProducesResponseType( typeof(CashierSessionDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> RequestCorrection(
         Guid sessionId,
         [FromBody] RequestCorrectionDto dto)
     {
         var result = await _cashierSessionService.RequestCorrectionAsync(sessionId, dto);
-        return StatusCode(result.StatusCode, result);
+        return Ok(result);
     }
 
     // ============================================================
@@ -96,15 +91,14 @@ public class CashierSessionsController : ControllerBase
         Description = "Permite a un administrador o auditor evaluar y resolver una solicitud de corrección emitida por un cajero.",
         Tags = new[] { "CashierSessions" }
     )]
-    [Authorize(Roles = $"{RolesConstants.admin},{RolesConstants.auditor}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces(typeof(ResponseDto<CashierSessionDto>))]
+    [Authorize(Roles = $"{RolesConstants.admin}")]
+    [ProducesResponseType(typeof(CashierSessionDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> ResolveCorrection(
         Guid sessionId,
         [FromBody] ResolveCorrectionDto dto)
     {
         var result = await _cashierSessionService.ResolveCorrectionAsync(sessionId, dto);
-        return StatusCode(result.StatusCode, result);
+        return Ok(result);
     }
 
     // ============================================================
@@ -118,12 +112,11 @@ public class CashierSessionsController : ControllerBase
         Tags = new[] { "CashierSessions" }
     )]
     [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces(typeof(ResponseDto<PagedResultDto<CashierSessionDto>>))]
+    [ProducesResponseType( typeof(PagedResultDto<CashierSessionDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetFiltered([FromQuery] CashierSessionFilterDto filter)
     {
         var result = await _cashierSessionService.GetFilteredSessionsAsync(filter);
-        return StatusCode(result.StatusCode, result);
+        return Ok(result);
     }
 
     // ============================================================
@@ -137,11 +130,10 @@ public class CashierSessionsController : ControllerBase
         Tags = new[] { "CashierSessions" }
     )]
     [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [Produces(typeof(ResponseDto<CashierSessionDto?>))]
+    [ProducesResponseType( typeof(CashierSessionDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById(Guid sessionId)
     {
         var result = await _cashierSessionService.GetByIdAsync(sessionId);
-        return StatusCode(result.StatusCode, result);
+        return Ok(result);
     }
 }

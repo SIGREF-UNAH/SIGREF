@@ -10,7 +10,7 @@ public interface IReportQueryService
     /// Obtiene el resumen del reporte (totales y conteos).
     /// Respuesta liviana, pensada para carga rápida en UI.
     /// </summary>
-    Task<ResponseDto<ReportSummaryResponseDto>> GetReportSummaryAsync(
+    Task<ReportSummaryResponseDto> GetReportSummaryAsync(
         ReportFilterDto filter);
 
     /// <summary>
@@ -18,6 +18,6 @@ public interface IReportQueryService
     /// Diseñado para tablas en UI (no devuelve miles de filas).
     /// Si necesita USAR miles de filas UTILIZAR EL EXPORT MEDIANTE LOS JOBS
     /// </summary>
-    Task<ResponseDto<ReportDetailPageResponseDto>> GetReportDetailPageAsync(
+    Task<ReportDetailPageResponseDto> GetReportDetailPageAsync(
         ReportFilterDto filter);
 }

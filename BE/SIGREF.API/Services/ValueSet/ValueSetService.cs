@@ -25,7 +25,6 @@ public class ValueSetService : IValueSetService
 
         // FHIR usa offset (0-based), nosotros recibimos page (1-based)
         int offset = (page - 1) * pageSize;
-        var inputParams = new Parameters();
         var expandUrl = $"ValueSet/$expand?url={canonicalUrl}&offset={offset}&count={pageSize}";
         var fullUri = new Uri(new Uri(_client.Endpoint.ToString()), expandUrl);
         Console.WriteLine($"[FHIR REQUEST]: {fullUri}");
