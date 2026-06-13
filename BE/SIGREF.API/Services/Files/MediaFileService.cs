@@ -93,8 +93,11 @@ public class MediaFileService : IMediaFileService
             var basePath = Path.Combine(_env.ContentRootPath, "media", systemFolder);
             if (!Directory.Exists(basePath))
                 Directory.CreateDirectory(basePath);
-
-            var finalPhysicalPath = Path.Combine(basePath, finalFileName);
+            
+            // Aseguramos que solo se tome el nombre del archivo, previniendo Path Traversal
+            var safeFinalFileName = Path.GetFileName(finalFileName);
+            var finalPhysicalPath = Path.Combine(basePath, safeFinalFileName);
+            // ===============================================
 
             try
             {

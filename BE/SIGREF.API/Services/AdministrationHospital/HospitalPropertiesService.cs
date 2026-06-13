@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿#nullable enable
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using SIGREF.API.Dtos.Administration;
 using SIGREF.API.Extensions;
@@ -95,9 +96,9 @@ public class HospitalPropertiesService : IHospitalPropertiesService
         {
             throw;
         }
-        catch (AppException)
+        catch (FhirOperationException fhirEx)
         {
-            throw;
+            throw FhirExceptionMapper.Map(fhirEx, null, nameof(GetAllDetailsAsync));
         }
         catch (Exception ex)
         {
@@ -297,11 +298,8 @@ public class HospitalPropertiesService : IHospitalPropertiesService
     /// </summary>
     private async Task<HospitalPropertiesEntity> GetCachedHospitalAsync()
     {
-        if (_cache.TryGetValue(CACHE_KEY_HOSPITAL, out HospitalPropertiesEntity? cached))
-        {
-            if (cached != null)
-                return cached;
-        }
+        if (_cache.TryGetValue(CACHE_KEY_HOSPITAL, out HospitalPropertiesEntity? cached) && cached != null)
+            return cached;
 
         var hospital = await _context.HospitalProperties
             .AsNoTracking()
