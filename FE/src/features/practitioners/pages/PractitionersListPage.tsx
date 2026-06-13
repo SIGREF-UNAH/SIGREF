@@ -19,11 +19,14 @@ type Practitioner = {
 };
 
 export const PractitionersListPage = () => {
-  const { data, isLoading } = useGetPractitionerList<{ items: Practitioner[]; }>();
+  const { data, isLoading } = useGetPractitionerList<{
+    items: Practitioner[];
+    pagination: { totalItems: number };
+  }>();
   const practitioners = data?.items ?? [];
-  const totalPractitioners = practitioners.length;
+  const totalPractitioners = data?.pagination?.totalItems ?? practitioners.length;
   const activePractitioners = practitioners.filter((emp) => emp.active)?.length || 0;
-  const inactivePractitioners = totalPractitioners - activePractitioners;
+  const inactivePractitioners = practitioners.length - activePractitioners;
   const ability = useAbility();
 
   if (isLoading) {

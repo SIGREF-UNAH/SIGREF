@@ -32,11 +32,13 @@ import { useNavigate } from "react-router";
 import {
   useDeletePractitionerById,
   useGetPractitionerList,
+  getGetPractitionerListQueryKey,
 } from "../../../api/practitioner/practitioner";
 import { useGetLocationList } from "../../../api/locations/locations";
 import { ROLE_OPTIONS } from "../../../shared/constants/RolesConstants";
 import { useAbility } from "../../../config";
 import { Can } from "@casl/react";
+import type { AdministrativeGender } from "../../../api/models";
 
 interface Practitioner {
   id: string;
@@ -48,6 +50,13 @@ interface Practitioner {
   status: string;
   gender?: number; // 0: Desconocido, 1: Masculino, 2: Femenino, 3: Otro
 }
+
+const GENDER_API_MAP: Record<number, AdministrativeGender> = {
+  0: "unknown",
+  1: "male",
+  2: "female",
+  3: "other",
+};
 
 export const PractitionersListForm = () => {
   const navigate = useNavigate();
@@ -62,8 +71,38 @@ export const PractitionersListForm = () => {
   const [searchStatus, setSearchStatus] = useState<string | undefined>(
     undefined,
   );
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const { data: locations } = useGetLocationList<{
+    items: { name: string }[];
+  }>();
+
+  const locationOptions =
+    locations?.items?.map((loc) => ({
+      label: loc.name,
+      value: loc.name,
+    })) ?? [];
+
   const handleNavigate = (id: string) => {
     navigate(`/practitioners/details/${id}`);
+  };
+
+  const activeFilter =
+    searchStatus === "Activo"
+      ? true
+      : searchStatus === "Inactivo"
+        ? false
+        : undefined;
+  const genderFilter =
+    searchGender !== undefined ? GENDER_API_MAP[searchGender] : undefined;
+
+  const queryParams = {
+    Name: searchName || undefined,
+    Active: activeFilter,
+    Gender: genderFilter,
+    PageNumber: pageNumber,
+    PageSize: pageSize,
   };
 
   const { data, isLoading, isError } = useGetPractitionerList<{
@@ -76,13 +115,15 @@ export const PractitionersListForm = () => {
       totalItems: number;
       totalPages: number;
     };
-  }>();
+  }>(queryParams);
 
   const deleteMutation = useDeletePractitionerById({
     mutation: {
       onSuccess: () => {
         message.success("Empleado eliminado correctamente");
-        queryClient.invalidateQueries({ queryKey: ["/api/Practitioner"] });
+        queryClient.invalidateQueries({
+          queryKey: getGetPractitionerListQueryKey(queryParams),
+        });
       },
       onError: (error) => {
         message.error("Error al eliminar el empleado");
@@ -95,26 +136,10 @@ export const PractitionersListForm = () => {
     number,
     { text: string; icon: React.ReactNode; color: string }
   > = {
-    1: {
-      text: "Masculino",
-      icon: <ManOutlined />,
-      color: "blue",
-    },
-    2: {
-      text: "Femenino",
-      icon: <WomanOutlined />,
-      color: "magenta",
-    },
-    3: {
-      text: "Otro",
-      icon: <AppstoreOutlined />,
-      color: "purple",
-    },
-    0: {
-      text: "Desconocido",
-      icon: <QuestionCircleOutlined />,
-      color: "default",
-    },
+    1: { text: "Masculino", icon: <ManOutlined />, color: "blue" },
+    2: { text: "Femenino", icon: <WomanOutlined />, color: "magenta" },
+    3: { text: "Otro", icon: <AppstoreOutlined />, color: "purple" },
+    0: { text: "Desconocido", icon: <QuestionCircleOutlined />, color: "default" },
   };
 
   const practitioners: Practitioner[] =
@@ -151,14 +176,11 @@ export const PractitionersListForm = () => {
       </div>
     );
 
+  // Name, Active, Gender are filtered server-side; Role and Area are client-side only
   const filteredEmployees = practitioners.filter((e) => {
-    const nameMatch = e.name.toLowerCase().includes(searchName.toLowerCase());
     const roleMatch = searchRole ? e.positionCode === searchRole : true;
     const areaMatch = searchArea ? e.area === searchArea : true;
-    const statusMatch = searchStatus ? e.status === searchStatus : true;
-    const genderMatch =
-      searchGender !== undefined ? e.gender === searchGender : true;
-    return nameMatch && roleMatch && areaMatch && statusMatch && genderMatch;
+    return roleMatch && areaMatch;
   });
 
   const handleEdit = (practitioner: Practitioner) => {
@@ -228,6 +250,7 @@ export const PractitionersListForm = () => {
     {
       title: "Acciones",
       key: "actions",
+      align: "center",
       render: (_: any, record: Practitioner) => (
         <Space>
           <Can I="read" a="practitioners" ability={ability}>
@@ -282,16 +305,6 @@ export const PractitionersListForm = () => {
     },
   ];
 
-  const { data: locations } = useGetLocationList<{
-    items: { name: string }[];
-  }>();
-
-  const locationOptions =
-    locations?.items?.map((loc) => ({
-      label: loc.name,
-      value: loc.name,
-    })) ?? [];
-
   return (
     <div className="primary-card">
       {/* {contextHolder} */}
@@ -311,7 +324,10 @@ export const PractitionersListForm = () => {
               placeholder="Buscar por nombre"
               fieldProps={{
                 value: searchName,
-                onChange: (e) => setSearchName(e.target.value),
+                onChange: (e) => {
+                  setSearchName(e.target.value);
+                  setPageNumber(1);
+                },
               }}
             />
             <ProFormSelect
@@ -324,7 +340,10 @@ export const PractitionersListForm = () => {
               }))}
               fieldProps={{
                 value: searchRole,
-                onChange: (value) => setSearchRole(value),
+                onChange: (value) => {
+                  setSearchRole(value);
+                  setPageNumber(1);
+                },
               }}
             />
             <ProFormSelect
@@ -336,7 +355,10 @@ export const PractitionersListForm = () => {
               options={locationOptions}
               fieldProps={{
                 value: searchArea,
-                onChange: (value) => setSearchArea(value),
+                onChange: (value) => {
+                  setSearchArea(value);
+                  setPageNumber(1);
+                },
               }}
             />
             <ProFormSelect
@@ -351,7 +373,10 @@ export const PractitionersListForm = () => {
               ]}
               fieldProps={{
                 value: searchGender,
-                onChange: (value) => setSearchGender(value),
+                onChange: (value) => {
+                  setSearchGender(value);
+                  setPageNumber(1);
+                },
               }}
             />
             <ProFormSelect
@@ -364,7 +389,10 @@ export const PractitionersListForm = () => {
               ]}
               fieldProps={{
                 value: searchStatus,
-                onChange: (value) => setSearchStatus(value),
+                onChange: (value) => {
+                  setSearchStatus(value);
+                  setPageNumber(1);
+                },
               }}
             />
           </div>
@@ -383,10 +411,16 @@ export const PractitionersListForm = () => {
           rowKey="id"
           loading={isLoading}
           pagination={{
-            pageSize: 10,
+            current: pageNumber,
+            pageSize: pageSize,
+            total: data?.pagination?.totalItems ?? 0,
             showSizeChanger: true,
             showQuickJumper: true,
-            total: filteredEmployees.length,
+            pageSizeOptions: ["5", "10", "20", "50"],
+            onChange: (page, size) => {
+              setPageNumber(page);
+              setPageSize(size);
+            },
             showTotal: (total, range) =>
               `${range[0]}-${range[1]} de ${total} empleados`,
           }}
