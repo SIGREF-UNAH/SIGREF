@@ -374,29 +374,30 @@ public class CashierSessionService : ICashierSessionService
                 query = query.Where(x => x.UserId == userId);
 
             // Filtro: IsOpen
-            if (filter.IsOpen.HasValue)
-                query = query.Where(x => x.IsOpen == filter.IsOpen.Value);
+            // Filtro: IsOpen
+            if (filter.IsOpen == true)
+                query = query.Where(x => x.IsOpen);
+            else if (filter.IsOpen == false)
+                query = query.Where(x => !x.IsOpen);
 
             // Filtro: IsClosedCorrectly (Difference == 0)
-            if (filter.IsClosedCorrectly.HasValue)
-            {
-                if (filter.IsClosedCorrectly.Value)
-                    query = query.Where(x => x.Difference == 0);
-                else
-                    query = query.Where(x => x.Difference != 0);
-            }
+            if (filter.IsClosedCorrectly == true)
+                query = query.Where(x => x.Difference == 0);
+            else if (filter.IsClosedCorrectly == false)
+                query = query.Where(x => x.Difference != 0);
 
             // Filtro: fechas (DateTimeOffset)
-            if (filter.FromDate.HasValue)
-                query = query.Where(x => x.OpenAt >= filter.FromDate.Value);
+            // Filtro: fechas (DateTimeOffset)
+            if (filter.FromDate is { } fromDate)
+                query = query.Where(x => x.OpenAt >= fromDate);
 
-            if (filter.ToDate.HasValue)
-                query = query.Where(x => x.OpenAt <= filter.ToDate.Value);
+            if (filter.ToDate is { } toDate)
+                query = query.Where(x => x.OpenAt <= toDate);
+            
 
             // Filtro: turno
-            if (filter.ShiftId.HasValue)
-                query = query.Where(x => x.ShiftId == filter.ShiftId.Value);
-
+            if (filter.ShiftId is { } shiftId)
+                query = query.Where(x => x.ShiftId == shiftId);
             // Contar total
             int totalItems = await query.CountAsync();
             int totalPages = totalItems > 0

@@ -825,6 +825,8 @@ public class InvoiceService : IInvoiceService
                     { "ParentInvoiceId", parentInvoiceId }
                 });
 
+            if (dto.Items == null || dto.Items.Count == 0)
+                throw new ValidationException("INVOICE_NOTE_ITEMS_REQUIRED");
             // Paralelizar: Serie + Servicios (Recomendación #1)
             var fhirIds = dto.Items.Select(i => i.ServiceId).Distinct().ToList();
 
@@ -854,10 +856,7 @@ public class InvoiceService : IInvoiceService
                     { "StartNumber", serie.StartNumber },
                     { "EndNumber", serie.EndNumber }
                 });
-
-            if (dto.Items == null || dto.Items.Count == 0)
-                throw new ValidationException("INVOICE_NOTE_ITEMS_REQUIRED");
-
+            
             foreach (var item in dto.Items)
             {
                 if (item.Quantity <= 0)
