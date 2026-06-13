@@ -34,10 +34,13 @@ public partial class Startup
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
-        app.UseMiddleware<GlobalExceptionMiddleware>();
         if (env.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
+        }
+        app.UseMiddleware<GlobalExceptionMiddleware>();
+        if (env.IsDevelopment())
+        {
             //Middleware temporal para debuggear Swagger
             app.Use(async (context, next) =>
             {
