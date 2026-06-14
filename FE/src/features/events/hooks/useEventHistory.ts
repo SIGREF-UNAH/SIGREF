@@ -32,7 +32,7 @@ const initialFormValues: FormValues = {
   dateRange: null,
 };
 
-export const useEventHistory = () => {
+export const useEventHistory = (initialFilters?: Partial<GetAuditLogsParams>) => {
   const [form] = Form.useForm();
   const [formValues, setFormValues] = useState<FormValues>(initialFormValues);
   const [selectedRecord, setSelectedRecord] = useState<AuditLog | null>(null);
@@ -40,6 +40,7 @@ export const useEventHistory = () => {
   const [filters, setFilters] = useState<GetAuditLogsParams>({
     CurrentPage: 1,
     PageSize: 20,
+    ...initialFilters,
   });
 
   const buildParams = useCallback((): GetAuditLogsParams => {
@@ -62,7 +63,7 @@ export const useEventHistory = () => {
     if (formValues.dateRange?.[1]) params.ToDate = formValues.dateRange[1].toISOString();
 
     return params;
-  }, [filters, formValues]);
+  }, [filters.CurrentPage, filters.PageSize, formValues]);
 
   const { data, isLoading } = useGetAuditLogs(
     buildParams(),
