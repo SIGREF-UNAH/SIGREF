@@ -3,7 +3,6 @@ import { ProDescriptions } from "@ant-design/pro-components";
 import { FaUser, FaBriefcase } from "react-icons/fa";
 import { BsPersonVcardFill } from "react-icons/bs";
 import { Button, Spin, Space, Popconfirm, Empty, Alert, Tag } from "antd";
-import { ROLE_OPTIONS } from "../../../shared/constants/RolesConstants";
 import { PageHeaderTabs } from "../../../shared/components";
 import { Can } from "@casl/react";
 import {
@@ -266,7 +265,6 @@ export default function PractitionerDetailsPage() {
         open={roleModalOpen}
         onOpenChange={setRoleModalOpen}
         onSubmit={handleRoleSubmit}
-        roleOptions={ROLE_OPTIONS}
         orgOptions={
           orgsData?.items?.map((o) => ({
             label: o.name || "",
