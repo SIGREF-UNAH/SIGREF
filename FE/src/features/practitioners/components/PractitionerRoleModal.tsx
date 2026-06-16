@@ -1,13 +1,13 @@
-import { ModalForm, ProFormText, ProFormSelect, type ProFormInstance, ProFormDatePicker } from "@ant-design/pro-components";
+import { ModalForm, type ProFormInstance } from "@ant-design/pro-components";
 import { useEffect } from "react";
-import dayjs from "dayjs";
+import PractitionerRoleForm from "./PractitionerRoleForm";
+type SelectOption = { label: string; value: string };
 
 type PractitionerRoleModalProps = {
   title?: string;
   open: boolean;
-  roleOptions: { label: string; value: string }[];
-  orgOptions: { label: string; value: string }[];
-  locationOptions: { label: string; value: string }[];
+  orgOptions: SelectOption[];
+  locationOptions: SelectOption[];
   initialValues?: any;
   formRef?: React.RefObject<ProFormInstance | null>;
   onOpenChange: (open: boolean) => void;
@@ -17,7 +17,6 @@ type PractitionerRoleModalProps = {
 export default function PractitionerRoleModal({
   title,
   open,
-  roleOptions,
   orgOptions,
   locationOptions,
   initialValues,
@@ -25,7 +24,6 @@ export default function PractitionerRoleModal({
   onOpenChange,
   onSubmit,
 }: PractitionerRoleModalProps) {
-  
   useEffect(() => {
     if (formRef?.current && initialValues) {
       formRef.current.setFieldsValue(initialValues);
@@ -42,79 +40,10 @@ export default function PractitionerRoleModal({
       initialValues={initialValues}
       onFinish={onSubmit}
     >
-      <ProFormText
-        name="roleName"
-        label="Titulo"
-        placeholder="Ej. Médico General"
-        rules={[{ required: true, message: "Este campo es obligatorio" }]}
+      <PractitionerRoleForm
+        orgOptions={orgOptions}
+        locationOptions={locationOptions}
       />
-
-      <ProFormSelect
-        name="role"
-        label="Tipo"
-        placeholder="Seleccionar"
-        options={roleOptions}
-        rules={[{ required: true, message: "Seleccione el tipo de cargo" }]}
-      />
-
-      <ProFormSelect
-        name="organizationId"
-        label="Organización"
-        placeholder="Seleccionar"
-        allowClear
-        options={orgOptions}
-        rules={[{ required: true, message: "Seleccione la organización" }]}
-      />
-
-      <ProFormSelect
-        name="locationId"
-        label="Ubicación"
-        placeholder="Seleccionar"
-        allowClear
-        options={locationOptions}
-        rules={[{ required: true, message: "Seleccione la ubicación" }]}
-      />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-        <ProFormDatePicker
-          name="startDate"
-          label="Fecha de inicio *"
-          placeholder="Seleccione fecha de inicio"
-          fieldProps={{
-            format: "DD/MM/YYYY",
-            className: "w-full",
-          }}
-          rules={[
-            { required: true, message: "La fecha de inicio es obligatoria" },
-          ]}
-        />
-
-        <ProFormDatePicker
-          name="endDate"
-          label="Fecha de fin (opcional)"
-          placeholder="Dejar vacío si es permanente"
-          fieldProps={{
-            format: "DD/MM/YYYY",
-            className: "w-full",
-          }}
-          rules={[
-            { required: false },
-            // Validación para que la fecha de fin no sea anterior a la de inicio
-            ({ getFieldValue }) => ({
-              validator(_, value) {
-                if (!value) return Promise.resolve();
-                const start = getFieldValue("startDate");
-                if (start && dayjs(value).isBefore(dayjs(start), "day")) {
-                  return Promise.reject(
-                    new Error("La fecha de fin debe ser posterior o igual a la de inicio")
-                  );
-                }
-                return Promise.resolve();
-              },
-            }),
-          ]}
-        />
-      </div>
     </ModalForm>
   );
 }
