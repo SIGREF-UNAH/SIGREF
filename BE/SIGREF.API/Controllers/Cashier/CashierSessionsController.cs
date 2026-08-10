@@ -1,19 +1,22 @@
-﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Http;
+using System.Net.Mime;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos.Cashier;
 using SIGREF.API.Services.Cashier;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
-using Swashbuckle.AspNetCore.Annotations;
 namespace SIGREF.API.Controllers.Cashier;
 
+/// <summary>Gestiona el ciclo de vida de las sesiones de caja de SIGREF.</summary>
+/// <remarks>Dominio SIGREF: registra aperturas, cierres, correcciones y consultas de sesiones. No expone recursos FHIR directamente.</remarks>
 [Route("api/[controller]")]
 [ApiController]
 [Authorize(AuthenticationSchemes = "Bearer")]
 [Produces(MediaTypeNames.Application.Json)]
 [Consumes(MediaTypeNames.Application.Json)]
-[SwaggerTag("Sesiones de Caja - Gestión de Sesiones")]
+[Tags("Sesiones de Caja - Gestión de Sesiones")]
 public class CashierSessionsController : ControllerBase
 {
     private readonly ICashierSessionService _cashierSessionService;
@@ -27,12 +30,10 @@ public class CashierSessionsController : ControllerBase
     //                  ABRIR SESION DE CAJA
     // ============================================================
     [HttpPost("open")]
-    [SwaggerOperation(
-        OperationId = "CreateSessionOpen",
-        Summary = "Abrir sesión de caja",
-        Description = "Inicia una nueva sesión de caja para un cajero autenticado.",
-        Tags = new[] { "CashierSessions" }
-    )]
+    [EndpointName("CreateSessionOpen")]
+    [EndpointSummary("Abrir sesión de caja")]
+    [EndpointDescription("Inicia una nueva sesión de caja para un cajero autenticado.")]
+    [Tags("SIGREF - Sesiones de caja")]
     [Authorize(Roles = $"{RolesConstants.cashier}")]
     [ProducesResponseType( typeof(CashierSessionMinimalDto), StatusCodes.Status201Created)]
     public async Task<IActionResult> OpenSession([FromBody] CreateCashierSessionDto dto)
@@ -45,12 +46,10 @@ public class CashierSessionsController : ControllerBase
     //                    CERRAR SESIÓN DE CAJA
     // ============================================================
     [HttpPost("{sessionId:guid}/close")]
-    [SwaggerOperation(
-        OperationId = "CreateSessionCloseById",
-        Summary = "Cerrar sesión de caja",
-        Description = "Cierra una sesión de caja activa utilizando su ID y los datos de cierre proporcionados.",
-        Tags = new[] { "CashierSessions" }
-    )]
+    [EndpointName("CreateSessionCloseById")]
+    [EndpointSummary("Cerrar sesión de caja")]
+    [EndpointDescription("Cierra una sesión de caja activa utilizando su ID y los datos de cierre proporcionados.")]
+    [Tags("SIGREF - Sesiones de caja")]
     [Authorize(Roles = $"{RolesConstants.cashier}")]
     [ProducesResponseType(typeof(CashierSessionDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> CloseSession(
@@ -65,12 +64,10 @@ public class CashierSessionsController : ControllerBase
     //                SOLICITAR CORRECCIÓN (CAJERO)
     // ============================================================
     [HttpPost("{sessionId:guid}/request-correction")]
-    [SwaggerOperation(
-        OperationId = "CreateSessionCorrection",
-        Summary = "Solicitar corrección de sesión",
-        Description = "Permite a un cajero solicitar una corrección para una sesión de caja que ya fue cerrada.",
-        Tags = new[] { "CashierSessions" }
-    )]
+    [EndpointName("CreateSessionCorrection")]
+    [EndpointSummary("Solicitar corrección de sesión")]
+    [EndpointDescription("Permite a un cajero solicitar una corrección para una sesión de caja que ya fue cerrada.")]
+    [Tags("SIGREF - Sesiones de caja")]
     [Authorize(Roles = $"{RolesConstants.cashier}")]
     [ProducesResponseType( typeof(CashierSessionDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> RequestCorrection(
@@ -85,12 +82,10 @@ public class CashierSessionsController : ControllerBase
     //         RESOLVER CORRECCIÓN (ADMIN / AUDITOR)
     // ============================================================
     [HttpPost("{sessionId:guid}/resolve-correction")]
-    [SwaggerOperation(
-        OperationId = "UpdateSessionResolveCorrection",
-        Summary = "Resolver corrección de sesión",
-        Description = "Permite a un administrador o auditor evaluar y resolver una solicitud de corrección emitida por un cajero.",
-        Tags = new[] { "CashierSessions" }
-    )]
+    [EndpointName("UpdateSessionResolveCorrection")]
+    [EndpointSummary("Resolver corrección de sesión")]
+    [EndpointDescription("Permite a un administrador o auditor evaluar y resolver una solicitud de corrección emitida por un cajero.")]
+    [Tags("SIGREF - Sesiones de caja")]
     [Authorize(Roles = $"{RolesConstants.admin}")]
     [ProducesResponseType(typeof(CashierSessionDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> ResolveCorrection(
@@ -105,12 +100,10 @@ public class CashierSessionsController : ControllerBase
     //                 LISTAR SESIONES DE CAJA
     // ============================================================
     [HttpGet]
-    [SwaggerOperation(
-        OperationId = "GetSessionList",
-        Summary = "Obtener sesiones de caja filtradas",
-        Description = "Recupera una lista paginada de las sesiones de caja en el sistema, de acuerdo a los filtros proporcionados.",
-        Tags = new[] { "CashierSessions" }
-    )]
+    [EndpointName("GetSessionList")]
+    [EndpointSummary("Obtener sesiones de caja filtradas")]
+    [EndpointDescription("Recupera una lista paginada de las sesiones de caja en el sistema, de acuerdo a los filtros proporcionados.")]
+    [Tags("SIGREF - Sesiones de caja")]
     [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor}")]
     [ProducesResponseType( typeof(PagedResultDto<CashierSessionDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetFiltered([FromQuery] CashierSessionFilterDto filter)
@@ -123,12 +116,10 @@ public class CashierSessionsController : ControllerBase
     //                 OBTENER SESIÓN POR ID
     // ============================================================
     [HttpGet("{sessionId:guid}")]
-    [SwaggerOperation(
-        OperationId = "GetSessionById",
-        Summary = "Obtener una sesión por su ID",
-        Description = "Recupera el detalle completo de una sesión de caja específica a partir de su identificador único.",
-        Tags = new[] { "CashierSessions" }
-    )]
+    [EndpointName("GetSessionById")]
+    [EndpointSummary("Obtener una sesión por su ID")]
+    [EndpointDescription("Recupera el detalle completo de una sesión de caja específica a partir de su identificador único.")]
+    [Tags("SIGREF - Sesiones de caja")]
     [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor}")]
     [ProducesResponseType( typeof(CashierSessionDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById(Guid sessionId)

@@ -1,21 +1,24 @@
-﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Http;
+using System.Net.Mime;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos.Files;
 using SIGREF.API.Services.Files;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Types;
-using Swashbuckle.AspNetCore.Annotations;
 
 namespace SIGREF.API.Controllers.Files;
 
+/// <summary>Gestiona archivos multimedia asociados a la configuración y operación del hospital.</summary>
+/// <remarks>Dominio SIGREF: administra almacenamiento y asociaciones de archivos; no es un recurso FHIR.</remarks>
 [Route("api/[controller]")]
 // TODO APLICAR AUTORIZACIONES DE ROLES
 [ApiController]
 [Authorize(AuthenticationSchemes = "Bearer")]
 // A nivel de clase: TODOS los endpoints responden con JSON
 [Produces(MediaTypeNames.Application.Json)]
-[SwaggerTag("MediaFiles - Archivos Media")]
+[Tags("MediaFiles - Archivos Media")]
 
 public class MediaFilesController : ControllerBase
 {
@@ -30,12 +33,10 @@ public class MediaFilesController : ControllerBase
     //                   UPLOAD (Solo imagenes)
     // ============================================================
     [HttpPost("upload")]
-    [SwaggerOperation(
-        OperationId = "CreateMediaFileUpload",
-        Summary = "Sube una imagen al servidor",
-        Description = "NA",
-        Tags = new[] { "MediaFiles" }
-    )]
+    [EndpointName("CreateMediaFileUpload")]
+    [EndpointSummary("Subir un archivo multimedia")]
+    [EndpointDescription("Almacena un archivo multimedia y devuelve sus datos de identificación.")]
+    [Tags("SIGREF - Archivos multimedia")]
     [Consumes("multipart/form-data")]
     [ProducesResponseType(typeof(MediaFileDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> Upload([FromForm] UploadMediaFileDto dto)
@@ -48,12 +49,10 @@ public class MediaFilesController : ControllerBase
     //             GET BY ID  (URL + info del archivo)
     // ============================================================
     [HttpGet("{id:guid}")]
-    [SwaggerOperation(
-        OperationId = "GetMediaFileById",
-        Summary = "Obtiene una imagen al servidor",
-        Description = "NA",
-        Tags = new[] { "MediaFiles" }
-    )]
+    [EndpointName("GetMediaFileById")]
+    [EndpointSummary("Obtener un archivo multimedia")]
+    [EndpointDescription("Recupera un archivo multimedia por su identificador.")]
+    [Tags("SIGREF - Archivos multimedia")]
     [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor},{RolesConstants.ti}")] // Para que clientes y FE puedan cargar logos
     [ProducesResponseType(typeof(MediaFileDto) ,StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById(Guid id)
@@ -63,15 +62,13 @@ public class MediaFilesController : ControllerBase
     }
 
     // ============================================================
-    //                DELETE 
+    //                DELETE
     // ============================================================
     [HttpDelete("{id:guid}")]
-    [SwaggerOperation(
-        OperationId = "DeleteMediaFileById",
-        Summary = "Elimina una imagen al servidor",
-        Description = "NA",
-        Tags = new[] { "MediaFiles" }
-    )]
+    [EndpointName("DeleteMediaFileById")]
+    [EndpointSummary("Eliminar un archivo multimedia")]
+    [EndpointDescription("Elimina un archivo multimedia identificado por su ID.")]
+    [Tags("SIGREF - Archivos multimedia")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [Authorize(Roles = $"{RolesConstants.ti}")]
     public async Task<IActionResult> Delete(Guid id)
@@ -85,12 +82,10 @@ public class MediaFilesController : ControllerBase
     //           ASIGNAR LOGO / LOGO DE SALUD AL HOSPITAL
     // ============================================================
     [HttpPost("{mediaId:guid}/assign")]
-    [SwaggerOperation(
-        OperationId = "CreateMediaFileAssignment",
-        Summary = "Asigna una imagen a Salud o logo de Hospital",
-        Description = "NA",
-        Tags = new[] { "MediaFiles" }
-    )]
+    [EndpointName("CreateMediaFileAssignment")]
+    [EndpointSummary("Asociar un archivo al hospital")]
+    [EndpointDescription("Asocia un archivo multimedia con el tipo de recurso institucional indicado.")]
+    [Tags("SIGREF - Archivos multimedia")]
     [ProducesResponseType(typeof(MediaFileDto) , StatusCodes.Status204NoContent)]
     [Authorize(Roles = $"{RolesConstants.ti}")]
     public async Task<IActionResult> SetHospitalMedia(
@@ -105,12 +100,10 @@ public class MediaFilesController : ControllerBase
     //     LISTA PAGINADA DE ARCHIVOS (solo TI podria)
     // ============================================================
     [HttpGet]
-    [SwaggerOperation(
-        OperationId = "GetMediaFileList",
-        Summary = "Obtiene imagenes paginadas",
-        Description = "NA",
-        Tags = new[] { "MediaFiles" }
-    )]
+    [EndpointName("GetMediaFileList")]
+    [EndpointSummary("Listar archivos multimedia")]
+    [EndpointDescription("Obtiene una lista paginada de archivos multimedia aplicando los filtros solicitados.")]
+    [Tags("SIGREF - Archivos multimedia")]
     [ProducesResponseType(typeof(MediaFileDto), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.ti}")]
     public async Task<IActionResult> GetPaged([FromQuery] MediaFileFilterDto filter)

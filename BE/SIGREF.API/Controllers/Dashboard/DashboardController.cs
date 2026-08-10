@@ -1,30 +1,31 @@
-﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Http;
+using System.Net.Mime;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos.Dashboard;
 using SIGREF.API.Services.Dashboard;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
-using Swashbuckle.AspNetCore.Annotations;
 
 namespace SIGREF.API.Controllers.Dashboard;
 
+/// <summary>Proporciona indicadores agregados para los paneles operativos y financieros.</summary>
+/// <remarks>Dominio SIGREF: consolida información de negocio para visualización; no representa un recurso FHIR.</remarks>
 [Route("api/[controller]")]
 [ApiController]
 [Authorize(Roles = $"{RolesConstants.admin},{RolesConstants.auditor}")]
 [Authorize(AuthenticationSchemes = "Bearer")]
 [Produces(MediaTypeNames.Application.Json)]
 [Consumes(MediaTypeNames.Application.Json)]
-[SwaggerTag("Dashboard - Resumen de Estadisticas")]
+[Tags("Dashboard - Resumen de Estadisticas")]
 public class DashboardController(IDashboardReportingService dashboardReportingService) : ControllerBase
 {
     [HttpGet("summary")]
-    [SwaggerOperation(
-        OperationId = "GetDashboardSummary",
-        Summary = "Obtiene el Resumen general de estadisticas de ingresos",
-        Description = "NA",
-        Tags = new[] { "Dashboard" }
-    )]
+    [EndpointName("GetDashboardSummary")]
+    [EndpointSummary("Obtiene el Resumen general de estadisticas de ingresos")]
+    [EndpointDescription("Devuelve los principales indicadores agregados de ingresos para el periodo y filtros solicitados.")]
+    [Tags("SIGREF - Dashboard")]
     [ProducesResponseType(typeof(DashboardSummaryDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSummary([FromQuery] DashboardFilterDto filter)
     {
@@ -35,12 +36,10 @@ public class DashboardController(IDashboardReportingService dashboardReportingSe
     }
 
     [HttpGet("service-usage")]
-    [SwaggerOperation(
-        OperationId = "GetDashboardServiceUsage",
-        Summary = "Obtiene el Resumen de servicios usados",
-        Description = "NA",
-        Tags = new[] { "Dashboard" }
-    )]
+    [EndpointName("GetDashboardServiceUsage")]
+    [EndpointSummary("Obtiene el Resumen de servicios usados")]
+    [EndpointDescription("Devuelve el uso agregado de los servicios médicos durante el periodo consultado.")]
+    [Tags("SIGREF - Dashboard")]
     [ProducesResponseType( typeof(ServiceUsageResultDto) , StatusCodes.Status200OK)]
     public async Task<IActionResult> GetServiceUsage([FromQuery] DashboardFilterDto filter)
     {
@@ -51,12 +50,10 @@ public class DashboardController(IDashboardReportingService dashboardReportingSe
     }
 
     [HttpGet("package-usage")]
-    [SwaggerOperation(
-        OperationId = "GetDashboardPackageUsage",
-        Summary = "Obtiene el Resumen de paquetes usados",
-        Description = "NA",
-        Tags = new[] { "Dashboard" }
-    )]
+    [EndpointName("GetDashboardPackageUsage")]
+    [EndpointSummary("Obtiene el Resumen de paquetes usados")]
+    [EndpointDescription("Devuelve el uso agregado de los paquetes de servicios durante el periodo consultado.")]
+    [Tags("SIGREF - Dashboard")]
     [ProducesResponseType(typeof(PackageUsageResultDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPackageUsage([FromQuery] DashboardFilterDto filter)
     {
@@ -67,12 +64,10 @@ public class DashboardController(IDashboardReportingService dashboardReportingSe
     }
 
     [HttpGet("weekly-income")]
-    [SwaggerOperation(
-        OperationId = "GetDashboardWeeklyIncome",
-        Summary = "Obtiene el Resumen de ingresos semanales",
-        Description = "NA",
-        Tags = new[] { "Dashboard" }
-    )]
+    [EndpointName("GetDashboardWeeklyIncome")]
+    [EndpointSummary("Obtiene el Resumen de ingresos semanales")]
+    [EndpointDescription("Devuelve la evolución semanal de los ingresos para el periodo y filtros solicitados.")]
+    [Tags("SIGREF - Dashboard")]
     [ProducesResponseType(typeof(List<WeeklyIncomeDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetWeeklyIncome([FromQuery] DashboardFilterDto filter)
     {
@@ -83,12 +78,10 @@ public class DashboardController(IDashboardReportingService dashboardReportingSe
     }
 
     [HttpGet("shift-income")]
-    [SwaggerOperation(
-        OperationId = "GetDashboardShiftIncome",
-        Summary = "Obtiene el Resumen de ingresos por turnos",
-        Description = "NA",
-        Tags = new[] { "Dashboard" }
-    )]
+    [EndpointName("GetDashboardShiftIncome")]
+    [EndpointSummary("Obtiene el Resumen de ingresos por turnos")]
+    [EndpointDescription("Devuelve los ingresos agregados por turno de caja.")]
+    [Tags("SIGREF - Dashboard")]
     [ProducesResponseType(typeof(List<ShiftIncomeDto>) , StatusCodes.Status200OK)]
     public async Task<IActionResult> GetShiftIncome([FromQuery] DashboardFilterDto filter)
     {
@@ -99,12 +92,10 @@ public class DashboardController(IDashboardReportingService dashboardReportingSe
     }
 
     [HttpGet("location-income")]
-    [SwaggerOperation(
-        OperationId = "GetDashboardLocationIncome",
-        Summary = "Obtiene el Resumen de servicios usados",
-        Description = "NA",
-        Tags = new[] { "Dashboard" }
-    )]
+    [EndpointName("GetDashboardLocationIncome")]
+    [EndpointSummary("Obtiene el Resumen de servicios usados")]
+    [EndpointDescription("Devuelve los ingresos agregados por ubicación física.")]
+    [Tags("SIGREF - Dashboard")]
     [ProducesResponseType(typeof(List<LocationIncomeDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetLocationIncome([FromQuery] DashboardFilterDto filter)
     {

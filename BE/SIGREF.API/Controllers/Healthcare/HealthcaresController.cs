@@ -1,20 +1,23 @@
-﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Http;
+using System.Net.Mime;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos.Healthcare;
 using SIGREF.API.Services.Healthcare;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
-using Swashbuckle.AspNetCore.Annotations;
 
 namespace SIGREF.API.Controllers.Healthcare;
 
+/// <summary>Administra servicios médicos ofrecidos por la institución.</summary>
+/// <remarks>Híbrido SIGREF + FHIR: aplica reglas y DTOs de SIGREF sobre recursos FHIR HealthcareService.</remarks>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(AuthenticationSchemes = "Bearer")]
 [Produces(MediaTypeNames.Application.Json)]
 [Consumes(MediaTypeNames.Application.Json)]
-[SwaggerTag("Servicios Medicos - Gestion de Servicios Medicos")]
+[Tags("Servicios Medicos - Gestion de Servicios Medicos")]
 public class HealthcaresController : ControllerBase
 {
     private readonly IHealthcareService _healthcareService;
@@ -34,18 +37,16 @@ public class HealthcaresController : ControllerBase
     /// <response code="200">Lista de servicios de salud obtenida exitosamente.</response>
     /// <response code="400">Error en los parámetros de búsqueda.</response>
     [HttpGet]
-    [SwaggerOperation(
-        OperationId = "GetHealtcareList",
-        Summary = "Obtiene una lista de Servicios Medicos",
-        Description = "NA",
-        Tags = new[] { "Healthcares" }
-    )]
+    [EndpointName("GetHealtcareList")]
+    [EndpointSummary("Obtiene una lista de Servicios Medicos")]
+    [EndpointDescription("Obtiene servicios médicos basados en recursos FHIR HealthcareService y los devuelve paginados.")]
+    [Tags("HÍBRIDO - HealthcareService / FHIR")]
     [Authorize(Roles = $"{RolesConstants.auditor},{RolesConstants.admin},{RolesConstants.ti}")]
     [ProducesResponseType(typeof(PagedResultDto<HealthcareDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResultDto<HealthcareDto>>> GetFiltered([FromQuery] HealthcareFilterDto filter)
     {
         var result = await _healthcareService.GetFilteredAsync(filter);
-    
+
         return Ok(result);
     }
 
@@ -59,12 +60,10 @@ public class HealthcaresController : ControllerBase
     /// <response code="200">Servicio de salud encontrado exitosamente.</response>
     /// <response code="404">No se encontró el servicio de salud solicitado.</response>
     [HttpGet("{id}")]
-    [SwaggerOperation(
-        OperationId = "GetHealtcareById",
-        Summary = "Obtiene un servicio medico por su Id",
-        Description = "NA",
-        Tags = new[] { "Healthcares" }
-    )]
+    [EndpointName("GetHealtcareById")]
+    [EndpointSummary("Obtiene un servicio medico por su Id")]
+    [EndpointDescription("Recupera un recurso FHIR HealthcareService por su identificador lógico.")]
+    [Tags("HÍBRIDO - HealthcareService / FHIR")]
     [Authorize(Roles = $"{RolesConstants.auditor},{RolesConstants.admin},{RolesConstants.ti}")]
     [ProducesResponseType(typeof(HealthcareDto), StatusCodes.Status200OK)]
     public async Task<ActionResult<HealthcareDto>> GetById(string id)
@@ -83,12 +82,10 @@ public class HealthcaresController : ControllerBase
     /// <response code="201">Servicio creado y enriquecido exitosamente.</response>
     /// <response code="400">Datos de entrada inválidos.</response>
     [HttpPost]
-    [SwaggerOperation(
-        OperationId = "CreateHealtcare",
-        Summary = "Crea un nuevo servicio Medico",
-        Description = "NA",
-        Tags = new[] { "Healthcares" }
-    )]
+    [EndpointName("CreateHealtcare")]
+    [EndpointSummary("Crea un nuevo servicio Medico")]
+    [EndpointDescription("Crea un recurso FHIR HealthcareService con los datos del servicio médico proporcionados.")]
+    [Tags("HÍBRIDO - HealthcareService / FHIR")]
     [Authorize(Roles = RolesConstants.admin)]
     [ProducesResponseType(typeof(HealthcareDto), StatusCodes.Status201Created)]
     public async Task<ActionResult<HealthcareDto>> Create([FromBody] CreateHealthcareDto dto)
@@ -108,12 +105,10 @@ public class HealthcaresController : ControllerBase
     /// <response code="200">Servicio actualizado y sincronizado exitosamente.</response>
     /// <response code="404">El servicio no existe en el servidor médico.</response>
     [HttpPut("{id}")]
-    [SwaggerOperation(
-        OperationId = "UpdateHealtcareById",
-        Summary = "Actualiza un servicio medico por su Id",
-        Description = "NA",
-        Tags = new[] { "Healthcares" }
-    )]
+    [EndpointName("UpdateHealtcareById")]
+    [EndpointSummary("Actualiza un servicio medico por su Id")]
+    [EndpointDescription("Actualiza un recurso FHIR HealthcareService existente mediante su identificador lógico.")]
+    [Tags("HÍBRIDO - HealthcareService / FHIR")]
     [Authorize(Roles = RolesConstants.admin)]
     [ProducesResponseType(typeof(HealthcareDto), StatusCodes.Status200OK)]
     public async Task<ActionResult<HealthcareDto>> Update(string id, [FromBody] UpdateHealthcareDto dto)
@@ -132,12 +127,10 @@ public class HealthcaresController : ControllerBase
     /// <response code="204">Servicio eliminado exitosamente de ambos sistemas.</response>
     /// <response code="404">El servicio no existe en el servidor médico.</response>
     [HttpDelete("{id}")]
-    [SwaggerOperation(
-        OperationId = "DeleteHealtcareById",
-        Summary = "Elimina un Servicio Medico por su Id",
-        Description = "NA",
-        Tags = new[] { "Healthcares" }
-    )]
+    [EndpointName("DeleteHealtcareById")]
+    [EndpointSummary("Elimina un Servicio Medico por su Id")]
+    [EndpointDescription("Elimina el recurso FHIR HealthcareService indicado por su identificador lógico.")]
+    [Tags("HÍBRIDO - HealthcareService / FHIR")]
     [Authorize(Roles = RolesConstants.admin)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Delete(string id)

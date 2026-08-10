@@ -1,4 +1,6 @@
-﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Http;
+using System.Net.Mime;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos.Common;
@@ -6,16 +8,17 @@ using SIGREF.API.Dtos.Practitioner;
 using SIGREF.API.Services.Practitioner;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
-using Swashbuckle.AspNetCore.Annotations;
 
 namespace SIGREF.API.Controllers.PractitionerC;
 
+/// <summary>Gestiona los profesionales sanitarios registrados en la plataforma.</summary>
+/// <remarks>FHIR: representa y administra recursos Practitioner, usados también para vincular usuarios de Keycloak.</remarks>
 [Route("api/[controller]")]
 [ApiController]
 [Authorize(AuthenticationSchemes = "Bearer")]
 [Produces(MediaTypeNames.Application.Json)]
 [Consumes(MediaTypeNames.Application.Json)]
-[SwaggerTag("Empleados - Gestión de Empleados")]
+[Tags("Empleados - Gestión de Empleados")]
 public class PractitionerController : ControllerBase
 {
     private readonly IPractitionerService _practitionerService;
@@ -27,12 +30,10 @@ public class PractitionerController : ControllerBase
 
     // GET: api/practitioner
     [HttpGet]
-    [SwaggerOperation(
-        OperationId = "GetPractitionerList",
-        Summary = "Obtener Ubicaciones",
-        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
-        Tags = new[] { "Practitioner" }
-    )]
+    [EndpointName("GetPractitionerList")]
+    [EndpointSummary("Listar profesionales")]
+    [EndpointDescription("Obtiene una lista paginada de recursos Practitioner aplicando los filtros solicitados.")]
+    [Tags("FHIR - Practitioner")]
     [ProducesResponseType(typeof(PagedResultDto<PractitionerDto>) , StatusCodes.Status200OK)]
     [Authorize(Roles = $" {RolesConstants.admin} , {RolesConstants.auditor} , {RolesConstants.ti}")]
     public async Task<IActionResult> GetFiltered([FromQuery] PractitionerFilterDto filter)
@@ -50,12 +51,10 @@ public class PractitionerController : ControllerBase
 
     // GET: api/practitioner/{id}
     [HttpGet("{id}")]
-    [SwaggerOperation(
-        OperationId = "GetPractitionerById",
-        Summary = "Obtener Ubicaciones",
-        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
-        Tags = new[] { "Practitioner" }
-    )]
+    [EndpointName("GetPractitionerById")]
+    [EndpointSummary("Obtener un profesional por ID")]
+    [EndpointDescription("Recupera el recurso Practitioner identificado por su ID lógico en FHIR.")]
+    [Tags("FHIR - Practitioner")]
     [ProducesResponseType( typeof(PractitionerDto) , StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.auditor} , {RolesConstants.ti}")]
     public async Task<IActionResult> GetById(string id)
@@ -66,12 +65,10 @@ public class PractitionerController : ControllerBase
 
     // POST: api/practitioner
     [HttpPost]
-    [SwaggerOperation(
-        OperationId = "CreatePractitioner",
-        Summary = "Obtener Ubicaciones",
-        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
-        Tags = new[] { "Practitioner" }
-    )]
+    [EndpointName("CreatePractitioner")]
+    [EndpointSummary("Crear un profesional")]
+    [EndpointDescription("Crea un nuevo recurso Practitioner con los datos profesionales proporcionados.")]
+    [Tags("FHIR - Practitioner")]
     [ProducesResponseType( typeof(PractitionerDto) , StatusCodes.Status201Created)]
     [Authorize(Roles = $" {RolesConstants.admin} , {RolesConstants.ti}")]
     public async Task<IActionResult> CreatePractitioner([FromBody] CreatePractitionerDto createPractitionerDto)
@@ -85,12 +82,10 @@ public class PractitionerController : ControllerBase
 
     // PUT: api/practitioner/{id}
     [HttpPut("{id}")]
-    [SwaggerOperation(
-        OperationId = "UpdatePractitionerById",
-        Summary = "Obtener Ubicaciones",
-        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
-        Tags = new[] { "Practitioner" }
-    )]
+    [EndpointName("UpdatePractitionerById")]
+    [EndpointSummary("Actualizar un profesional")]
+    [EndpointDescription("Actualiza el recurso Practitioner indicado por su ID lógico.")]
+    [Tags("FHIR - Practitioner")]
     [ProducesResponseType(typeof(PractitionerDto), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.ti}")]
     public async Task<IActionResult> UpdatePractitioner(string id, [FromBody] UpdatePractitionerDto updatePractitionerDto)
@@ -101,12 +96,10 @@ public class PractitionerController : ControllerBase
 
     // DELETE: api/practitioner/{id}
     [HttpDelete("{id}")]
-    [SwaggerOperation(
-        OperationId = "DeletePractitionerById",
-        Summary = "Obtener Ubicaciones",
-        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
-        Tags = new[] { "Practitioner" }
-    )]
+    [EndpointName("DeletePractitionerById")]
+    [EndpointSummary("Eliminar un profesional")]
+    [EndpointDescription("Elimina el recurso Practitioner indicado por su ID lógico.")]
+    [Tags("FHIR - Practitioner")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.ti}")]
     public async Task<IActionResult> DeletePractitioner(string id)
@@ -123,4 +116,3 @@ public class PractitionerController : ControllerBase
         return NoContent();
     }
 }
-
