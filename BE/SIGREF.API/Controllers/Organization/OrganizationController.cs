@@ -1,4 +1,6 @@
-﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Http;
+using System.Net.Mime;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos;
@@ -6,16 +8,17 @@ using SIGREF.API.Dtos.Common;
 using SIGREF.API.Services.Organization;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
-using Swashbuckle.AspNetCore.Annotations;
 
 namespace SIGREF.API.Controllers;
 
+/// <summary>Gestiona las organizaciones que participan en la operación sanitaria.</summary>
+/// <remarks>FHIR: representa y administra recursos Organization mediante la capa de integración de SIGREF.</remarks>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(AuthenticationSchemes = "Bearer")]
 [Produces(MediaTypeNames.Application.Json)]
 [Consumes(MediaTypeNames.Application.Json)]
-[SwaggerTag("Organizaciones - Gestion de Organizaciones")]
+[Tags("Organizaciones - Gestion de Organizaciones")]
 public class OrganizationsController : ControllerBase
 {
     private readonly IOrganizationService _organizationService;
@@ -28,12 +31,10 @@ public class OrganizationsController : ControllerBase
     }
 
     [HttpGet()]
-    [SwaggerOperation(
-        OperationId = "GetOrganizationList",
-        Summary = "Obtener Ubicaciones",
-        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
-        Tags = new[] { "Organizations" }
-    )]
+    [EndpointName("GetOrganizationList")]
+    [EndpointSummary("Listar organizaciones")]
+    [EndpointDescription("Obtiene una lista paginada de recursos Organization aplicando los filtros solicitados.")]
+    [Tags("FHIR - Organization")]
     [ProducesResponseType( typeof(PagedResultDto<OrganizationDto>), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.auditor} , {RolesConstants.ti}")]
     public async Task<IActionResult> GetFilteredOrganizations([FromQuery] OrganizationFilterDto filter)
@@ -50,12 +51,10 @@ public class OrganizationsController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [SwaggerOperation(
-        OperationId = "GetOrganizationById",
-        Summary = "Obtener Ubicaciones",
-        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
-        Tags = new[] { "Organizations" }
-    )]
+    [EndpointName("GetOrganizationById")]
+    [EndpointSummary("Obtener una organización por ID")]
+    [EndpointDescription("Recupera el recurso Organization identificado por su ID lógico en FHIR.")]
+    [Tags("FHIR - Organization")]
     [ProducesResponseType( typeof(OrganizationDto) , StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.auditor} , {RolesConstants.ti}")]
     public async Task<ActionResult<OrganizationDto>> GetOrganizationById(string id)
@@ -77,12 +76,10 @@ public class OrganizationsController : ControllerBase
     }
 
     [HttpPost]
-    [SwaggerOperation(
-        OperationId = "CreateOrganization",
-        Summary = "Obtener Ubicaciones",
-        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
-        Tags = new[] { "Organizations" }
-    )]
+    [EndpointName("CreateOrganization")]
+    [EndpointSummary("Crear una organización")]
+    [EndpointDescription("Crea un nuevo recurso Organization con la información institucional proporcionada.")]
+    [Tags("FHIR - Organization")]
     [ProducesResponseType( typeof(OrganizationDto), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.ti}")]
     public async Task<ActionResult<OrganizationDto>> CreateOrganization([FromBody] CreateOrganizationDto createDto)
@@ -105,12 +102,10 @@ public class OrganizationsController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [SwaggerOperation(
-        OperationId = "UpdateOrganizationById",
-        Summary = "Obtener Ubicaciones",
-        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
-        Tags = new[] { "Organizations" }
-    )]
+    [EndpointName("UpdateOrganizationById")]
+    [EndpointSummary("Actualizar una organización")]
+    [EndpointDescription("Actualiza el recurso Organization indicado por su ID lógico.")]
+    [Tags("FHIR - Organization")]
     [ProducesResponseType( typeof(OrganizationDto), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.admin}, {RolesConstants.ti}")]
     public async Task<ActionResult<OrganizationDto>> UpdateOrganization(string id, [FromBody] UpdateOrganizationDto updateDto)
@@ -137,19 +132,17 @@ public class OrganizationsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [SwaggerOperation(
-        OperationId = "DeleteOrganizationById",
-        Summary = "Obtener Ubicaciones",
-        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
-        Tags = new[] { "Organizations" }
-    )]
+    [EndpointName("DeleteOrganizationById")]
+    [EndpointSummary("Eliminar una organización")]
+    [EndpointDescription("Elimina el recurso Organization indicado por su ID lógico.")]
+    [Tags("FHIR - Organization")]
     [Authorize(Roles = $"{RolesConstants.admin}, {RolesConstants.ti}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DeleteOrganization(string id)
     {
         // El Middleware captura todo y Orval recibe el status code correcto.
         await _organizationService.DeleteOrganizationAsync(id);
-    
+
         return NoContent();
     }
 }

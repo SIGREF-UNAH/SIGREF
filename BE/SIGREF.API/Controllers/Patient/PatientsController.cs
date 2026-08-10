@@ -1,4 +1,6 @@
-﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Http;
+using System.Net.Mime;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Constants;
@@ -7,7 +9,6 @@ using SIGREF.API.Dtos.Patient;
 using SIGREF.API.Services.Patient;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
-using Swashbuckle.AspNetCore.Annotations;
 
 namespace SIGREF.API.Controllers.PatientC;
 
@@ -15,12 +16,14 @@ namespace SIGREF.API.Controllers.PatientC;
 /// Controlador para gestionar recursos FHIR de tipo Patient.
 /// Proporciona operaciones CRUD completas con respuestas tipadas y códigos HTTP adecuados.
 /// </summary>
+/// <summary>Gestiona los pacientes registrados en la plataforma clínica.</summary>
+/// <remarks>FHIR: representa y administra recursos Patient. SIGREF agrega filtros, DTOs y reglas de acceso.</remarks>
 [Route("api/[controller]")]
 [ApiController]
 [Authorize(AuthenticationSchemes = "Bearer")]
 [Produces(MediaTypeNames.Application.Json)]
 [Consumes(MediaTypeNames.Application.Json)]
-[SwaggerTag("Pacientes - Gestión de Pacientes")]
+[Tags("Pacientes - Gestión de Pacientes")]
 public class PatientsController : ControllerBase
 {
     private readonly IPatientService _patientService;
@@ -39,12 +42,10 @@ public class PatientsController : ControllerBase
     /// Obtiene todos los pacientes registrados.
     /// </summary>
     [HttpGet]
-    [SwaggerOperation(
-        OperationId = "GetPatientList",
-        Summary = "Obtener Ubicaciones",
-        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
-        Tags = new[] { "Patients" }
-    )]
+    [EndpointName("GetPatientList")]
+    [EndpointSummary("Listar pacientes")]
+    [EndpointDescription("Obtiene una lista paginada de recursos Patient aplicando los filtros clínicos y administrativos solicitados.")]
+    [Tags("FHIR - Patient")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
 
@@ -67,12 +68,10 @@ public class PatientsController : ControllerBase
     /// </summary>
     /// <param name="id">ID del paciente.</param>
     [HttpGet("{id}")]
-    [SwaggerOperation(
-        OperationId = "GetPatientById",
-        Summary = "Obtener Ubicaciones",
-        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
-        Tags = new[] { "Patients" }
-    )]
+    [EndpointName("GetPatientById")]
+    [EndpointSummary("Obtener un paciente por ID")]
+    [EndpointDescription("Recupera el recurso Patient identificado por su ID lógico en FHIR.")]
+    [Tags("FHIR - Patient")]
     [ProducesResponseType(typeof(PatientDto) , StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.cashier}, {RolesConstants.admin} , {RolesConstants.auditor}")]
     public async Task<IActionResult> GetById(string id)
@@ -90,12 +89,10 @@ public class PatientsController : ControllerBase
     /// </summary>
     /// <param name="createPatientDto">Datos del paciente a crear.</param>
     [HttpPost]
-    [SwaggerOperation(
-        OperationId = "CreatePatient",
-        Summary = "Obtener Ubicaciones",
-        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
-        Tags = new[] { "Patients" }
-    )]
+    [EndpointName("CreatePatient")]
+    [EndpointSummary("Crear un paciente")]
+    [EndpointDescription("Crea un nuevo recurso Patient con los datos demográficos y de contacto proporcionados.")]
+    [Tags("FHIR - Patient")]
     [ProducesResponseType(typeof(PatientDto), StatusCodes.Status201Created)]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} ")]
     public async Task<IActionResult> CreatePatient([FromBody] CreatePatientDto createPatientDto)
@@ -114,12 +111,10 @@ public class PatientsController : ControllerBase
     /// <param name="id">ID del paciente a actualizar.</param>
     /// <param name="updatePatientDto">Datos a actualizar.</param>
     [HttpPut("{id}")]
-    [SwaggerOperation(
-        OperationId = "UpdatePatientById",
-        Summary = "Obtener Ubicaciones",
-        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
-        Tags = new[] { "Patients" }
-    )]
+    [EndpointName("UpdatePatientById")]
+    [EndpointSummary("Actualizar un paciente")]
+    [EndpointDescription("Actualiza el recurso Patient indicado por su ID lógico.")]
+    [Tags("FHIR - Patient")]
     [ProducesResponseType( typeof(PatientDto), StatusCodes.Status200OK)]
     [Produces("application/json")]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} ")]
@@ -146,12 +141,10 @@ public class PatientsController : ControllerBase
     /// </summary>
     /// <param name="id">ID del paciente a eliminar.</param>
     [HttpDelete("{id}")]
-    [SwaggerOperation(
-        OperationId = "DeletePatientById",
-        Summary = "Obtener Ubicaciones",
-        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
-        Tags = new[] { "Patients" }
-    )]
+    [EndpointName("DeletePatientById")]
+    [EndpointSummary("Eliminar un paciente")]
+    [EndpointDescription("Elimina el recurso Patient indicado por su ID lógico.")]
+    [Tags("FHIR - Patient")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [Authorize(Roles = $"{RolesConstants.admin}")]
     public async Task<IActionResult> DeletePatient(string id)

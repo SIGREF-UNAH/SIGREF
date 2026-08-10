@@ -1,12 +1,11 @@
-﻿using System.ComponentModel;
-using Swashbuckle.AspNetCore.Annotations;
+using System.ComponentModel;
 
 namespace SIGREF.API.Audit.Types;
 
 /// <summary>
 /// Tipos de acciones de auditoría disponibles
 /// </summary>
-[SwaggerSchema(Description = "Tipos de acciones de auditoría disponibles")]
+[Description("Tipos de acciones de auditoria disponibles")]
 public enum DatabaseAction
 {
     [Description("Creación de un nuevo recurso")]

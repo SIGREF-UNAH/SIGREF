@@ -1,19 +1,22 @@
-﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Http;
+using System.Net.Mime;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos.Administration;
 using SIGREF.API.Services.AdministrationHospital;
 using SIGREF.Common.Constants;
-using Swashbuckle.AspNetCore.Annotations;
 
 namespace SIGREF.API.Controllers.HospitalProperties;
 
+/// <summary>Gestiona la información institucional propia del hospital.</summary>
+/// <remarks>Dominio SIGREF: almacena configuración y datos administrativos del hospital; no es un recurso FHIR.</remarks>
 [Route("api/[controller]")]
 [ApiController]
 [Authorize(AuthenticationSchemes = "Bearer")]
 [Produces(MediaTypeNames.Application.Json)]
 [Consumes(MediaTypeNames.Application.Json)]
-[SwaggerTag("Informacion Hospital - Gestion de Datos de Hospital")]
+[Tags("Informacion Hospital - Gestion de Datos de Hospital")]
 public class HospitalPropertiesController : ControllerBase
 {
     private readonly IHospitalPropertiesService _hospitalService;
@@ -27,12 +30,10 @@ public class HospitalPropertiesController : ControllerBase
     //       GET PUBLICO  (Nombre + logos) - SIN TOKEN
     // ============================================================
     [HttpGet("public")]
-    [SwaggerOperation(
-        OperationId = "GetHospitalPropertiesPublic",
-        Summary = "Obtiene una imagen al servidor",
-        Description = "NA",
-        Tags = new[] { "HospitalProperties" }
-    )]
+    [EndpointName("GetHospitalPropertiesPublic")]
+    [EndpointSummary("Obtener información pública del hospital")]
+    [EndpointDescription("Devuelve la información institucional pública necesaria para clientes no administrativos.")]
+    [Tags("SIGREF - Información del hospital")]
     [ProducesResponseType(typeof(HospitalPublicDto), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.auditor},{RolesConstants.admin},{RolesConstants.ti},{RolesConstants.cashier}")]
     public async Task<IActionResult> GetPublic()
@@ -40,14 +41,12 @@ public class HospitalPropertiesController : ControllerBase
         var result = await _hospitalService.GetPublicAsync();
         return Ok(result);
     }
-    
+
     [HttpGet("details")]
-    [SwaggerOperation(
-        OperationId = "GetHospitalPropertiesDetails",
-        Summary = "Obtiene una imagen al servidor",
-        Description = "NA",
-        Tags = new[] { "HospitalProperties" }
-    )]
+    [EndpointName("GetHospitalPropertiesDetails")]
+    [EndpointSummary("Obtener detalles del hospital")]
+    [EndpointDescription("Devuelve el detalle completo de la configuración institucional del hospital.")]
+    [Tags("SIGREF - Información del hospital")]
     [ProducesResponseType(typeof(HospitalDetailsDto), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.auditor},{RolesConstants.admin},{RolesConstants.ti},{RolesConstants.cashier}")]
     public async Task<IActionResult> GetAllDetails()
@@ -59,12 +58,10 @@ public class HospitalPropertiesController : ControllerBase
     //                 CREAR (solo 1 vez)
     // ============================================================
     [HttpPost]
-    [SwaggerOperation(
-        OperationId = "CreateHospitalProperties",
-        Summary = "Obtiene una imagen al servidor",
-        Description = "NA",
-        Tags = new[] { "HospitalProperties" }
-    )]
+    [EndpointName("CreateHospitalProperties")]
+    [EndpointSummary("Crear información del hospital")]
+    [EndpointDescription("Crea la configuración institucional inicial del hospital.")]
+    [Tags("SIGREF - Información del hospital")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [Produces<HospitalDetailsDto>()]
     [Authorize(Roles = $"{RolesConstants.ti}")]
@@ -78,12 +75,10 @@ public class HospitalPropertiesController : ControllerBase
     //                 UPDATE
     // ============================================================
     [HttpPut]
-    [SwaggerOperation(
-        OperationId = "UpdateHospitalProperties",
-        Summary = "Obtiene una imagen al servidor",
-        Description = "NA",
-        Tags = new[] { "HospitalProperties" }
-    )]
+    [EndpointName("UpdateHospitalProperties")]
+    [EndpointSummary("Actualizar información del hospital")]
+    [EndpointDescription("Actualiza la configuración institucional del hospital.")]
+    [Tags("SIGREF - Información del hospital")]
     [ProducesResponseType(typeof(HospitalDetailsDto), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.ti}")]
     public async Task<IActionResult> Update([FromBody] UpdateHospitalPropertiesDto dto)

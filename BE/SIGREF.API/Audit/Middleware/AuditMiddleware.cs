@@ -168,9 +168,9 @@ public class AuditMiddleware
     private bool ShouldAudit(string path, string method)
     {
         // 1. REGLA DE EXCLUSIÓN (Ruido del sistema)
-        // No queremos auditar la interfaz de Swagger, los pings de salud del servidor (health checks)
+        // No queremos auditar los pings de salud del servidor (health checks)
         // ni la descarga de archivos multimedia (imágenes, PDFs), ya que generan demasiada "basura" en los logs.
-        if (path.Contains("/swagger") || path.Contains("/health") || path.Contains("/media"))
+        if (path.Contains("/health") || path.Contains("/media"))
             return false;
         
         // REGLA POR DEFECTO

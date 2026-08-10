@@ -1,4 +1,6 @@
-﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Http;
+using System.Net.Mime;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SIGREF.API.Dtos.Invoice;
@@ -6,16 +8,17 @@ using SIGREF.API.Services.Billing;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
 using SIGREF.Common.Types;
-using Swashbuckle.AspNetCore.Annotations;
 
 namespace SIGREF.API.Controllers.Invoices;
 
+/// <summary>Gestiona facturas, pagos, cancelaciones y notas asociadas.</summary>
+/// <remarks>Dominio SIGREF: las facturas se almacenan en el modelo de negocio local y pueden referenciar identificadores FHIR.</remarks>
 [ApiController]
 [Route("api/invoices")]
 [Authorize(AuthenticationSchemes = "Bearer")]
 [Produces(MediaTypeNames.Application.Json)]
 [Consumes(MediaTypeNames.Application.Json)]
-[SwaggerTag("Facturas - Gestión de Facturación")]
+[Tags("Facturas - Gestión de Facturación")]
 public class InvoiceController : ControllerBase
 {
     private readonly IInvoiceService _service;
@@ -29,12 +32,10 @@ public class InvoiceController : ControllerBase
     // CREAR FACTURA
     // ============================================
     [HttpPost]
-    [SwaggerOperation(
-        OperationId = "CreateInvoice",
-        Summary = "Crear factura",
-        Description = "Crea una nueva factura en el sistema con los detalles proporcionados.",
-        Tags = new[] { "Invoice" }
-    )]
+    [EndpointName("CreateInvoice")]
+    [EndpointSummary("Crear factura")]
+    [EndpointDescription("Crea una nueva factura en el sistema con los detalles proporcionados.")]
+    [Tags("SIGREF - Facturación")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [Produces(typeof(InvoiceDetailDto))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin}")]
@@ -48,12 +49,10 @@ public class InvoiceController : ControllerBase
     // OBTENER FACTURA POR ID
     // ============================================
     [HttpGet("{id:guid}")]
-    [SwaggerOperation(
-        OperationId = "GetInvoiceById",
-        Summary = "Obtener factura por ID",
-        Description = "Recupera el detalle completo de una factura específica utilizando su identificador único.",
-        Tags = new[] { "Invoice" }
-    )]
+    [EndpointName("GetInvoiceById")]
+    [EndpointSummary("Obtener factura por ID")]
+    [EndpointDescription("Recupera el detalle completo de una factura específica utilizando su identificador único.")]
+    [Tags("SIGREF - Facturación")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [Produces(typeof(InvoiceDetailDto))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
@@ -69,12 +68,10 @@ public class InvoiceController : ControllerBase
     // LISTAR FACTURAS
     // ============================================
     [HttpGet]
-    [SwaggerOperation(
-        OperationId = "GetInvoiceList",
-        Summary = "Listar facturas",
-        Description = "Obtiene una lista paginada y filtrada de las facturas registradas en el sistema.",
-        Tags = new[] { "Invoice" }
-    )]
+    [EndpointName("GetInvoiceList")]
+    [EndpointSummary("Listar facturas")]
+    [EndpointDescription("Obtiene una lista paginada y filtrada de las facturas registradas en el sistema.")]
+    [Tags("SIGREF - Facturación")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [Produces(typeof(PagedResultDto<InvoiceGetDto>))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
@@ -88,12 +85,10 @@ public class InvoiceController : ControllerBase
     // CANCELAR FACTURA
     // ============================================
     [HttpPost("{id:guid}/cancel")]
-    [SwaggerOperation(
-        OperationId = "CreateInvoiceByIdCancellation",
-        Summary = "Crea una cancelacion factura",
-        Description = "Anula o cancela una factura existente en el sistema mediante su identificador.",
-        Tags = new[] { "Invoice" }
-    )]
+    [EndpointName("CreateInvoiceByIdCancellation")]
+    [EndpointSummary("Crea una cancelacion factura")]
+    [EndpointDescription("Anula o cancela una factura existente en el sistema mediante su identificador.")]
+    [Tags("SIGREF - Facturación")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [Produces(typeof(InvoiceDetailDto))]
     [Authorize(Roles = $"{RolesConstants.admin},")]
@@ -107,12 +102,10 @@ public class InvoiceController : ControllerBase
     // PAGAR FACTURA
     // ============================================
     [HttpPost("{id:guid}/pay")]
-    [SwaggerOperation(
-        OperationId = "CreateInvoiceMarkAsPaid",
-        Summary = "Pagar factura",
-        Description = "Marca una factura como pagada registrando el monto abonado.",
-        Tags = new[] { "Invoice" }
-    )]
+    [EndpointName("CreateInvoiceMarkAsPaid")]
+    [EndpointSummary("Pagar factura")]
+    [EndpointDescription("Marca una factura como pagada registrando el monto abonado.")]
+    [Tags("SIGREF - Facturación")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [Produces(typeof(InvoiceDetailDto))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} ")]
@@ -128,12 +121,10 @@ public class InvoiceController : ControllerBase
     // CREAR NOTA DE CRÉDITO / DÉBITO
     // ============================================
     [HttpPost("{parentId:guid}/notes/{noteType}")]
-    [SwaggerOperation(
-        OperationId = "CreateInvoiceNote",
-        Summary = "Crear nota de crédito/débito",
-        Description = "Genera una nota de crédito o débito asociada a una factura padre específica.",
-        Tags = new[] { "Invoice" }
-    )]
+    [EndpointName("CreateInvoiceNote")]
+    [EndpointSummary("Crear nota de crédito/débito")]
+    [EndpointDescription("Genera una nota de crédito o débito asociada a una factura padre específica.")]
+    [Tags("SIGREF - Facturación")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [Produces(typeof(InvoiceDetailDto))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} ")]
@@ -150,12 +141,10 @@ public class InvoiceController : ControllerBase
     // VERIFICAR SI TIENE NOTAS HIJAS
     // ============================================
     [HttpGet("{id:guid}/child-notes")]
-    [SwaggerOperation(
-        OperationId = "GetInvoiceHasChildNotes",
-        Summary = "Verificar notas hijas",
-        Description = "Comprueba y lista las notas de crédito o débito asociadas a una factura en particular.",
-        Tags = new[] { "Invoice" }
-    )]
+    [EndpointName("GetInvoiceHasChildNotes")]
+    [EndpointSummary("Verificar notas hijas")]
+    [EndpointDescription("Comprueba y lista las notas de crédito o débito asociadas a una factura en particular.")]
+    [Tags("SIGREF - Facturación")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [Produces(typeof(List<MinimalInvoiceDto>))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
@@ -169,12 +158,10 @@ public class InvoiceController : ControllerBase
     // RECALCULAR TOTALES
     // ============================================
     [HttpPost("{id:guid}/recalculate")]
-    [SwaggerOperation(
-        OperationId = "CreateInvoiceByIdRecalculation",
-        Summary = "Na",
-        Description = "NA",
-        Tags = new[] { "Invoice" }
-    )]
+    [EndpointName("CreateInvoiceByIdRecalculation")]
+    [EndpointSummary("Recalcular totales de factura")]
+    [EndpointDescription("Recalcula los totales y el estado derivado de una factura a partir de sus notas relacionadas.")]
+    [Tags("SIGREF - Facturación")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
     public async Task<IActionResult> RecalculateTotals(Guid id)
@@ -182,15 +169,13 @@ public class InvoiceController : ControllerBase
         await _service.RecalculateInvoiceTotalsAsync(id);
         return Ok();
     }
-    
+
     // SUMMARY DE NOTAS (CREDIT/DEBIT)
     [HttpGet("{id:guid}/notes-summary")]
-    [SwaggerOperation(
-        OperationId = "GetInvoiceRecalculateNotesSummary",
-        Summary = "Recalcular totales de factura",
-        Description = "Vuelve a calcular los totales de una factura específica.",
-        Tags = new[] { "Invoice" }
-    )]
+    [EndpointName("GetInvoiceRecalculateNotesSummary")]
+    [EndpointSummary("Recalcular totales de factura")]
+    [EndpointDescription("Vuelve a calcular los totales de una factura específica.")]
+    [Tags("SIGREF - Facturación")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [Produces(typeof(InvoiceNotesSummaryDto))]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
