@@ -17,7 +17,11 @@ export function CashierRouteGuard({
   const navigate = useNavigate();
   const { keycloak, initialized } = useKeycloak();
   const location = useLocation();
-  const hasActiveSession = useCashierSessionStore((state) =>state.hasActiveSession());
+  const session = useCashierSessionStore((state) => state.session);
+  const validationState = useCashierSessionStore(
+    (state) => state.validationState,
+  );
+  const hasActiveSession = validationState === "validated" && session !== null;
 
   if (!initialized) {
     return (
@@ -53,6 +57,14 @@ export function CashierRouteGuard({
   }
 
   // Validar que la sesión de caja esté abierta
+  if (requiresActiveSession && validationState !== "validated") {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
   if (requiresActiveSession && !hasActiveSession) {
     // Si está intentando acceder a /incomes sin sesión, mostrar mensaje específico
     if (location.pathname.startsWith("/incomes")) {

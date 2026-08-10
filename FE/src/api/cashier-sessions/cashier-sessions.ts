@@ -35,6 +35,14 @@ import type {
 
 import { customInstance } from ".././mutator/customInstance";
 
+export const getActiveSession = (signal?: AbortSignal) => {
+  return customInstance<CashierSessionDto>({
+    url: "/api/CashierSessions/active",
+    method: "GET",
+    signal,
+  });
+};
+
 /**
  * Recupera una lista paginada de las sesiones de caja en el sistema, de acuerdo a los filtros proporcionados.
  * @summary Obtener sesiones de caja filtradas
