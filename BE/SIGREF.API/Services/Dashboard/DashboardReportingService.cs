@@ -56,7 +56,8 @@ public class DashboardReportingService : IDashboardReportingService
             var start = new DateTimeOffset(startLocalDate.Date, AppTimeZone.GetUtcOffset(startLocalDate.Date));
             var endExclusive = new DateTimeOffset(endLocalDate.Date.AddDays(1), AppTimeZone.GetUtcOffset(endLocalDate.Date.AddDays(1)));
 
-            return (start, endExclusive);
+            // PostgreSQL timestamptz/Npgsql requiere parámetros DateTimeOffset con offset UTC.
+            return (start.ToUniversalTime(), endExclusive.ToUniversalTime());
         }
 
         // 1) No mandaron nada => este mes

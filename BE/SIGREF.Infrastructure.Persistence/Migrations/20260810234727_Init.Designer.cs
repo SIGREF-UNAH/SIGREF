@@ -12,8 +12,8 @@ using SIGREF.Infrastructure.Persistence;
 namespace SIGREF.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(SIGREFContext))]
-    [Migration("20260611202407_AddHealthLogoMediaId")]
-    partial class AddHealthLogoMediaId
+    [Migration("20260810234727_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
