@@ -281,20 +281,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         onDelete: ReferentialAction.Restrict);
                 },
                 comment: "Items facturados: cada servicio congelado con precio histórico.");
-            // [REF: Issue #259 | Commit a5a3f4e]
-            // [FILE: BE/SIGREF.Infrastructure.Persistence/Configurations/CashierSessionConfiguration.cs]
-            // ---------------------------------------------------------------------------------
-            // NOTA DE INFRAESTRUCTURA: PostgreSQL + EF Core Indexing
-            // Debido a limitaciones de EF Core con índices múltiples en la misma columna (user_id),
-            // estos índices se definen manualmente en esta migración para evitar conflictos 
-            // con el Model Snapshot. Cualquier cambio aquí debe reflejarse en la clase de 
-            // configuración mencionada arriba.
-            // ---------------------------------------------------------------------------------
-            migrationBuilder.CreateIndex(
-                name: "idx_cashier_sessions_user",
-                table:"cashier_sessions",
-                column: "user_id");
-            
+
             migrationBuilder.CreateIndex(
                 name: "idx_cashier_sessions_closed_at",
                 table: "cashier_sessions",
@@ -470,6 +457,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                 name: "idx_shifts_name_location",
                 table: "shifts",
                 columns: new[] { "name", "location_id" });
+            
             // ============================================
             // 1. Crear la MATERIALIZED VIEW optimizada
             // ============================================
@@ -564,13 +552,14 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
 
             // Ingresos reales (para agregaciones rápidas)
             migrationBuilder.Sql(@"CREATE INDEX IF NOT EXISTS idx_mv_facts_real_income ON mv_dashboard_facts(real_income);");
+            
+            
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql("DROP MATERIALIZED VIEW IF EXISTS mv_dashboard_facts;");
-
             migrationBuilder.DropTable(
                 name: "hospital_properties");
 

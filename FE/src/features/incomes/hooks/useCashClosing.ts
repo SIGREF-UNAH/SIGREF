@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { useKeycloak } from "@react-keycloak/web";
 import { useGetHospitalPropertiesDetails } from "../../../api/hospital-properties/hospital-properties";
 import { useCashierSessionStore } from "../../cashier-sessions/store";
+import type { CashierSession } from "../../cashier-sessions/store";
 import { useCreateSessionCloseById } from "../../../api/cashier-sessions/cashier-sessions";
 import useMediaFiles from "../../media-files/hooks/useMediaFiles";
 import { useExport } from "../../../shared/utils";
 import { useMessage } from "../../../shared/hooks";
 import dayjs from "dayjs";
+import { completeCashierSessionClose } from "./cashClosingState";
 
 export default function useCashClosing() {
   const msg = useMessage();
@@ -22,6 +24,7 @@ export default function useCashClosing() {
   const [showResult, setShowResult] = useState(false);
   const [closedSessionId, setClosedSessionId] = useState<string>("");
   const [systemAmount, setSystemAmount] = useState(0);
+  const [closedSession, setClosedSession] = useState<CashierSession | null>(null);
 
   // Store de sesión de caja
   const { session, clearSession } = useCashierSessionStore();
@@ -38,8 +41,16 @@ export default function useCashClosing() {
           // CashierSessionDtoResponseDto tiene wrapper .data
           // TODO Cuando BE deje de usar wrapper, eliminar .data
           const sessionData = response;
-          setClosedSessionId(sessionData?.id || session?.id || "");
-          setSystemAmount(sessionData?.systemAmount || 0);
+          if (session) {
+            const closeState = completeCashierSessionClose(
+              session,
+              sessionData,
+              clearSession,
+            );
+            setClosedSession(closeState.closedSession);
+            setClosedSessionId(closeState.closedSessionId);
+            setSystemAmount(closeState.systemAmount);
+          }
           msg.success("Sesión cerrada exitosamente");
           setShowConfirmation(false);
           setShowResult(true);
@@ -126,7 +137,7 @@ export default function useCashClosing() {
   }, [showResult, clearSession]);
 
   return {
-    session,
+    session: session ?? closedSession,
     amount,
     printRef,
     isLoadingHospital,

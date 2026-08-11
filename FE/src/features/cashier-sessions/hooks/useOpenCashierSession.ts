@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { useKeycloak } from "@react-keycloak/web";
 import { useCashierSessionStore } from "../store";
 import { useGetLocationList } from "../../../api/locations/locations";
 import { useGetShiftList } from "../../../api/shifts/shifts";
@@ -14,11 +15,12 @@ dayjs.locale("es");
 
 export default function useOpenCashierSession() {
   const navigate = useNavigate();
+  const { keycloak } = useKeycloak();
   const ability = useAbility();
   const message = useMessage();
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
   const [selectedShiftId, setSelectedShiftId] = useState<string | null>(null);
-  const { session, setSession } = useCashierSessionStore();
+  const { session, setSessionForUser } = useCashierSessionStore();
 
   // Cargar Ubicaciones
   const { data: locationsData, isLoading: isLoadingLocations } = useGetLocationList();
@@ -46,7 +48,13 @@ export default function useOpenCashierSession() {
               (l: any) => l.id === selectedLocationId
             );
 
-            setSession({
+            const userId = keycloak.tokenParsed?.sub;
+            if (!userId) {
+              message.error("No se pudo identificar al usuario autenticado");
+              return;
+            }
+
+            setSessionForUser(userId, {
               id: response.data.id,
               openAt: response.data.openAt,
               shiftName: selectedShift?.name || "N/A",

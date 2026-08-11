@@ -7,6 +7,7 @@ using SIGREF.API.Dtos.Cashier;
 using SIGREF.API.Services.Cashier;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
+using SIGREF.Infrastructure.Keycloak.Interfaces;
 namespace SIGREF.API.Controllers.Cashier;
 
 /// <summary>Gestiona el ciclo de vida de las sesiones de caja de SIGREF.</summary>
@@ -20,10 +21,31 @@ namespace SIGREF.API.Controllers.Cashier;
 public class CashierSessionsController : ControllerBase
 {
     private readonly ICashierSessionService _cashierSessionService;
+    private readonly IUserContextService _userContext;
 
-    public CashierSessionsController(ICashierSessionService cashierSessionService)
+    public CashierSessionsController(
+        ICashierSessionService cashierSessionService,
+        IUserContextService userContext)
     {
         _cashierSessionService = cashierSessionService;
+        _userContext = userContext;
+    }
+
+    // ============================================================
+    //              OBTENER SESION ACTIVA DEL CAJERO
+    // ============================================================
+    [HttpGet("active")]
+    [EndpointName("GetActiveSession")]
+    [EndpointSummary("Obtener la sesiÃ³n activa del cajero autenticado")]
+    [EndpointDescription("Consulta la sesiÃ³n de caja abierta del usuario autenticado sin aceptar un identificador externo.")]
+    [Tags("SIGREF - Sesiones de caja")]
+    [Authorize(Roles = $"{RolesConstants.cashier}")]
+    [ProducesResponseType(typeof(CashierSessionDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetActive()
+    {
+        var userId = _userContext.GetUserId();
+        var result = await _cashierSessionService.GetActiveSessionByUserAsync(userId);
+        return Ok(result);
     }
 
     // ============================================================
