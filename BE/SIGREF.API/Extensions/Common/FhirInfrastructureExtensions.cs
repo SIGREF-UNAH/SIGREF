@@ -28,7 +28,7 @@ namespace SIGREF.API.Extensions.Common
         public static T UpdateMeta<T>(this T resource) where T : Resource
         {
             resource.Meta ??= new Meta();
-            resource.Meta.LastUpdated = DateTimeOffset.Now;
+            resource.Meta.LastUpdated = DateTime.UtcNow;
             resource.Meta.VersionId = IncrementVersion(resource.Meta.VersionId);
             return resource;
         }

@@ -28,5 +28,5 @@ public class ShiftEntity : BaseEntity
 
     public TimeOnly EndTime { get; set; }
     
-    public DateTimeOffset CorrectionClosure { get; set; }
+    public DateTime CorrectionClosure { get; set; }
 }

@@ -75,7 +75,7 @@ public static class KeycloakUserMapper
         // Importante: Keycloak usa 'createdTimestamp' en MILISEGUNDOS
         if (user.TryGetProperty("createdTimestamp", out var createdProp))
         {
-            dto.CreatedAt = DateTimeOffset.FromUnixTimeMilliseconds(createdProp.GetInt64());
+            dto.CreatedAt = DateTime.UnixEpoch.AddMilliseconds(createdProp.GetInt64());
         }
         // Los atributos personalizados son opcionales; se procesan solo si existen
         if (!user.TryGetProperty("attributes", out var attrs))
@@ -98,10 +98,9 @@ public static class KeycloakUserMapper
             && lastModifiedAtArray.GetArrayLength() > 0)
         {
             var rawValue = lastModifiedAtArray[0].GetString();
-            if (DateTimeOffset.TryParse(rawValue, out var parsedDate))
-            {
-                dto.LastModifiedAt = parsedDate;
-            }
+            if (DateTime.TryParse(rawValue, System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.RoundtripKind, out var parsedDate))
+                dto.LastModifiedAt = parsedDate.ToUniversalTime();
         }
  
         return dto;

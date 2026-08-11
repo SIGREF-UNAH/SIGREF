@@ -8,7 +8,7 @@ public class ReportLineDto
     /// <summary>
     /// Fecha/hora asociada al registro (por ejemplo: fecha de factura/recibo).
     /// </summary>
-    public DateTimeOffset TransactionDate { get; set; }
+    public DateTime TransactionDate { get; set; }
 
     /// <summary>
     /// Número de recibo/boleta/comprobante.

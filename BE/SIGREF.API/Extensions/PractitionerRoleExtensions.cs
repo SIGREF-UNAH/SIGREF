@@ -46,8 +46,8 @@ public static class PractitionerRoleExtensions
             Active = resource.Active ?? true,
             Period = resource.Period != null ? new PeriodDto
             {
-                Start = resource.Period.StartElement?.ToDateTimeOffset(TimeSpan.Zero).DateTime,
-                End = resource.Period.EndElement?.ToDateTimeOffset(TimeSpan.Zero).DateTime
+                Start = resource.Period.StartElement?.ToUtcDateTime(),
+                End = resource.Period.EndElement?.ToUtcDateTime()
             } : null,
             Practitioner = resource.Practitioner?.ToReferenceDto(),
             Organization = resource.Organization?.ToReferenceDto(),

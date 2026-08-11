@@ -5,12 +5,12 @@ public class DashboardFilterDto
     /// <summary>
     /// Fecha inicial del rango.
     /// </summary>
-    public DateTimeOffset? StartDate { get; set; }
+    public DateTime? StartDate { get; set; }
 
     /// <summary>
     /// Fecha final del rango.
     /// </summary>
-    public DateTimeOffset? EndDate { get; set; }
+    public DateTime? EndDate { get; set; }
 
     /// <summary>
     /// Lista de Locations a incluir. Si viene vacía = todos.

@@ -99,7 +99,7 @@ public class ShiftService : IShiftService
                 EndTime = dto.EndTime,
                 IsActive = true,
                 CreatedById = _userContext.GetUserId(),
-                CreatedDate = DateTimeOffset.UtcNow
+                CreatedDate = DateTime.UtcNow
             };
 
             _db.Shifts.Add(newShift);
@@ -216,7 +216,7 @@ public class ShiftService : IShiftService
                 shift.IsActive = dto.IsActive.Value;
 
             shift.UpdatedById = userId;
-            shift.UpdatedDate = DateTimeOffset.UtcNow;
+            shift.UpdatedDate = DateTime.UtcNow;
 
             await _db.SaveChangesAsync();
 
@@ -277,7 +277,7 @@ public class ShiftService : IShiftService
 
             shift.IsActive = false;
             shift.UpdatedById = userId;
-            shift.UpdatedDate = DateTimeOffset.UtcNow;
+            shift.UpdatedDate = DateTime.UtcNow;
 
             await _db.SaveChangesAsync();
         }

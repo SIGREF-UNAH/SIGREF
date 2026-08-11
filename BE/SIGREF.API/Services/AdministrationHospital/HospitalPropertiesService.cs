@@ -141,7 +141,7 @@ public class HospitalPropertiesService : IHospitalPropertiesService
                     }
 
                     var userId = _userContext.GetUserId();
-                    var now = DateTimeOffset.UtcNow;
+                    var now = DateTime.UtcNow;
 
                     var entity = new HospitalPropertiesEntity
                     {
@@ -219,7 +219,7 @@ public class HospitalPropertiesService : IHospitalPropertiesService
             // Optimización: ExecuteUpdateAsync evita cargar la entidad completa en memoria
             // Solo actualiza las columnas necesarias directamente en la BD
             var userId = _userContext.GetUserId();
-            var now = DateTimeOffset.UtcNow;
+            var now = DateTime.UtcNow;
 
             var affectedRows = await _context.HospitalProperties
                 .Where(x => x.IsSingleton)

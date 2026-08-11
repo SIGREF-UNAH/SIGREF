@@ -47,42 +47,41 @@ public class DashboardReportingService : IDashboardReportingService
 
     private static readonly TimeZoneInfo AppTimeZone = GetAppTimeZone();
 
-    private (DateTimeOffset Start, DateTimeOffset End) NormalizeDateRange(DashboardFilterDto filter)
+    private (DateTime Start, DateTime End) NormalizeDateRange(DashboardFilterDto filter)
     {
-        var todayLocal = DateTimeOffset.Now.Date;
+        var todayLocal = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, AppTimeZone).Date;
 
-        (DateTimeOffset Start, DateTimeOffset EndExclusive) ToOffsetRange(DateTimeOffset startLocalDate, DateTimeOffset endLocalDate)
+        (DateTime Start, DateTime EndExclusive) ToUtcRange(DateTime startLocalDate, DateTime endLocalDate)
         {
-            var start = new DateTimeOffset(startLocalDate.Date, AppTimeZone.GetUtcOffset(startLocalDate.Date));
-            var endExclusive = new DateTimeOffset(endLocalDate.Date.AddDays(1), AppTimeZone.GetUtcOffset(endLocalDate.Date.AddDays(1)));
-
-            // PostgreSQL timestamptz/Npgsql requiere parámetros DateTimeOffset con offset UTC.
-            return (start.ToUniversalTime(), endExclusive.ToUniversalTime());
+            var start = TimeZoneInfo.ConvertTimeToUtc(
+                DateTime.SpecifyKind(startLocalDate.Date, DateTimeKind.Unspecified), AppTimeZone);
+            var endExclusive = TimeZoneInfo.ConvertTimeToUtc(
+                DateTime.SpecifyKind(endLocalDate.Date.AddDays(1), DateTimeKind.Unspecified), AppTimeZone);
+            return (start, endExclusive);
         }
 
         // 1) No mandaron nada => este mes
         if (filter.StartDate == null && filter.EndDate == null)
         {
-            var startLocal = new DateTimeOffset(new DateTime(todayLocal.Year, todayLocal.Month, 1), AppTimeZone.GetUtcOffset(new DateTime(todayLocal.Year, todayLocal.Month, 1)));
-            var endLocal = new DateTimeOffset(todayLocal, AppTimeZone.GetUtcOffset(todayLocal));
+            var startLocal = new DateTime(todayLocal.Year, todayLocal.Month, 1);
+            var endLocal = todayLocal;
 
-            return ToOffsetRange(startLocal, endLocal);
+            return ToUtcRange(startLocal, endLocal);
         }
 
         // 2) Mandaron solo StartDate
         if (filter.StartDate != null && filter.EndDate == null)
         {
-            var startLocal = new DateTimeOffset(filter.StartDate.Value.Date, AppTimeZone.GetUtcOffset(filter.StartDate.Value.Date));
+            var startLocal = filter.StartDate.Value.Date;
 
-            if (startLocal.Date > todayLocal)
+            if (startLocal > todayLocal)
                 throw new ValidationException("DASHBOARD_FUTURE_START_DATE", new Dictionary<string, object>
                 {
-                    { "StartDate", startLocal.Date },
+                    { "StartDate", startLocal },
                     { "Today", todayLocal }
                 });
 
-            var endLocal = new DateTimeOffset(todayLocal, AppTimeZone.GetUtcOffset(todayLocal));
-            return ToOffsetRange(startLocal, endLocal);
+            return ToUtcRange(startLocal, todayLocal);
         }
 
         // 3) Mandaron solo EndDate
@@ -95,17 +94,17 @@ public class DashboardReportingService : IDashboardReportingService
         }
 
         // 4) Mandaron ambos
-        var startDateLocal = new DateTimeOffset(filter.StartDate!.Value.Date, AppTimeZone.GetUtcOffset(filter.StartDate.Value.Date));
-        var endDateLocal = new DateTimeOffset(filter.EndDate!.Value.Date, AppTimeZone.GetUtcOffset(filter.EndDate.Value.Date));
+        var startDateLocal = filter.StartDate!.Value.Date;
+        var endDateLocal = filter.EndDate!.Value.Date;
 
-        if (startDateLocal.Date > endDateLocal.Date)
+        if (startDateLocal > endDateLocal)
             throw new ValidationException("DASHBOARD_INVALID_DATE_RANGE", new Dictionary<string, object>
             {
-                { "StartDate", startDateLocal.Date },
-                { "EndDate", endDateLocal.Date }
+                { "StartDate", startDateLocal },
+                { "EndDate", endDateLocal }
             });
 
-        return ToOffsetRange(startDateLocal, endDateLocal);
+        return ToUtcRange(startDateLocal, endDateLocal);
     }
 
     public async Task<DashboardSummaryDto> GetSummaryAsync(DashboardFilterDto filter)
@@ -542,7 +541,7 @@ public class DashboardReportingService : IDashboardReportingService
             var grouped = rows
                 .Select(r =>
                 {
-                    var localDate = r.CreatedDate.ToOffset(AppTimeZone.GetUtcOffset(r.CreatedDate)).Date;
+                    var localDate = TimeZoneInfo.ConvertTimeFromUtc(r.CreatedDate, AppTimeZone).Date;
                     int diff = (7 + (int)localDate.DayOfWeek - (int)DayOfWeek.Monday) % 7;
                     var weekStart = localDate.AddDays(-diff);
 

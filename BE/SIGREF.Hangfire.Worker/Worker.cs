@@ -21,7 +21,7 @@ public class Worker : BackgroundService
         {
             // En lugar de cada 1 segundo, informamos cada 30 minutos 
             // que el nodo sigue saludable.
-            _logger.LogInformation("SIGREF Worker Heartbeat: Nodo activo a las {time}", DateTimeOffset.Now);
+            _logger.LogInformation("SIGREF Worker Heartbeat: Nodo activo a las {time}", DateTime.UtcNow);
             await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
            // await Task.Delay(TimeSpan.FromMinutes(30), stoppingToken);
         }

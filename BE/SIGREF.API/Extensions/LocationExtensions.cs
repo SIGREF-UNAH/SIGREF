@@ -46,7 +46,7 @@ public static class LocationExtensions
             ManagingOrganization = createDto.ManagingOrganization?.ToFhirReference(),
             Meta = new Meta
             {
-                LastUpdated = DateTimeOffset.Now,
+                LastUpdated = DateTime.UtcNow,
                 VersionId = "1"
             }
         };
@@ -102,7 +102,7 @@ public static class LocationExtensions
         if (existingLocation.Meta == null)
             existingLocation.Meta = new Meta();
 
-        existingLocation.Meta.LastUpdated = DateTimeOffset.Now;
+        existingLocation.Meta.LastUpdated = DateTime.UtcNow;
 
 
         // Incrementar versión

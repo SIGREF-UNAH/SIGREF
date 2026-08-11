@@ -11,7 +11,7 @@ public class DashboardFact
     // ===============================
     // DIMENSIÓN DE TIEMPO
     // ===============================
-    public DateTimeOffset CreatedDate { get; set; }
+    public DateTime CreatedDate { get; set; }
 
     // ===============================
     // INGRESOS Y MONTO REAL (OPTIMIZADO)

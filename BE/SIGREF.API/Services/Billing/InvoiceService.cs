@@ -207,7 +207,7 @@ public class InvoiceService : IInvoiceService
                 CashierSessionId = activeSessionId,
                 InvoiceDiscount = dto.InvoiceDiscount ?? decimal.Zero,
                 CreatedById = userId,
-                CreatedDate = DateTimeOffset.UtcNow
+                CreatedDate = DateTime.UtcNow
             };
 
             // ============================
@@ -226,7 +226,7 @@ public class InvoiceService : IInvoiceService
                     UnitPrice = item.UnitPrice,
                     TotalAmount = lineTotal,
                     CreatedById = userId,
-                    CreatedDate = DateTimeOffset.UtcNow
+                    CreatedDate = DateTime.UtcNow
                 });
             }
 
@@ -661,7 +661,7 @@ public class InvoiceService : IInvoiceService
             invoice.AmountPaid = 0;
             invoice.AmountDue = 0;
             invoice.UpdatedById = _userContextService.GetUserId();
-            invoice.UpdatedDate = DateTimeOffset.UtcNow;
+            invoice.UpdatedDate = DateTime.UtcNow;
 
             await _dbContext.SaveChangesAsync();
 
@@ -752,7 +752,7 @@ public class InvoiceService : IInvoiceService
                 ? InvoiceStatus.Paid
                 : InvoiceStatus.Created;
             invoice.UpdatedById = _userContextService.GetUserId();
-            invoice.UpdatedDate = DateTimeOffset.UtcNow;
+            invoice.UpdatedDate = DateTime.UtcNow;
 
             await _dbContext.SaveChangesAsync();
 
@@ -900,7 +900,7 @@ public class InvoiceService : IInvoiceService
                 InvoiceDiscount = 0,
                 AdjustmentTotal = 0,
                 CreatedById = userId,
-                CreatedDate = DateTimeOffset.UtcNow
+                CreatedDate = DateTime.UtcNow
             };
 
             foreach (var item in dto.Items)
@@ -916,7 +916,7 @@ public class InvoiceService : IInvoiceService
                     UnitPrice = item.UnitPrice,
                     TotalAmount = lineTotal,
                     CreatedById = userId,
-                    CreatedDate = DateTimeOffset.UtcNow
+                    CreatedDate = DateTime.UtcNow
                 });
             }
 
@@ -1109,7 +1109,7 @@ public class InvoiceService : IInvoiceService
             }
 
             invoice.UpdatedById = _userContextService.GetUserId();
-            invoice.UpdatedDate = DateTimeOffset.UtcNow;
+            invoice.UpdatedDate = DateTime.UtcNow;
 
             await _dbContext.SaveChangesAsync();
         }

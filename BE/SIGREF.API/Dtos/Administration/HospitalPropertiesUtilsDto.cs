@@ -22,7 +22,7 @@ public class HospitalDetailsDto : HospitalPublicDto
     public string? Currency { get; set; }
     
     public Guid UpdatedById { get; set; }
-    public DateTimeOffset UpdatedDate { get; set; }
+    public DateTime UpdatedDate { get; set; }
 
 }
 

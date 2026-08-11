@@ -303,7 +303,7 @@ public static class OrganizationExtensions
         {
             existingOrganization.Meta = new Meta();
         }
-        existingOrganization.Meta.LastUpdated = DateTimeOffset.UtcNow;
+        existingOrganization.Meta.LastUpdated = DateTime.UtcNow;
 
         return existingOrganization;
     }

@@ -47,11 +47,11 @@ public class CashierSessionService : ICashierSessionService
             {
                 UserId = userId,
                 ShiftId = dto.ShiftId,
-                OpenAt = DateTimeOffset.UtcNow,
+                OpenAt = DateTime.UtcNow,
                 IsOpen = true,
                 SystemAmount = 0,
                 CreatedById = userId,
-                CreatedDate = DateTimeOffset.UtcNow
+                CreatedDate = DateTime.UtcNow
             };
 
             _db.CashierSessions.Add(session);
@@ -180,9 +180,9 @@ public class CashierSessionService : ICashierSessionService
             session.SystemAmount = systemAmount;
             session.Difference = dto.DeclaredAmount - systemAmount;
             session.IsOpen = false;
-            session.ClosedAt = DateTimeOffset.UtcNow;
+            session.ClosedAt = DateTime.UtcNow;
             session.UpdatedById = userId;
-            session.UpdatedDate = DateTimeOffset.UtcNow;
+            session.UpdatedDate = DateTime.UtcNow;
 
             bool isCorrect = session.Difference == 0;
             session.RequiresCorrection = !isCorrect;
@@ -251,7 +251,7 @@ public class CashierSessionService : ICashierSessionService
 
             session.Notes = dto.Notes;
             session.UpdatedById = userId;
-            session.UpdatedDate = DateTimeOffset.UtcNow;
+            session.UpdatedDate = DateTime.UtcNow;
             session.RequiresCorrection = true;
 
             await _db.SaveChangesAsync();
@@ -316,7 +316,7 @@ public class CashierSessionService : ICashierSessionService
             bool isCorrect = session.Difference == 0;
             session.RequiresCorrection = !isCorrect;
             session.UpdatedById = userId;
-            session.CorrectionDate = DateTimeOffset.UtcNow;
+            session.CorrectionDate = DateTime.UtcNow;
 
             await _db.SaveChangesAsync();
 
@@ -386,8 +386,8 @@ public class CashierSessionService : ICashierSessionService
             else if (filter.IsClosedCorrectly == false)
                 query = query.Where(x => x.Difference != 0);
 
-            // Filtro: fechas (DateTimeOffset)
-            // Filtro: fechas (DateTimeOffset)
+            // Filtro: fechas UTC (DateTime)
+            // Filtro: fechas UTC (DateTime)
             if (filter.FromDate is { } fromDate)
                 query = query.Where(x => x.OpenAt >= fromDate);
 

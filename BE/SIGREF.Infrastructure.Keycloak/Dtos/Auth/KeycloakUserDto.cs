@@ -20,13 +20,13 @@ public class KeycloakUserDto
     /// <summary>
     /// Fecha de creación del usuario (mapeado desde 'createdTimestamp' de Keycloak)
     /// </summary>
-    public DateTimeOffset? CreatedAt { get; set; }
+    public DateTime? CreatedAt { get; set; }
 
     /// <summary>
     /// Fecha de la última actualización de perfil/credenciales.
     /// Nota: atributo custom
     /// </summary>
-    public DateTimeOffset? LastModifiedAt { get; set; }
+    public DateTime? LastModifiedAt { get; set; }
 }
 
 

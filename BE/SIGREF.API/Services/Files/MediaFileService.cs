@@ -87,7 +87,7 @@ public class MediaFileService : IMediaFileService
             _context.MediaFiles.Add(entity);
             await _context.SaveChangesAsync(); // genera ID
 
-            var timestamp = DateTimeOffset.UtcNow.ToString("yyyyMMddHHmmss");
+            var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
             var finalFileName = $"{entity.Id}{timestamp}{dto.Type}{ext}";
 
             var basePath = Path.Combine(_env.ContentRootPath, "media", systemFolder);

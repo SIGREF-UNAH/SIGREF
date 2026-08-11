@@ -42,7 +42,7 @@ public static class PatientExtensions
             Extension = dto.Extension?.Select(e => e.ToFhirExtension()).ToList() ?? [],
             Meta = new Meta
             {
-                LastUpdated = DateTimeOffset.Now,
+                LastUpdated = DateTime.UtcNow,
                 VersionId = "1"
             }
         };
@@ -74,7 +74,7 @@ public static class PatientExtensions
         }
 
         existing.Meta ??= new Meta();
-        existing.Meta.LastUpdated = DateTimeOffset.Now;
+        existing.Meta.LastUpdated = DateTime.UtcNow;
         existing.Meta.VersionId = FhirInfrastructureExtensions.IncrementVersion(existing.Meta.VersionId);
 
         return existing;

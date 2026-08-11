@@ -273,7 +273,7 @@ public class ReportQueryService : IReportQueryService
     /// </summary>
     private sealed class ReportLineProjection
     {
-        public DateTimeOffset CreatedDate { get; set; }
+        public DateTime CreatedDate { get; set; }
         public string? SeriePrefix { get; set; }
         public long Number { get; set; }
         public Guid? CashierUserId { get; set; }

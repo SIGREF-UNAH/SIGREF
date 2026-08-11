@@ -32,7 +32,7 @@ public static class PractionerExtensions
             Identifier = dto.Identifier?.Select(i => i.ToFhirIdentifier()).ToList() ?? [],
             Meta = new Meta
             {
-                LastUpdated = DateTimeOffset.Now,
+                LastUpdated = DateTime.UtcNow,
                 VersionId = "1"
             }
         };
@@ -58,7 +58,7 @@ public static class PractionerExtensions
         if (update.Identifier != null)
             existing.Identifier = update.Identifier.Select(i => i.ToFhirIdentifier()).ToList();
         existing.Meta ??= new Meta();
-        existing.Meta.LastUpdated = DateTimeOffset.Now;
+        existing.Meta.LastUpdated = DateTime.UtcNow;
         existing.Meta.VersionId = FhirInfrastructureExtensions.IncrementVersion(existing.Meta.VersionId);
 
         return existing;

@@ -24,7 +24,7 @@ public class InvoiceGetDto
 
     public long Number { get; set; }
 
-    public DateTimeOffset CreatedDate { get; set; }
+    public DateTime CreatedDate { get; set; }
 }
 
 public class GetInvoiceParameters

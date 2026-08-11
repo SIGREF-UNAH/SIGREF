@@ -569,7 +569,7 @@ public partial class KeycloakClient : IKeycloakClient
             {
                 ["displayName"] = [dto.DisplayName ?? currentDisplayName ?? ""],
                 ["practitionerId"] = [dto.PractitionerId ?? currentPractitionerId ?? ""],
-                ["lastModifiedAt"] = [DateTimeOffset.UtcNow.ToString("O")]
+                ["lastModifiedAt"] = [DateTime.UtcNow.ToString("O")]
             }
         };
     }

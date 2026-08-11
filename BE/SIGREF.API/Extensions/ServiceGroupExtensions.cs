@@ -18,7 +18,7 @@ public static class ServiceGroupExtensions
             Status = list.Status,
             Title = list.Title,
             Code = list.Code?.ToCodeableConceptDto(),
-            Date = list.DateElement?.ToDateTime()?.ToDateTimeOffset(TimeSpan.Zero).DateTime,
+            Date = list.DateElement?.ToUtcDateTime(),
             Description = list.Note?.FirstOrDefault()?.Text,
             // Items serán poblados en el service (ya no aquí)
             HealthcareService = [],
@@ -61,7 +61,7 @@ public static class ServiceGroupExtensions
             //Significa que es una lista editable
             Mode = ListMode.Working,
             Code = dto.Code?.ToFhirCodeableConcept(),
-            DateElement = new FhirDateTime(DateTime.Now),
+            DateElement = new FhirDateTime(DateTime.UtcNow),
             Entry = new List<FhirList.EntryComponent>(),
             Note = [new Annotation(){Text =  dto.Description}],
          };
@@ -130,7 +130,7 @@ public static class ServiceGroupExtensions
             }
         }
 
-        list.DateElement = new FhirDateTime(DateTimeOffset.Now);
+        list.DateElement = new FhirDateTime(DateTime.UtcNow);
     }
 
     public record FhirListWithIncludes

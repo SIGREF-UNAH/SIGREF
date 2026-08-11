@@ -25,5 +25,5 @@ public class ResolveCorrectionDto
 public class CashierSessionMinimalDto
 {
     public Guid Id { get; set; }
-    public DateTimeOffset OpenAt { get; set; }
+    public DateTime OpenAt { get; set; }
 }
