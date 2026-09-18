@@ -13,14 +13,14 @@ using DateTime = System.DateTime;
 namespace SIGREF.API.Services.Reports;
 
 /// <summary>
-/// Servicio de consulta de reportes usando InvoiceEntity directamente.
-/// Esta versión es más confiable y no depende de la vista materializada DashboardFact.
+///     Servicio de consulta de reportes usando InvoiceEntity directamente.
+///     Esta versión es más confiable y no depende de la vista materializada DashboardFact.
 /// </summary>
 public class ReportQueryService : IReportQueryService
 {
     private readonly SIGREFContext _context;
-    private readonly IUserContextService _userContext;
     private readonly IDbContextFactory<SIGREFContext> _dbFactory;
+    private readonly IUserContextService _userContext;
 
     public ReportQueryService(
         SIGREFContext context,
@@ -164,7 +164,7 @@ public class ReportQueryService : IReportQueryService
                     CreatedDate = x.CreatedDate,
                     SeriePrefix = x.Serie != null ? x.Serie.Prefix : null,
                     Number = x.Number,
-                    CashierUserId = x.CashierSession != null ? (Guid?)x.CashierSession.UserId : null,
+                    CashierUserId = x.CashierSession != null ? x.CashierSession.UserId : null,
                     PatientDisplay = x.PatientDisplay,
                     ItemsCount = x.Items.Count(),
                     FirstItemDesc = x.Items
@@ -181,11 +181,11 @@ public class ReportQueryService : IReportQueryService
                 TransactionDate = x.CreatedDate,
                 ReceiptNumber = (x.SeriePrefix ?? "SIN") + "-" + x.Number.ToString().PadLeft(8, '0'),
                 CashierName = x.CashierUserId.HasValue
-                    ? "Usuario: " + x.CashierUserId.Value.ToString()
+                    ? "Usuario: " + x.CashierUserId.Value
                     : "Sin cajero",
                 PatientName = x.PatientDisplay ?? "Sin paciente",
                 ServiceName = x.ItemsCount == 1
-                    ? (x.FirstItemDesc ?? "Sin servicios")
+                    ? x.FirstItemDesc ?? "Sin servicios"
                     : x.ItemsCount > 1
                         ? $"Múltiples servicios ({x.ItemsCount})"
                         : "Sin servicios",
@@ -261,15 +261,17 @@ public class ReportQueryService : IReportQueryService
     }
 
     private ReportMetadataDto BuildMetadata()
-        => new()
+    {
+        return new ReportMetadataDto
         {
             GeneratedAt = DateTime.UtcNow,
             GeneratedByUserName = _userContext.GetUsername(),
             GeneratedByRoleName = _userContext.GetUserRoles()
         };
+    }
 
     /// <summary>
-    /// Proyección intermedia para evitar proyecciones anidadas complejas en EF Core.
+    ///     Proyección intermedia para evitar proyecciones anidadas complejas en EF Core.
     /// </summary>
     private sealed class ReportLineProjection
     {

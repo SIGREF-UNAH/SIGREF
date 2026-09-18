@@ -11,6 +11,8 @@ public static class PatientExtensions
 
     public static PatientDto ToDto(this Patient patient)
     {
+        ArgumentNullException.ThrowIfNull(patient);
+
         return new PatientDto
         {
             Id = patient.Id,
@@ -22,13 +24,15 @@ public static class PatientExtensions
             Telecom = patient.Telecom?.Select(t => t.ToDto()).ToList(),
             Address = patient.Address?.Select(a => a.ToDto()).ToList(),
             Identifier = patient.Identifier?.Select(i => i.ToDto()).ToList(),
-            LastUpdated = patient.Meta?.LastUpdated?.DateTime,
+            LastUpdated = patient.Meta?.LastUpdated?.UtcDateTime,
             Extension = patient.Extension?.Select(e => e.ToDto()).ToList()
         };
     }
 
     public static Patient ToFhirPatient(this CreatePatientDto dto)
     {
+        ArgumentNullException.ThrowIfNull(dto);
+
         var patient = new Patient
         {
             Active = dto.Active,
@@ -58,20 +62,21 @@ public static class PatientExtensions
 
     public static Patient ApplyUpdate(this Patient existing, UpdatePatientDto update)
     {
-        if (update.Active.HasValue) existing.Active = update.Active.Value;
-        if (update.Name != null) existing.Name = update.Name.Select(n => n.ToFhirHumanName()).ToList();
-        if (!string.IsNullOrEmpty(update.Gender?.ToString())) existing.Gender = update.Gender;
-        if (update.BirthDate.HasValue) existing.BirthDateElement = update.BirthDate.ToFhirDate();
-        if (update.MaritalStatus != null) existing.MaritalStatus = update.MaritalStatus.ToFhirCodeableConcept();
-        if (update.Telecom != null) existing.Telecom = update.Telecom.Select(t => t.ToFhirContactPoint()).ToList();
-        if (update.Address != null) existing.Address = update.Address.Select(a => a.ToFhirAddress()).ToList();
-        if (update.Identifier != null) existing.Identifier = update.Identifier.Select(i => i.ToFhirIdentifier()).ToList();
+        ArgumentNullException.ThrowIfNull(existing);
+        ArgumentNullException.ThrowIfNull(update);
+
+        if (update.WasSpecified(nameof(update.Active)) && update.Active.HasValue) existing.Active = update.Active.Value;
+        if (update.WasSpecified(nameof(update.Name))) existing.Name = update.Name?.Select(n => n.ToFhirHumanName()).ToList() ?? [];
+        if (update.WasSpecified(nameof(update.Gender)) && update.Gender.HasValue) existing.Gender = update.Gender;
+        if (update.WasSpecified(nameof(update.BirthDate))) existing.BirthDateElement = update.BirthDate.ToFhirDate();
+        if (update.WasSpecified(nameof(update.MaritalStatus))) existing.MaritalStatus = update.MaritalStatus?.ToFhirCodeableConcept();
+        if (update.WasSpecified(nameof(update.Telecom))) existing.Telecom = update.Telecom?.Select(t => t.ToFhirContactPoint()).ToList() ?? [];
+        if (update.WasSpecified(nameof(update.Address))) existing.Address = update.Address?.Select(a => a.ToFhirAddress()).ToList() ?? [];
+        if (update.WasSpecified(nameof(update.Identifier))) existing.Identifier = update.Identifier?.Select(i => i.ToFhirIdentifier()).ToList() ?? [];
 
         // Manejar extensiones
-        if (update.Extension != null)
-        {
-            existing.Extension = update.Extension.Select(e => e.ToFhirExtension()).ToList();
-        }
+        if (update.WasSpecified(nameof(update.Extension)))
+            existing.Extension = update.Extension?.Select(e => e.ToFhirExtension()).ToList() ?? [];
 
         existing.Meta ??= new Meta();
         existing.Meta.LastUpdated = DateTime.UtcNow;

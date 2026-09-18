@@ -10,7 +10,8 @@ namespace SIGREF.Infrastructure.Keycloak;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddKeycloakInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddKeycloakInfrastructure(this IServiceCollection services,
+        IConfiguration configuration)
     {
         // 
         services.Configure<KeycloakOptions>(

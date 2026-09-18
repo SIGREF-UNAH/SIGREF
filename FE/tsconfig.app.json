@@ -1,27 +1,54 @@
 {
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+
     "target": "ES2022",
     "useDefineForClassFields": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "skipLibCheck": true,
 
-    /* Bundler mode */
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+
+     "types": [
+      "vite/client"
+    ],
+    
+    "module": "ESNext",
     "moduleResolution": "bundler",
+
+    "baseUrl": ".",
+    "paths": {
+      "@endpoints": ["src/api/generated/endpoints/index.ts"],
+      "@endpoints/*": ["src/api/generated/endpoints/*"],
+      "@models": ["src/api/generated/schemas/models/index.ts"],
+      "@models/*": ["src/api/generated/schemas/models/*"],
+      "@types": ["src/api/generated/schemas/types/index.ts"],
+      "@types/*": ["src/api/generated/schemas/types/*"]
+    },
+
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
+
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Linting */
     "strict": true,
+
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+
+    "erasableSyntaxOnly": true,
+    "skipLibCheck": true
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ]
 }

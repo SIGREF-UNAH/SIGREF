@@ -93,7 +93,7 @@ public class MediaFileService : IMediaFileService
             var basePath = Path.Combine(_env.ContentRootPath, "media", systemFolder);
             if (!Directory.Exists(basePath))
                 Directory.CreateDirectory(basePath);
-            
+
             // Aseguramos que solo se tome el nombre del archivo, previniendo Path Traversal
             var safeFinalFileName = Path.GetFileName(finalFileName);
             var finalPhysicalPath = Path.Combine(basePath, safeFinalFileName);
@@ -237,7 +237,7 @@ public class MediaFileService : IMediaFileService
 
             if (hospital != null)
             {
-                bool changed = false;
+                var changed = false;
 
                 if (hospital.LogoMediaId == id)
                 {
@@ -346,7 +346,7 @@ public class MediaFileService : IMediaFileService
                 throw new NotFoundException("HOSPITAL_CONFIG_NOT_FOUND");
 
             // Actualizar segun tipo
-            string publicUrl = media.RelativePath;
+            var publicUrl = media.RelativePath;
 
             if (type == MediaFileType.AppHospital)
             {

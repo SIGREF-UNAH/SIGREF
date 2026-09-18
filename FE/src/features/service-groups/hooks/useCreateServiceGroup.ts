@@ -1,11 +1,11 @@
 import { useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMessage } from "../../../shared/hooks";
-import type { CreateServiceGroupDto } from "../../../api/models";
+import type { CreateServiceGroupDto } from "@models";
 import {
   getGetServiceGroupListQueryKey,
   useCreateServiceGroup as useCreateServiceGroupMutation,
-} from "../../../api/service-group/service-group";
+} from "@endpoints/service-groups/service-groups";
 
 /**
  * Hook personalizado para crear un paquete de servicios

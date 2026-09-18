@@ -1,5 +1,4 @@
 using Hl7.Fhir.Model;
-using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.ServiceGroup;
 using SIGREF.API.Extensions.Common;
 using FhirList = Hl7.Fhir.Model.List;
@@ -23,12 +22,12 @@ public static class ServiceGroupExtensions
             // Items serán poblados en el service (ya no aquí)
             HealthcareService = [],
             Locations = [],
-            TotalPrice = 0  // Se calculará en el service
+            TotalPrice = 0 // Se calculará en el service
         };
     }
 
     /// <summary>
-    /// Convierte HealthcareService a DTO simplificado para ServiceGroup
+    ///     Convierte HealthcareService a DTO simplificado para ServiceGroup
     /// </summary>
     public static ServiceGroupHealthcareDto ToSimplifiedDto(this HealthcareService service)
     {
@@ -36,12 +35,12 @@ public static class ServiceGroupExtensions
         {
             Id = service.Id,
             Name = service.Name ?? string.Empty,
-            Price = null  // Se llenará desde Postgres en el Service
+            Price = null // Se llenará desde Postgres en el Service
         };
     }
 
     /// <summary>
-    /// Convierte Location a DTO simplificado para ServiceGroup
+    ///     Convierte Location a DTO simplificado para ServiceGroup
     /// </summary>
     public static ServiceGroupLocationDto ToSimplifiedDto(this Location location)
     {
@@ -62,72 +61,56 @@ public static class ServiceGroupExtensions
             Mode = ListMode.Working,
             Code = dto.Code?.ToFhirCodeableConcept(),
             DateElement = new FhirDateTime(DateTime.UtcNow),
-            Entry = new List<FhirList.EntryComponent>(),
-            Note = [new Annotation(){Text =  dto.Description}],
-         };
+            Entry = new List<List.EntryComponent>(),
+            Note = [new Annotation { Text = dto.Description }]
+        };
 
         // Agregar servicios de salud como entries
         if (dto.HealthcareServiceIds != null)
-        {
             foreach (var id in dto.HealthcareServiceIds)
-            {
-                list.Entry.Add(new FhirList.EntryComponent
+                list.Entry.Add(new List.EntryComponent
                 {
                     Item = new ResourceReference($"{nameof(HealthcareService)}/{id}")
                 });
-            }
-        }
 
         // Agregar ubicaciones como entries (no extensions)
         if (dto.LocationIds != null && dto.LocationIds.Any())
-        {
             foreach (var locationId in dto.LocationIds)
-            {
-                list.Entry.Add(new FhirList.EntryComponent
+                list.Entry.Add(new List.EntryComponent
                 {
                     Item = new ResourceReference($"{nameof(Location)}/{locationId}")
                 });
-            }
-        }
 
         return list;
     }
 
     public static void ApplyUpdate(this FhirList list, UpdateServiceGroupDto dto)
     {
-        if (!string.IsNullOrEmpty(dto.Title)) list.Title = dto.Title;
-        if (dto.Status != list.Status) list.Status = dto.Status;
-        if (dto.Code != null) list.Code = dto.Code.ToFhirCodeableConcept();
-        if (!string.IsNullOrEmpty(dto.Description)) list.Note = [new Annotation(){Text = dto.Description}];
+        if (dto.WasSpecified(nameof(dto.Title))) list.Title = dto.Title;
+        if (dto.WasSpecified(nameof(dto.Status)) && dto.Status.HasValue) list.Status = dto.Status.Value;
+        if (dto.WasSpecified(nameof(dto.Code))) list.Code = dto.Code?.ToFhirCodeableConcept();
+        if (dto.WasSpecified(nameof(dto.Description))) list.Note = dto.Description == null ? [] : [new Annotation { Text = dto.Description }];
 
         // Actualizar servicios de salud y ubicaciones como entries
-        if (dto.HealthcareServiceIds != null || dto.LocationIds != null)
+        if (dto.WasSpecified(nameof(dto.HealthcareServiceIds)) || dto.WasSpecified(nameof(dto.LocationIds)))
         {
             list.Entry = [];
 
             // Agregar servicios de salud
             if (dto.HealthcareServiceIds != null)
-            {
                 foreach (var id in dto.HealthcareServiceIds)
-                {
-                    list.Entry.Add(new FhirList.EntryComponent
+                    list.Entry.Add(new List.EntryComponent
                     {
                         Item = new ResourceReference($"HealthcareService/{id}")
                     });
-                }
-            }
 
             // Agregar ubicaciones
             if (dto.LocationIds != null)
-            {
                 foreach (var locationId in dto.LocationIds)
-                {
-                    list.Entry.Add(new FhirList.EntryComponent
+                    list.Entry.Add(new List.EntryComponent
                     {
                         Item = new ResourceReference($"Location/{locationId}")
                     });
-                }
-            }
         }
 
         list.DateElement = new FhirDateTime(DateTime.UtcNow);

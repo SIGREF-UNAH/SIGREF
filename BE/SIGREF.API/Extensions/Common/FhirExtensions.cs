@@ -1,10 +1,10 @@
 ﻿#nullable enable
-using System.Linq;
 using Hl7.Fhir.Model;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Extensions.Common;
 
 namespace SIGREF.API.Extensions;
+
 public static class CommonExtensions
 {
     // ────────────────────────────────────────────────
@@ -46,7 +46,7 @@ public static class CommonExtensions
         return new IdentifierDto
         {
             Use = identifier.Use,
-            Type = identifier.Type?.ToCodeableConceptDto(), 
+            Type = identifier.Type?.ToCodeableConceptDto(),
             System = identifier.System,
             Value = identifier.Value
         };
@@ -57,7 +57,7 @@ public static class CommonExtensions
         return new Identifier
         {
             Use = dto.Use,
-            Type = dto.Type?.ToFhirCodeableConcept(), 
+            Type = dto.Type?.ToFhirCodeableConcept(),
             System = dto.System,
             Value = dto.Value
         };
@@ -68,14 +68,18 @@ public static class CommonExtensions
     // ────────────────────────────────────────────────
 
     public static ResourceReference ToFhirReference(this ReferenceDto dto)
-        => new(dto.Reference, dto.Display);
+    {
+        return new ResourceReference(dto.Reference, dto.Display);
+    }
 
     public static ReferenceDto ToReferenceDto(this ResourceReference reference)
-        => new()
+    {
+        return new ReferenceDto
         {
             Reference = reference.Reference,
             Display = reference.Display
         };
+    }
 
     // ────────────────────────────────────────────────
     // CODEABLE CONCEPT
@@ -143,33 +147,24 @@ public static class CommonExtensions
         var extension = new Extension { Url = dto.Url };
 
         if (dto.ValueString != null)
-        {
             extension.Value = new FhirString(dto.ValueString);
-        }
         else if (dto.ValueBoolean.HasValue)
-        {
             extension.Value = new FhirBoolean(dto.ValueBoolean.Value);
-        }
         else if (dto.ValueInteger.HasValue)
-        {
             extension.Value = new Integer(dto.ValueInteger.Value);
-        }
-        else if (dto.ValueDecimal.HasValue)
-        {
-            extension.Value = new FhirDecimal(dto.ValueDecimal.Value);
-        }
+        else if (dto.ValueDecimal.HasValue) extension.Value = new FhirDecimal(dto.ValueDecimal.Value);
 
         return extension;
     }
 
 
-
     /// <summary>
-    /// Genera un Display genérico para cualquier DomainResource a partir de campos relevantes.
+    ///     Genera un Display genérico para cualquier DomainResource a partir de campos relevantes.
     /// </summary>
     /// <param name="resource">Recurso FHIR</param>
     /// <param name="fieldSelectors">Funciones que devuelven strings a combinar en el Display</param>
-    public static void GenerateDisplay(this DomainResource resource, params Func<DomainResource, string?>[] fieldSelectors)
+    public static void GenerateDisplay(this DomainResource resource,
+        params Func<DomainResource, string?>[] fieldSelectors)
     {
         if (resource == null) return;
         if (fieldSelectors == null || fieldSelectors.Length == 0) return;
@@ -181,10 +176,7 @@ public static class CommonExtensions
             .ToList();
 
         // Si no hay valores, usar Id o tipo de recurso
-        if (!parts.Any())
-        {
-            parts.Add(!string.IsNullOrEmpty(resource.Id) ? resource.Id : resource.TypeName);
-        }
+        if (!parts.Any()) parts.Add(!string.IsNullOrEmpty(resource.Id) ? resource.Id : resource.TypeName);
 
         // Combinar con separador
         var display = string.Join(" - ", parts);

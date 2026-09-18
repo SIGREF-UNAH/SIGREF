@@ -1,4 +1,5 @@
 using SIGREF.API.Utils;
+using SIGREF.API.ModelBinding;
 
 namespace SIGREF.API;
 
@@ -7,13 +8,16 @@ public partial class Startup
     private void AddControllersAndOpenApi(IServiceCollection services)
     {
         services.AddControllers(options =>
-        {
-            options.Conventions.Add(new AddCommonErrorResponsesConvention());
-        });
+            {
+                options.Conventions.Add(new AddCommonErrorResponsesConvention());
+                options.ModelBinderProviders.Insert(0, new UpdateRequestModelBinderProvider());
+            })
+            .AddJsonOptions(options => options.JsonSerializerOptions.ConfigureForOpenApiContract());
 
         services.AddEndpointsApiExplorer();
         services.AddOpenApi(options =>
         {
+            options.AddSchemaTransformer<StringEnumOpenApiSchemaTransformer>();
             options.AddDocumentTransformer((document, _, _) =>
             {
                 document.Info.Title = "SIGREF API";

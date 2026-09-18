@@ -23,7 +23,7 @@ export function CashierSessionChecker() {
     if (!isValidated) return;
 
     if (!hasActiveSession && location.pathname !== "/cashier/open-session") {
-      navigate("/cashier/open-session", { replace: true });
+      void navigate("/cashier/open-session", { replace: true });
     }
   }, [
     initialized,

@@ -1,16 +1,17 @@
 using System.Text.Json.Serialization;
 using Hl7.Fhir.Model;
 using SIGREF.API.Dtos.Common;
+using SIGREF.Common.Dtos;
 
 namespace SIGREF.API.Dtos.ServiceGroup;
 
-public class UpdateServiceGroupDto
+public class UpdateServiceGroupDto : UpdateRequestDto
 {
     [JsonPropertyName("title")] public string? Title { get; set; }
 
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public List.ListStatus Status { get; set; } = List.ListStatus.Current;
+    public List.ListStatus? Status { get; set; }
 
 
     [JsonPropertyName("code")] public CodeableConceptDto? Code { get; set; }

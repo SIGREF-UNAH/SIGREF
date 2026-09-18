@@ -5,12 +5,20 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "orval": "npx orval",
     "build": "tsc -b && vite build",
-    "build:prod": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --pretty false",
     "lint": "eslint .",
+    "report:quality": "node scripts/report-quality.mjs",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
     "test": "vitest",
-    "preview": "vite preview"
+    "test:run": "vitest run",
+    "api:clean": "node scripts/clean-api.mjs",
+    "orval": "orval --config ./orval.config.ts",
+    "api:generate": "npm run api:clean && npm run orval",
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm run test:run"
   },
   "dependencies": {
     "@ant-design/icons": "^5.6.1",
@@ -47,19 +55,35 @@
   "devDependencies": {
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
     "@eslint/js": "^9.33.0",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
+    "@types/node": "^26.5.0",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^5.0.0",
+    "@vitest/coverage-v8": "^4.1.10",
+    "ajv": "^8.20.0",
+    "ajv-draft-04": "^1.0.0",
     "eslint": "^9.33.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
-    "orval": "^7.17.0",
+    "jsdom": "^30.0.1",
+    "orval": "^8.30.0",
     "prettier": "^3.6.2",
     "rollup": "^4.24.0",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.39.1",
     "vite": "^7.1.2",
     "vitest": "^4.1.10"
+  },
+  "allowScripts": {
+    "esbuild@0.27.7": true,
+    "core-js": false,
+    "esbuild@0.28.2": true
   }
 }

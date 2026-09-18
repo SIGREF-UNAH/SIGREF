@@ -17,7 +17,7 @@ namespace SIGREF.API.Controllers.PractitionerC;
 [Authorize(AuthenticationSchemes = "Bearer")]
 [Produces(MediaTypeNames.Application.Json)]
 [Consumes(MediaTypeNames.Application.Json)]
-[Tags("Roles Empleados - Gestión de Roles Empleados")]
+[Tags("PractitionerRoles")]
 public class PractitionerRoleController : ControllerBase
 {
     private readonly IPractitionerRoleService _prService;
@@ -32,7 +32,7 @@ public class PractitionerRoleController : ControllerBase
     [EndpointName("GetPractitionerRoleList")]
     [EndpointSummary("Listar roles de profesionales")]
     [EndpointDescription("Obtiene una lista paginada de recursos PractitionerRole aplicando los filtros solicitados.")]
-    [Tags("FHIR - PractitionerRole")]
+    [Tags("PractitionerRoles", "FHIR")]
     // Éxito: Especificamos el DTO de paginación con su tipo genérico
     [ProducesResponseType(typeof(PagedResultDto<PractitionerRoleDto>), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor},{RolesConstants.ti}")]
@@ -47,7 +47,7 @@ public class PractitionerRoleController : ControllerBase
     [EndpointName("GetPractitionerRoleById")]
     [EndpointSummary("Obtener un rol por ID")]
     [EndpointDescription("Recupera el recurso PractitionerRole identificado por su ID lógico en FHIR.")]
-    [Tags("FHIR - PractitionerRole")]
+    [Tags("PractitionerRoles", "FHIR")]
     // Éxito: Retorna un solo objeto DTO
     [ProducesResponseType(typeof(PractitionerRoleDto), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.admin},{RolesConstants.auditor},{RolesConstants.ti}")]
@@ -62,7 +62,7 @@ public class PractitionerRoleController : ControllerBase
     [EndpointName("GetPractitionerRoleByPractitionerId")]
     [EndpointSummary("Listar roles de un profesional")]
     [EndpointDescription("Obtiene los roles FHIR asociados a un Practitioner específico.")]
-    [Tags("FHIR - PractitionerRole")]
+    [Tags("PractitionerRoles", "FHIR")]
     // Especificamos que devuelve una colección (IEnumerable o List)
     [ProducesResponseType(typeof(IEnumerable<PractitionerRoleDto>), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.admin},{RolesConstants.auditor},{RolesConstants.ti}")]
@@ -77,7 +77,7 @@ public class PractitionerRoleController : ControllerBase
     [EndpointName("CreatePractitionerRole")]
     [EndpointSummary("Crear un rol de profesional")]
     [EndpointDescription("Crea un recurso PractitionerRole con sus relaciones profesionales y organizacionales.")]
-    [Tags("FHIR - PractitionerRole")]
+    [Tags("PractitionerRoles", "FHIR")]
     [ProducesResponseType(typeof(PractitionerRoleDto), StatusCodes.Status201Created)]
     [Authorize(Roles = $"{RolesConstants.admin}, {RolesConstants.ti}")]
     public async Task<ActionResult<PractitionerRoleDto>> Create([FromBody] CreatePractitionerRoleDto dto)
@@ -92,7 +92,7 @@ public class PractitionerRoleController : ControllerBase
     [EndpointName("UpdatePractitionerRoleById")]
     [EndpointSummary("Actualizar un rol de profesional")]
     [EndpointDescription("Actualiza el recurso PractitionerRole indicado por su ID lógico.")]
-    [Tags("FHIR - PractitionerRole")]
+    [Tags("PractitionerRoles", "FHIR")]
     [ProducesResponseType(typeof(PractitionerRoleDto), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.admin}, {RolesConstants.ti}")]
     [Produces<PractitionerRoleDto>()]
@@ -107,7 +107,7 @@ public class PractitionerRoleController : ControllerBase
     [EndpointName("DeletePractitionerRoleById")]
     [EndpointSummary("Eliminar un rol de profesional")]
     [EndpointDescription("Elimina el recurso PractitionerRole indicado por su ID lógico.")]
-    [Tags("FHIR - PractitionerRole")]
+    [Tags("PractitionerRoles", "FHIR")]
     // Éxito: 204
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [Authorize(Roles = $"{RolesConstants.admin}, {RolesConstants.ti}")]

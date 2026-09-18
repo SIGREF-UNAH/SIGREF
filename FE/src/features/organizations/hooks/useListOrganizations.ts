@@ -3,12 +3,12 @@ import { useNavigate } from "react-router";
 import { useUrlFilters, useMessage } from "../../../shared/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import type { TablePaginationConfig } from "antd";
-import type { OrganizationDto } from "../../../api/models";
+import type { OrganizationDto } from "@models";
 import {
   getGetOrganizationListQueryKey,
   useGetOrganizationList,
   useDeleteOrganizationById,
-} from "../../../api/organizations/organizations";
+} from "@endpoints/organizations/organizations";
 
 export function useOrganizationsList() {
   const [selectedOrganization, setSelectedOrganization] = useState<OrganizationDto | null>(null);

@@ -1,6 +1,7 @@
 # Configurador de Realm de Keycloak para Aspire
 
-Esta clase proporciona múltiples métodos para configurar automáticamente Keycloak con un realm por defecto en aplicaciones .NET Aspire.
+Esta clase proporciona múltiples métodos para configurar automáticamente Keycloak con un realm por defecto en
+aplicaciones .NET Aspire.
 
 ## Características
 
@@ -13,6 +14,7 @@ Esta clase proporciona múltiples métodos para configurar automáticamente Keyc
 ## Métodos Disponibles
 
 ### 1. `AddKeycloakWithPostgresAndRealm` (Método Simple)
+
 Configuración usando el flag `--import-realm` de Keycloak.
 
 ```csharp
@@ -23,10 +25,10 @@ var keycloak = builder.AddKeycloakWithPostgresAndRealm(
     "./config/keycloak-realm.json");
 ```
 
-**Pros:** Simple, directo
-**Contras:** A veces no funciona en todos los entornos
+**Pros:** Simple, directo **Contras:** A veces no funciona en todos los entornos
 
 ### 2. `AddKeycloakWithAutoSetup` (Método Recomendado)
+
 Configuración usando init container con API Admin de Keycloak.
 
 ```csharp
@@ -36,17 +38,20 @@ var keycloak = builder.AddKeycloakWithAutoSetup(
     "keycloak");
 ```
 
-**Pros:** 
+**Pros:**
+
 - ✅ Más confiable
 - ✅ Verifica si el realm ya existe
 - ✅ Usa API Admin de Keycloak
 - ✅ Mejor manejo de errores
 
-**Contras:** 
+**Contras:**
+
 - Requiere script adicional
 - Más complejo
 
 ### 3. `AddKeycloakWithRealm` (Método Básico)
+
 Para configuraciones sin PostgreSQL.
 
 ```csharp
@@ -100,14 +105,17 @@ SIGREF.API.AppHost/config/
 El realm incluye:
 
 ### Clientes
+
 - **fhir-client**: Cliente principal (secret: fhir-client-secret)
 - **fhir-admin**: Cliente administrativo (secret: fhir-admin-secret)
 
 ### Roles
+
 - **fhir-user**: Usuario estándar de FHIR
 - **fhir-admin**: Administrador de FHIR
 
 ### Usuarios de Prueba
+
 - **fhir-user** / **fhir123**: Usuario estándar
 - **fhir-admin** / **admin123**: Usuario administrador
 

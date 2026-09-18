@@ -57,7 +57,7 @@ public static class HealthcareExtensions
             Location = healthcare.Location?.Select(l => l.ToReferenceDto()).ToList() ?? [],
             Abbreviation = abbreviation,
             Scope = scope,
-            LastUpdated = healthcare.Meta?.LastUpdated?.DateTime
+            LastUpdated = healthcare.Meta?.LastUpdated?.UtcDateTime
         };
     }
 
@@ -108,20 +108,19 @@ public static class HealthcareExtensions
     {
         ArgumentNullException.ThrowIfNull(existing);
 
-        if (update.Identifier != null) existing.Identifier = update.Identifier.Select(i => i.ToFhirIdentifier()).ToList();
-        if (!string.IsNullOrEmpty(update.Name)) existing.Name = update.Name;
-        if (update.Specialty != null) existing.Specialty = update.Specialty.Select(s => s.ToFhirCodeableConcept()).ToList();
-        if (update.Location != null) existing.Location = update.Location.Select(l => l.ToFhirReference()).ToList();
-
-        existing.Active = update.Active;
-        existing.Comment = update.Comment;
-        existing.ProvidedBy = update.ProvidedBy?.ToFhirReference();
+        if (update.WasSpecified(nameof(update.Identifier))) existing.Identifier = update.Identifier?.Select(i => i.ToFhirIdentifier()).ToList() ?? [];
+        if (update.WasSpecified(nameof(update.Name))) existing.Name = update.Name;
+        if (update.WasSpecified(nameof(update.Specialty))) existing.Specialty = update.Specialty?.Select(s => s.ToFhirCodeableConcept()).ToList() ?? [];
+        if (update.WasSpecified(nameof(update.Location))) existing.Location = update.Location?.Select(l => l.ToFhirReference()).ToList() ?? [];
+        if (update.WasSpecified(nameof(update.Active)) && update.Active.HasValue) existing.Active = update.Active.Value;
+        if (update.WasSpecified(nameof(update.Comment))) existing.Comment = update.Comment;
+        if (update.WasSpecified(nameof(update.ProvidedBy))) existing.ProvidedBy = update.ProvidedBy?.ToFhirReference();
 
         // Inicializar extensiones
         existing.Extension ??= new List<Extension>();
 
         // Abbreviation
-        if (!string.IsNullOrEmpty(update.Abbreviation))
+        if (update.WasSpecified(nameof(update.Abbreviation)) && !string.IsNullOrEmpty(update.Abbreviation))
         {
             var abbreviationExtension = existing.Extension
                 .FirstOrDefault(e => e.Url == ns.HealthcareServiceAbbreviation);
@@ -136,23 +135,14 @@ public static class HealthcareExtensions
                 });
         }
 
-        // Scope (siempre se guarda)
-        var scopeValue = update.Scope.ToString().ToLowerInvariant();
-
-        var scopeExtension = existing.Extension.FirstOrDefault(e => e.Url == ns.HealthcareServiceScope);
-
-        if (scopeExtension != null)
+        if (update.WasSpecified(nameof(update.Scope)) && update.Scope.HasValue)
         {
-            scopeExtension.Value = new Code(scopeValue);
-
-        }
-        else
-        {
-            existing.Extension.Add(new Extension
-            {
-                Url = ns.HealthcareServiceScope,
-                Value = new Code(scopeValue)
-            });
+            var scopeValue = update.Scope.Value.ToString().ToLowerInvariant();
+            var scopeExtension = existing.Extension.FirstOrDefault(e => e.Url == ns.HealthcareServiceScope);
+            if (scopeExtension != null)
+                scopeExtension.Value = new Code(scopeValue);
+            else
+                existing.Extension.Add(new Extension { Url = ns.HealthcareServiceScope, Value = new Code(scopeValue) });
         }
         
 

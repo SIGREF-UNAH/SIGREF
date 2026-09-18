@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Console;
+using Npgsql;
 using SIGREF.API;
 using SIGREF.API.ServiceDefaults;
 using SIGREF.API.Utils;
-
-using SIGREF.API.Services.FhirUtils;
-using Microsoft.Extensions.Logging.Console;
+using SIGREF.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,9 +24,9 @@ builder.Logging.ClearProviders();
 builder.Logging.AddSimpleConsole(options =>
 {
     // Mantiene cada entrada de log en una sola linea
-    options.SingleLine = true;  
+    options.SingleLine = true;
     options.TimestampFormat = "HH:mm:ss ";
-    
+
     // Habilita colores ANSI para distinguir niveles de log (Info, Warning, Error) visualmente
     options.ColorBehavior = LoggerColorBehavior.Enabled;
 });
@@ -71,15 +71,15 @@ if (builder.Environment.IsDevelopment())
 builder.AddServiceDefaults();
 
 // PostgreSQL + Context Factory
-builder.AddNpgsqlDbContext<SIGREF.Infrastructure.Persistence.SIGREFContext>("sigref");
-builder.Services.AddDbContextFactory<SIGREF.Infrastructure.Persistence.SIGREFContext>();
-builder.Services.AddScoped<Npgsql.NpgsqlConnection>(sp => 
-    sp.GetRequiredService<Npgsql.NpgsqlDataSource>().OpenConnection());
+builder.AddNpgsqlDbContext<SIGREFContext>("sigref");
+builder.Services.AddDbContextFactory<SIGREFContext>();
+builder.Services.AddScoped(sp =>
+    sp.GetRequiredService<NpgsqlDataSource>().OpenConnection());
 // MongoDB
 builder.AddMongoDBClient("MongoDb");
 
 // HttpClient nombrado para HAPI FHIR con Service Discovery de Aspire
-builder.Services.AddHttpClient("hapifhir", client =>  // ← "hapifhir" exacto
+builder.Services.AddHttpClient("hapifhir", client => // ← "hapifhir" exacto
     {
         client.BaseAddress = new Uri("http://hapifhir/fhir/");
         client.Timeout = TimeSpan.FromSeconds(10);
@@ -106,14 +106,12 @@ startup.Configure(app, app.Environment);
 // =============================================================
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<SIGREF.Infrastructure.Persistence.SIGREFContext>();
+    var context = scope.ServiceProvider.GetRequiredService<SIGREFContext>();
     try
     {
         // Verificación rapida de conexion
         if (string.IsNullOrEmpty(builder.Configuration.GetConnectionString("sigref")))
-        {
             app.Logger.LogCritical("Error: Cadena de conexion 'sigref' no encontrada.");
-        }
 
         if (context.Database.GetPendingMigrations().Any())
         {
@@ -129,7 +127,7 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         app.Logger.LogError(ex, "Error critico durante la migracion de la base de datos.");
-        if (!app.Environment.IsDevelopment()) throw; 
+        if (!app.Environment.IsDevelopment()) throw;
     }
 }
 

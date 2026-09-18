@@ -33,7 +33,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("created_by_id");
 
-                    b.Property<DateTimeOffset>("CreatedDate")
+                    b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
@@ -107,7 +107,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("updated_by_id");
 
-                    b.Property<DateTimeOffset?>("UpdatedDate")
+                    b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_date");
 
@@ -172,7 +172,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("created_by_id");
 
-                    b.Property<DateTimeOffset>("CreatedDate")
+                    b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
@@ -270,7 +270,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("updated_by_id");
 
-                    b.Property<DateTimeOffset?>("UpdatedDate")
+                    b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_date");
 
@@ -323,7 +323,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("created_by_id");
 
-                    b.Property<DateTimeOffset>("CreatedDate")
+                    b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
@@ -369,7 +369,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("updated_by_id");
 
-                    b.Property<DateTimeOffset?>("UpdatedDate")
+                    b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_date");
 
@@ -412,7 +412,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("created_by_id");
 
-                    b.Property<DateTimeOffset>("CreatedDate")
+                    b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
@@ -455,7 +455,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("updated_by_id");
 
-                    b.Property<DateTimeOffset?>("UpdatedDate")
+                    b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_date");
 
@@ -481,12 +481,12 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<DateTimeOffset?>("ClosedAt")
+                    b.Property<DateTime?>("ClosedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("closed_at")
                         .HasComment("Fecha y hora en la que se cerró la sesión de caja.");
 
-                    b.Property<DateTimeOffset?>("CorrectionDate")
+                    b.Property<DateTime?>("CorrectionDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("correction_date")
                         .HasComment("Fecha en la que la sesión fue revisada/corregida por un administrador o auditor.");
@@ -495,7 +495,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("created_by_id");
 
-                    b.Property<DateTimeOffset>("CreatedDate")
+                    b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
@@ -530,7 +530,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnName("notes")
                         .HasComment("Notas o comentarios del cajero o administrador sobre discrepancias o correcciones.");
 
-                    b.Property<DateTimeOffset>("OpenAt")
+                    b.Property<DateTime>("OpenAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("open_at")
                         .HasComment("Fecha y hora exacta en la que el cajero abrió la sesión de caja.");
@@ -555,7 +555,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("updated_by_id");
 
-                    b.Property<DateTimeOffset?>("UpdatedDate")
+                    b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_date");
 
@@ -599,7 +599,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<DateTimeOffset>("CorrectionClosure")
+                    b.Property<DateTime>("CorrectionClosure")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("correction_closure");
 
@@ -607,7 +607,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("created_by_id");
 
-                    b.Property<DateTimeOffset>("CreatedDate")
+                    b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
@@ -646,7 +646,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("updated_by_id");
 
-                    b.Property<DateTimeOffset?>("UpdatedDate")
+                    b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_date");
 
@@ -678,7 +678,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("created_by_id");
 
-                    b.Property<DateTimeOffset>("CreatedDate")
+                    b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
@@ -706,7 +706,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("updated_by_id");
 
-                    b.Property<DateTimeOffset?>("UpdatedDate")
+                    b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_date");
 
@@ -728,7 +728,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("cashier_session_id");
 
-                    b.Property<DateTimeOffset>("CreatedDate")
+                    b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
@@ -871,7 +871,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("created_by_id");
 
-                    b.Property<DateTimeOffset>("CreatedDate")
+                    b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
@@ -922,7 +922,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("updated_by_id");
 
-                    b.Property<DateTimeOffset?>("UpdatedDate")
+                    b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_date");
 
@@ -954,7 +954,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("created_by_id");
 
-                    b.Property<DateTimeOffset>("CreatedDate")
+                    b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
@@ -1025,7 +1025,7 @@ namespace SIGREF.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("updated_by_id");
 
-                    b.Property<DateTimeOffset?>("UpdatedDate")
+                    b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_date");
 

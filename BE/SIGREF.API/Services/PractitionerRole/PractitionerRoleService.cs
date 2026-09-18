@@ -223,10 +223,17 @@ public class PractitionerRoleService(
         await _identifierValidation.ValidateUniquenessAsync<FhirPractitionerRole>(dto.Identifier, excludeId: id);
 
         // 4. Si el rol será activo, validar unicidad de asignación
-        if (dto.Active)
+        if (dto.Active == true)
         {
-            var practitionerRef = dto.Practitioner.Reference;
+            var practitionerRef = dto.Practitioner?.Reference;
             var organizationRef = dto.Organization?.Reference;
+
+            if (string.IsNullOrWhiteSpace(practitionerRef))
+                throw new ValidationException(MessageCodes.ValidationError, new Dictionary<string, object>
+                {
+                    { "Field", "Practitioner" },
+                    { "Details", "El practitioner es obligatorio para activar el rol." }
+                });
 
             var searchParams = new SearchParams()
                 .Add("practitioner", practitionerRef)
@@ -254,27 +261,35 @@ public class PractitionerRoleService(
         // TODO: Refactorizar lógica de mapeo a un método de extensión 'ApplyUpdate'
         // El servicio no debe conocer los detalles de transformación entre DTO y Entidad FHIR.
         // Se sugiere: existing.ApplyUpdate(dto);
-        existing.Active = dto.Active;
+        if (dto.WasSpecified(nameof(dto.Active)) && dto.Active.HasValue)
+            existing.Active = dto.Active.Value;
         // TODO: Extraer a un método de extensión global (ej. dto.Period.ToFhirPeriod())
         // Esta lógica de conversión de fechas es transversal a todos los recursos que usan Period (Pacientes, Encuentros, etc.).
-        existing.Period = (
-            (dto.Period.Start.HasValue || dto.Period.End.HasValue))
-            ? new Period
-            {
-                StartElement = dto.Period.Start.HasValue
-                    ? new FhirDateTime(dto.Period.Start.Value)
-                    : null,
+        if (dto.WasSpecified(nameof(dto.Period)))
+        {
+            existing.Period = dto.Period is null
+                ? null
+                : new Period
+                {
+                    StartElement = dto.Period.Start.HasValue
+                        ? new FhirDateTime(dto.Period.Start.Value)
+                        : null,
+                    EndElement = dto.Period.End.HasValue
+                        ? new FhirDateTime(dto.Period.End.Value)
+                        : null
+                };
+        }
 
-                EndElement = dto.Period.End.HasValue
-                    ? new FhirDateTime(dto.Period.End.Value)
-                    : null
-            }
-            : null;
-        existing.Practitioner = dto.Practitioner?.ToFhirReference();
-        existing.Organization = dto.Organization?.ToFhirReference();
-        existing.Location = dto.Location?.Select(x => x.ToFhirReference()).ToList();
-        existing.Code = dto.Code?.Select(x => x.ToFhirCodeableConcept()).ToList();
-        existing.Identifier = dto.Identifier?.Select(x => x.ToFhirIdentifier()).ToList();
+        if (dto.WasSpecified(nameof(dto.Practitioner)))
+            existing.Practitioner = dto.Practitioner?.ToFhirReference();
+        if (dto.WasSpecified(nameof(dto.Organization)))
+            existing.Organization = dto.Organization?.ToFhirReference();
+        if (dto.WasSpecified(nameof(dto.Location)))
+            existing.Location = dto.Location?.Select(x => x.ToFhirReference()).ToList() ?? [];
+        if (dto.WasSpecified(nameof(dto.Code)))
+            existing.Code = dto.Code?.Select(x => x.ToFhirCodeableConcept()).ToList() ?? [];
+        if (dto.WasSpecified(nameof(dto.Identifier)))
+            existing.Identifier = dto.Identifier?.Select(x => x.ToFhirIdentifier()).ToList() ?? [];
 
         existing.GenerateDisplay(
             r => ((FhirPractitionerRole)r).Practitioner?.Display,

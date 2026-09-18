@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { getLocationList } from "../../api/locations/locations";
+import { getLocationList } from "@endpoints/locations/locations";
 
 interface LocationOption {
   label: string;

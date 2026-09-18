@@ -20,7 +20,7 @@ import {
 } from "@ant-design/icons";
 import { PageHeaderTabs } from "../../../shared/components/ui";
 import type { ColumnsType } from "antd/es/table";
-import type { ShiftDto } from "../../../api/models";
+import type { ShiftDto } from "@models";
 import { CreateShiftModal, EditShiftModal, ShiftDetailsModal } from "../components";
 import { useAbility } from "../../../config";
 import { Can } from "@casl/react";

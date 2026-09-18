@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMessage } from "../../../shared/hooks";
-import { MediaFileType } from "../../../api/models";
+import { MediaFileType } from "@types/media-files";
 import {
   getGetMediaFileListQueryKey,
   useDeleteMediaFileById,
   useGetMediaFileList,
   useCreateMediaFileAssignment,
   useCreateMediaFileUpload,
-} from "../../../api/media-files/media-files";
-import { getGetHospitalPropertiesDetailsQueryKey } from "../../../api/hospital-properties/hospital-properties";
+} from "@endpoints/media-files/media-files";
+import { getGetHospitalPropertiesDetailsQueryKey } from "@endpoints/hospital-properties/hospital-properties";
 
 export default function useMediaFiles(logoType: MediaFileType = MediaFileType.appHospital) {
   const queryClient = useQueryClient();

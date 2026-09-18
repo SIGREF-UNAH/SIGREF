@@ -1,5 +1,4 @@
-﻿
-using Hl7.Fhir.Rest;
+﻿using Hl7.Fhir.Rest;
 using SIGREF.API.Constants;
 using SIGREF.API.Dtos.Practitioner;
 using SIGREF.API.Dtos.PractitionerRole;
@@ -18,12 +17,12 @@ namespace SIGREF.API.Services.Practitioner;
 
 public class PractitionerService : BaseFhirService, IPractitionerService
 {
+    private const string ResourceType = nameof(Practitioner);
     private readonly FhirClient _fhirClient;
     private readonly IPractitionerRoleService _practitionerRoleService;
-    private const string ResourceType = nameof(Practitioner);
 
     /// <summary>
-    /// Inicializa una nueva instancia de <see cref="PractitionerService"/> con los clientes y servicios necesarios.
+    ///     Inicializa una nueva instancia de <see cref="PractitionerService" /> con los clientes y servicios necesarios.
     /// </summary>
     public PractitionerService(
         FhirClient fhirClient,
@@ -32,9 +31,9 @@ public class PractitionerService : BaseFhirService, IPractitionerService
         IFhirNamespaceService ns)
         : base(userContext, ns)
     {
-        _fhirClient = fhirClient ?? throw new System.ArgumentNullException(nameof(fhirClient));
+        _fhirClient = fhirClient ?? throw new ArgumentNullException(nameof(fhirClient));
         _practitionerRoleService = practitionerRoleService ??
-                                   throw new System.ArgumentNullException(nameof(practitionerRoleService));
+                                   throw new ArgumentNullException(nameof(practitionerRoleService));
     }
 
     public async Task<PractitionerDto> CreatePractitionerAsync(CreatePractitionerDto dto)
@@ -83,10 +82,10 @@ public class PractitionerService : BaseFhirService, IPractitionerService
                 // if (await ExistsByIdentifier(dto.Identifiers)) 
                 //    throw new ConflictException(MessageCodes.DbUniqueConstraint, new Dictionary<string, object> { { "Value", dto.Identifiers.First().Value } });
             }
-            
+
             // 2. Transformación y Metadatos
             var practitioner = dto.ToFhirPractitioner();
-            ApplyMeta(practitioner, isCreate: true);
+            ApplyMeta(practitioner, true);
 
             // Intento de Creación
             var createdPractitioner = await _fhirClient.CreateAsync(practitioner);
@@ -142,7 +141,7 @@ public class PractitionerService : BaseFhirService, IPractitionerService
             // Obtener los roles (Uso de Try-Catch local opcional)
             // Lo envolvemos en un try-catch si queremos que el GET de Practitioner 
             // siga funcionando aunque falle la consulta de roles por algún motivo técnico.
-            try 
+            try
             {
                 var roles = await _practitionerRoleService.GetByPractitionerIdAsync(id);
                 dto.Roles = roles?.ToList() ?? new List<PractitionerRoleDto>();
@@ -172,12 +171,11 @@ public class PractitionerService : BaseFhirService, IPractitionerService
 
             // 2. Aplicamos lógica de negocio y metadatos.
             existingPractitioner.ApplyUpdate(dto);
-            ApplyMeta(existingPractitioner, isCreate: false);
+            ApplyMeta(existingPractitioner, false);
 
             // 3. Enviamos la actualización al servidor FHIR.
             var update = await _fhirClient.UpdateAsync(existingPractitioner);
             return update.ToDto();
-            
         }
         catch (FhirOperationException ex)
         {
@@ -195,13 +193,11 @@ public class PractitionerService : BaseFhirService, IPractitionerService
             // Si por ejemplo pageSize es 0 o negativo y el helper no lo controla, 
             // podríamos lanzar una ValidationException.
             if (filter.PageSize > 500) // Ejemplo de límite de seguridad
-            {
                 throw new ValidationException(MessageCodes.ValidationError, new Dictionary<string, object>
                 {
                     { "Field", "PageSize" },
                     { "Message", "El tamaño de página no puede exceder los 500 registros." }
                 });
-            }
 
             // Normalizar paginación
             var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
@@ -228,7 +224,7 @@ public class PractitionerService : BaseFhirService, IPractitionerService
 
             // Obtener PagedResult del helper
             var pagedResult = FhirPaginationHelper.ToPagedResult<FhirPractitioner>(bundle, pageNumber, pageSize);
-    
+
             // TODO: MEJORAR RENDIMIENTO - PROCESADO DE RECURSOS.
             // Evaluar si el Bundle original puede incluir los roles mediante '_include=PractitionerRole:practitioner'.
             // De no ser posible, implementar búsqueda por lote (Bulk Search) para evitar múltiples llamadas

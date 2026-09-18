@@ -7,9 +7,9 @@ namespace SIGREF.API.Audit.Middleware.worker;
 
 public class AuditWorker : BackgroundService
 {
-    private readonly IAuditQueue _queue;
     private readonly IMongoCollection<AuditLog> _collection;
     private readonly ILogger<AuditWorker> _logger;
+    private readonly IAuditQueue _queue;
 
     public AuditWorker(IAuditQueue queue, IMongoClient mongoClient, IConfiguration config, ILogger<AuditWorker> logger)
     {
@@ -31,8 +31,7 @@ public class AuditWorker : BackgroundService
         _logger.LogInformation("AuditWorker listo. Escuchando eventos en la cola...");
 
         await foreach (var log in _queue.ReadAllAsync(stoppingToken))
-        {
-            try 
+            try
             {
                 await _collection.InsertOneAsync(log, cancellationToken: stoppingToken);
             }
@@ -44,6 +43,5 @@ public class AuditWorker : BackgroundService
             {
                 _logger.LogError(ex, "Error crítico guardando auditoría. TraceId: {TraceId}", log.TraceId);
             }
-        }
     }
 }

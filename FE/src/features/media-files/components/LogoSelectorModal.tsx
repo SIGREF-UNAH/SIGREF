@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from "react";
 import useMediaFiles from "../hooks/useMediaFiles";
 import { MediaFilesList } from "./MediaFilesList";
-import type { MediaFileType } from "../../../api/models";
+import type { MediaFileType } from "@types/media-files";
 import { UploadMediaForm } from "./UploadMediaForm";
 import { Modal, Button, Input, Space, Tabs, type TabsProps } from "antd";
 import {

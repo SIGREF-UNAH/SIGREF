@@ -33,12 +33,12 @@ import {
   useDeletePractitionerById,
   useGetPractitionerList,
   getGetPractitionerListQueryKey,
-} from "../../../api/practitioner/practitioner";
-import { useGetLocationList } from "../../../api/locations/locations";
+} from "@endpoints/practitioners/practitioners";
+import { useGetLocationList } from "@endpoints/locations/locations";
 import { ROLE_OPTIONS } from "../../../shared/constants/RolesConstants";
 import { useAbility } from "../../../config";
 import { Can } from "@casl/react";
-import type { AdministrativeGender } from "../../../api/models";
+import type { NullableOfAdministrativeGender as AdministrativeGender } from "@types/shared";
 
 interface Practitioner {
   id: string;

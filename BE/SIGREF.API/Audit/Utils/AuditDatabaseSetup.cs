@@ -4,12 +4,13 @@ using SIGREF.API.Audit.Dto;
 namespace SIGREF.API.Audit.Utils;
 
 /// <summary>
-/// Se encarga de la configuración inicial de la colección de auditoría en MongoDB,
-/// garantizando que las consultas futuras sean de alto rendimiento.
+///     Se encarga de la configuración inicial de la colección de auditoría en MongoDB,
+///     garantizando que las consultas futuras sean de alto rendimiento.
 /// </summary>
 public static class AuditDatabaseSetup
 {
-    public static async Task EnsureIndexesAsync(IMongoCollection<AuditLog> collection, ILogger logger, CancellationToken ct)
+    public static async Task EnsureIndexesAsync(IMongoCollection<AuditLog> collection, ILogger logger,
+        CancellationToken ct)
     {
         try
         {
@@ -54,7 +55,7 @@ public static class AuditDatabaseSetup
 
             // Ejecutar la creación en bloque
             await collection.Indexes.CreateManyAsync(indexModels, ct);
-            
+
             logger.LogInformation("Los índices de auditoría en MongoDB han sido validados/creados con éxito.");
         }
         catch (MongoException ex)

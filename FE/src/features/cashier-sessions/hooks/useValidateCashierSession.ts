@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { getActiveSession } from "../../../api/cashier-sessions/cashier-sessions";
-import type { CashierSessionDto } from "../../../api/models/cashierSessionDto";
+import { getActiveSession } from "@endpoints/cashier-sessions/cashier-sessions";
+import type { CashierSessionDto } from "@models/cashier-sessions/cashierSessionDto";
 import { useCashierSessionStore } from "../store";
 
 export type ActiveSessionFetcher = () => Promise<CashierSessionDto>;

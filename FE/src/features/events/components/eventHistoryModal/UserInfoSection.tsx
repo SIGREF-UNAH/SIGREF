@@ -2,7 +2,7 @@
 import { GlobalOutlined, UserOutlined } from "@ant-design/icons";
 import { ProDescriptions } from "@ant-design/pro-components";
 import { Divider, Space } from "antd";
-import type { AuditLog } from "../../../../api/models/auditLog";
+import type { AuditLog } from "@models/audit/auditLog";
 
 interface Props {
   record: AuditLog;

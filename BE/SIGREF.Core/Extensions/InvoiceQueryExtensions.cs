@@ -13,7 +13,7 @@ public static class InvoiceQueryExtensions
         // 1. Normalización de fechas a UTC
         // ══════════════════════════════════════════════════════
         var start = filter.StartDate!.Value;
-        var end   = filter.EndDate!.Value;
+        var end = filter.EndDate!.Value;
 
         if (start.Kind == DateTimeKind.Unspecified)
             start = DateTime.SpecifyKind(start, DateTimeKind.Utc);
@@ -29,10 +29,7 @@ public static class InvoiceQueryExtensions
         // ══════════════════════════════════════════════════════
         // 3. Filtro por Series (opcional)
         // ══════════════════════════════════════════════════════
-        if (filter.SeriesIds is { Count: > 0 })
-        {
-            query = query.Where(x => filter.SeriesIds.Contains(x.SerieId));
-        }
+        if (filter.SeriesIds is { Count: > 0 }) query = query.Where(x => filter.SeriesIds.Contains(x.SerieId));
 
         // ══════════════════════════════════════════════════════
         // 4. Filtro por Cajeros (opcional)
@@ -51,11 +48,9 @@ public static class InvoiceQueryExtensions
                 .ToList();
 
             if (cashierGuids.Count > 0)
-            {
                 query = query.Where(x =>
                     x.CashierSession != null &&
                     cashierGuids.Contains(x.CashierSession.UserId));
-            }
         }
 
         return query;

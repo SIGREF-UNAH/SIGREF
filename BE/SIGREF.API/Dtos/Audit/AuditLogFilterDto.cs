@@ -1,12 +1,15 @@
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using SIGREF.API.Audit.Types;
 
 namespace SIGREF.API.Dtos.Audit;
-[System.ComponentModel.Description("Par�metros de consulta para recuperar logs de auditor�a con filtros avanzados y paginaci�n")]
+
+[Description("Par�metros de consulta para recuperar logs de auditor�a con filtros avanzados y paginaci�n")]
 public class AuditLogFilterDto
 {
     [Range(1, int.MaxValue, ErrorMessage = "CurrentPage debe ser mayor o igual a 1")]
     public int CurrentPage { get; set; } = 1;
+
     public int PageSize { get; set; } = 20;
 
     // Filtros

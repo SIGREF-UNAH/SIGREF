@@ -6,14 +6,14 @@ import { useAbility } from "../../../config";
 import type {
   HealthcareDto,
   GetHealtcareListParams,
-  HealthcareScope,
-} from "../../../api/models";
+} from "@models";
+import type { HealthcareScope } from "@types/healthcare-services";
 import {
   getGetHealtcareListQueryKey,
   useGetHealtcareList,
   useDeleteHealtcareById,
-} from "../../../api/healthcares/healthcares";
-import { useGetLocationList } from "../../../api/locations/locations";
+} from "@endpoints/healthcare-services/healthcare-services";
+import { useGetLocationList } from "@endpoints/locations/locations";
 
 interface FiltersState {
   location?: string;

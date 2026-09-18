@@ -1,0 +1,37 @@
+# Source control and local tooling
+.git
+.gitignore
+.agents
+.codex
+
+# Dependencies and generated artifacts
+node_modules
+dist
+coverage
+*.log
+lint-output.txt
+
+# Environment files and credentials
+.env
+.env.*
+!.env.template
+
+# Documentation and development-only files
+documentation
+README.md
+.editorconfig
+.prettierignore
+prettier.config.mjs
+vitest.config.ts
+tsconfig.test.json
+eslint.config.js
+orval.config.ts
+scripts
+
+# Editor, operating-system, and temporary files
+.DS_Store
+.idea
+.vscode
+*.swp
+*.swo
+*.har

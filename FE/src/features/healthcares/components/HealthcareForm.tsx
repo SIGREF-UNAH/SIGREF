@@ -6,7 +6,7 @@ import type {
   HealthcareDto,
   LocationDto,
   OrganizationDto,
-} from "../../../api/models";
+} from "@models";
 import {
   ProForm,
   ProFormText,

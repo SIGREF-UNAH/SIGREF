@@ -1,6 +1,6 @@
 import { message } from 'antd';
-import { useGetUserById} from '../../../api/users/users';
-import { useGetPractitionerById } from '../../../api/practitioner/practitioner';
+import { useGetUserById} from '@endpoints/users/users';
+import { useGetPractitionerById } from '@endpoints/practitioners/practitioners';
 
 export const useUserDetail = (userId: string | null) => {
   // Fetch de datos del usuario

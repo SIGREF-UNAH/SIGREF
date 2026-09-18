@@ -1,81 +1,80 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <Nullable>disable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <IsAspireSharedProject>true</IsAspireSharedProject>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>disable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <IsAspireSharedProject>true</IsAspireSharedProject>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="Database\Configuration\**" />
-    <Compile Remove="Database\Entities\**" />
-    <Compile Remove="media\**" />
-    <Compile Remove="SeedData\**" />
-    <Content Remove="Database\Configuration\**" />
-    <Content Remove="Database\Entities\**" />
-    <Content Remove="media\**" />
-    <Content Remove="SeedData\**" />
-    <EmbeddedResource Remove="Database\Configuration\**" />
-    <EmbeddedResource Remove="Database\Entities\**" />
-    <EmbeddedResource Remove="media\**" />
-    <EmbeddedResource Remove="SeedData\**" />
-    <None Remove="Database\Configuration\**" />
-    <None Remove="Database\Entities\**" />
-    <None Remove="media\**" />
-    <None Remove="SeedData\**" />
-    <EmbeddedResource Update="Resources\SharedResources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-    </EmbeddedResource>
-  </ItemGroup>
+    <ItemGroup>
+        <Compile Remove="Database\Configuration\**"/>
+        <Compile Remove="Database\Entities\**"/>
+        <Compile Remove="media\**"/>
+        <Compile Remove="SeedData\**"/>
+        <Content Remove="Database\Configuration\**"/>
+        <Content Remove="Database\Entities\**"/>
+        <Content Remove="media\**"/>
+        <Content Remove="SeedData\**"/>
+        <EmbeddedResource Remove="Database\Configuration\**"/>
+        <EmbeddedResource Remove="Database\Entities\**"/>
+        <EmbeddedResource Remove="media\**"/>
+        <EmbeddedResource Remove="SeedData\**"/>
+        <None Remove="Database\Configuration\**"/>
+        <None Remove="Database\Entities\**"/>
+        <None Remove="media\**"/>
+        <None Remove="SeedData\**"/>
+        <EmbeddedResource Update="Resources\SharedResources.resx">
+            <Generator>PublicResXFileCodeGenerator</Generator>
+        </EmbeddedResource>
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Aspire.Keycloak.Authentication" Version="13.0.1-preview.1.25575.3" />
-    <PackageReference Include="Aspire.MongoDB.Driver" Version="13.0.1" />
-    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="13.0.1" />
-    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.23" />
-    <PackageReference Include="Hangfire.PostgreSql" Version="1.21.1" />
-    <PackageReference Include="Hl7.Fhir.R4" Version="5.12.2" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.11" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="9.0.11" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.11" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.9">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.9">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
-    <PackageReference Include="MongoDB.Driver" Version="3.5.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
-    <PackageReference Include="Scrutor" Version="7.0.0" />
-    <PackageReference Include="Scalar.AspNetCore" Version="2.4.20" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Aspire.Keycloak.Authentication" Version="13.0.1-preview.1.25575.3"/>
+        <PackageReference Include="Aspire.MongoDB.Driver" Version="13.0.1"/>
+        <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="13.0.1"/>
+        <PackageReference Include="Hangfire.AspNetCore" Version="1.8.23"/>
+        <PackageReference Include="Hangfire.PostgreSql" Version="1.21.1"/>
+        <PackageReference Include="Hl7.Fhir.R4" Version="5.12.2"/>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.11"/>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="9.0.11"/>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.11"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.9">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.9">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0"/>
+        <PackageReference Include="MongoDB.Driver" Version="3.5.0"/>
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.4"/>
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4"/>
+        <PackageReference Include="Scrutor" Version="7.0.0"/>
+        <PackageReference Include="Scalar.AspNetCore" Version="2.4.20"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\SIGREF.API.ServiceDefaults\SIGREF.API.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\SIGREF.Common\SIGREF.Common.csproj" />
-    <ProjectReference Include="..\SIGREF.Core\SIGREF.Core.csproj" />
-    <ProjectReference Include="..\SIGREF.Hangfire.Worker\SIGREF.Hangfire.Worker.csproj" />
-    <ProjectReference Include="..\SIGREF.Infrastructure.Keycloak\SIGREF.Infrastructure.Keycloak.csproj" />
-    <ProjectReference Include="..\SIGREF.Infrastructure.Persistence\SIGREF.Infrastructure.Persistence.csproj" />
-    <ProjectReference Include="..\SIGREF.Infrastructure.Reporting\SIGREF.Infrastructure.Reporting.csproj" />
-  </ItemGroup>
-	<ItemGroup>
-		<EmbeddedResource Include="Assets/Fonts/DejaVuSans.ttf" />
-		<EmbeddedResource Include="Assets/Fonts/DejaVuSans-Bold.ttf" />
-		<EmbeddedResource Include="Assets/Fonts/DejaVuSans-Oblique.ttf" />
-		<EmbeddedResource Include="Assets/Fonts/DejaVuSans-BoldOblique.ttf" />
-	</ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\SIGREF.API.ServiceDefaults\SIGREF.API.ServiceDefaults.csproj"/>
+        <ProjectReference Include="..\SIGREF.Common\SIGREF.Common.csproj"/>
+        <ProjectReference Include="..\SIGREF.Core\SIGREF.Core.csproj"/>
+        <ProjectReference Include="..\SIGREF.Hangfire.Worker\SIGREF.Hangfire.Worker.csproj"/>
+        <ProjectReference Include="..\SIGREF.Infrastructure.Keycloak\SIGREF.Infrastructure.Keycloak.csproj"/>
+        <ProjectReference Include="..\SIGREF.Infrastructure.Persistence\SIGREF.Infrastructure.Persistence.csproj"/>
+        <ProjectReference Include="..\SIGREF.Infrastructure.Reporting\SIGREF.Infrastructure.Reporting.csproj"/>
+    </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Include="Assets/Fonts/DejaVuSans.ttf"/>
+        <EmbeddedResource Include="Assets/Fonts/DejaVuSans-Bold.ttf"/>
+        <EmbeddedResource Include="Assets/Fonts/DejaVuSans-Oblique.ttf"/>
+        <EmbeddedResource Include="Assets/Fonts/DejaVuSans-BoldOblique.ttf"/>
+    </ItemGroup>
 
     <PropertyGroup>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <NoWarn>$(NoWarn);1591</NoWarn>
     </PropertyGroup>
 
-    
 
 </Project>

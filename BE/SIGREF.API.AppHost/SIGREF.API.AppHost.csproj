@@ -1,29 +1,29 @@
 <Project Sdk="Aspire.AppHost.Sdk/13.0.0">
 
-<PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <UserSecretsId>fea1c280-9e04-4251-a153-5312b983ff58</UserSecretsId>
-    <IsAspireHost>true</IsAspireHost>
-  </PropertyGroup>
-  <ItemGroup>
-     <PackageReference Include="Aspire.Hosting.AppHost" Version="13.0.1" />
-     <PackageReference Include="Aspire.Hosting.Docker" Version="13.0.1-preview.1.25575.3" />
-    <PackageReference Include="Aspire.Hosting.Keycloak" Version="13.0.1-preview.1.25575.3" />
-    <PackageReference Include="Aspire.Hosting.MongoDB" Version="13.0.1" />
-    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.0.1" />
-    <PackageReference Include="Aspire.Hosting.Yarp" Version="13.0.1" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\SIGREF.API\SIGREF.API.csproj" />
-    <ProjectReference Include="..\SIGREF.Hangfire.Worker\SIGREF.Hangfire.Worker.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="config\**" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="config\themes\sigref\account\" />
-  </ItemGroup>
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <UserSecretsId>fea1c280-9e04-4251-a153-5312b983ff58</UserSecretsId>
+        <IsAspireHost>true</IsAspireHost>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Aspire.Hosting.AppHost" Version="13.0.1"/>
+        <PackageReference Include="Aspire.Hosting.Docker" Version="13.0.1-preview.1.25575.3"/>
+        <PackageReference Include="Aspire.Hosting.Keycloak" Version="13.0.1-preview.1.25575.3"/>
+        <PackageReference Include="Aspire.Hosting.MongoDB" Version="13.0.1"/>
+        <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.0.1"/>
+        <PackageReference Include="Aspire.Hosting.Yarp" Version="13.0.1"/>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\SIGREF.API\SIGREF.API.csproj"/>
+        <ProjectReference Include="..\SIGREF.Hangfire.Worker\SIGREF.Hangfire.Worker.csproj"/>
+    </ItemGroup>
+    <ItemGroup>
+        <Content Include="config\**" CopyToOutputDirectory="PreserveNewest"/>
+    </ItemGroup>
+    <ItemGroup>
+        <Folder Include="config\themes\sigref\account\"/>
+    </ItemGroup>
 </Project>

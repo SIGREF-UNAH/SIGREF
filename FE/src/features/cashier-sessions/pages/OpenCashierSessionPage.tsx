@@ -90,14 +90,14 @@ export default function OpenCashierSessionPage() {
                 <Button 
                   type="default" 
                   size="large"
-                  onClick={() => navigate("/")}
+                  onClick={() => void navigate("/")}
                 >
                   Volver al Inicio
                 </Button>
                 <Button 
                   type="primary" 
                   size="large"
-                  onClick={() => navigate("/incomes/close")}
+                  onClick={() => void navigate("/incomes/close")}
                 >
                   Ir a Cierre de Caja
                 </Button>
@@ -139,16 +139,18 @@ export default function OpenCashierSessionPage() {
                 optionFilterProp="children"
                 style={{ fontSize: '16px' }}
               >
-                {locations.map((location: any) => (
-                  <Option key={location.id} value={location.id}>
-                    <div className="flex items-center py-1">
-                      <EnvironmentOutlined className="mr-2 text-blue-500" />
-                      <div>
-                        <div className="font-medium">{location.name}</div>
+                {locations.map((location) =>
+                  location.id ? (
+                    <Option key={location.id} value={location.id}>
+                      <div className="flex items-center py-1">
+                        <EnvironmentOutlined className="mr-2 text-blue-500" />
+                        <div>
+                          <div className="font-medium">{location.name}</div>
+                        </div>
                       </div>
-                    </div>
-                  </Option>
-                ))}
+                    </Option>
+                  ) : null,
+                )}
               </Select>
             )}
           </div>
@@ -167,7 +169,7 @@ export default function OpenCashierSessionPage() {
                 />
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                  {shifts.map((shift: any) => (
+                  {shifts.map((shift) => shift.id ? (
                     <Card
                       key={shift.id}
                       className={`relative cursor-pointer transition-all duration-300 ${
@@ -175,7 +177,7 @@ export default function OpenCashierSessionPage() {
                           ? 'border-2 border-blue-500 shadow-2xl scale-105'
                           : 'border border-gray-200 hover:border-blue-300 hover:shadow-lg'
                       }`}
-                      onClick={() => handleShiftClick(shift.id)}
+                      onClick={() => handleShiftClick(shift.id!)}
                       style={{
                         borderRadius: '20px',
                         overflow: 'hidden',
@@ -229,11 +231,11 @@ export default function OpenCashierSessionPage() {
                           <div className="space-y-2">
                             <div className="flex items-center justify-center text-gray-600">
                               <span className="text-base font-medium mr-2">Inicio:</span>
-                              <span className="text-base font-semibold">{shift.startTime.slice(0, 5)}</span>
+                              <span className="text-base font-semibold">{shift.startTime?.slice(0, 5) ?? "--:--"}</span>
                             </div>
                             <div className="flex items-center justify-center text-gray-600">
                               <span className="text-base font-medium mr-2">Fin:</span>
-                              <span className="text-base font-semibold">{shift.endTime.slice(0, 5)}</span>
+                              <span className="text-base font-semibold">{shift.endTime?.slice(0, 5) ?? "--:--"}</span>
                             </div>
                           </div>
                         </div>
@@ -296,7 +298,7 @@ export default function OpenCashierSessionPage() {
                         </div>
                       </div>
                     </Card>
-                  ))}
+                  ) : null)}
                 </div>
               )}
 

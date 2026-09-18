@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useGetOrganizationList } from "../../../api/organizations/organizations";
-import { useGetLocationList } from "../../../api/locations/locations";
+import { useGetOrganizationList } from "@endpoints/organizations/organizations";
+import { useGetLocationList } from "@endpoints/locations/locations";
 import type { ProFormInstance } from "@ant-design/pro-components";
 import { ROLE_OPTIONS } from "../../../shared/constants";
 import { useState, useRef, useEffect } from "react";
@@ -10,19 +10,19 @@ import dayjs from "dayjs";
 import {
   useDeletePractitionerById,
   useGetPractitionerById,
-} from "../../../api/practitioner/practitioner";
+} from "@endpoints/practitioners/practitioners";
 import {
   useDeletePractitionerRoleById,
   useGetPractitionerRoleByPractitionerId,
   useCreatePractitionerRole,
   useUpdatePractitionerRoleById,
-} from "../../../api/practitioner-role/practitioner-role";
+} from "@endpoints/practitioner-roles/practitioner-roles";
 import type {
   PractitionerDto,
   PractitionerRoleDto,
   OrganizationDto,
   LocationDto,
-} from "../../../api/models";
+} from "@models";
 
 /**
  * Hook personalizado para gestionar la información de un profesional de salud

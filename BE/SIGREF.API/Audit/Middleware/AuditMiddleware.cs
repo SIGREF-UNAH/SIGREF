@@ -2,10 +2,10 @@
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
-using System.Linq;
 using SIGREF.API.Audit.Dto;
 using SIGREF.API.Audit.Middleware.Quee;
 using SIGREF.API.Audit.Types;
+using SIGREF.Common.Exceptions;
 
 public class AuditMiddleware
 {
@@ -56,7 +56,8 @@ public class AuditMiddleware
         finally
         {
             // 4. Construir y encolar el log (Se ejecuta SIEMPRE, haya error o éxito)
-            var statusCode = capturedException != null ? 500 : context.Response.StatusCode;
+            var appException = capturedException as AppException;
+            var statusCode = appException?.StatusCode ?? context.Response.StatusCode;
 
             var auditLog = new AuditLog
             {
@@ -72,6 +73,8 @@ public class AuditMiddleware
                 StatusCode = statusCode,
                 Success = capturedException == null && statusCode is >= 200 and < 300,
                 ErrorMessage = capturedException?.Message,
+                ErrorCode = appException?.ErrorCode ??
+                            (capturedException != null ? "INTERNAL_SERVER_ERROR" : null),
                 Action = MapHttpMethodToAction(request.Method, statusCode).ToString()
             };
 
@@ -83,19 +86,14 @@ public class AuditMiddleware
                 var filters = new Dictionary<string, string>();
 
                 // A. Capturamos los QueryParams (ej. ?name=Juan)
-                foreach (var query in request.Query)
-                {
-                    filters[query.Key] = query.Value.ToString();
-                }
+                foreach (var query in request.Query) filters[query.Key] = query.Value.ToString();
 
                 // B. Capturamos las variables de la URL (ej. el {id} de /api/Patient/{id})
                 // RouteValues es poblado automáticamente por .NET basado en tu [Route("")]
                 foreach (var routeValue in context.Request.RouteValues
                              .Where(rv => rv.Key != "controller" && rv.Key != "action"))
-                {
                     // Agregamos un prefijo para distinguirlo de los query params
                     filters[$"route_{routeValue.Key}"] = routeValue.Value?.ToString();
-                }
 
                 // Solo asignamos si realmente encontramos algo
                 auditLog.FiltersUsed = filters.Count > 0 ? filters : null;
@@ -116,7 +114,7 @@ public class AuditMiddleware
     // =================================================================================
 
     /// <summary>
-    /// Motor recursivo para extraer solo la estructura del JSON, ignorando los valores.
+    ///     Motor recursivo para extraer solo la estructura del JSON, ignorando los valores.
     /// </summary>
     private List<string> GetKeysFromJson(string json)
     {
@@ -138,29 +136,21 @@ public class AuditMiddleware
     private void ExtractKeysRecursive(JsonElement element, string prefix, List<string> keys)
     {
         if (element.ValueKind == JsonValueKind.Object)
-        {
             foreach (var property in element.EnumerateObject())
             {
-                string currentPath = string.IsNullOrEmpty(prefix) ? property.Name : $"{prefix}.{property.Name}";
+                var currentPath = string.IsNullOrEmpty(prefix) ? property.Name : $"{prefix}.{property.Name}";
 
                 if (property.Value.ValueKind == JsonValueKind.Object)
-                {
                     ExtractKeysRecursive(property.Value, currentPath, keys);
-                }
                 else if (property.Value.ValueKind == JsonValueKind.Array)
-                {
                     keys.Add(currentPath); // Registramos que el array fue modificado
-                }
                 else
-                {
                     keys.Add(currentPath);
-                }
             }
-        }
     }
 
     /// <summary>
-    /// Determina si una petición HTTP debe ser registrada en la auditoría.
+    ///     Determina si una petición HTTP debe ser registrada en la auditoría.
     /// </summary>
     /// <param name="path">La ruta del endpoint consultado (ej. "/api/Patient/123")</param>
     /// <param name="method">El verbo HTTP (ej. "GET", "POST")</param>
@@ -172,7 +162,7 @@ public class AuditMiddleware
         // ni la descarga de archivos multimedia (imágenes, PDFs), ya que generan demasiada "basura" en los logs.
         if (path.Contains("/health") || path.Contains("/media"))
             return false;
-        
+
         // REGLA POR DEFECTO
         return true;
     }
@@ -180,10 +170,7 @@ public class AuditMiddleware
     private DatabaseAction MapHttpMethodToAction(string httpMethod, int statusCode)
     {
         // 2. Prevenir excepciones por nulos
-        if (string.IsNullOrWhiteSpace(httpMethod))
-        {
-            return DatabaseAction.Unknown;
-        }
+        if (string.IsNullOrWhiteSpace(httpMethod)) return DatabaseAction.Unknown;
 
         // 3. Normalizar el string a mayúsculas (ToUpperInvariant es más seguro)
         // 4. Usar HttpStatusCode.Created en lugar de un "número mágico" (201)
@@ -213,13 +200,11 @@ public class AuditMiddleware
         else
         {
             // Fallback: Si no hay controlador (ej. Minimal APIs), buscamos la palabra después de "api/"
-            var segments = context.Request.Path.Value?.Split('/', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+            var segments = context.Request.Path.Value?.Split('/', StringSplitOptions.RemoveEmptyEntries) ??
+                           Array.Empty<string>();
             var apiIndex = Array.FindIndex(segments, s => s.Equals("api", StringComparison.OrdinalIgnoreCase));
-        
-            if (apiIndex >= 0 && apiIndex < segments.Length - 1)
-            {
-                auditLog.ResourceType = segments[apiIndex + 1];
-            }
+
+            if (apiIndex >= 0 && apiIndex < segments.Length - 1) auditLog.ResourceType = segments[apiIndex + 1];
         }
 
         // ==========================================
@@ -227,16 +212,12 @@ public class AuditMiddleware
         // ==========================================
         // Buscamos dinámicamente cualquier parámetro de la ruta que se llame "id" o termine en "Id" 
         // (Esto atrapa: {id}, {jobId}, {parentId}, {practitionerId}, etc.)
-        var idKey = routeValues.Keys.FirstOrDefault(k => 
-            k.Equals("id", StringComparison.OrdinalIgnoreCase) || 
+        var idKey = routeValues.Keys.FirstOrDefault(k =>
+            k.Equals("id", StringComparison.OrdinalIgnoreCase) ||
             k.EndsWith("Id", StringComparison.OrdinalIgnoreCase));
 
         if (idKey != null && routeValues.TryGetValue(idKey, out var idValue) && idValue != null)
-        {
             // ¡Lo encontramos! Sin importar en qué parte de la URL estaba.
             auditLog.ResourceId = idValue.ToString();
-        }
     }
-
-    
 }

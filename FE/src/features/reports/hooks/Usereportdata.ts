@@ -1,16 +1,16 @@
 import { useState, useCallback } from "react";
 import type {
-  GetReportsReportsDetailParams,
-  GetReportsReportsSummaryParams,
-} from "../../../api/models";
+  GetReportDetailParams,
+  GetReportSummaryParams,
+} from "@models";
 import {
   useGetReportDetail,
   useGetReportSummary,
-} from "../../../api/reports/reports";
+} from "@endpoints/reports/reports";
 
 export const useReportData = () => {
   const [committed, setCommitted] = useState<{
-    params: GetReportsReportsSummaryParams & GetReportsReportsDetailParams;
+    params: GetReportSummaryParams & GetReportDetailParams;
     enabled: boolean;
   }>({ params: {}, enabled: false });
 
@@ -27,7 +27,7 @@ export const useReportData = () => {
   // Acciones para generar, paginar y resetear el reporte
   const generateReport = useCallback(
     (
-      params: GetReportsReportsSummaryParams & GetReportsReportsDetailParams,
+      params: GetReportSummaryParams & GetReportDetailParams,
     ) => {
       setCommitted({ params, enabled: true });
     },

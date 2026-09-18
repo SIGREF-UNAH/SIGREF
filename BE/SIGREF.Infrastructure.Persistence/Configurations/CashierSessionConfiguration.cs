@@ -19,7 +19,7 @@ public class CashierSessionConfiguration : BaseEntityConfiguration<CashierSessio
                 t.HasComment(
                     "Tabla que almacena las sesiones de caja por usuario, incluyendo montos, diferencias y estado del arqueo.");
             });
-        
+
         // ============================
         //          RELACIONES
         // ============================
@@ -89,11 +89,11 @@ public class CashierSessionConfiguration : BaseEntityConfiguration<CashierSessio
             .HasColumnName("notes")
             .HasMaxLength(500)
             .HasComment("Notas o comentarios del cajero o administrador sobre discrepancias o correcciones.");
-        
+
         // ============================
         //            INDEXES
         // ============================
-        
+
         builder.HasIndex(x => x.ShiftId)
             .HasDatabaseName("idx_cashier_sessions_shift");
 
@@ -151,10 +151,9 @@ public class CashierSessionConfiguration : BaseEntityConfiguration<CashierSessio
         //     .HasDatabaseName("idx_cashier_sessions_user");
 
         // UNIQUE partial: a user cannot have 2 open sessions
-    builder.HasIndex(x => x.UserId)
-        .IsUnique()
-        .HasDatabaseName("uq_cashier_sessions_user_open")
-        .HasFilter("is_open = true");
-
+        builder.HasIndex(x => x.UserId)
+            .IsUnique()
+            .HasDatabaseName("uq_cashier_sessions_user_open")
+            .HasFilter("is_open = true");
     }
 }

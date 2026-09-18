@@ -19,7 +19,7 @@ public static class HospitalPropertiesExtension
             RTN = h.RTN,
             Website = h.Website,
             Currency = h.Currency,
-           // ExchangeVersion = h.ExchangeVersion,
+            // ExchangeVersion = h.ExchangeVersion,
             UrlLogo = h.UrlLogo,
             UrlLogoHealth = h.UrlLogoHealth
         };
@@ -37,7 +37,6 @@ public static class HospitalPropertiesExtension
         if (dto.RTN != null) h.RTN = dto.RTN;
         if (dto.Website != null) h.Website = dto.Website;
         if (dto.Currency != null) h.Currency = dto.Currency;
-       // if (dto.ExchangeVersion != null) h.ExchangeVersion = dto.ExchangeVersion;
+        // if (dto.ExchangeVersion != null) h.ExchangeVersion = dto.ExchangeVersion;
     }
-
 }

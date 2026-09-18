@@ -1,6 +1,6 @@
 
 import { Card, Col, Row, Spin, Statistic } from "antd";
-import { useGetPractitionerList } from "../../../api/practitioner/practitioner";
+import { useGetPractitionerList } from "@endpoints/practitioners/practitioners";
 import { PageHeaderTabs } from "../../../shared/components";
 import { PractitionersListForm } from "../components";
 import { useAbility } from "../../../config";

@@ -47,7 +47,7 @@ export function CashierRouteGuard({
           title="Acceso Denegado"
           subTitle="No tienes permisos para acceder a esta sección."
           extra={
-            <Button type="primary" onClick={() => navigate(-1)}>
+            <Button type="primary" onClick={() => void navigate(-1)}>
               Volver
             </Button>
           }
@@ -75,7 +75,7 @@ export function CashierRouteGuard({
             title="Iniciar Turno Requerido"
             subTitle="Debes iniciar un turno de trabajo para poder acceder a esta sección"
             extra={
-              <Button type="primary" onClick={() => navigate("/cashier/open-session")}>
+              <Button type="primary" onClick={() => void navigate("/cashier/open-session")}>
                 Abrir Turno
               </Button>
             }

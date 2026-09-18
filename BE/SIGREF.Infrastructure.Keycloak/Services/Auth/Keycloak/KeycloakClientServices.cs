@@ -23,45 +23,14 @@ public partial class KeycloakClient : IKeycloakClient
         if (!response.IsSuccessStatusCode)
             throw new ExternalServiceException(
                 "KEYCLOAK_SEARCH_USERS_FAILED",
-                statusCode: (int)response.StatusCode,
-                extraData: new Dictionary<string, object>
+                (int)response.StatusCode,
+                new Dictionary<string, object>
                 {
                     { "searchTerm", search },
                     { "httpStatus", (int)response.StatusCode }
                 });
 
         return await response.Content.ReadFromJsonAsync<List<JsonElement>>(ct) ?? [];
-    }
-
-    /// <summary>
-    /// Obtiene el número total de usuarios que coinciden con los filtros indicados.
-    /// Usa el endpoint nativo /users/count de la Admin REST API.
-    /// </summary>
-    public async Task<int> GetUsersCountAsync(
-        string? usernameFilter,
-        CancellationToken ct)
-    {
-        var query = new List<string>();
-
-        if (!string.IsNullOrWhiteSpace(usernameFilter))
-            query.Add($"search={Uri.EscapeDataString(usernameFilter)}");
-
-        var url = $"{_settings.BaseUrl}/admin/realms/{_settings.RealmName}/users/count" +
-                  (query.Count > 0 ? $"?{string.Join("&", query)}" : string.Empty);
-
-        var response = await SendAuthenticatedAsync(HttpMethod.Get, url, ct: ct);
-
-        if (!response.IsSuccessStatusCode)
-            throw new ExternalServiceException(
-                "KEYCLOAK_GET_USERS_COUNT_FAILED",
-                statusCode: (int)response.StatusCode,
-                extraData: new Dictionary<string, object>
-                {
-                    { "filter", usernameFilter ?? "(sin filtro)" },
-                    { "httpStatus", (int)response.StatusCode }
-                });
-
-        return await response.Content.ReadFromJsonAsync<int>(ct);
     }
 
     public async Task<List<string>> SearchUsernamesAsync(string username, CancellationToken ct)
@@ -74,8 +43,8 @@ public partial class KeycloakClient : IKeycloakClient
         if (!response.IsSuccessStatusCode)
             throw new ExternalServiceException(
                 "KEYCLOAK_SEARCH_USERNAMES_FAILED",
-                statusCode: (int)response.StatusCode,
-                extraData: new Dictionary<string, object>
+                (int)response.StatusCode,
+                new Dictionary<string, object>
                 {
                     { "searchTerm", username },
                     { "httpStatus", (int)response.StatusCode }
@@ -100,8 +69,8 @@ public partial class KeycloakClient : IKeycloakClient
         if (!response.IsSuccessStatusCode)
             throw new ExternalServiceException(
                 "KEYCLOAK_SEARCH_USER_BY_EMAIL_FAILED",
-                statusCode: (int)response.StatusCode,
-                extraData: new Dictionary<string, object>
+                (int)response.StatusCode,
+                new Dictionary<string, object>
                 {
                     { "email", email },
                     { "httpStatus", (int)response.StatusCode }
@@ -128,8 +97,8 @@ public partial class KeycloakClient : IKeycloakClient
         if (!response.IsSuccessStatusCode)
             throw new ExternalServiceException(
                 "KEYCLOAK_GET_USER_FAILED",
-                statusCode: (int)response.StatusCode,
-                extraData: new Dictionary<string, object>
+                (int)response.StatusCode,
+                new Dictionary<string, object>
                 {
                     { "userId", userId },
                     { "httpStatus", (int)response.StatusCode }
@@ -147,8 +116,8 @@ public partial class KeycloakClient : IKeycloakClient
         if (!response.IsSuccessStatusCode)
             throw new ExternalServiceException(
                 "KEYCLOAK_GET_USER_ROLES_FAILED",
-                statusCode: (int)response.StatusCode,
-                extraData: new Dictionary<string, object>
+                (int)response.StatusCode,
+                new Dictionary<string, object>
                 {
                     { "userId", userId },
                     { "httpStatus", (int)response.StatusCode }
@@ -188,8 +157,8 @@ public partial class KeycloakClient : IKeycloakClient
         if (!response.IsSuccessStatusCode)
             throw new ExternalServiceException(
                 "KEYCLOAK_GET_USERS_BY_IDS_FAILED",
-                statusCode: (int)response.StatusCode,
-                extraData: new Dictionary<string, object>
+                (int)response.StatusCode,
+                new Dictionary<string, object>
                 {
                     { "requestedCount", idList.Count },
                     { "httpStatus", (int)response.StatusCode }
@@ -198,7 +167,7 @@ public partial class KeycloakClient : IKeycloakClient
         var rawUsers = await response.Content.ReadFromJsonAsync<List<JsonElement>>(ct) ?? [];
 
         return rawUsers
-            .Select(x => KeycloakUserMapper.ToDto(x, null))
+            .Select(x => KeycloakUserMapper.ToDto(x))
             .Where(dto => dto is not null)
             .ToList()!;
     }
@@ -216,7 +185,7 @@ public partial class KeycloakClient : IKeycloakClient
         if (response.StatusCode == HttpStatusCode.Conflict)
             throw new ConflictException(
                 "KEYCLOAK_USER_ALREADY_EXISTS",
-                extraData: new Dictionary<string, object>
+                new Dictionary<string, object>
                 {
                     { "httpStatus", (int)response.StatusCode }
                 });
@@ -224,8 +193,8 @@ public partial class KeycloakClient : IKeycloakClient
         if (!response.IsSuccessStatusCode)
             throw new ExternalServiceException(
                 "KEYCLOAK_CREATE_USER_FAILED",
-                statusCode: (int)response.StatusCode,
-                extraData: new Dictionary<string, object>
+                (int)response.StatusCode,
+                new Dictionary<string, object>
                 {
                     { "httpStatus", (int)response.StatusCode }
                 });
@@ -249,8 +218,8 @@ public partial class KeycloakClient : IKeycloakClient
         if (!response.IsSuccessStatusCode)
             throw new ExternalServiceException(
                 "KEYCLOAK_DELETE_USER_FAILED",
-                statusCode: (int)response.StatusCode,
-                extraData: new Dictionary<string, object>
+                (int)response.StatusCode,
+                new Dictionary<string, object>
                 {
                     { "userId", userId },
                     { "httpStatus", (int)response.StatusCode }
@@ -265,13 +234,13 @@ public partial class KeycloakClient : IKeycloakClient
 
     public async Task<bool> ToggleUserStatusAsync(string userId, CancellationToken ct)
     {
-        JsonElement existing = await GetUserByIdAsync(userId, ct)
-                               ?? throw new NotFoundException(
-                                   "KEYCLOAK_USER_NOT_FOUND",
-                                   extraData: new Dictionary<string, object> { { "userId", userId } });
+        var existing = await GetUserByIdAsync(userId, ct)
+                       ?? throw new NotFoundException(
+                           "KEYCLOAK_USER_NOT_FOUND",
+                           new Dictionary<string, object> { { "userId", userId } });
 
-        bool currentEnabled = existing.TryGetProperty("enabled", out var en) && en.GetBoolean();
-        bool newEnabled = !currentEnabled;
+        var currentEnabled = existing.TryGetProperty("enabled", out var en) && en.GetBoolean();
+        var newEnabled = !currentEnabled;
 
         var updateDto = new KeycloakUpdateUserDto { Enabled = newEnabled };
         var updatedPayload = BuildUpdatePayload(existing, updateDto);
@@ -283,8 +252,8 @@ public partial class KeycloakClient : IKeycloakClient
         if (!response.IsSuccessStatusCode)
             throw new ExternalServiceException(
                 "KEYCLOAK_TOGGLE_USER_STATUS_FAILED",
-                statusCode: (int)response.StatusCode,
-                extraData: new Dictionary<string, object>
+                (int)response.StatusCode,
+                new Dictionary<string, object>
                 {
                     { "userId", userId },
                     { "newStatus", newEnabled },
@@ -310,8 +279,8 @@ public partial class KeycloakClient : IKeycloakClient
         if (!response.IsSuccessStatusCode)
             throw new ExternalServiceException(
                 "KEYCLOAK_ASSIGN_ROLE_FAILED",
-                statusCode: (int)response.StatusCode,
-                extraData: new Dictionary<string, object>
+                (int)response.StatusCode,
+                new Dictionary<string, object>
                 {
                     { "userId", userId },
                     { "roleName", roleName },
@@ -326,7 +295,7 @@ public partial class KeycloakClient : IKeycloakClient
         _ = await GetUserByIdAsync(userId, ct)
             ?? throw new NotFoundException(
                 "KEYCLOAK_USER_NOT_FOUND",
-                extraData: new Dictionary<string, object> { { "userId", userId } });
+                new Dictionary<string, object> { { "userId", userId } });
 
         var mappingUrl = $"{_settings.BaseUrl}/admin/realms/{_settings.RealmName}" +
                          $"/users/{userId}/role-mappings/realm";
@@ -336,8 +305,8 @@ public partial class KeycloakClient : IKeycloakClient
         if (!currentRolesResponse.IsSuccessStatusCode)
             throw new ExternalServiceException(
                 "KEYCLOAK_GET_USER_ROLES_FAILED",
-                statusCode: (int)currentRolesResponse.StatusCode,
-                extraData: new Dictionary<string, object>
+                (int)currentRolesResponse.StatusCode,
+                new Dictionary<string, object>
                 {
                     { "userId", userId },
                     { "httpStatus", (int)currentRolesResponse.StatusCode }
@@ -354,8 +323,8 @@ public partial class KeycloakClient : IKeycloakClient
             if (!deleteResponse.IsSuccessStatusCode)
                 throw new ExternalServiceException(
                     "KEYCLOAK_REMOVE_USER_ROLES_FAILED",
-                    statusCode: (int)deleteResponse.StatusCode,
-                    extraData: new Dictionary<string, object>
+                    (int)deleteResponse.StatusCode,
+                    new Dictionary<string, object>
                     {
                         { "userId", userId },
                         { "httpStatus", (int)deleteResponse.StatusCode }
@@ -371,10 +340,10 @@ public partial class KeycloakClient : IKeycloakClient
 
     public async Task UpdateUserAsync(string userId, KeycloakUpdateUserDto updateDto, CancellationToken ct)
     {
-        JsonElement existing = await GetUserByIdAsync(userId, ct)
-                               ?? throw new NotFoundException(
-                                   "KEYCLOAK_USER_NOT_FOUND",
-                                   extraData: new Dictionary<string, object> { { "userId", userId } });
+        var existing = await GetUserByIdAsync(userId, ct)
+                       ?? throw new NotFoundException(
+                           "KEYCLOAK_USER_NOT_FOUND",
+                           new Dictionary<string, object> { { "userId", userId } });
 
         var updatedPayload = BuildUpdatePayload(existing, updateDto);
 
@@ -385,8 +354,8 @@ public partial class KeycloakClient : IKeycloakClient
         if (!response.IsSuccessStatusCode)
             throw new ExternalServiceException(
                 "KEYCLOAK_UPDATE_USER_FAILED",
-                statusCode: (int)response.StatusCode,
-                extraData: new Dictionary<string, object>
+                (int)response.StatusCode,
+                new Dictionary<string, object>
                 {
                     { "userId", userId },
                     { "httpStatus", (int)response.StatusCode }
@@ -444,8 +413,8 @@ public partial class KeycloakClient : IKeycloakClient
         if (!response.IsSuccessStatusCode)
             throw new ExternalServiceException(
                 "KEYCLOAK_GET_USERS_FILTERED_FAILED",
-                statusCode: (int)response.StatusCode,
-                extraData: new Dictionary<string, object>
+                (int)response.StatusCode,
+                new Dictionary<string, object>
                 {
                     { "httpStatus", (int)response.StatusCode }
                 });
@@ -453,7 +422,7 @@ public partial class KeycloakClient : IKeycloakClient
         var rawUsers = await response.Content.ReadFromJsonAsync<List<JsonElement>>(ct) ?? [];
 
         return rawUsers
-            .Select(x => KeycloakUserMapper.ToDto(x, null))
+            .Select(x => KeycloakUserMapper.ToDto(x))
             .Where(dto => dto is not null)
             .ToList()!;
     }
@@ -495,9 +464,40 @@ public partial class KeycloakClient : IKeycloakClient
         if (!response.IsSuccessStatusCode)
             throw new ExternalServiceException(
                 "KEYCLOAK_GET_USERS_COUNT_FAILED",
-                statusCode: (int)response.StatusCode,
-                extraData: new Dictionary<string, object>
+                (int)response.StatusCode,
+                new Dictionary<string, object>
                 {
+                    { "httpStatus", (int)response.StatusCode }
+                });
+
+        return await response.Content.ReadFromJsonAsync<int>(ct);
+    }
+
+    /// <summary>
+    ///     Obtiene el número total de usuarios que coinciden con los filtros indicados.
+    ///     Usa el endpoint nativo /users/count de la Admin REST API.
+    /// </summary>
+    public async Task<int> GetUsersCountAsync(
+        string? usernameFilter,
+        CancellationToken ct)
+    {
+        var query = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(usernameFilter))
+            query.Add($"search={Uri.EscapeDataString(usernameFilter)}");
+
+        var url = $"{_settings.BaseUrl}/admin/realms/{_settings.RealmName}/users/count" +
+                  (query.Count > 0 ? $"?{string.Join("&", query)}" : string.Empty);
+
+        var response = await SendAuthenticatedAsync(HttpMethod.Get, url, ct: ct);
+
+        if (!response.IsSuccessStatusCode)
+            throw new ExternalServiceException(
+                "KEYCLOAK_GET_USERS_COUNT_FAILED",
+                (int)response.StatusCode,
+                new Dictionary<string, object>
+                {
+                    { "filter", usernameFilter ?? "(sin filtro)" },
                     { "httpStatus", (int)response.StatusCode }
                 });
 
@@ -517,11 +517,11 @@ public partial class KeycloakClient : IKeycloakClient
         if (roleResponse.StatusCode == HttpStatusCode.NotFound)
             throw new NotFoundException(
                 "KEYCLOAK_ROLE_NOT_FOUND",
-                extraData: new Dictionary<string, object> { { "roleName", roleName } });
+                new Dictionary<string, object> { { "roleName", roleName } });
         if (roleResponse.StatusCode == HttpStatusCode.Forbidden)
             throw new ForbiddenException(
                 "KEYCLOAK_ROLE_ACCESS_FORBIDDEN",
-                extraData: new Dictionary<string, object>
+                new Dictionary<string, object>
                 {
                     { "roleName", roleName },
                     { "hint", "El Service Account requiere el rol 'view-realm' en realm-management." }
@@ -530,8 +530,8 @@ public partial class KeycloakClient : IKeycloakClient
         if (!roleResponse.IsSuccessStatusCode)
             throw new ExternalServiceException(
                 "KEYCLOAK_FETCH_ROLE_FAILED",
-                statusCode: (int)roleResponse.StatusCode,
-                extraData: new Dictionary<string, object>
+                (int)roleResponse.StatusCode,
+                new Dictionary<string, object>
                 {
                     { "roleName", roleName },
                     { "httpStatus", (int)roleResponse.StatusCode }

@@ -7,6 +7,7 @@ Accept: application/json
 
 GET {{ApiUrl}}/api/Locations
 Accept: application/json
+
 ###
 POST {{ApiUrl}}/api/Locations/CreateLocation
 Content-Type: application/json
@@ -15,19 +16,20 @@ Content-Type: application/json
   "name": "New Location",
   "description": "Description of the new location"
 }
+
 ###
 
 ### ============ HealthcareService ============
 
-### Obtener todos los servicios médicos
+### Obtener todos los servicios mï¿½dicos
 GET {{ApiUrl}}/api/Healthcares
 Accept: application/json
 
-### Obtener un servicio médico por id
+### Obtener un servicio mï¿½dico por id
 GET {{ApiUrl}}/api/Healthcares/1602
 Accept: application/json
 
-### Crear un nuevo servicio médico
+### Crear un nuevo servicio mï¿½dico
 POST {{ApiUrl}}/api/Healthcares
 Content-Type: application/json
 {
@@ -40,9 +42,9 @@ Content-Type: application/json
     }
   ],
   "active": true,
-  "name": "Consulta Médica General",
+  "name": "Consulta Mï¿½dica General",
   "abbreviation": "CMG",
-  "comment": "Servicio de atención médica general disponible de lunes a viernes con cita previa.",
+  "comment": "Servicio de atenciï¿½n mï¿½dica general disponible de lunes a viernes con cita previa.",
   "cost": 350.00,
   "specialty": [
     {
@@ -79,12 +81,12 @@ Content-Type: application/json
         "value": "LOC-002"
       },
       "reference": "Location/1",
-      "display": "Clínica Externa, Piso 2 - Hospital Central"
+      "display": "Clï¿½nica Externa, Piso 2 - Hospital Central"
     }
   ]
 }
 
-### Actualizar un servicio médico existente
+### Actualizar un servicio mï¿½dico existente
 PUT {{ApiUrl}}/api/Healthcares/1602
 Content-Type: application/json
 {
@@ -97,9 +99,9 @@ Content-Type: application/json
     }
   ],
   "active": true,
-  "name": "Servicio de Radiología Diagnóstica",
+  "name": "Servicio de Radiologï¿½a Diagnï¿½stica",
   "abbreviation": "SRD",
-  "comment": "Servicio de radiología para estudios diagnósticos. Se atiende por orden de cita y emergencia.",
+  "comment": "Servicio de radiologï¿½a para estudios diagnï¿½sticos. Se atiende por orden de cita y emergencia.",
   "cost": 850.00,
   "specialty": [
     {
@@ -112,7 +114,7 @@ Content-Type: application/json
           "userSelected": true
         }
       ],
-      "text": "Radiología Diagnóstica"
+      "text": "Radiologï¿½a Diagnï¿½stica"
     }
   ],
   "providedBy": {
@@ -124,7 +126,7 @@ Content-Type: application/json
       "value": "ORG-007"
     },
     "reference": "Organization/1702",
-    "display": "Clínica San Miguel"
+    "display": "Clï¿½nica San Miguel"
   },
   "location": [
     {
@@ -136,11 +138,11 @@ Content-Type: application/json
         "value": "LOC-010"
       },
       "reference": "Location/1",
-      "display": "Edificio Principal, Piso 1 - Área de Radiología"
+      "display": "Edificio Principal, Piso 1 - ï¿½rea de Radiologï¿½a"
     }
   ]
 }
 
-### Eliminar un servicio médico por id
+### Eliminar un servicio mï¿½dico por id
 DELETE {{ApiUrl}}/api/Healthcares/1602
 Accept: application/json

@@ -1,8 +1,10 @@
 ﻿// Services/AuditLogService.cs
+
+using System.Linq.Expressions;
+using System.Text.RegularExpressions;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using SIGREF.API.Audit.Dto;
-using System.Text.RegularExpressions;
 using SIGREF.API.Dtos.Audit;
 using SIGREF.Common.Dtos;
 
@@ -45,27 +47,15 @@ public class AuditLogService : IAuditLogService
             AddStringFilterIfNotNull(filters, filterBuilder, f => f.IpAddress, filter.IpAddress);
             AddStringFilterIfNotNull(filters, filterBuilder, f => f.Endpoint, filter.Endpoint);
             AddStringFilterIfNotNull(filters, filterBuilder, f => f.HttpMethod, filter.HttpMethod);
-            
-            if (filter.StatusCode.HasValue)
-            {
-                filters.Add(filterBuilder.Eq(f => f.StatusCode, filter.StatusCode.Value));
-            }
-            
-            if (filter.Success.HasValue)
-            {
-                filters.Add(filterBuilder.Eq(f => f.Success, filter.Success.Value));
-            }
+
+            if (filter.StatusCode.HasValue) filters.Add(filterBuilder.Eq(f => f.StatusCode, filter.StatusCode.Value));
+
+            if (filter.Success.HasValue) filters.Add(filterBuilder.Eq(f => f.Success, filter.Success.Value));
 
             // Filtro por rango de fechas
-            if (filter.FromDate.HasValue)
-            {
-                filters.Add(filterBuilder.Gte(f => f.Timestamp, filter.FromDate.Value));
-            }
-            
-            if (filter.ToDate.HasValue)
-            {
-                filters.Add(filterBuilder.Lte(f => f.Timestamp, filter.ToDate.Value));
-            }
+            if (filter.FromDate.HasValue) filters.Add(filterBuilder.Gte(f => f.Timestamp, filter.FromDate.Value));
+
+            if (filter.ToDate.HasValue) filters.Add(filterBuilder.Lte(f => f.Timestamp, filter.ToDate.Value));
 
             // Búsqueda por texto en múltiples campos
             if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
@@ -75,8 +65,8 @@ public class AuditLogService : IAuditLogService
             }
 
             // Combinar todos los filtros
-            var combinedFilter = filters.Count > 0 
-                ? filterBuilder.And(filters) 
+            var combinedFilter = filters.Count > 0
+                ? filterBuilder.And(filters)
                 : filterBuilder.Empty;
 
             // Construir la ordenación
@@ -145,17 +135,14 @@ public class AuditLogService : IAuditLogService
     private void AddStringFilterIfNotNull(
         List<FilterDefinition<AuditLog>> filters,
         FilterDefinitionBuilder<AuditLog> filterBuilder,
-        System.Linq.Expressions.Expression<Func<AuditLog, string>> field,
+        Expression<Func<AuditLog, string>> field,
         string? value)
     {
-        if (!string.IsNullOrWhiteSpace(value))
-        {
-            filters.Add(filterBuilder.Eq(field, value));
-        }
+        if (!string.IsNullOrWhiteSpace(value)) filters.Add(filterBuilder.Eq(field, value));
     }
 
     private FilterDefinition<AuditLog> BuildSearchFilter(
-        FilterDefinitionBuilder<AuditLog> filterBuilder, 
+        FilterDefinitionBuilder<AuditLog> filterBuilder,
         string searchTerm)
     {
         // Escapar caracteres especiales de regex
@@ -183,44 +170,44 @@ public class AuditLogService : IAuditLogService
     {
         return sortBy?.ToLower() switch
         {
-            "traceid" => sortDescending 
-                ? sortBuilder.Descending(f => f.TraceId) 
+            "traceid" => sortDescending
+                ? sortBuilder.Descending(f => f.TraceId)
                 : sortBuilder.Ascending(f => f.TraceId),
-            "action" => sortDescending 
-                ? sortBuilder.Descending(f => f.Action) 
+            "action" => sortDescending
+                ? sortBuilder.Descending(f => f.Action)
                 : sortBuilder.Ascending(f => f.Action),
-            "resourcetype" => sortDescending 
-                ? sortBuilder.Descending(f => f.ResourceType) 
+            "resourcetype" => sortDescending
+                ? sortBuilder.Descending(f => f.ResourceType)
                 : sortBuilder.Ascending(f => f.ResourceType),
-            "resourceid" => sortDescending 
-                ? sortBuilder.Descending(f => f.ResourceId) 
+            "resourceid" => sortDescending
+                ? sortBuilder.Descending(f => f.ResourceId)
                 : sortBuilder.Ascending(f => f.ResourceId),
-            "userid" => sortDescending 
-                ? sortBuilder.Descending(f => f.UserId) 
+            "userid" => sortDescending
+                ? sortBuilder.Descending(f => f.UserId)
                 : sortBuilder.Ascending(f => f.UserId),
-            "username" => sortDescending 
-                ? sortBuilder.Descending(f => f.UserName) 
+            "username" => sortDescending
+                ? sortBuilder.Descending(f => f.UserName)
                 : sortBuilder.Ascending(f => f.UserName),
-            "ipaddress" => sortDescending 
-                ? sortBuilder.Descending(f => f.IpAddress) 
+            "ipaddress" => sortDescending
+                ? sortBuilder.Descending(f => f.IpAddress)
                 : sortBuilder.Ascending(f => f.IpAddress),
-            "endpoint" => sortDescending 
-                ? sortBuilder.Descending(f => f.Endpoint) 
+            "endpoint" => sortDescending
+                ? sortBuilder.Descending(f => f.Endpoint)
                 : sortBuilder.Ascending(f => f.Endpoint),
-            "httpmethod" => sortDescending 
-                ? sortBuilder.Descending(f => f.HttpMethod) 
+            "httpmethod" => sortDescending
+                ? sortBuilder.Descending(f => f.HttpMethod)
                 : sortBuilder.Ascending(f => f.HttpMethod),
-            "statuscode" => sortDescending 
-                ? sortBuilder.Descending(f => f.StatusCode) 
+            "statuscode" => sortDescending
+                ? sortBuilder.Descending(f => f.StatusCode)
                 : sortBuilder.Ascending(f => f.StatusCode),
-            "success" => sortDescending 
-                ? sortBuilder.Descending(f => f.Success) 
+            "success" => sortDescending
+                ? sortBuilder.Descending(f => f.Success)
                 : sortBuilder.Ascending(f => f.Success),
-            "timestamp" => sortDescending 
-                ? sortBuilder.Descending(f => f.Timestamp) 
+            "timestamp" => sortDescending
+                ? sortBuilder.Descending(f => f.Timestamp)
                 : sortBuilder.Ascending(f => f.Timestamp),
-            _ => sortDescending 
-                ? sortBuilder.Descending(f => f.Timestamp) 
+            _ => sortDescending
+                ? sortBuilder.Descending(f => f.Timestamp)
                 : sortBuilder.Ascending(f => f.Timestamp)
         };
     }

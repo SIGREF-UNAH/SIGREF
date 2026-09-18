@@ -15,7 +15,7 @@ namespace SIGREF.API.Controllers.ServiveGroup;
 /// <remarks>Híbrido SIGREF + FHIR: usa la representación FHIR List para agrupar servicios y expone una vista de negocio propia.</remarks>
 [Route("api/[controller]")]
 [ApiController]
-[Tags("Paquetes de Servicios Medicos - GestiÃ³n de Paquetes de Servicios Medicos")]
+[Tags("ServiceGroups")]
 [Authorize(AuthenticationSchemes = "Bearer")]
 [Produces(MediaTypeNames.Application.Json)]
 [Consumes(MediaTypeNames.Application.Json)]
@@ -25,7 +25,7 @@ public class ServiceGroupController(HealthcareGroupService serviceGroupService) 
     [EndpointName("GetServiceGroupList")]
     [EndpointSummary("Listar paquetes de servicios")]
     [EndpointDescription("Obtiene una lista paginada de paquetes de servicios médicos con sus filtros y relaciones.")]
-    [Tags("HÍBRIDO - ServiceGroup / FHIR")]
+    [Tags("ServiceGroups", "FHIR")]
     [ProducesResponseType(typeof(PagedResultDto<ServiceGroupDto>), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor} ")]
     public async Task<ActionResult<ServiceGroupDto>> GetFiltered([FromQuery] ServiceGroupFilterDto filter)
@@ -38,7 +38,7 @@ public class ServiceGroupController(HealthcareGroupService serviceGroupService) 
     [EndpointName("GetServiceGroupById")]
     [EndpointSummary("Obtener un paquete por ID")]
     [EndpointDescription("Recupera un paquete de servicios y su composición a partir de su identificador FHIR.")]
-    [Tags("HÍBRIDO - ServiceGroup / FHIR")]
+    [Tags("ServiceGroups", "FHIR")]
     [ProducesResponseType(typeof(ServiceGroupDto), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor} ")]
     public async Task<IActionResult> GetById(string id)
@@ -51,7 +51,7 @@ public class ServiceGroupController(HealthcareGroupService serviceGroupService) 
     [EndpointName("CreateServiceGroup")]
     [EndpointSummary("Crear un paquete de servicios")]
     [EndpointDescription("Crea un paquete basado en una representación FHIR List y devuelve su vista completa.")]
-    [Tags("HÍBRIDO - ServiceGroup / FHIR")]
+    [Tags("ServiceGroups", "FHIR")]
     [ProducesResponseType(typeof(ServiceGroupDto), StatusCodes.Status201Created)]
     [Authorize(Roles = $" {RolesConstants.admin}")]
     public async Task<IActionResult> Create([FromBody] CreateServiceGroupDto createDto)
@@ -71,7 +71,7 @@ public class ServiceGroupController(HealthcareGroupService serviceGroupService) 
     [EndpointName("UpdateServiceGroupById")]
     [EndpointSummary("Actualizar un paquete de servicios")]
     [EndpointDescription("Actualiza la composición del paquete FHIR y devuelve la vista de negocio actualizada.")]
-    [Tags("HÍBRIDO - ServiceGroup / FHIR")]
+    [Tags("ServiceGroups", "FHIR")]
     [ProducesResponseType(typeof(ServiceGroupDto), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.admin}")]
     public async Task<IActionResult> Update(string id, [FromBody] UpdateServiceGroupDto updateDto)
@@ -94,7 +94,7 @@ public class ServiceGroupController(HealthcareGroupService serviceGroupService) 
     [EndpointName("DeleteServiceGroupById")]
     [EndpointSummary("Eliminar un paquete de servicios")]
     [EndpointDescription("Elimina el paquete de servicios identificado por su ID.")]
-    [Tags("HÍBRIDO - ServiceGroup / FHIR")]
+    [Tags("ServiceGroups", "FHIR")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [Authorize(Roles = $"{RolesConstants.admin}")]
     public async Task<IActionResult> Delete(string id)

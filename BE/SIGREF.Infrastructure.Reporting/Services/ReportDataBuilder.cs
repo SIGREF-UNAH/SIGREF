@@ -1,39 +1,37 @@
-﻿using System.Runtime.CompilerServices;
-using System.Collections.Concurrent;
-using Microsoft.EntityFrameworkCore;
+﻿using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
+using Microsoft.EntityFrameworkCore;
 using SIGREF.Common.Dtos.Report;
 using SIGREF.Core.Extensions;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
-using SIGREF.Infrastructure.Reporting.Interfaces;
 using SIGREF.Infrastructure.Persistence;
+using SIGREF.Infrastructure.Reporting.Interfaces;
 using SYTASK = System.Threading.Tasks.Task;
- 
+
 namespace SIGREF.Infrastructure.Reporting.Services;
- 
+
 public class ReportDataCollector : IReportDataCollector
 {
-    private readonly SIGREFContext _context;
-    private readonly FhirClient _fhirClient;
-    private readonly IKeycloakAdminService _keycloakClient;
- 
-
     // Tamaño del lote FHIR. 100 es el máximo común en servidores
     // FHIR (HAPI, Azure FHIR, etc.) con el parámetro _id.
     private const int FhirBatchSize = 100;
-    
+
     // TODO :
     // aun no esta integrado en nuestra practica en Infrastruture.keycloak por lo tanto se usa un semaforo por el momento
     // Tampoco puedo asegurar si funciona o no correctamente https://github.com/keycloak/keycloak/issues/42479
-    
-    
+
+
     // Keycloak NO tiene endpoint batch por IDs.
     // La mejor estrategia disponible es paralelismo controlado:
     // hasta N llamadas simultáneas para no saturar el servidor.
     // Ajustar según los rate-limits de tu instalación.
     private const int KeycloakMaxConcurrency = 5;
- 
+    private readonly SIGREFContext _context;
+    private readonly FhirClient _fhirClient;
+    private readonly IKeycloakAdminService _keycloakClient;
+
     public ReportDataCollector(
         SIGREFContext context,
         FhirClient fhirClient,
@@ -43,7 +41,7 @@ public class ReportDataCollector : IReportDataCollector
         _fhirClient = fhirClient;
         _keycloakClient = keycloakClient;
     }
-    
+
     // STREAM PRINCIPAL
     //
     // Por cada lote de FhirBatchSize líneas se ejecutan dos fases:
@@ -60,39 +58,39 @@ public class ReportDataCollector : IReportDataCollector
         // En un reporte masivo los mismos 30 cajeros se repiten miles de
         // veces; evita re-consultar a Keycloak por los mismos IDs.
         var cashierCache = new Dictionary<string, string>();
- 
+
         var query = _context.Invoices
             .AsNoTracking()
             .ApplyBaseFilters(filter)
             .Select(invoice => new ReportLineDto
             {
                 TransactionDate = invoice.CreatedDate,
-                ReceiptNumber   = invoice.Number.ToString(),
-                ServiceName     = invoice.Items.Count == 0
+                ReceiptNumber = invoice.Number.ToString(),
+                ServiceName = invoice.Items.Count == 0
                     ? "Sin detalle"
                     : invoice.Items.Count == 1
                         ? invoice.Items.First().Description
                         : "Varios Servicios",
-                Status          = invoice.Status.ToString(),
-                AmountPaid      = invoice.FinalTotal,
+                Status = invoice.Status.ToString(),
+                AmountPaid = invoice.FinalTotal,
                 // Guardamos el ID crudo; se reemplaza en Fase A
-                CashierName     = invoice.CreatedById.ToString(),
+                CashierName = invoice.CreatedById.ToString(),
                 CashierIdentity = invoice.CreatedById.ToString(),
                 // Si PatientDisplay está en BD lo usamos directamente;
                 // si no, guardamos el ID/identifier FHIR para Fase B
-                PatientName     = !string.IsNullOrEmpty(invoice.PatientDisplay)
+                PatientName = !string.IsNullOrEmpty(invoice.PatientDisplay)
                     ? invoice.PatientDisplay
                     : invoice.PatientIdFhir,
-                PatientIdentity = invoice.PatientIdFhir,
+                PatientIdentity = invoice.PatientIdFhir
             })
             .AsAsyncEnumerable();
- 
+
         var batch = new List<ReportLineDto>();
- 
+
         await foreach (var dto in query.WithCancellation(cancellationToken))
         {
             batch.Add(dto);
- 
+
             if (batch.Count >= FhirBatchSize)
             {
                 await ResolveBatchAsync(batch, cashierCache, cancellationToken);
@@ -100,7 +98,7 @@ public class ReportDataCollector : IReportDataCollector
                 batch.Clear();
             }
         }
- 
+
         // Remanente final
         if (batch.Count > 0)
         {
@@ -108,7 +106,7 @@ public class ReportDataCollector : IReportDataCollector
             foreach (var item in batch) yield return item;
         }
     }
-    
+
     // Orquestador por lote: Keycloak primero, FHIR después.
     // Ambas fases se completan antes de emitir cualquier línea del lote.
     private async SYTASK ResolveBatchAsync(
@@ -119,7 +117,7 @@ public class ReportDataCollector : IReportDataCollector
         await ResolveKeycloakBatchAsync(batch, cashierCache, cancellationToken);
         await ResolveFhirBatchAsync(batch, cancellationToken);
     }
-    
+
     // FASE A — CAJEROS (Keycloak)
     // La mejor optimización posible es disparar las llamadas pendientes
     // en paralelo con un SemaphoreSlim que controla la concurrencia.
@@ -139,24 +137,24 @@ public class ReportDataCollector : IReportDataCollector
             .Distinct()
             .Where(id => !cashierCache.ContainsKey(id))
             .ToList();
- 
+
         if (uncachedIds.Count > 0)
         {
             using var semaphore = new SemaphoreSlim(KeycloakMaxConcurrency, KeycloakMaxConcurrency);
             var freshlyFetched = new ConcurrentDictionary<string, string>();
- 
+
             var tasks = uncachedIds.Select(async id =>
             {
                 await semaphore.WaitAsync(cancellationToken);
                 try
                 {
-                    var user     = await _keycloakClient.GetUserByIdAsync(id, cancellationToken);
+                    var user = await _keycloakClient.GetUserByIdAsync(id, cancellationToken);
                     var fullName = (user?.DisplayName ?? string.Empty).Trim();
- 
+
                     // Fallback al email si no hay DisplayName
                     if (string.IsNullOrEmpty(fullName))
                         fullName = user?.Email ?? "Desconocido";
- 
+
                     freshlyFetched[id] = fullName;
                 }
                 catch (OperationCanceledException)
@@ -172,20 +170,20 @@ public class ReportDataCollector : IReportDataCollector
                     semaphore.Release();
                 }
             });
- 
+
             await SYTASK.WhenAll(tasks);
- 
+
             // Volcar a la caché global
             // se procesa a la vez en el stream (no hay concurrencia aquí).
             foreach (var kvp in freshlyFetched)
                 cashierCache[kvp.Key] = kvp.Value;
         }
- 
+
         // Aplicar caché a todas las líneas del lote actual
         foreach (var dto in batch.Where(d => cashierCache.ContainsKey(d.CashierIdentity)))
-                dto.CashierName = cashierCache[dto.CashierIdentity];
+            dto.CashierName = cashierCache[dto.CashierIdentity];
     }
-    
+
     // FASE B — PACIENTES (FHIR)
     // Solo procesamos líneas cuyo PatientName todavía es el ID crudo
     // (es decir, invoice.PatientDisplay no estaba disponible en BD).
@@ -205,24 +203,23 @@ public class ReportDataCollector : IReportDataCollector
         var lineasConIdentidad = batch
             .Where(x => !string.IsNullOrEmpty(x.PatientIdentity))
             .ToList();
- 
+
         if (lineasConIdentidad.Count == 0) return;
- 
+
         var ids = lineasConIdentidad
             .Select(x => x.PatientIdentity!)
             .Distinct()
             .ToList();
- 
+
         var fhirData = await FetchFhirPatientDetailsBatchAsync(ids);
- 
+
         foreach (var dto in lineasConIdentidad)
-        {
             if (fhirData.TryGetValue(dto.PatientIdentity!, out var details))
             {
                 // Nombre: solo se reemplaza si todavía es el ID crudo
                 if (dto.PatientName == dto.PatientIdentity)
                     dto.PatientName = details.FullName;
- 
+
                 // Fecha de nacimiento: siempre se asigna desde FHIR
                 dto.PatientBirthDate = details.BirthDate ?? "";
             }
@@ -231,9 +228,8 @@ public class ReportDataCollector : IReportDataCollector
                 if (dto.PatientName == dto.PatientIdentity)
                     dto.PatientName = "Paciente Desconocido";
             }
-        }
     }
-    
+
     // Consulta FHIR optimizada con _elements
     // ELIGE EL MODO según lo que contiene PatientIdentity:    
     //                                                             
@@ -250,15 +246,15 @@ public class ReportDataCollector : IReportDataCollector
     {
         if (patientIds.Count == 0)
             return new Dictionary<string, FhirPatientDetails>();
- 
+
         try
         {
             var searchParams = new SearchParams();
- 
+
             //  MODO A: buscar por ID interno del recurso 
             // Activo por defecto. Descomenta MODO B si usas identifiers.
             searchParams.Add("_id", string.Join(",", patientIds));
- 
+
             // MODO B: buscar por identificador de negocio
             // Reemplaza IDENTIFIER_SYSTEM por el URI de tu sistema.
             // Si el servidor no requiere system (identificadores sin
@@ -267,14 +263,14 @@ public class ReportDataCollector : IReportDataCollector
             // const string IdentifierSystem = "https://tu-hospital.org/pacientes";
             // searchParams.Add("identifier",
             //     string.Join(",", patientIds.Select(id => $"{IdentifierSystem}|{id}")));
- 
+
             // Solo pedimos los campos que usamos: id, name y birthDate.
             // El servidor devuelve los recursos con meta.tag = SUBSETTED
             // lo cual es correcto para este uso de solo-lectura.
             searchParams.Add("_elements", "id,name,birthDate");
- 
+
             var bundle = await _fhirClient.SearchAsync<Patient>(searchParams);
- 
+
             // En MODO B el diccionario debe indexarse por el valor del
             // identifier, no por p.Id. Adaptar el keySelector si corresponde.
             return bundle.Entry
@@ -285,13 +281,13 @@ public class ReportDataCollector : IReportDataCollector
                     p =>
                     {
                         var nombre = p!.Name.FirstOrDefault();
-                        var given  = nombre?.Given?.FirstOrDefault() ?? string.Empty;
+                        var given = nombre?.Given?.FirstOrDefault() ?? string.Empty;
                         var family = nombre?.Family ?? string.Empty;
-                        var full   = $"{given} {family}".Trim();
- 
+                        var full = $"{given} {family}".Trim();
+
                         return new FhirPatientDetails
                         {
-                            FullName  = string.IsNullOrEmpty(full) ? "Sin nombre" : full,
+                            FullName = string.IsNullOrEmpty(full) ? "Sin nombre" : full,
                             BirthDate = p.BirthDate
                         };
                     }
@@ -302,19 +298,19 @@ public class ReportDataCollector : IReportDataCollector
             // Si el lote falla, devolvemos error para no bloquear el reporte.
             return patientIds.ToDictionary(
                 id => id,
-                _  => new FhirPatientDetails
+                _ => new FhirPatientDetails
                 {
-                    FullName  = "Error de conexión (FHIR)",
+                    FullName = "Error de conexión (FHIR)",
                     BirthDate = null
                 }
             );
         }
     }
- 
+
     //  Tipo auxiliar interno 
     private sealed class FhirPatientDetails
     {
-        public string  FullName  { get; init; } = string.Empty;
+        public string FullName { get; init; } = string.Empty;
         public string? BirthDate { get; init; }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System.Text.Json;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using SIGREF.Common.Dtos.Report;
 using SIGREF.Common.Types;
 using SIGREF.Infrastructure.Persistence;
@@ -10,23 +9,21 @@ using SIGREF.Infrastructure.Reporting.Interfaces;
 namespace SIGREF.Hangfire.Worker.Jobs;
 
 /// <summary>
-/// Job que Hangfire ejecuta en el Worker.
-///
-/// Responsabilidades:
-///   1. Actualizar el estado en nuestra BD (Processing → Completed/Failed)
-///   2. Orquestar: DataCollector → PdfBuilder → Storage
-///
-/// Lo que NO hace:
-///   - Reintentos: los maneja Hangfire con [AutomaticRetry]
-///   - Logs de error detallados: los guarda Hangfire en su BD
+///     Job que Hangfire ejecuta en el Worker.
+///     Responsabilidades:
+///     1. Actualizar el estado en nuestra BD (Processing → Completed/Failed)
+///     2. Orquestar: DataCollector → PdfBuilder → Storage
+///     Lo que NO hace:
+///     - Reintentos: los maneja Hangfire con [AutomaticRetry]
+///     - Logs de error detallados: los guarda Hangfire en su BD
 /// </summary>
 public class GenerateReportJob : IGenerateReportJob
 {
-    private readonly SIGREFContext             _context;
-    private readonly IReportDataCollector      _dataCollector;
-    private readonly IReportPdfBuilder         _pdfBuilder;
-    private readonly IReportStorageService     _storage;
+    private readonly SIGREFContext _context;
+    private readonly IReportDataCollector _dataCollector;
     private readonly ILogger<GenerateReportJob> _logger;
+    private readonly IReportPdfBuilder _pdfBuilder;
+    private readonly IReportStorageService _storage;
 
     public GenerateReportJob(
         SIGREFContext context,
@@ -35,11 +32,11 @@ public class GenerateReportJob : IGenerateReportJob
         IReportStorageService storage,
         ILogger<GenerateReportJob> logger)
     {
-        _context       = context;
+        _context = context;
         _dataCollector = dataCollector;
-        _pdfBuilder    = pdfBuilder;
-        _storage       = storage;
-        _logger        = logger;
+        _pdfBuilder = pdfBuilder;
+        _storage = storage;
+        _logger = logger;
     }
 
     [AutomaticRetry(Attempts = 2, DelaysInSeconds = new[] { 60, 300 })]
@@ -59,28 +56,30 @@ public class GenerateReportJob : IGenerateReportJob
 
         try
         {
-            _logger.LogInformation("[Job] Iniciando reporte: {Type} para el usuario {User}", history.ReportType, history.CreatedById);
+            _logger.LogInformation("[Job] Iniciando reporte: {Type} para el usuario {User}", history.ReportType,
+                history.CreatedById);
 
             // 2. Actualizar estado a Processing
             history.Status = ReportStatus.Processing;
             history.Progress = 5; // Iniciando
             await _context.SaveChangesAsync(cancellationToken);
-            
+
             // 3. TODO: Obtener Filtros
             // Aquí deberías deserializar los filtros si los guardaste en la entidad
-             var filters = JsonSerializer.Deserialize<ReportFilterDto>(history.FilterJson?? "");
+            var filters = JsonSerializer.Deserialize<ReportFilterDto>(history.FilterJson ?? "");
 
             // 4. Streaming de Datos (DataCollector)
-            
-            var dataStream = _dataCollector.StreamReportLinesAsync(filters, cancellationToken);
-            
-            // 5. TODO: Generación del PDF con QuestPDF
-            using var pdfStream = await _pdfBuilder.BuildAsync(dataStream, history.HospitalPropertiesSnapshot, meta,cancellationToken);
 
-            var downloadUrl = await _storage.SaveAsync(historyId, pdfStream,   cancellationToken);
+            var dataStream = _dataCollector.StreamReportLinesAsync(filters, cancellationToken);
+
+            // 5. TODO: Generación del PDF con QuestPDF
+            using var pdfStream = await _pdfBuilder.BuildAsync(dataStream, history.HospitalPropertiesSnapshot, meta,
+                cancellationToken);
+
+            var downloadUrl = await _storage.SaveAsync(historyId, pdfStream, cancellationToken);
             history.DownloadUrl = downloadUrl;
-            
-            
+
+
             await _context.SaveChangesAsync(cancellationToken);
             // 6. Guardar el archivo físico
             // var fileName = $"{history.Id}.pdf";
@@ -99,16 +98,17 @@ public class GenerateReportJob : IGenerateReportJob
             _logger.LogWarning("[Job] El reporte {HistoryId} fue cancelated/abortado", historyId);
             throw; // Re-lanzamos para que Hangfire sepa que se canceló
         }
-        
+
         catch (Exception ex)
         {
             _logger.LogError(ex, "[Job] Error fatal generando reporte {HistoryId}", historyId);
-            
+
             // Guardamos el error para que el usuario sepa qué pasó
             history.Status = ReportStatus.Failed;
             history.ErrorMessage = ex.Message;
-            await _context.SaveChangesAsync(CancellationToken.None); // Usamos None para asegurar que se guarde el error aunque el token esté cancelado
-            
+            await _context.SaveChangesAsync(CancellationToken
+                .None); // Usamos None para asegurar que se guarde el error aunque el token esté cancelado
+
             throw; // Re-lanzamos para que aparezca en el Dashboard de Hangfire
         }
     }

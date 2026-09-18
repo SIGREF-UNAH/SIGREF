@@ -12,23 +12,22 @@ import {
   getGetLocationListQueryKey,
   type GetLocationByIdQueryResult,
   type GetLocationListQueryResult,
-} from "../../../api/locations/locations";
+} from "@endpoints/locations/locations";
 import {
   useGetOrganizationList,
   type GetOrganizationListQueryResult,
-} from "../../../api/organizations/organizations";
+} from "@endpoints/organizations/organizations";
 import type {
   LocationDto,
   OrganizationDto,
   ContactPointDto,
   AddressDto,
   ReferenceDto,
-  ContactPointSystem,
-  LocationStatus,
-  LocationMode,
   CreateLocationDto,
   UpdateLocationDto,
-} from "../../../api/models";
+} from "@models";
+import type { NullableOfContactPointSystem as ContactPointSystem } from "@types/shared";
+import { NullableOfLocationStatus as LocationStatus, LocationMode } from "@types/locations";
 import { useMessage } from "../../../shared/hooks";
 import {
   getCityOptionsByCountryAndState,

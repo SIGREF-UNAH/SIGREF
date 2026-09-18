@@ -14,7 +14,6 @@ public class CreatePatientDto
     public List<HumanNameDto> Name { get; set; } = new();
 
     [Required(ErrorMessage = "El género es obligatorio.")]
-    [JsonConverter(typeof(JsonStringEnumConverter))]
     public AdministrativeGender? Gender { get; set; }
 
     [Required(ErrorMessage = "La fecha de nacimiento es obligatoria.")]
@@ -33,4 +32,3 @@ public class CreatePatientDto
 
     public List<IdentifierDto>? Identifier { get; set; }
 }
-

@@ -1,7 +1,5 @@
-﻿using Hl7.Fhir.Model;
-using Hl7.Fhir.Rest;
+﻿using Hl7.Fhir.Rest;
 using SIGREF.API.Dtos.Common;
-using SIGREF.API.Helpers;
 using SIGREF.API.Services.Common;
 using SIGREF.Common.Dtos;
 using SIGREF.Common.Helpers;
@@ -24,7 +22,7 @@ public class ValueSetService : IValueSetService
         var canonicalUrl = CatalogValueSetResolver.Resolve(type);
 
         // FHIR usa offset (0-based), nosotros recibimos page (1-based)
-        int offset = (page - 1) * pageSize;
+        var offset = (page - 1) * pageSize;
         var expandUrl = $"ValueSet/$expand?url={canonicalUrl}&offset={offset}&count={pageSize}";
         var fullUri = new Uri(new Uri(_client.Endpoint.ToString()), expandUrl);
         Console.WriteLine($"[FHIR REQUEST]: {fullUri}");
@@ -44,7 +42,7 @@ public class ValueSetService : IValueSetService
 
         // Cálculos para el PaginationDto
         long totalItems = valueSet.Expansion?.Total ?? 0;
-        int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+        var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
 
 
         return new PagedResultDto<ValueSetItemDto>

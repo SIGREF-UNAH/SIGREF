@@ -4,8 +4,8 @@ import {
   getGetSerieListQueryKey,
   useUpdateSerieById,
   useDeleteSerieById,
-} from "../../../api/series/series";
-import type { UpdateSeriesDto } from "../../../api/models";
+} from "@endpoints/series/series";
+import type { UpdateSeriesDto } from "@models";
 
 interface ToggleSerieData {
   name: string;

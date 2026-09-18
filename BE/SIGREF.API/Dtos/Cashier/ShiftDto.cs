@@ -12,7 +12,6 @@ public class ShiftDto
 
     public TimeOnly EndTime { get; set; }
     public bool IsActive { get; set; }
-    
+
     public string? NameLocation { get; set; }
-    
 }

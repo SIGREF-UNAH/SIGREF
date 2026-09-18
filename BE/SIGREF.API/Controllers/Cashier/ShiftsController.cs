@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Routing;
-using Microsoft.AspNetCore.Http;
 using System.Net.Mime;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,7 +15,7 @@ namespace SIGREF.API.Controllers.Cashier;
 [Authorize(AuthenticationSchemes = "Bearer")]
 [Produces(MediaTypeNames.Application.Json)]
 [Consumes(MediaTypeNames.Application.Json)]
-[Tags("Turnos - Gestión de Turnos")]
+[Tags("Shifts")]
 public class ShiftsController(IShiftService shiftService) : ControllerBase
 {
     // ============================================================
@@ -27,7 +25,7 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
     [EndpointName("GetShiftList")]
     [EndpointSummary("Obtener Turnos filtrados y paginados")]
     [EndpointDescription("Recupera una lista de los turnos vigentes según los filtros proporcionados")]
-    [Tags("SIGREF - Turnos")]
+    [Tags("Shifts")]
     [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor}")]
     [ProducesResponseType(typeof(PagedResultDto<ShiftDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetFiltered([FromQuery] ShiftFilterDto filter)
@@ -43,9 +41,9 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
     [EndpointName("GetShiftById")]
     [EndpointSummary("Obtener un turno por su ID")]
     [EndpointDescription("Recupera el detalle de un turno específico a partir de su ID")]
-    [Tags("SIGREF - Turnos")]
+    [Tags("Shifts")]
     [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor}")]
-    [ProducesResponseType( typeof(ShiftDto) , StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ShiftDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById(Guid id)
     {
         var response = await shiftService.GetShiftByIdAsync(id);
@@ -59,12 +57,11 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
     [EndpointName("CreateShift")]
     [EndpointSummary("Crear un nuevo turno")]
     [EndpointDescription("Registra un nuevo turno en el sistema con la información proporcionada")]
-    [Tags("SIGREF - Turnos")]
+    [Tags("Shifts")]
     [Authorize(Roles = $"{RolesConstants.admin}")]
     [ProducesResponseType(typeof(ShiftDto), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create([FromBody] CreateShiftDto dto)
     {
-
         var result = await shiftService.CreateShiftAsync(dto);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
@@ -76,7 +73,7 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
     [EndpointName("UpdateShiftById")]
     [EndpointSummary("Actualizar un turno existente")]
     [EndpointDescription("Modifica los datos de un turno previamente registrado utilizando su ID")]
-    [Tags("SIGREF - Turnos")]
+    [Tags("Shifts")]
     [Authorize(Roles = $"{RolesConstants.admin}")]
     [ProducesResponseType(typeof(ShiftDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateShiftDto dto)
@@ -95,7 +92,7 @@ public class ShiftsController(IShiftService shiftService) : ControllerBase
     [EndpointName("DeleteShiftById")]
     [EndpointSummary("Eliminar un turno")]
     [EndpointDescription("Elimina un turno del sistema a partir de su ID")]
-    [Tags("SIGREF - Turnos")]
+    [Tags("Shifts")]
     [Authorize(Roles = $"{RolesConstants.admin}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Delete(Guid id)

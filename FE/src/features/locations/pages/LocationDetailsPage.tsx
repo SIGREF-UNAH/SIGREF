@@ -7,11 +7,11 @@ import {
   DeleteOutlined,
   ArrowLeftOutlined,
 } from "@ant-design/icons";
-import { useGetLocationById } from "../../../api/locations/locations";
+import { useGetLocationById } from "@endpoints/locations/locations";
 import {
   useDeleteLocationById,
   getGetLocationListQueryKey,
-} from "../../../api/locations/locations";
+} from "@endpoints/locations/locations";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   BsBuilding,
@@ -19,7 +19,7 @@ import {
   BsPersonFill,
   BsPinMapFill,
 } from "react-icons/bs";
-import type { ContactPointSystem } from "../../../api/models";
+import type { NullableOfContactPointSystem as ContactPointSystem } from "@types/shared";
 import { PageHeaderTabs } from "../../../shared/components/ui";
 import { useAbility } from "../../../config";
 import { Can } from "@casl/react";

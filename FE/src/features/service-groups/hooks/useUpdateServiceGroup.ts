@@ -1,12 +1,12 @@
 import { useNavigate, useParams } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMessage } from "../../../shared/hooks";
-import type { UpdateServiceGroupDto } from "../../../api/models";
+import type { UpdateServiceGroupDto } from "@models";
 import {
   getGetServiceGroupListQueryKey,
   useUpdateServiceGroupById,
   useGetServiceGroupById,
-} from "../../../api/service-group/service-group";
+} from "@endpoints/service-groups/service-groups";
 
 export function useUpdateServiceGroup() {
   const navigate = useNavigate();

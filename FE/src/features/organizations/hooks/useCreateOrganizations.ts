@@ -1,17 +1,15 @@
 import { useNavigate } from "react-router";
-import type { CreateOrganizationDto } from "../../../api/models";
+import type { CreateOrganizationDto } from "@models";
 import { 
-  OrganizationTypeEnum,
-  ContactPointSystem,
-  ContactPointUse,
-  AddressUse,
-  AddressType,
-} from "../../../api/models";
+} from "@models";
+import { OrganizationTypeEnum } from "../types";
+import { NullableOfContactPointSystem as ContactPointSystem, NullableOfContactPointUse as ContactPointUse } from "@types/shared";
+import { NullableOfAddressUse as AddressUse, NullableOfAddressType as AddressType } from "@types/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   getGetOrganizationListQueryKey,
   useCreateOrganization as useCreateOrganizationMutation,
-} from "../../../api/organizations/organizations";
+} from "@endpoints/organizations/organizations";
 import { useMessage } from "../../../shared/hooks";
 
 /**

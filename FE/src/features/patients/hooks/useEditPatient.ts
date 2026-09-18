@@ -4,8 +4,8 @@ import {
   getGetPatientListQueryKey,
   useGetPatientById,
   useUpdatePatientById,
-} from "../../../api/patients/patients";
-import type { PatientDto } from "../../../api/models";
+} from "@endpoints/patients/patients";
+import type { PatientDto } from "@models";
 import { PatientExtensionsUrls } from "../../../shared/constants";
 import { useMessage } from "../../../shared/hooks";
 import { useQueryClient } from "@tanstack/react-query";

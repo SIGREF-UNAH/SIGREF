@@ -1,5 +1,5 @@
 import { Modal, Descriptions, Tag, Spin } from "antd";
-import type { ShiftDto } from "../../../api/models";
+import type { ShiftDto } from "@models";
 
 interface ShiftDetailsModalProps {
   open: boolean;

@@ -1,10 +1,9 @@
+using System.Net;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
 using Microsoft.EntityFrameworkCore;
 using SIGREF.API.Dtos.Cashier;
-using SIGREF.API.Dtos.Common;
 using SIGREF.API.Extensions;
-using SIGREF.API.Helpers;
 using SIGREF.API.Middleware;
 using SIGREF.Common.Dtos;
 using SIGREF.Common.Exceptions;
@@ -47,12 +46,10 @@ public class ShiftService : IShiftService
             }
 
             if (results == null || !results.Entry.Any())
-            {
                 throw new NotFoundException("FHIR_LOCATION_NOT_FOUND", new Dictionary<string, object>
                 {
                     { "LocationId", dto.LocationId }
                 });
-            }
 
             // =======================================================
             // VALIDAR EXISTENCIA DE NOMBRE DUPLICADO
@@ -176,7 +173,7 @@ public class ShiftService : IShiftService
             if (!string.IsNullOrWhiteSpace(dto.Name) &&
                 dto.Name.Trim().ToUpper() != shift.Name.Trim().ToUpper())
             {
-                bool nameExists = await _db.Shifts.AnyAsync(s =>
+                var nameExists = await _db.Shifts.AnyAsync(s =>
                     s.Id != shift.Id &&
                     s.IsActive &&
                     s.LocationId == targetLocationId &&
@@ -193,7 +190,7 @@ public class ShiftService : IShiftService
             // 4. VALIDAR HORA DE INICIO DUPLICADA (solo entre turnos ACTIVOS)
             if (dto.StartTime.HasValue && dto.StartTime.Value != shift.StartTime)
             {
-                bool timeExists = await _db.Shifts.AnyAsync(s =>
+                var timeExists = await _db.Shifts.AnyAsync(s =>
                     s.Id != shift.Id &&
                     s.IsActive &&
                     s.LocationId == targetLocationId &&
@@ -208,7 +205,7 @@ public class ShiftService : IShiftService
             }
 
             // 5. APLICAR LOS CAMBIOS
-            Guid userId = _userContext.GetUserId();
+            var userId = _userContext.GetUserId();
 
             shift.ApplyUpdate(dto, userId);
 
@@ -273,7 +270,7 @@ public class ShiftService : IShiftService
             // =======================================================
             // SOFT DELETE
             // =======================================================
-            Guid userId = _userContext.GetUserId();
+            var userId = _userContext.GetUserId();
 
             shift.IsActive = false;
             shift.UpdatedById = userId;
@@ -342,7 +339,7 @@ public class ShiftService : IShiftService
                 dto.NameLocation = location.Name;
             }
             catch (FhirOperationException fhirEx)
-                when (fhirEx.Status == System.Net.HttpStatusCode.NotFound)
+                when (fhirEx.Status == HttpStatusCode.NotFound)
             {
                 dto.NameLocation = null;
             }
@@ -392,10 +389,10 @@ public class ShiftService : IShiftService
             // =======================================================
             // 1. NORMALIZAR PAGINACIÓN
             // =======================================================
-            int pageNumber = Math.Clamp(filter.PageNumber <= 0 ? 1 : filter.PageNumber, 1, int.MaxValue);
-            int pageSize = Math.Clamp(filter.PageSize <= 0 ? 10 : filter.PageSize, 1, 50);
+            var pageNumber = Math.Clamp(filter.PageNumber <= 0 ? 1 : filter.PageNumber, 1, int.MaxValue);
+            var pageSize = Math.Clamp(filter.PageSize <= 0 ? 10 : filter.PageSize, 1, 50);
 
-            IQueryable<ShiftEntity> query = _db.Shifts.AsNoTracking();
+            var query = _db.Shifts.AsNoTracking();
 
             // =======================================================
             // 2. FILTROS BÁSICOS (SIGREF)
@@ -437,7 +434,6 @@ public class ShiftService : IShiftService
                     .ToList();
 
                 if (fhirLocationIds.Count == 0)
-                {
                     return new PagedResultDto<ShiftDto>
                     {
                         Items = new List<ShiftDto>(),
@@ -449,7 +445,6 @@ public class ShiftService : IShiftService
                             TotalPages = 0
                         }
                     };
-                }
 
                 query = query.Where(s => fhirLocationIds.Contains(s.LocationId));
             }
@@ -457,8 +452,8 @@ public class ShiftService : IShiftService
             // =======================================================
             // 4. TOTAL DE REGISTROS
             // =======================================================
-            int totalItems = await query.CountAsync();
-            int totalPages = totalItems > 0
+            var totalItems = await query.CountAsync();
+            var totalPages = totalItems > 0
                 ? (int)Math.Ceiling(totalItems / (double)pageSize)
                 : 0;
 
@@ -482,7 +477,6 @@ public class ShiftService : IShiftService
             Dictionary<string, string?> locationNames = new();
 
             if (shiftLocationIds.Any())
-            {
                 try
                 {
                     var searchParamsLocations = new SearchParams()
@@ -501,9 +495,9 @@ public class ShiftService : IShiftService
                 }
                 catch (FhirOperationException fhirEx)
                 {
-                    throw FhirExceptionMapper.Map(fhirEx, string.Join(",", shiftLocationIds), nameof(GetFilteredShiftsAsync));
+                    throw FhirExceptionMapper.Map(fhirEx, string.Join(",", shiftLocationIds),
+                        nameof(GetFilteredShiftsAsync));
                 }
-            }
 
             // =======================================================
             // MAPEAR SHIFTS A DTO

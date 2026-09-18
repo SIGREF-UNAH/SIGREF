@@ -5,7 +5,7 @@ import { useKeycloak } from "@react-keycloak/web";
 import { RoutesByRole, useAbility } from "../../config";
 import { ShortcutsGuideModal } from "./modals";
 import { useState } from "react";
-import { useGetHospitalPropertiesDetails } from "../../api/hospital-properties/hospital-properties";
+import { useGetHospitalPropertiesDetails } from "@endpoints/hospital-properties/hospital-properties";
 import { USER_ROLE_OPTIONS } from "../constants";
 import useMediaFiles from "../../features/media-files/hooks/useMediaFiles";
 import {

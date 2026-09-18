@@ -12,10 +12,6 @@ namespace SIGREF.Infrastructure.Keycloak.Services.Auth;
 
 public class KeycloakAdminService : IKeycloakAdminService
 {
-    private readonly IKeycloakClient _kc;
-    private readonly IFhirPractitionerService _fhirBridge;
-    private readonly ILogger<KeycloakAdminService> _logger;
-
     private static readonly Dictionary<string, string[]> RoleRules = new()
     {
         { "ti", ["ti", "admin", "auditor", "cashier"] },
@@ -25,6 +21,9 @@ public class KeycloakAdminService : IKeycloakAdminService
     };
 
     private static readonly HashSet<string> ManagementRoles = ["ti", "admin"];
+    private readonly IFhirPractitionerService _fhirBridge;
+    private readonly IKeycloakClient _kc;
+    private readonly ILogger<KeycloakAdminService> _logger;
 
     public KeycloakAdminService(
         IKeycloakClient kc,
@@ -53,7 +52,7 @@ public class KeycloakAdminService : IKeycloakAdminService
         var creatorRole = ExtractRole(creator)
                           ?? throw new ForbiddenException(
                               "CREATOR_ROLE_UNDETERMINED",
-                              extraData: new Dictionary<string, object>
+                              new Dictionary<string, object>
                               {
                                   { "hint", "El token no contiene un claim de rol válido." }
                               });
@@ -61,16 +60,14 @@ public class KeycloakAdminService : IKeycloakAdminService
         //  Verificar jerarquía: el creador solo puede asignar roles permitidos.
         if (!RoleRules.TryGetValue(creatorRole, out var allowedRoles)
             || roles.Any(r => !allowedRoles.Contains(r)))
-        {
             throw new ForbiddenException(
                 "ROLE_ASSIGNMENT_NOT_ALLOWED",
-                extraData: new Dictionary<string, object>
+                new Dictionary<string, object>
                 {
                     { "creatorRole", creatorRole },
                     { "requestedRoles", roles },
                     { "allowedRoles", allowedRoles ?? [] }
                 });
-        }
 
         // Validar Practitioner en FHIR.
         var (exists, firstName, lastName, isActive) = await _fhirBridge.GetBasicDataAsync(practitionerId);
@@ -79,13 +76,13 @@ public class KeycloakAdminService : IKeycloakAdminService
         if (!exists)
             throw new NotFoundException(
                 "FHIR_PRACTITIONER_NOT_FOUND",
-                extraData: new Dictionary<string, object> { { "practitionerId", practitionerId } });
+                new Dictionary<string, object> { { "practitionerId", practitionerId } });
 
         // Regla de negocio practitioner inactivo no puede tener usuario 
         if (!isActive)
             throw new BusinessRuleException(
                 "FHIR_PRACTITIONER_INACTIVE",
-                extraData: new Dictionary<string, object> { { "practitionerId", practitionerId } });
+                new Dictionary<string, object> { { "practitionerId", practitionerId } });
 
         // 4. Validar existencia de los roles en Keycloak ANTES de crear el usuario.
         await ValidateRolesExistAsync(roles, ct);
@@ -95,17 +92,17 @@ public class KeycloakAdminService : IKeycloakAdminService
         if (await FindUserByPractitionerIdAsync(practitionerId, ct) is not null)
             throw new ConflictException(
                 "PRACTITIONER_ALREADY_LINKED",
-                extraData: new Dictionary<string, object> { { "practitionerId", practitionerId } });
+                new Dictionary<string, object> { { "practitionerId", practitionerId } });
 
         string? createdUserId = null;
         try
         {
             var kcUser = new
             {
-                username = username,
-                email = email,
-                firstName = firstName,
-                lastName = lastName,
+                username,
+                email,
+                firstName,
+                lastName,
                 enabled = true,
                 credentials = new[]
                 {
@@ -139,7 +136,6 @@ public class KeycloakAdminService : IKeycloakAdminService
         {
             // ROLLBACK: eliminar el usuario si algo falló tras su creación.
             if (!string.IsNullOrEmpty(createdUserId))
-            {
                 try
                 {
                     await _kc.DeleteUserAsync(createdUserId, CancellationToken.None);
@@ -151,7 +147,6 @@ public class KeycloakAdminService : IKeycloakAdminService
                         "Fallo durante el rollback. El usuario '{UserId}' pudo quedar huérfano en Keycloak.",
                         createdUserId);
                 }
-            }
 
             _logger.LogError(
                 "Error crítico al crear usuario '{Username}'. Se aplicó rollback para el ID: {UserId}",
@@ -222,11 +217,11 @@ public class KeycloakAdminService : IKeycloakAdminService
         if (string.IsNullOrWhiteSpace(username))
             throw new ValidationException(
                 "USERNAME_REQUIRED",
-                extraData: new Dictionary<string, object> { { "field", "username" } });
+                new Dictionary<string, object> { { "field", "username" } });
 
         var matches = await _kc.SearchUsernamesAsync(username, ct);
 
-        bool exactExists = matches.Any(u =>
+        var exactExists = matches.Any(u =>
             u.Equals(username, StringComparison.OrdinalIgnoreCase));
 
         return new KeycloakUsernameDto
@@ -245,9 +240,9 @@ public class KeycloakAdminService : IKeycloakAdminService
         KeycloakFilter filter,
         CancellationToken ct = default)
     {
-        int page = filter.PageNumber <= 0 ? 1 : filter.PageNumber;
-        int pageSize = filter.PageSize <= 0 ? 10 : Math.Min(filter.PageSize, 30);
-        int first = (page - 1) * pageSize;
+        var page = filter.PageNumber <= 0 ? 1 : filter.PageNumber;
+        var pageSize = filter.PageSize <= 0 ? 10 : Math.Min(filter.PageSize, 30);
+        var first = (page - 1) * pageSize;
 
         // Search tiene precedencia; si está presente los filtros específicos se ignoran
         // para evitar comportamiento ambiguo en Keycloak.
@@ -301,7 +296,7 @@ public class KeycloakAdminService : IKeycloakAdminService
         if (requestorId == targetUserId)
             throw new BusinessRuleException(
                 "USER_CANNOT_CHANGE_OWN_STATUS",
-                extraData: new Dictionary<string, object> { { "userId", requestorId ?? "unknown" } });
+                new Dictionary<string, object> { { "userId", requestorId ?? "unknown" } });
 
         return await _kc.ToggleUserStatusAsync(targetUserId, ct);
     }
@@ -321,23 +316,21 @@ public class KeycloakAdminService : IKeycloakAdminService
         if (!string.IsNullOrWhiteSpace(updateDto.NewRoleName)
             && (!RoleRules.TryGetValue(requestorRole, out var allowedRoles)
                 || !allowedRoles.Contains(updateDto.NewRoleName)))
-        {
             throw new ForbiddenException(
                 "ROLE_ASSIGNMENT_NOT_ALLOWED",
-                extraData: new Dictionary<string, object>
+                new Dictionary<string, object>
                 {
                     { "requestorRole", requestorRole },
                     { "requestedRole", updateDto.NewRoleName },
                     { "allowedRoles", allowedRoles ?? [] }
                 });
-        }
 
         await _kc.UpdateUserAsync(targetUserId, updateDto, ct);
 
         var updated = await _kc.GetUserByIdAsync(targetUserId, ct)
                       ?? throw new NotFoundException(
                           "KEYCLOAK_USER_NOT_FOUND",
-                          extraData: new Dictionary<string, object> { { "userId", targetUserId } });
+                          new Dictionary<string, object> { { "userId", targetUserId } });
 
         return KeycloakUserMapper.ToDto(updated)!;
     }
@@ -358,13 +351,13 @@ public class KeycloakAdminService : IKeycloakAdminService
         if (requestorId == targetUserId)
             throw new BusinessRuleException(
                 "USER_CANNOT_DELETE_THEMSELVES",
-                extraData: new Dictionary<string, object> { { "userId", requestorId ?? "unknown" } });
+                new Dictionary<string, object> { { "userId", requestorId ?? "unknown" } });
 
         var existing = await _kc.GetUserByIdAsync(targetUserId, ct);
         if (existing is null)
             throw new NotFoundException(
                 "KEYCLOAK_USER_NOT_FOUND",
-                extraData: new Dictionary<string, object> { { "userId", targetUserId } });
+                new Dictionary<string, object> { { "userId", targetUserId } });
 
         await _kc.DeleteUserAsync(targetUserId, ct);
 
@@ -380,13 +373,17 @@ public class KeycloakAdminService : IKeycloakAdminService
     // ============================================================
 
     private static string? ExtractRole(ClaimsPrincipal principal)
-        => principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value
+    {
+        return principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value
             is { Length: > 0 } role
             ? role
             : null;
+    }
 
     private static string? ExtractUserId(ClaimsPrincipal principal)
-        => principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+    {
+        return principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+    }
 
     private static string ValidateManagementRole(ClaimsPrincipal requestor, string action)
     {
@@ -394,7 +391,7 @@ public class KeycloakAdminService : IKeycloakAdminService
         if (string.IsNullOrEmpty(role) || !ManagementRoles.Contains(role))
             throw new ForbiddenException(
                 "MANAGEMENT_ROLE_REQUIRED",
-                extraData: new Dictionary<string, object>
+                new Dictionary<string, object>
                 {
                     { "action", action },
                     { "requiredRoles", ManagementRoles }

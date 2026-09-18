@@ -1,11 +1,10 @@
 import { useMessage } from "../../../shared/hooks";
-import { useCreateInvoice } from "../../../api/invoice/invoice";
+import { useCreateInvoice } from "@endpoints/invoices/invoices";
 import {
-  InvoiceType,
-  PaymentMethodType,
   type InvoiceCreateDto,
   type InvoiceItemCreateDto,
-} from "../../../api/models";
+} from "@models";
+import { InvoiceType, PaymentMethodType } from "@types/invoices";
 
 interface SelectedService {
   id: string;

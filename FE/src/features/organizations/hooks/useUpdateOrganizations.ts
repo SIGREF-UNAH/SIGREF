@@ -1,18 +1,17 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMessage } from "../../../shared/hooks";
-import type { UpdateOrganizationDto, CodingDto } from "../../../api/models";
+import type { UpdateOrganizationDto, CodingDto } from "@models";
 import { 
-  OrganizationTypeEnum,
-  ContactPointSystem,
-  ContactPointUse,
-} from "../../../api/models";
+} from "@models";
+import { OrganizationTypeEnum } from "../types";
+import { NullableOfContactPointSystem as ContactPointSystem, NullableOfContactPointUse as ContactPointUse } from "@types/shared";
 import type { OrganizationFormValues } from "../components/OrganizationsForm";
 import {
   getGetOrganizationListQueryKey,
   useGetOrganizationById,
   useUpdateOrganizationById,
-} from "../../../api/organizations/organizations";
+} from "@endpoints/organizations/organizations";
 
 /**
  * Hook personalizado para actualizar organizaciones

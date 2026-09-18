@@ -1,10 +1,15 @@
 import { Modal, Descriptions, Tag, Empty } from "antd";
-import type { HealthcareDto } from "../../../api/models";
+import type { HealthcareDto } from "@models/healthcare-services/healthcareDto";
+
+
+interface HealthcareDetailFilters{
+  includeCost: boolean;
+}
 
 interface HealthcareDetailModalProps {
   open: boolean;
   healthcare: HealthcareDto | null;
-  filters: any;
+  filters: HealthcareDetailFilters;
   onClose: () => void;
 }
 
@@ -14,6 +19,8 @@ export const HealthcareDetailsModal = ({
   filters,
   onClose,
 }: HealthcareDetailModalProps) => {
+  const isInternalScope = Number(healthcare?.scope ?? 1) === 0;
+
   if (!healthcare) {
     return (
       <Modal
@@ -78,8 +85,8 @@ export const HealthcareDetailsModal = ({
           )}
 
           <Descriptions.Item label="Tipo" span={1}>
-            <Tag color={(healthcare.scope as any) === 0 ? "blue" : "orange"}>
-              {(healthcare.scope as any) === 0 ? "Interno" : "Externo"}
+            <Tag color={isInternalScope ? "blue" : "orange"}>
+              {isInternalScope ? "Interno" : "Externo"}
             </Tag>
           </Descriptions.Item>
 

@@ -18,7 +18,7 @@ namespace SIGREF.API.Controllers.Files;
 [Authorize(AuthenticationSchemes = "Bearer")]
 // A nivel de clase: TODOS los endpoints responden con JSON
 [Produces(MediaTypeNames.Application.Json)]
-[Tags("MediaFiles - Archivos Media")]
+[Tags("MediaFiles")]
 
 public class MediaFilesController : ControllerBase
 {
@@ -36,7 +36,7 @@ public class MediaFilesController : ControllerBase
     [EndpointName("CreateMediaFileUpload")]
     [EndpointSummary("Subir un archivo multimedia")]
     [EndpointDescription("Almacena un archivo multimedia y devuelve sus datos de identificación.")]
-    [Tags("SIGREF - Archivos multimedia")]
+    [Tags("MediaFiles")]
     [Consumes("multipart/form-data")]
     [ProducesResponseType(typeof(MediaFileDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> Upload([FromForm] UploadMediaFileDto dto)
@@ -52,7 +52,7 @@ public class MediaFilesController : ControllerBase
     [EndpointName("GetMediaFileById")]
     [EndpointSummary("Obtener un archivo multimedia")]
     [EndpointDescription("Recupera un archivo multimedia por su identificador.")]
-    [Tags("SIGREF - Archivos multimedia")]
+    [Tags("MediaFiles")]
     [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor},{RolesConstants.ti}")] // Para que clientes y FE puedan cargar logos
     [ProducesResponseType(typeof(MediaFileDto) ,StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById(Guid id)
@@ -68,7 +68,7 @@ public class MediaFilesController : ControllerBase
     [EndpointName("DeleteMediaFileById")]
     [EndpointSummary("Eliminar un archivo multimedia")]
     [EndpointDescription("Elimina un archivo multimedia identificado por su ID.")]
-    [Tags("SIGREF - Archivos multimedia")]
+    [Tags("MediaFiles")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [Authorize(Roles = $"{RolesConstants.ti}")]
     public async Task<IActionResult> Delete(Guid id)
@@ -85,7 +85,7 @@ public class MediaFilesController : ControllerBase
     [EndpointName("CreateMediaFileAssignment")]
     [EndpointSummary("Asociar un archivo al hospital")]
     [EndpointDescription("Asocia un archivo multimedia con el tipo de recurso institucional indicado.")]
-    [Tags("SIGREF - Archivos multimedia")]
+    [Tags("MediaFiles")]
     [ProducesResponseType(typeof(MediaFileDto) , StatusCodes.Status204NoContent)]
     [Authorize(Roles = $"{RolesConstants.ti}")]
     public async Task<IActionResult> SetHospitalMedia(
@@ -103,7 +103,7 @@ public class MediaFilesController : ControllerBase
     [EndpointName("GetMediaFileList")]
     [EndpointSummary("Listar archivos multimedia")]
     [EndpointDescription("Obtiene una lista paginada de archivos multimedia aplicando los filtros solicitados.")]
-    [Tags("SIGREF - Archivos multimedia")]
+    [Tags("MediaFiles")]
     [ProducesResponseType(typeof(MediaFileDto), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.ti}")]
     public async Task<IActionResult> GetPaged([FromQuery] MediaFileFilterDto filter)

@@ -19,9 +19,9 @@ import {
 import type { ColumnsType } from "antd/es/table";
 import type {
   HealthcareDto,
-  HealthcareScope as HealthcareScopeType,
-} from "../../../api/models";
-import { HealthcareScope } from "../../../api/models/healthcareScope";
+} from "@models";
+import type { HealthcareScope as HealthcareScopeType } from "@types/healthcare-services";
+import { HealthcareScope } from "@types/healthcare-services";
 import { useHealthcaresList } from "../hooks/useHealthcaresList";
 import { PageHeaderTabs } from "../../../shared/components/ui";
 import { HealthcareDetailsModal } from "../components";

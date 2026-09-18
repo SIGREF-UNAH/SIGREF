@@ -1,9 +1,13 @@
-# Build artifacts
-**/bin/
-**/obj/
-**/out/
+# ============================================================================
+# CAMBIOS APLICADOS (Codex, 2026-09-17)
+# Reduce el contexto de build y evita enviar secretos, archivos locales y salida
+# de herramientas al daemon de Docker. Los secretos se inyectan en ejecucion.
+# ============================================================================
 
-# Visual Studio / Rider
+# Control de versiones y metadatos locales.
+.git/
+.gitignore
+.gitattributes
 .vs/
 .vscode/
 .idea/
@@ -12,26 +16,40 @@
 *.cache
 *.sln.DotSettings.user
 
-# Docker
+# Salida de compilacion, dependencias y pruebas que no participan en publish.
+**/bin/
+**/obj/
+**/out/
+**/node_modules/
+SIGREF.API.Tests/
+docs/
+infra/
+SIGREF.API.AppHost/
+
+# Secretos y configuracion exclusiva de desarrollo: se pasan con --env-file,
+# secretos del orquestador o variables de entorno, nunca con COPY . .
+.env
+.env.*
+!.env.example
+**/secrets.json
+**/*secrets*.json
+**/appsettings.Development.json
+**/*.pem
+**/*.key
+**/*.pfx
+**/*.p12
+
+# Datos persistentes, logs y archivos de usuario no deben formar parte de la imagen.
+**/data/
+**/.mongodb/
+**/logs/
+**/media/
+*.log
+
+# Archivos de soporte que no son necesarios para restaurar ni publicar la aplicacion.
 **/Dockerfile*
 **/docker-compose*
-.dockerignore
-# Data directories (mounted volumes)
-**/data/
-SIGREF.API.AppHost/data/
-**/.mongodb
-
-# Git
-.git/
-.gitignore
-.gitattributes
-
-# Documentation
 *.md
 LICENSE*
-
-# Other
-**/node_modules/
-**/.DS_Store
-**/appsettings.Development.json
-
+*.DS_Store
+arbol_documentos.txt

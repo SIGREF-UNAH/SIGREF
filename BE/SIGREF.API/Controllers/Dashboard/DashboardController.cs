@@ -18,14 +18,14 @@ namespace SIGREF.API.Controllers.Dashboard;
 [Authorize(AuthenticationSchemes = "Bearer")]
 [Produces(MediaTypeNames.Application.Json)]
 [Consumes(MediaTypeNames.Application.Json)]
-[Tags("Dashboard - Resumen de Estadisticas")]
+[Tags("Dashboard")]
 public class DashboardController(IDashboardReportingService dashboardReportingService) : ControllerBase
 {
     [HttpGet("summary")]
     [EndpointName("GetDashboardSummary")]
     [EndpointSummary("Obtiene el Resumen general de estadisticas de ingresos")]
     [EndpointDescription("Devuelve los principales indicadores agregados de ingresos para el periodo y filtros solicitados.")]
-    [Tags("SIGREF - Dashboard")]
+    [Tags("Dashboard")]
     [ProducesResponseType(typeof(DashboardSummaryDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSummary([FromQuery] DashboardFilterDto filter)
     {
@@ -39,7 +39,7 @@ public class DashboardController(IDashboardReportingService dashboardReportingSe
     [EndpointName("GetDashboardServiceUsage")]
     [EndpointSummary("Obtiene el Resumen de servicios usados")]
     [EndpointDescription("Devuelve el uso agregado de los servicios médicos durante el periodo consultado.")]
-    [Tags("SIGREF - Dashboard")]
+    [Tags("Dashboard")]
     [ProducesResponseType( typeof(ServiceUsageResultDto) , StatusCodes.Status200OK)]
     public async Task<IActionResult> GetServiceUsage([FromQuery] DashboardFilterDto filter)
     {
@@ -53,7 +53,7 @@ public class DashboardController(IDashboardReportingService dashboardReportingSe
     [EndpointName("GetDashboardPackageUsage")]
     [EndpointSummary("Obtiene el Resumen de paquetes usados")]
     [EndpointDescription("Devuelve el uso agregado de los paquetes de servicios durante el periodo consultado.")]
-    [Tags("SIGREF - Dashboard")]
+    [Tags("Dashboard")]
     [ProducesResponseType(typeof(PackageUsageResultDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPackageUsage([FromQuery] DashboardFilterDto filter)
     {
@@ -67,7 +67,7 @@ public class DashboardController(IDashboardReportingService dashboardReportingSe
     [EndpointName("GetDashboardWeeklyIncome")]
     [EndpointSummary("Obtiene el Resumen de ingresos semanales")]
     [EndpointDescription("Devuelve la evolución semanal de los ingresos para el periodo y filtros solicitados.")]
-    [Tags("SIGREF - Dashboard")]
+    [Tags("Dashboard")]
     [ProducesResponseType(typeof(List<WeeklyIncomeDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetWeeklyIncome([FromQuery] DashboardFilterDto filter)
     {
@@ -81,7 +81,7 @@ public class DashboardController(IDashboardReportingService dashboardReportingSe
     [EndpointName("GetDashboardShiftIncome")]
     [EndpointSummary("Obtiene el Resumen de ingresos por turnos")]
     [EndpointDescription("Devuelve los ingresos agregados por turno de caja.")]
-    [Tags("SIGREF - Dashboard")]
+    [Tags("Dashboard")]
     [ProducesResponseType(typeof(List<ShiftIncomeDto>) , StatusCodes.Status200OK)]
     public async Task<IActionResult> GetShiftIncome([FromQuery] DashboardFilterDto filter)
     {
@@ -95,7 +95,7 @@ public class DashboardController(IDashboardReportingService dashboardReportingSe
     [EndpointName("GetDashboardLocationIncome")]
     [EndpointSummary("Obtiene el Resumen de servicios usados")]
     [EndpointDescription("Devuelve los ingresos agregados por ubicación física.")]
-    [Tags("SIGREF - Dashboard")]
+    [Tags("Dashboard")]
     [ProducesResponseType(typeof(List<LocationIncomeDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetLocationIncome([FromQuery] DashboardFilterDto filter)
     {

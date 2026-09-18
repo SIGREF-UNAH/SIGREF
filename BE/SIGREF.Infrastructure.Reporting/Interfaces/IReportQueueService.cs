@@ -1,5 +1,4 @@
-﻿using SIGREF.Common.Dtos;
-using SIGREF.Common.Dtos.Report;
+﻿using SIGREF.Common.Dtos.Report;
 
 namespace SIGREF.Infrastructure.Reporting.Interfaces;
 
@@ -10,10 +9,10 @@ public interface IReportQueueService
         ReportFilterDto filter,
         Guid userId,
         CancellationToken cancellationToken = default);
- 
+
     /// <summary>Estado puntual de un job. Usado para polling desde la UI.</summary>
     Task<ReportJobStatusDto?> GetStatusAsync(Guid jobId, CancellationToken cancellationToken = default);
- 
+
     /// <summary>Historial de reportes solicitados por un usuario.</summary>
     Task<IReadOnlyList<ReportJobStatusDto>> GetHistoryAsync(
         Guid userId,

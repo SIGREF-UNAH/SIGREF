@@ -1,3 +1,11 @@
+# ============================================================================
+# CAMBIOS APLICADOS (Codex, 2026-09-17)
+# - Los puertos se mantienen solo en la red interna con `expose`.
+# - Las credenciales siguen llegando por variables de entorno; use .env.example
+#   como plantilla local y un gestor de secretos en despliegues reales.
+# - Se anaden healthchecks y reinicio controlado a servicios con estado.
+# ============================================================================
+
 services:
   env-dashboard:
     image: "mcr.microsoft.com/dotnet/nightly/aspire-dashboard:latest"
@@ -15,19 +23,27 @@ services:
       POSTGRES_USER: "${POSTGRES_USERNAME}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
       POSTGRES_DB: "postgres"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USERNAME} -d postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
     expose:
       - "5432"
     volumes:
       - type: "bind"
         target: "/var/lib/postgresql/data"
         source: "/home/erick/Desktop/unah/SIGREF/BE/SIGREF.API.AppHost/data/postgres"
-        read_only: false
+        # El script de inicializacion no debe ser modificable desde el contenedor.
+        read_only: true
       - type: "bind"
         target: "/docker-entrypoint-initdb.d/init-db.sql"
         source: "/home/erick/Desktop/unah/SIGREF/BE/SIGREF.API.AppHost/config/init-db.sql"
         read_only: false
     networks:
       - "aspire"
+    restart: unless-stopped
   mongo-sigref-logs:
     image: "docker.io/library/mongo:8.2"
     environment:
@@ -35,6 +51,12 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: "${MONGODB_PASSWORD}"
     expose:
       - "27017"
+    healthcheck:
+      test: [ "CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand({ ping: 1 }).ok'" ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
     volumes:
       - type: "bind"
         target: "/data/db"
@@ -42,6 +64,7 @@ services:
         read_only: false
     networks:
       - "aspire"
+    restart: unless-stopped
   keycloak:
     image: "quay.io/keycloak/keycloak:26.4"
     command:
@@ -68,9 +91,10 @@ services:
       - "9000"
     depends_on:
       postgres:
-        condition: "service_started"
+        condition: "service_healthy"
     networks:
       - "aspire"
+    restart: unless-stopped
   hapi-fhir:
     image: "hapiproject/hapi:latest"
     environment:
@@ -104,9 +128,10 @@ services:
         read_only: false
     depends_on:
       postgres:
-        condition: "service_started"
+        condition: "service_healthy"
     networks:
       - "aspire"
+    restart: unless-stopped
   sigref-api:
     image: "${SIGREF_API_IMAGE}"
     environment:
@@ -151,6 +176,17 @@ services:
       - "${SIGREF_API_PORT}"
     networks:
       - "aspire"
+    # Aislamiento compatible con .NET: sin capacidades Linux adicionales.
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 1G
   gateway:
     image: "mcr.microsoft.com/dotnet/nightly/yarp:2.3.0-preview.4"
     command:
@@ -185,6 +221,7 @@ services:
       - "5000"
     networks:
       - "aspire"
+    restart: unless-stopped
 networks:
   aspire:
     driver: "bridge"

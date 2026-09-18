@@ -1,26 +1,25 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Hl7.Fhir.Rest;
+using Microsoft.EntityFrameworkCore;
 using SIGREF.API.Dtos.Invoice;
 using SIGREF.API.Extensions;
 using SIGREF.API.Middleware;
 using SIGREF.API.Services.Cashier;
 using SIGREF.Common.Constants;
+using SIGREF.Common.Dtos;
 using SIGREF.Common.Exceptions;
-using SIGREF.Common.Helpers;
 using SIGREF.Common.Types;
 using SIGREF.Core.Entity.Billing;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
 using SIGREF.Infrastructure.Persistence;
-using Hl7.Fhir.Rest;
-using SIGREF.Common.Dtos;
 
 namespace SIGREF.API.Services.Billing;
 
 // NOTA: LOS INVOICES SE ENTIENDEN COMO ORDENES DE DONACION
 public class InvoiceService : IInvoiceService
 {
+    private readonly ICashierSessionService _cashierSessionService;
     private readonly SIGREFContext _dbContext;
     private readonly IUserContextService _userContextService;
-    private readonly ICashierSessionService _cashierSessionService;
 
     public InvoiceService(SIGREFContext dbContext, IUserContextService userContextService,
         ICashierSessionService cashierSessionService)
@@ -28,38 +27,6 @@ public class InvoiceService : IInvoiceService
         _dbContext = dbContext;
         _userContextService = userContextService;
         _cashierSessionService = cashierSessionService;
-    }
-
-    // =====================================================================
-    // HELPERS PRIVADOS
-    // =====================================================================
-
-    private void ApplyInvoiceTypeBehavior(InvoiceEntity invoice, InvoiceCreateDto dto)
-    {
-        switch (dto.InvoiceType)
-        {
-            case InvoiceType.Normal:
-                invoice.AmountPaid = invoice.FinalTotal;
-                invoice.AmountDue = 0;
-                invoice.Status = InvoiceStatus.Paid;
-                break;
-
-            case InvoiceType.Emergency:
-                var initialPayment = dto.InitialPayment ?? 0;
-                invoice.AmountPaid = initialPayment;
-                invoice.AmountDue = invoice.FinalTotal - initialPayment;
-                invoice.Status = invoice.AmountDue == 0
-                    ? InvoiceStatus.Paid
-                    : InvoiceStatus.Created;
-                break;
-
-            case InvoiceType.Exempt:
-                invoice.FinalTotal = 0;
-                invoice.AmountPaid = 0;
-                invoice.AmountDue = 0;
-                invoice.Status = InvoiceStatus.Paid;
-                break;
-        }
     }
 
     // =====================================================================
@@ -131,7 +98,7 @@ public class InvoiceService : IInvoiceService
             // ============================
             // VALIDAR DESCUENTO GLOBAL
             // ============================
-            var invoiceDiscount = dto.InvoiceDiscount ?? Decimal.Zero;
+            var invoiceDiscount = dto.InvoiceDiscount ?? decimal.Zero;
             if (invoiceDiscount < 0)
                 throw new ValidationException("INVOICE_NEGATIVE_DISCOUNT", new Dictionary<string, object>
                 {
@@ -353,8 +320,10 @@ public class InvoiceService : IInvoiceService
                 .GroupBy(n => 1)
                 .Select(g => new
                 {
-                    TotalCredit = g.Where(n => n.InvoiceType == InvoiceType.CreditNote).Sum(n => (decimal?)n.FinalTotal) ?? 0,
-                    TotalDebit = g.Where(n => n.InvoiceType == InvoiceType.DebitNote).Sum(n => (decimal?)n.FinalTotal) ?? 0,
+                    TotalCredit =
+                        g.Where(n => n.InvoiceType == InvoiceType.CreditNote).Sum(n => (decimal?)n.FinalTotal) ?? 0,
+                    TotalDebit =
+                        g.Where(n => n.InvoiceType == InvoiceType.DebitNote).Sum(n => (decimal?)n.FinalTotal) ?? 0,
                     CountCredit = g.Count(n => n.InvoiceType == InvoiceType.CreditNote),
                     CountDebit = g.Count(n => n.InvoiceType == InvoiceType.DebitNote),
                     TotalCount = g.Count()
@@ -790,7 +759,8 @@ public class InvoiceService : IInvoiceService
     // CREAR NOTA DE CRÉDITO / DÉBITO
     // =====================================================================
 
-    public async Task<InvoiceDetailDto> CreateNoteAsync(Guid parentInvoiceId, InvoiceCreateDto dto, InvoiceType noteType)
+    public async Task<InvoiceDetailDto> CreateNoteAsync(Guid parentInvoiceId, InvoiceCreateDto dto,
+        InvoiceType noteType)
     {
         // Recomendación #3: Transacción para garantizar consistencia entre nota y recálculo
         await using var transaction = await _dbContext.Database.BeginTransactionAsync();
@@ -856,7 +826,7 @@ public class InvoiceService : IInvoiceService
                     { "StartNumber", serie.StartNumber },
                     { "EndNumber", serie.EndNumber }
                 });
-            
+
             foreach (var item in dto.Items)
             {
                 if (item.Quantity <= 0)
@@ -1088,11 +1058,11 @@ public class InvoiceService : IInvoiceService
             }
             else
             {
-                decimal totalCredits = childNotes
+                var totalCredits = childNotes
                     .Where(x => x.InvoiceType == InvoiceType.CreditNote)
                     .Sum(x => x.FinalTotal);
 
-                decimal totalDebits = childNotes
+                var totalDebits = childNotes
                     .Where(x => x.InvoiceType == InvoiceType.DebitNote)
                     .Sum(x => x.FinalTotal);
 
@@ -1224,6 +1194,38 @@ public class InvoiceService : IInvoiceService
                 { "Operation", nameof(GetNotesSummaryAsync) },
                 { "InvoiceId", invoiceId }
             });
+        }
+    }
+
+    // =====================================================================
+    // HELPERS PRIVADOS
+    // =====================================================================
+
+    private void ApplyInvoiceTypeBehavior(InvoiceEntity invoice, InvoiceCreateDto dto)
+    {
+        switch (dto.InvoiceType)
+        {
+            case InvoiceType.Normal:
+                invoice.AmountPaid = invoice.FinalTotal;
+                invoice.AmountDue = 0;
+                invoice.Status = InvoiceStatus.Paid;
+                break;
+
+            case InvoiceType.Emergency:
+                var initialPayment = dto.InitialPayment ?? 0;
+                invoice.AmountPaid = initialPayment;
+                invoice.AmountDue = invoice.FinalTotal - initialPayment;
+                invoice.Status = invoice.AmountDue == 0
+                    ? InvoiceStatus.Paid
+                    : InvoiceStatus.Created;
+                break;
+
+            case InvoiceType.Exempt:
+                invoice.FinalTotal = 0;
+                invoice.AmountPaid = 0;
+                invoice.AmountDue = 0;
+                invoice.Status = InvoiceStatus.Paid;
+                break;
         }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace SIGREF.API.Dtos.Cashier;
 
-public class UpdateShiftDto
+public class UpdateShiftDto : SIGREF.Common.Dtos.UpdateRequestDto
 {
     public string LocationId { get; set; }
 

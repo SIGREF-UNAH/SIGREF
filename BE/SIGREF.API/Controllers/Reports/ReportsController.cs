@@ -17,7 +17,7 @@ namespace SIGREF.API.Controllers.Reports;
 /// <remarks>Dominio SIGREF: utiliza consultas y trabajos en segundo plano; no expone recursos FHIR.</remarks>
 [Route("reports/[controller]")]
 [ApiController]
-[Tags("Reportes - Gestión de Reportes")]
+[Tags("Reports")]
 [Authorize(AuthenticationSchemes = "Bearer")]
 [Produces(MediaTypeNames.Application.Json)]
 [Consumes(MediaTypeNames.Application.Json)]
@@ -45,7 +45,7 @@ public class ReportsController : ControllerBase
     [EndpointName("GetReportSummary")]
     [EndpointSummary("Obtener resumen del reporte")]
     [EndpointDescription("Obtiene totales y conteos agregados para cargar rápidamente un dashboard de reportes.")]
-    [Tags("SIGREF - Reportes")]
+    [Tags("Reports")]
     [ProducesResponseType(typeof(ReportSummaryResponseDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetReportSummary([FromQuery] ReportFilterDto filter)
     {
@@ -63,7 +63,7 @@ public class ReportsController : ControllerBase
     [EndpointName("GetReportDetail")]
     [EndpointSummary("Obtener detalle paginado del reporte")]
     [EndpointDescription("Obtiene el detalle paginado del reporte para su consulta en tablas.")]
-    [Tags("SIGREF - Reportes")]
+    [Tags("Reports")]
     [ProducesResponseType(typeof(ReportDetailPageResponseDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetReportDetailPage([FromQuery] ReportFilterDto filter)
     {
@@ -79,7 +79,7 @@ public class ReportsController : ControllerBase
     [EndpointName("CreateReportEnqueue")]
     [EndpointSummary("Encolar generación de reporte")]
     [EndpointDescription("Encola la generación del reporte y devuelve inmediatamente el identificador del trabajo para polling.")]
-    [Tags("SIGREF - Reportes")]
+    [Tags("Reports")]
     [ProducesResponseType(typeof(EnqueueReportResponseDto), StatusCodes.Status200OK)]
 
     public async Task<IActionResult> Enqueue(
@@ -101,7 +101,7 @@ public class ReportsController : ControllerBase
     [EndpointName("GetReportEnqueueStatus")]
     [EndpointSummary("Consultar estado de generación")]
     [EndpointDescription("Consulta el estado actual de un trabajo de generación de reporte.")]
-    [Tags("SIGREF - Reportes")]
+    [Tags("Reports")]
     public async Task<IActionResult> GetStatus(Guid jobId, CancellationToken cancellationToken)
     {
         var status = await _queue.GetStatusAsync(jobId, cancellationToken);
@@ -115,7 +115,7 @@ public class ReportsController : ControllerBase
     [EndpointName("GetReportListHistory")]
     [EndpointSummary("Consultar historial de reportes")]
     [EndpointDescription("Obtiene el historial paginado de reportes del usuario autenticado.")]
-    [Tags("SIGREF - Reportes")]
+    [Tags("Reports")]
     public async Task<IActionResult> GetHistory(
         [FromQuery] int page     = 1,
         [FromQuery] int pageSize = 20,
@@ -133,7 +133,7 @@ public class ReportsController : ControllerBase
     [EndpointName("GetReportDownload")]
     [EndpointSummary("Descargar reporte generado")]
     [EndpointDescription("Descarga el PDF asociado a un trabajo que haya finalizado correctamente.")]
-    [Tags("SIGREF - Reportes")]
+    [Tags("Reports")]
     public async Task<IActionResult> Download(Guid jobId, CancellationToken cancellationToken)
     {
         var status = await _queue.GetStatusAsync(jobId, cancellationToken);

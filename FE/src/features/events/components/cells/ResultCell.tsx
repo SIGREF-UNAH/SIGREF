@@ -3,7 +3,7 @@ import { WarningOutlined } from "@ant-design/icons";
 
 interface Props {
   success?: boolean;
-  errorMessage?: string;
+  errorMessage?: string | null;
 }
 
 export const ResultCell = ({ success, errorMessage }: Props) =>

@@ -4,7 +4,7 @@ import { LinkOutlined } from "@ant-design/icons";
 const { Text } = Typography;
 
 interface Props {
-  traceId?: string;
+  traceId?: string | null;
 }
 
 export const TraceIdCell = ({ traceId }: Props) => {

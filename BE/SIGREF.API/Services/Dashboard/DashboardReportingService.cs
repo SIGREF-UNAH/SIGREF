@@ -1,21 +1,22 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Hl7.Fhir.Rest;
+using Microsoft.EntityFrameworkCore;
 using SIGREF.API.Dtos.Dashboard;
 using SIGREF.API.Middleware;
 using SIGREF.API.Services.FhirUtils;
 using SIGREF.Common.Exceptions;
 using SIGREF.Core.Entity.Dashboard;
 using SIGREF.Infrastructure.Persistence;
-using Hl7.Fhir.Rest;
 
 namespace SIGREF.API.Services.Dashboard;
 
 /// <summary>
-/// TODO:
-/// - Revisar bien las consultas; cuando FE conecte pueden saltar errores o diferencias.
-/// - Traer los nombres de las locaciones desde FHIR o lookup local.
+///     TODO:
+///     - Revisar bien las consultas; cuando FE conecte pueden saltar errores o diferencias.
+///     - Traer los nombres de las locaciones desde FHIR o lookup local.
 /// </summary>
 public class DashboardReportingService : IDashboardReportingService
 {
+    private static readonly TimeZoneInfo AppTimeZone = GetAppTimeZone();
     private readonly SIGREFContext _dbContext;
     private readonly IFhirLookupService _fhirLookupService;
 
@@ -23,88 +24,6 @@ public class DashboardReportingService : IDashboardReportingService
     {
         _dbContext = dbContext;
         _fhirLookupService = fhirLookupService;
-    }
-
-    private string ResolveName(string id, Dictionary<string, string?> lookup)
-    {
-        if (lookup.TryGetValue(id, out var name))
-            return name ?? "N/A";
-
-        return "N/A";
-    }
-
-    private static TimeZoneInfo GetAppTimeZone()
-    {
-        try
-        {
-            return TimeZoneInfo.FindSystemTimeZoneById("America/Tegucigalpa");
-        }
-        catch
-        {
-            return TimeZoneInfo.FindSystemTimeZoneById("Central America Standard Time");
-        }
-    }
-
-    private static readonly TimeZoneInfo AppTimeZone = GetAppTimeZone();
-
-    private (DateTime Start, DateTime End) NormalizeDateRange(DashboardFilterDto filter)
-    {
-        var todayLocal = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, AppTimeZone).Date;
-
-        (DateTime Start, DateTime EndExclusive) ToUtcRange(DateTime startLocalDate, DateTime endLocalDate)
-        {
-            var start = TimeZoneInfo.ConvertTimeToUtc(
-                DateTime.SpecifyKind(startLocalDate.Date, DateTimeKind.Unspecified), AppTimeZone);
-            var endExclusive = TimeZoneInfo.ConvertTimeToUtc(
-                DateTime.SpecifyKind(endLocalDate.Date.AddDays(1), DateTimeKind.Unspecified), AppTimeZone);
-            return (start, endExclusive);
-        }
-
-        // 1) No mandaron nada => este mes
-        if (filter.StartDate == null && filter.EndDate == null)
-        {
-            var startLocal = new DateTime(todayLocal.Year, todayLocal.Month, 1);
-            var endLocal = todayLocal;
-
-            return ToUtcRange(startLocal, endLocal);
-        }
-
-        // 2) Mandaron solo StartDate
-        if (filter.StartDate != null && filter.EndDate == null)
-        {
-            var startLocal = filter.StartDate.Value.Date;
-
-            if (startLocal > todayLocal)
-                throw new ValidationException("DASHBOARD_FUTURE_START_DATE", new Dictionary<string, object>
-                {
-                    { "StartDate", startLocal },
-                    { "Today", todayLocal }
-                });
-
-            return ToUtcRange(startLocal, todayLocal);
-        }
-
-        // 3) Mandaron solo EndDate
-        if (filter.StartDate == null && filter.EndDate != null)
-        {
-            throw new ValidationException("DASHBOARD_START_DATE_REQUIRED", new Dictionary<string, object>
-            {
-                { "EndDate", filter.EndDate.Value }
-            });
-        }
-
-        // 4) Mandaron ambos
-        var startDateLocal = filter.StartDate!.Value.Date;
-        var endDateLocal = filter.EndDate!.Value.Date;
-
-        if (startDateLocal > endDateLocal)
-            throw new ValidationException("DASHBOARD_INVALID_DATE_RANGE", new Dictionary<string, object>
-            {
-                { "StartDate", startDateLocal },
-                { "EndDate", endDateLocal }
-            });
-
-        return ToUtcRange(startDateLocal, endDateLocal);
     }
 
     public async Task<DashboardSummaryDto> GetSummaryAsync(DashboardFilterDto filter)
@@ -125,11 +44,9 @@ public class DashboardReportingService : IDashboardReportingService
                 f.CreatedDate < endExclusive);
 
             if (filter.LocationIds?.Count > 0)
-            {
                 facts = facts.Where(f =>
                     f.LocationId != null &&
                     filter.LocationIds.Contains(f.LocationId));
-            }
 
             // ===============================
             // TOTAL INGRESOS (real_income)
@@ -164,11 +81,9 @@ public class DashboardReportingService : IDashboardReportingService
                 c.ClosedAt < endExclusive);
 
             if (filter.LocationIds?.Count > 0)
-            {
                 cashierQuery = cashierQuery.Where(c =>
                     c.Shift != null &&
                     filter.LocationIds.Contains(c.Shift.LocationId));
-            }
 
             var closuresWithErrors = await cashierQuery
                 .CountAsync(c => !c.IsOpen && c.RequiresCorrection);
@@ -240,7 +155,7 @@ public class DashboardReportingService : IDashboardReportingService
                 WHERE rn_desc <= 5 OR rn_asc <= 5;
                 ";
 
-            var locationIdsArray = (filter.LocationIds != null && filter.LocationIds.Count > 0)
+            var locationIdsArray = filter.LocationIds != null && filter.LocationIds.Count > 0
                 ? filter.LocationIds.ToArray()
                 : null;
 
@@ -303,10 +218,10 @@ public class DashboardReportingService : IDashboardReportingService
             if (totalCount > 0)
             {
                 foreach (var s in topUsed)
-                    s.Percentage = Math.Round(((decimal)s.Count / totalCount) * 100m, 2);
+                    s.Percentage = Math.Round((decimal)s.Count / totalCount * 100m, 2);
 
                 foreach (var s in bottomUsed)
-                    s.Percentage = Math.Round(((decimal)s.Count / totalCount) * 100m, 2);
+                    s.Percentage = Math.Round((decimal)s.Count / totalCount * 100m, 2);
             }
 
             return new ServiceUsageResultDto
@@ -363,12 +278,10 @@ public class DashboardReportingService : IDashboardReportingService
                 );
 
             if (filter.LocationIds?.Count > 0)
-            {
                 facts = facts.Where(f =>
                     f.LocationId != null &&
                     filter.LocationIds.Contains(f.LocationId)
                 );
-            }
 
             // ===============================
             // EVITAR INFLAR CON item_id:
@@ -412,7 +325,6 @@ public class DashboardReportingService : IDashboardReportingService
 
             PackageUsageDto? others = null;
             if (othersSource.Count > 0)
-            {
                 others = new PackageUsageDto
                 {
                     FhirPackageId = "others",
@@ -421,7 +333,6 @@ public class DashboardReportingService : IDashboardReportingService
                     TotalGenerated = othersSource.Sum(x => x.TotalGenerated),
                     Percentage = 0m
                 };
-            }
 
             // ===============================
             // OBTENER NOMBRES DESDE FHIR (solo TOP 5)
@@ -453,10 +364,10 @@ public class DashboardReportingService : IDashboardReportingService
             if (totalCount > 0)
             {
                 foreach (var p in top5Dtos)
-                    p.Percentage = Math.Round(((decimal)p.Count / totalCount) * 100m, 2);
+                    p.Percentage = Math.Round(p.Count / totalCount * 100m, 2);
 
                 if (others != null)
-                    others.Percentage = Math.Round(((decimal)others.Count / totalCount) * 100m, 2);
+                    others.Percentage = Math.Round(others.Count / totalCount * 100m, 2);
             }
 
             return new PackageUsageResultDto
@@ -542,7 +453,7 @@ public class DashboardReportingService : IDashboardReportingService
                 .Select(r =>
                 {
                     var localDate = TimeZoneInfo.ConvertTimeFromUtc(r.CreatedDate, AppTimeZone).Date;
-                    int diff = (7 + (int)localDate.DayOfWeek - (int)DayOfWeek.Monday) % 7;
+                    var diff = (7 + (int)localDate.DayOfWeek - (int)DayOfWeek.Monday) % 7;
                     var weekStart = localDate.AddDays(-diff);
 
                     return new
@@ -601,11 +512,11 @@ public class DashboardReportingService : IDashboardReportingService
         {
             var (start, endExclusive) = NormalizeDateRange(filter);
 
-            var locationIdsArray = (filter.LocationIds != null && filter.LocationIds.Count > 0)
+            var locationIdsArray = filter.LocationIds != null && filter.LocationIds.Count > 0
                 ? filter.LocationIds.ToArray()
                 : null;
 
-            var shiftIdsArray = (filter.ShiftIds != null && filter.ShiftIds.Count > 0)
+            var shiftIdsArray = filter.ShiftIds != null && filter.ShiftIds.Count > 0
                 ? filter.ShiftIds.ToArray()
                 : null;
 
@@ -691,7 +602,7 @@ public class DashboardReportingService : IDashboardReportingService
         {
             var (start, endExclusive) = NormalizeDateRange(filter);
 
-            var locationIdsArray = (filter.LocationIds != null && filter.LocationIds.Count > 0)
+            var locationIdsArray = filter.LocationIds != null && filter.LocationIds.Count > 0
                 ? filter.LocationIds.ToArray()
                 : null;
 
@@ -761,5 +672,83 @@ public class DashboardReportingService : IDashboardReportingService
                 { "Operation", nameof(GetLocationIncomeAsync) }
             });
         }
+    }
+
+    private string ResolveName(string id, Dictionary<string, string?> lookup)
+    {
+        if (lookup.TryGetValue(id, out var name))
+            return name ?? "N/A";
+
+        return "N/A";
+    }
+
+    private static TimeZoneInfo GetAppTimeZone()
+    {
+        try
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("America/Tegucigalpa");
+        }
+        catch
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("Central America Standard Time");
+        }
+    }
+
+    private (DateTime Start, DateTime End) NormalizeDateRange(DashboardFilterDto filter)
+    {
+        var todayLocal = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, AppTimeZone).Date;
+
+        (DateTime Start, DateTime EndExclusive) ToUtcRange(DateTime startLocalDate, DateTime endLocalDate)
+        {
+            var start = TimeZoneInfo.ConvertTimeToUtc(
+                DateTime.SpecifyKind(startLocalDate.Date, DateTimeKind.Unspecified), AppTimeZone);
+            var endExclusive = TimeZoneInfo.ConvertTimeToUtc(
+                DateTime.SpecifyKind(endLocalDate.Date.AddDays(1), DateTimeKind.Unspecified), AppTimeZone);
+            return (start, endExclusive);
+        }
+
+        // 1) No mandaron nada => este mes
+        if (filter.StartDate == null && filter.EndDate == null)
+        {
+            var startLocal = new DateTime(todayLocal.Year, todayLocal.Month, 1);
+            var endLocal = todayLocal;
+
+            return ToUtcRange(startLocal, endLocal);
+        }
+
+        // 2) Mandaron solo StartDate
+        if (filter.StartDate != null && filter.EndDate == null)
+        {
+            var startLocal = filter.StartDate.Value.Date;
+
+            if (startLocal > todayLocal)
+                throw new ValidationException("DASHBOARD_FUTURE_START_DATE", new Dictionary<string, object>
+                {
+                    { "StartDate", startLocal },
+                    { "Today", todayLocal }
+                });
+
+            return ToUtcRange(startLocal, todayLocal);
+        }
+
+        // 3) Mandaron solo EndDate
+        if (filter.StartDate == null && filter.EndDate != null)
+            throw new ValidationException("DASHBOARD_START_DATE_REQUIRED", new Dictionary<string, object>
+            {
+                { "EndDate", filter.EndDate.Value }
+            });
+
+        // 4) Mandaron ambos
+        var startDateLocal = filter.StartDate!.Value.Date;
+        var endDateLocal = filter.EndDate!.Value.Date;
+
+        if (startDateLocal > endDateLocal)
+            throw new ValidationException("DASHBOARD_INVALID_DATE_RANGE", new Dictionary<string, object>
+            {
+                { "StartDate", startDateLocal },
+                { "EndDate", endDateLocal }
+            });
+
+        return ToUtcRange(startDateLocal, endDateLocal);
     }
 }

@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { useGetOrganizationList } from "../../../api/organizations/organizations";
-import { useGetLocationList } from "../../../api/locations/locations";
+import { useGetOrganizationList } from "@endpoints/organizations/organizations";
+import { useGetLocationList } from "@endpoints/locations/locations";
 
 export function useHealthcareForm() {
   const navigate = useNavigate();

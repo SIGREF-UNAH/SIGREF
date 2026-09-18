@@ -1,15 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using SIGREF.API.Dtos.Cashier;
 using SIGREF.API.Extensions;
-using SIGREF.API.Middleware;
 using SIGREF.Common.Constants;
+using SIGREF.Common.Dtos;
 using SIGREF.Common.Exceptions;
 using SIGREF.Common.Types;
 using SIGREF.Core.Entity.Cashier;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
 using SIGREF.Infrastructure.Persistence;
-using Hl7.Fhir.Rest;
-using SIGREF.Common.Dtos;
 
 namespace SIGREF.API.Services.Cashier;
 
@@ -17,10 +15,11 @@ namespace SIGREF.API.Services.Cashier;
 public class CashierSessionService : ICashierSessionService
 {
     private readonly SIGREFContext _db;
-    private readonly IUserContextService _userContext;
     private readonly IKeycloakAdminService _keycloakClient;
+    private readonly IUserContextService _userContext;
 
-    public CashierSessionService(SIGREFContext db, IUserContextService userContext, IKeycloakAdminService keycloakClient)
+    public CashierSessionService(SIGREFContext db, IUserContextService userContext,
+        IKeycloakAdminService keycloakClient)
     {
         _db = db;
         _userContext = userContext;
@@ -184,7 +183,7 @@ public class CashierSessionService : ICashierSessionService
             session.UpdatedById = userId;
             session.UpdatedDate = DateTime.UtcNow;
 
-            bool isCorrect = session.Difference == 0;
+            var isCorrect = session.Difference == 0;
             session.RequiresCorrection = !isCorrect;
 
             await _db.SaveChangesAsync();
@@ -313,7 +312,7 @@ public class CashierSessionService : ICashierSessionService
             var declared = session.DeclaredAmount ?? 0;
 
             session.Difference = declared - systemAmount;
-            bool isCorrect = session.Difference == 0;
+            var isCorrect = session.Difference == 0;
             session.RequiresCorrection = !isCorrect;
             session.UpdatedById = userId;
             session.CorrectionDate = DateTime.UtcNow;
@@ -355,16 +354,16 @@ public class CashierSessionService : ICashierSessionService
         try
         {
             // Paginación
-            int pageNumber = filter.PageNumber <= 0 ? 1 : filter.PageNumber;
-            int pageSize = filter.PageSize <= 0 ? 10 : Math.Clamp(filter.PageSize, 1, 50);
+            var pageNumber = filter.PageNumber <= 0 ? 1 : filter.PageNumber;
+            var pageSize = filter.PageSize <= 0 ? 10 : Math.Clamp(filter.PageSize, 1, 50);
             pageNumber = Math.Clamp(pageNumber, 1, int.MaxValue);
 
             // Obtener usuario y roles
             var userId = _userContext.GetUserId();
             var roles = _userContext.GetUserRoles();
-            bool isAdmin = roles.Contains(RolesConstants.admin);
-            bool isAuditor = roles.Contains(RolesConstants.auditor);
-            bool canViewAll = isAdmin || isAuditor;
+            var isAdmin = roles.Contains(RolesConstants.admin);
+            var isAuditor = roles.Contains(RolesConstants.auditor);
+            var canViewAll = isAdmin || isAuditor;
 
             // Query base
             var query = _db.CashierSessions.AsNoTracking().AsQueryable();
@@ -393,19 +392,19 @@ public class CashierSessionService : ICashierSessionService
 
             if (filter.ToDate is { } toDate)
                 query = query.Where(x => x.OpenAt <= toDate);
-            
+
 
             // Filtro: turno
             if (filter.ShiftId is { } shiftId)
                 query = query.Where(x => x.ShiftId == shiftId);
             // Contar total
-            int totalItems = await query.CountAsync();
-            int totalPages = totalItems > 0
+            var totalItems = await query.CountAsync();
+            var totalPages = totalItems > 0
                 ? (int)Math.Ceiling(totalItems / (double)pageSize)
                 : 0;
 
             // Paginación
-            int skip = (pageNumber - 1) * pageSize;
+            var skip = (pageNumber - 1) * pageSize;
 
             // Mapeo directo en la BD
             var sessionDtos = await query
@@ -423,7 +422,7 @@ public class CashierSessionService : ICashierSessionService
                     SystemAmount = x.SystemAmount,
                     Difference = x.Difference,
                     IsOpen = x.IsOpen,
-                    IsClosedCorrectly = (x.Difference == 0 || x.Difference == null),
+                    IsClosedCorrectly = x.Difference == 0 || x.Difference == null,
                     Notes = x.Notes,
                     CorrectionClosure = x.CorrectionDate
                 })
@@ -506,9 +505,9 @@ public class CashierSessionService : ICashierSessionService
             var userId = _userContext.GetUserId();
             var roles = _userContext.GetUserRoles();
 
-            bool isAdmin = roles.Contains(RolesConstants.admin);
-            bool isAuditor = roles.Contains(RolesConstants.auditor);
-            bool canViewAll = isAdmin || isAuditor;
+            var isAdmin = roles.Contains(RolesConstants.admin);
+            var isAuditor = roles.Contains(RolesConstants.auditor);
+            var canViewAll = isAdmin || isAuditor;
 
             var sessionDto = await _db.CashierSessions
                 .Where(x => x.Id == sessionId)
@@ -523,7 +522,7 @@ public class CashierSessionService : ICashierSessionService
                     SystemAmount = x.SystemAmount,
                     Difference = x.Difference,
                     IsOpen = x.IsOpen,
-                    IsClosedCorrectly = (x.Difference == 0 || x.Difference == null),
+                    IsClosedCorrectly = x.Difference == 0 || x.Difference == null,
                     Notes = x.Notes,
                     CorrectionClosure = x.CorrectionDate
                 })

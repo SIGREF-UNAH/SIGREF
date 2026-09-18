@@ -1,9 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using SIGREF.API.Dtos.Common;
+using SIGREF.Common.Dtos;
 
 namespace SIGREF.API.Dtos;
 
-public class UpdateOrganizationDto
+public class UpdateOrganizationDto : UpdateRequestDto
 {
     public List<IdentifierDto> Identifier { get; set; }
 

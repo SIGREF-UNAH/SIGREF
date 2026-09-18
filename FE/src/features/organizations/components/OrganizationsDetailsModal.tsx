@@ -1,8 +1,8 @@
 // TODO: Organizacion no muestra todos los elementos de identificadores existentes para este archivo, igualmente con otras props
 
 import { Modal, Descriptions, Tag, Empty } from "antd";
-import type { OrganizationDto } from "../../../api/models";
-import { OrganizationTypeEnum } from "../../../api/models";
+import type { OrganizationDto } from "@models";
+import { OrganizationTypeEnum } from "../types";
 
 interface OrganizationDetailsModalProps {
   open: boolean;

@@ -1,7 +1,7 @@
 ﻿namespace SIGREF.Common.Types;
 
 /// <summary>
-/// Formatos soportados para exportacion
+///     Formatos soportados para exportacion
 /// </summary>
 public enum ReportExportFormat
 {

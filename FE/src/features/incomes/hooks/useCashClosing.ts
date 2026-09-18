@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useKeycloak } from "@react-keycloak/web";
-import { useGetHospitalPropertiesDetails } from "../../../api/hospital-properties/hospital-properties";
+import { useGetHospitalPropertiesDetails } from "@endpoints/hospital-properties/hospital-properties";
 import { useCashierSessionStore } from "../../cashier-sessions/store";
 import type { CashierSession } from "../../cashier-sessions/store";
-import { useCreateSessionCloseById } from "../../../api/cashier-sessions/cashier-sessions";
+import { useCreateSessionCloseById } from "@endpoints/cashier-sessions/cashier-sessions";
 import useMediaFiles from "../../media-files/hooks/useMediaFiles";
 import { useExport } from "../../../shared/utils";
 import { useMessage } from "../../../shared/hooks";

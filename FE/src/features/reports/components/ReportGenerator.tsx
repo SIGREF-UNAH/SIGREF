@@ -22,7 +22,7 @@ import {
   ReloadOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
-import type { ReportLineDto } from "../../../api/models";
+import type { ReportLineDto } from "@models";
 import type { ColumnsType } from "antd/es/table";
 import { useReportData, useReportFilters } from "../hooks";
 import useMediaFiles from "../../media-files/hooks/useMediaFiles";

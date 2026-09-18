@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace SIGREF.Core.Entity.common;
+﻿namespace SIGREF.Core.Entity.common;
 
 public abstract class BaseEntity
 {
@@ -9,10 +6,12 @@ public abstract class BaseEntity
     //        PRIMARY KEY
     // ============================
     public Guid Id { get; set; } = Guid.NewGuid();
+
     // ============================
     //          ESTADO
     // ============================
     public bool IsActive { get; set; } = true;
+
     // ============================
     //          AUDITORÍA
     // ============================

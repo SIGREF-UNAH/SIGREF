@@ -8,7 +8,7 @@ import {
   useGetDashboardShiftIncome,
   useGetDashboardSummary,
   useGetDashboardWeeklyIncome,
-} from "../../../api/dashboard/dashboard";
+} from "@endpoints/dashboard/dashboard";
 
 dayjs.extend(isoWeek);
 

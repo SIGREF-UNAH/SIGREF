@@ -23,7 +23,7 @@ public class Worker : BackgroundService
             // que el nodo sigue saludable.
             _logger.LogInformation("SIGREF Worker Heartbeat: Nodo activo a las {time}", DateTime.UtcNow);
             await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
-           // await Task.Delay(TimeSpan.FromMinutes(30), stoppingToken);
+            // await Task.Delay(TimeSpan.FromMinutes(30), stoppingToken);
         }
     }
 }

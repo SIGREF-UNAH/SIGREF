@@ -1,39 +1,44 @@
-import { defineConfig } from 'vite'
-import tailwindcss from '@tailwindcss/vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 
-// https://vite.dev/config/
-export default defineConfig({
-  plugins: [
-    tailwindcss(),
-    react()
-  ],
-  build: {
-    // Ignorar errores de TypeScript en producción
-    rollupOptions: {
-      onwarn(warning, warn) {
-        // Suprimir ciertos warnings
-        if (warning.code === 'UNUSED_EXTERNAL_IMPORT') return
-        warn(warning)
-      }
-    }
-  },
-  server: {
-    host: true,
-    port: parseInt(process.env.PORT ?? "5173"),
-    proxy: {
-      '/api': {
-        target: process.env.VITE_API_URL || 'http://localhost:5226',
-        changeOrigin: true,
-        secure: false
-      }
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+
+  return {
+    resolve: {
+      alias: {
+        '@endpoints': `${process.cwd()}/src/api/generated/endpoints`,
+        '@models': `${process.cwd()}/src/api/generated/schemas/models`,
+        '@types': `${process.cwd()}/src/api/generated/schemas/types`,
+      },
     },
-    watch: {
-      usePolling: true,
-      interval: 1000
+
+    plugins: [
+      react(),
+      tailwindcss(),
+    ],
+
+    server: {
+      host: true,
+      port: Number(env.PORT ?? 5173),
+
+      proxy: {
+        '/api': {
+          target: env.VITE_API_URL || 'http://localhost:5226',
+          changeOrigin: true,
+          secure: false,
+        },
+      },
+
+      watch: {
+        usePolling: true,
+        interval: 1000,
+      },
+
+      hmr: {
+        clientPort: 5173,
+      },
     },
-    hmr: {
-      clientPort: 5173
-    }
   }
 })

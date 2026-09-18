@@ -16,7 +16,7 @@ namespace SIGREF.API.Controllers.HospitalProperties;
 [Authorize(AuthenticationSchemes = "Bearer")]
 [Produces(MediaTypeNames.Application.Json)]
 [Consumes(MediaTypeNames.Application.Json)]
-[Tags("Informacion Hospital - Gestion de Datos de Hospital")]
+[Tags("HospitalProperties")]
 public class HospitalPropertiesController : ControllerBase
 {
     private readonly IHospitalPropertiesService _hospitalService;
@@ -33,7 +33,7 @@ public class HospitalPropertiesController : ControllerBase
     [EndpointName("GetHospitalPropertiesPublic")]
     [EndpointSummary("Obtener información pública del hospital")]
     [EndpointDescription("Devuelve la información institucional pública necesaria para clientes no administrativos.")]
-    [Tags("SIGREF - Información del hospital")]
+    [Tags("HospitalProperties")]
     [ProducesResponseType(typeof(HospitalPublicDto), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.auditor},{RolesConstants.admin},{RolesConstants.ti},{RolesConstants.cashier}")]
     public async Task<IActionResult> GetPublic()
@@ -46,8 +46,9 @@ public class HospitalPropertiesController : ControllerBase
     [EndpointName("GetHospitalPropertiesDetails")]
     [EndpointSummary("Obtener detalles del hospital")]
     [EndpointDescription("Devuelve el detalle completo de la configuración institucional del hospital.")]
-    [Tags("SIGREF - Información del hospital")]
+    [Tags("HospitalProperties")]
     [ProducesResponseType(typeof(HospitalDetailsDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [Authorize(Roles = $"{RolesConstants.auditor},{RolesConstants.admin},{RolesConstants.ti},{RolesConstants.cashier}")]
     public async Task<IActionResult> GetAllDetails()
     {
@@ -61,7 +62,7 @@ public class HospitalPropertiesController : ControllerBase
     [EndpointName("CreateHospitalProperties")]
     [EndpointSummary("Crear información del hospital")]
     [EndpointDescription("Crea la configuración institucional inicial del hospital.")]
-    [Tags("SIGREF - Información del hospital")]
+    [Tags("HospitalProperties")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [Produces<HospitalDetailsDto>()]
     [Authorize(Roles = $"{RolesConstants.ti}")]
@@ -78,7 +79,7 @@ public class HospitalPropertiesController : ControllerBase
     [EndpointName("UpdateHospitalProperties")]
     [EndpointSummary("Actualizar información del hospital")]
     [EndpointDescription("Actualiza la configuración institucional del hospital.")]
-    [Tags("SIGREF - Información del hospital")]
+    [Tags("HospitalProperties")]
     [ProducesResponseType(typeof(HospitalDetailsDto), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.ti}")]
     public async Task<IActionResult> Update([FromBody] UpdateHospitalPropertiesDto dto)

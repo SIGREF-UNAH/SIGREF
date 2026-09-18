@@ -1,6 +1,3 @@
-using System.Text.Json.Serialization;
-
-
 namespace SIGREF.Common.Dtos;
 
 public class PaginationDto
@@ -16,6 +13,5 @@ public class PaginationDto
 public class PagedResultDto<T>
 {
     public IEnumerable<T> Items { get; set; } = new List<T>();
-    public PaginationDto Pagination { get; set; } = new PaginationDto();
+    public PaginationDto Pagination { get; set; } = new();
 }
-

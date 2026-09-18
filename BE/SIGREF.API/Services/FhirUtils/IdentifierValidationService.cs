@@ -64,12 +64,11 @@ public class IdentifierValidationService(FhirClient _fhirClient) : IIdentifierVa
                 return hit is null
                     ? null
                     : new IdentifierConflictDetail(
-                        System: c.Original.System,
-                        Value: c.Original.Value,
-                        ConflictingResourceId: $"{hit.TypeName}/{hit.Id}");
+                        c.Original.System,
+                        c.Original.Value,
+                        $"{hit.TypeName}/{hit.Id}");
             })
             .Where(c => c is not null)
-            .Cast<IdentifierConflictDetail>()
             .ToList();
 
         if (conflicts.Count == 0) return;

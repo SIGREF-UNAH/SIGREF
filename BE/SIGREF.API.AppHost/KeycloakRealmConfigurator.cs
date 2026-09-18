@@ -1,9 +1,6 @@
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Security.Cryptography;
-using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.Postgres;
 
 namespace SIGREF.API.AppHost;
 
@@ -30,9 +27,10 @@ public static class KeycloakRealmConfigurator
         var adminPass = Environment.GetEnvironmentVariable("KEYCLOAK_ADMIN_PASS") ?? "admin";
         var hostname = Environment.GetEnvironmentVariable("KEYCLOAK_HOSTNAME") ?? "localhost";
 
-        var keycloak = CreateBaseKeycloakContainer(builder, containerName, databaseName, dbUser, dbPass, adminUser, adminPass, hostname)
+        var keycloak = CreateBaseKeycloakContainer(builder, containerName, databaseName, dbUser, dbPass, adminUser,
+                adminPass, hostname)
             .WithBindMount(realmConfigPath, "/opt/keycloak/data/import/realm.json")
-            .WithArgs("start-dev", "--import-realm","--debug")
+            .WithArgs("start-dev", "--import-realm", "--debug")
             .WaitFor(dbResource);
 
         Console.WriteLine("[SIGREF] Keycloak se inicializará automáticamente con --import-realm.");
@@ -118,9 +116,11 @@ public static class KeycloakRealmConfigurator
             standardFlowEnabled = true,
             directAccessGrantsEnabled = true,
             publicClient = false,
-            redirectUris = (Environment.GetEnvironmentVariable("KEYCLOAK_CLIENT_API_REDIRECT_URIS") ?? "https://api.localhost/*")
+            redirectUris = (Environment.GetEnvironmentVariable("KEYCLOAK_CLIENT_API_REDIRECT_URIS") ??
+                            "https://api.localhost/*")
                 .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
-            webOrigins = (Environment.GetEnvironmentVariable("KEYCLOAK_CLIENT_API_WEB_ORIGINS") ?? "https://api.localhost")
+            webOrigins = (Environment.GetEnvironmentVariable("KEYCLOAK_CLIENT_API_WEB_ORIGINS") ??
+                          "https://api.localhost")
                 .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
         };
 
@@ -135,9 +135,11 @@ public static class KeycloakRealmConfigurator
             protocol = "openid-connect",
             standardFlowEnabled = true,
             directAccessGrantsEnabled = true,
-            redirectUris = (Environment.GetEnvironmentVariable("KEYCLOAK_CLIENT_FE_REDIRECT_URIS") ?? "http://localhost:5173/*")
+            redirectUris = (Environment.GetEnvironmentVariable("KEYCLOAK_CLIENT_FE_REDIRECT_URIS") ??
+                            "http://localhost:5173/*")
                 .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
-            webOrigins = (Environment.GetEnvironmentVariable("KEYCLOAK_CLIENT_FE_WEB_ORIGINS") ?? "http://localhost:5173")
+            webOrigins = (Environment.GetEnvironmentVariable("KEYCLOAK_CLIENT_FE_WEB_ORIGINS") ??
+                          "http://localhost:5173")
                 .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
         };
 
@@ -184,14 +186,16 @@ public static class KeycloakRealmConfigurator
             // --- Usuario administrador inicial ---
             users = new[]
             {
-                new {
+                new
+                {
                     username = adminUser,
                     enabled = true,
                     emailVerified = true,
                     firstName = adminFirst,
                     lastName = adminLast,
                     email = adminEmail,
-                    credentials = new[] {
+                    credentials = new[]
+                    {
                         new { type = "password", value = adminPass, temporary = false }
                     },
                     realmRoles = roleNames

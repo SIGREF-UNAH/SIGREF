@@ -4,8 +4,8 @@ import { UserOutlined } from "@ant-design/icons";
 const { Text } = Typography;
 
 interface Props {
-  userName?: string;
-  userId?: string;
+  userName?: string | null;
+  userId?: string | null;
 }
 
 export const UserCell = ({ userName, userId }: Props) => (

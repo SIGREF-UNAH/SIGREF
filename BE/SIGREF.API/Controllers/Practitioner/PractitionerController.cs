@@ -18,7 +18,7 @@ namespace SIGREF.API.Controllers.PractitionerC;
 [Authorize(AuthenticationSchemes = "Bearer")]
 [Produces(MediaTypeNames.Application.Json)]
 [Consumes(MediaTypeNames.Application.Json)]
-[Tags("Empleados - Gestión de Empleados")]
+[Tags("Practitioners")]
 public class PractitionerController : ControllerBase
 {
     private readonly IPractitionerService _practitionerService;
@@ -33,7 +33,7 @@ public class PractitionerController : ControllerBase
     [EndpointName("GetPractitionerList")]
     [EndpointSummary("Listar profesionales")]
     [EndpointDescription("Obtiene una lista paginada de recursos Practitioner aplicando los filtros solicitados.")]
-    [Tags("FHIR - Practitioner")]
+    [Tags("Practitioners", "FHIR")]
     [ProducesResponseType(typeof(PagedResultDto<PractitionerDto>) , StatusCodes.Status200OK)]
     [Authorize(Roles = $" {RolesConstants.admin} , {RolesConstants.auditor} , {RolesConstants.ti}")]
     public async Task<IActionResult> GetFiltered([FromQuery] PractitionerFilterDto filter)
@@ -54,7 +54,7 @@ public class PractitionerController : ControllerBase
     [EndpointName("GetPractitionerById")]
     [EndpointSummary("Obtener un profesional por ID")]
     [EndpointDescription("Recupera el recurso Practitioner identificado por su ID lógico en FHIR.")]
-    [Tags("FHIR - Practitioner")]
+    [Tags("Practitioners", "FHIR")]
     [ProducesResponseType( typeof(PractitionerDto) , StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.auditor} , {RolesConstants.ti}")]
     public async Task<IActionResult> GetById(string id)
@@ -68,7 +68,7 @@ public class PractitionerController : ControllerBase
     [EndpointName("CreatePractitioner")]
     [EndpointSummary("Crear un profesional")]
     [EndpointDescription("Crea un nuevo recurso Practitioner con los datos profesionales proporcionados.")]
-    [Tags("FHIR - Practitioner")]
+    [Tags("Practitioners", "FHIR")]
     [ProducesResponseType( typeof(PractitionerDto) , StatusCodes.Status201Created)]
     [Authorize(Roles = $" {RolesConstants.admin} , {RolesConstants.ti}")]
     public async Task<IActionResult> CreatePractitioner([FromBody] CreatePractitionerDto createPractitionerDto)
@@ -85,7 +85,7 @@ public class PractitionerController : ControllerBase
     [EndpointName("UpdatePractitionerById")]
     [EndpointSummary("Actualizar un profesional")]
     [EndpointDescription("Actualiza el recurso Practitioner indicado por su ID lógico.")]
-    [Tags("FHIR - Practitioner")]
+    [Tags("Practitioners", "FHIR")]
     [ProducesResponseType(typeof(PractitionerDto), StatusCodes.Status200OK)]
     [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.ti}")]
     public async Task<IActionResult> UpdatePractitioner(string id, [FromBody] UpdatePractitionerDto updatePractitionerDto)
@@ -99,7 +99,7 @@ public class PractitionerController : ControllerBase
     [EndpointName("DeletePractitionerById")]
     [EndpointSummary("Eliminar un profesional")]
     [EndpointDescription("Elimina el recurso Practitioner indicado por su ID lógico.")]
-    [Tags("FHIR - Practitioner")]
+    [Tags("Practitioners", "FHIR")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [Authorize(Roles = $"{RolesConstants.admin} , {RolesConstants.ti}")]
     public async Task<IActionResult> DeletePractitioner(string id)

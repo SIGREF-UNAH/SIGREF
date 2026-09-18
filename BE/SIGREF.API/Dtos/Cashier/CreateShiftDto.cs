@@ -16,6 +16,6 @@ public class CreateShiftDto
 
     [Required(ErrorMessage = "La hora de finalización es obligatoria.")]
     public TimeOnly EndTime { get; set; }
-    
+
     public bool IsActive { get; set; } = true;
 }

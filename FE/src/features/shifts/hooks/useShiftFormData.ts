@@ -1,4 +1,4 @@
-import { useGetLocationList } from "../../../api/locations/locations";
+import { useGetLocationList } from "@endpoints/locations/locations";
 
 // ! no hay paginacion real en locations
 

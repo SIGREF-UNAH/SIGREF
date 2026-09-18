@@ -18,7 +18,7 @@ namespace SIGREF.API.Controllers.ValueSet;
 [Authorize(AuthenticationSchemes = "Bearer")]
 [Produces(MediaTypeNames.Application.Json)]
 [Consumes(MediaTypeNames.Application.Json)]
-[Tags("Terminologias [ValueSet] - Validacion y Expansion")]
+[Tags("ValueSets")]
 public class ValueSetController : ControllerBase
 {
     private readonly IValueSetService _valueSetService;
@@ -39,7 +39,7 @@ public class ValueSetController : ControllerBase
     [EndpointName("GetValueSetListByType")]
     [EndpointSummary("Consultar catálogo FHIR por tipo")]
     [EndpointDescription("Obtiene un catálogo derivado de un ValueSet FHIR y lo devuelve paginado según el tipo solicitado.")]
-    [Tags("FHIR - ValueSet")]
+    [Tags("ValueSets", "FHIR")]
     //[Authorize(Roles = $"{RolesConstants.admin}")]
     [ProducesResponseType(typeof(PagedResultDto<ValueSetItemDto>) ,StatusCodes.Status200OK)]
     public async Task<IActionResult> GetCatalog([FromRoute] CatalogType type, [FromQuery] GetCatalogRequestDto request)

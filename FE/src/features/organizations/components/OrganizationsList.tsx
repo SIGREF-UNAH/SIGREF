@@ -6,7 +6,7 @@ import {
 } from "@ant-design/icons";
 import { Table, Button, Input, Space, Popconfirm, Tag, Select } from "antd";
 import { useOrganizationsList } from "../hooks";
-import type { OrganizationDto } from "../../../api/models";
+import type { OrganizationDto } from "@models";
 import { OrganizationDetailsModal } from "./OrganizationsDetailsModal";
 import { useAbility } from "../../../config";
 import { Can } from "@casl/react";
