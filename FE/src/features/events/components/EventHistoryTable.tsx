@@ -1,8 +1,6 @@
 // EventHistoryTable.tsx
 import { ProTable } from "@ant-design/pro-components";
-import type { AuditLog } from "../../../api/models/auditLog";
-import type { GetAuditLogsParams } from "../../../api/models/getAuditLogsParams";
-import type { AuditLogPagedResultDto } from "../../../api/models/auditLogPagedResultDto"; // 1. Importamos el DTO correcto del API
+import type { AuditLog, GetAuditLogsParams, PagedResultDtoOfAuditLog as AuditLogPagedResultDto } from "@models/audit";
 import { PAGE_SIZE_OPTIONS } from "../constants";
 import { useTableColumns, useColorUtils } from "../hooks";
 

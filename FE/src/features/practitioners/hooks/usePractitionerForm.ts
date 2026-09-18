@@ -8,12 +8,12 @@ import type {
   PractitionerDto,
   CreatePractitionerDto,
   UpdatePractitionerDto,
-} from "../../../api/models";
+} from "@models";
 import {
   useGetPractitionerById,
   useCreatePractitioner,
   useUpdatePractitionerById,
-} from "../../../api/practitioner/practitioner";
+} from "@endpoints/practitioners/practitioners";
 
 export function usePractitionerForm() {
   const navigate = useNavigate();

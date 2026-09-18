@@ -1,6 +1,4 @@
-﻿
-using SIGREF.Common.Dtos;
-using SIGREF.Common.Dtos.Report;
+﻿using SIGREF.Common.Dtos.Report;
 
 namespace SIGREF.API.Services.Reports;
 
@@ -14,9 +12,9 @@ public interface IReportQueryService
         ReportFilterDto filter);
 
     /// <summary>
-    /// Obtiene el detalle del reporte de forma paginada.
-    /// Diseñado para tablas en UI (no devuelve miles de filas).
-    /// Si necesita USAR miles de filas UTILIZAR EL EXPORT MEDIANTE LOS JOBS
+    ///     Obtiene el detalle del reporte de forma paginada.
+    ///     Diseñado para tablas en UI (no devuelve miles de filas).
+    ///     Si necesita USAR miles de filas UTILIZAR EL EXPORT MEDIANTE LOS JOBS
     /// </summary>
     Task<ReportDetailPageResponseDto> GetReportDetailPageAsync(
         ReportFilterDto filter);

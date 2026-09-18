@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Routing;
-using Microsoft.AspNetCore.Http;
 using System.Net.Mime;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,7 +15,7 @@ namespace SIGREF.API.Controllers.Healthcare;
 [Authorize(AuthenticationSchemes = "Bearer")]
 [Produces(MediaTypeNames.Application.Json)]
 [Consumes(MediaTypeNames.Application.Json)]
-[Tags("Servicios Medicos - Gestion de Servicios Medicos")]
+[Tags("HealthcareServices")]
 public class HealthcaresController : ControllerBase
 {
     private readonly IHealthcareService _healthcareService;
@@ -31,7 +29,7 @@ public class HealthcaresController : ControllerBase
     // LISTAR / FILTRAR
     // ============================================================
     /// <summary>
-    /// Obtiene una lista paginada de servicios de salud con filtros avanzados.
+    ///     Obtiene una lista paginada de servicios de salud con filtros avanzados.
     /// </summary>
     /// <param name="filter">Criterios de búsqueda (Nombre, Especialidad, Organización, etc.)</param>
     /// <response code="200">Lista de servicios de salud obtenida exitosamente.</response>
@@ -39,8 +37,9 @@ public class HealthcaresController : ControllerBase
     [HttpGet]
     [EndpointName("GetHealtcareList")]
     [EndpointSummary("Obtiene una lista de Servicios Medicos")]
-    [EndpointDescription("Obtiene servicios médicos basados en recursos FHIR HealthcareService y los devuelve paginados.")]
-    [Tags("HÍBRIDO - HealthcareService / FHIR")]
+    [EndpointDescription(
+        "Obtiene servicios médicos basados en recursos FHIR HealthcareService y los devuelve paginados.")]
+    [Tags("HealthcareServices", "FHIR")]
     [Authorize(Roles = $"{RolesConstants.auditor},{RolesConstants.admin},{RolesConstants.ti}")]
     [ProducesResponseType(typeof(PagedResultDto<HealthcareDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResultDto<HealthcareDto>>> GetFiltered([FromQuery] HealthcareFilterDto filter)
@@ -54,7 +53,7 @@ public class HealthcaresController : ControllerBase
     // OBTENER POR ID
     // ============================================================
     /// <summary>
-    /// Obtiene el detalle de un servicio de salud específico por su ID.
+    ///     Obtiene el detalle de un servicio de salud específico por su ID.
     /// </summary>
     /// <param name="id">Identificador único del HealthcareService.</param>
     /// <response code="200">Servicio de salud encontrado exitosamente.</response>
@@ -63,7 +62,7 @@ public class HealthcaresController : ControllerBase
     [EndpointName("GetHealtcareById")]
     [EndpointSummary("Obtiene un servicio medico por su Id")]
     [EndpointDescription("Recupera un recurso FHIR HealthcareService por su identificador lógico.")]
-    [Tags("HÍBRIDO - HealthcareService / FHIR")]
+    [Tags("HealthcareServices", "FHIR")]
     [Authorize(Roles = $"{RolesConstants.auditor},{RolesConstants.admin},{RolesConstants.ti}")]
     [ProducesResponseType(typeof(HealthcareDto), StatusCodes.Status200OK)]
     public async Task<ActionResult<HealthcareDto>> GetById(string id)
@@ -76,7 +75,7 @@ public class HealthcaresController : ControllerBase
     // CREAR
     // ============================================================
     /// <summary>
-    /// Crea un nuevo servicio de salud en FHIR y registra su costo en SIGREF.
+    ///     Crea un nuevo servicio de salud en FHIR y registra su costo en SIGREF.
     /// </summary>
     /// <param name="dto">Datos del servicio (Nombre, Especialidad, Costo, etc.)</param>
     /// <response code="201">Servicio creado y enriquecido exitosamente.</response>
@@ -85,7 +84,7 @@ public class HealthcaresController : ControllerBase
     [EndpointName("CreateHealtcare")]
     [EndpointSummary("Crea un nuevo servicio Medico")]
     [EndpointDescription("Crea un recurso FHIR HealthcareService con los datos del servicio médico proporcionados.")]
-    [Tags("HÍBRIDO - HealthcareService / FHIR")]
+    [Tags("HealthcareServices", "FHIR")]
     [Authorize(Roles = RolesConstants.admin)]
     [ProducesResponseType(typeof(HealthcareDto), StatusCodes.Status201Created)]
     public async Task<ActionResult<HealthcareDto>> Create([FromBody] CreateHealthcareDto dto)
@@ -98,7 +97,7 @@ public class HealthcaresController : ControllerBase
     // ACTUALIZAR
     // ============================================================
     /// <summary>
-    /// Actualiza un servicio de salud en FHIR y sincroniza su costo en SIGREF.
+    ///     Actualiza un servicio de salud en FHIR y sincroniza su costo en SIGREF.
     /// </summary>
     /// <param name="id">Identificador único del servicio.</param>
     /// <param name="dto">Datos actualizados (incluyendo el costo opcional).</param>
@@ -108,7 +107,7 @@ public class HealthcaresController : ControllerBase
     [EndpointName("UpdateHealtcareById")]
     [EndpointSummary("Actualiza un servicio medico por su Id")]
     [EndpointDescription("Actualiza un recurso FHIR HealthcareService existente mediante su identificador lógico.")]
-    [Tags("HÍBRIDO - HealthcareService / FHIR")]
+    [Tags("HealthcareServices", "FHIR")]
     [Authorize(Roles = RolesConstants.admin)]
     [ProducesResponseType(typeof(HealthcareDto), StatusCodes.Status200OK)]
     public async Task<ActionResult<HealthcareDto>> Update(string id, [FromBody] UpdateHealthcareDto dto)
@@ -121,7 +120,7 @@ public class HealthcaresController : ControllerBase
     // ELIMINAR
     // ============================================================
     /// <summary>
-    /// Elimina un servicio de salud de FHIR y su registro de costo asociado en SIGREF.
+    ///     Elimina un servicio de salud de FHIR y su registro de costo asociado en SIGREF.
     /// </summary>
     /// <param name="id">Identificador único del servicio.</param>
     /// <response code="204">Servicio eliminado exitosamente de ambos sistemas.</response>
@@ -130,7 +129,7 @@ public class HealthcaresController : ControllerBase
     [EndpointName("DeleteHealtcareById")]
     [EndpointSummary("Elimina un Servicio Medico por su Id")]
     [EndpointDescription("Elimina el recurso FHIR HealthcareService indicado por su identificador lógico.")]
-    [Tags("HÍBRIDO - HealthcareService / FHIR")]
+    [Tags("HealthcareServices", "FHIR")]
     [Authorize(Roles = RolesConstants.admin)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Delete(string id)

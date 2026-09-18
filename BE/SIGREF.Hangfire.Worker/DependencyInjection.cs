@@ -7,7 +7,7 @@ public static class DependencyInjection
 {
     public static IHostApplicationBuilder AddWorkerHangfire(this IHostApplicationBuilder builder)
     {
-        var connectionString = builder.Configuration.GetConnectionString("hangfire") 
+        var connectionString = builder.Configuration.GetConnectionString("hangfire")
                                ?? throw new InvalidOperationException("Connection string 'hangfire' no inyectada.");
 
         builder.Services.AddHangfire((sp, cfg) =>
@@ -22,7 +22,7 @@ public static class DependencyInjection
         builder.Services.AddHangfireServer(opt =>
         {
             opt.ServerName = $"SIGREF-WORKER-{Environment.MachineName}";
-            int workers = Environment.ProcessorCount * 3;
+            var workers = Environment.ProcessorCount * 3;
             opt.WorkerCount = Math.Clamp(workers, 4, 30);
         });
 

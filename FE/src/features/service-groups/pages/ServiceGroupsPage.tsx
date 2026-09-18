@@ -18,7 +18,7 @@ import {
 } from "@ant-design/icons";
 import { PageHeaderTabs } from "../../../shared/components/ui";
 import type { ColumnsType } from "antd/es/table";
-import type { ServiceGroupDto } from "../../../api/models";
+import type { ServiceGroupDto } from "@models";
 import { useLocationSearch } from "../../../shared/hooks/useLocationSearch";
 import { getListStatusLabel, getListStatusColor, getListStatusOptions } from "../../../shared/utils";
 import { useAbility } from "../../../config";

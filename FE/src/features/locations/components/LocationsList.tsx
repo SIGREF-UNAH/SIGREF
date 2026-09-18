@@ -9,16 +9,13 @@ import {
   Alert,
   Popconfirm,
 } from "antd";
-import type { LocationDto } from "../../../api/models";
-import {
-  LocationMode,
-  LocationStatus,
-} from "../../../api/models";
+import type { LocationDto } from "@models";
+import { LocationMode, NullableOfLocationStatus as LocationStatus } from "@types/locations";
 import {
   getGetLocationListQueryKey,
   useDeleteLocationById,
   useGetLocationList,
-} from "../../../api/locations/locations";
+} from "@endpoints/locations/locations";
 import {
   FilterOutlined,
   EyeOutlined,

@@ -1,6 +1,6 @@
 import { HospitalForm } from "../components/HospitalForm";
 import useCreateHospital from "../hooks/useCreateHospital";
-import type { CreateHospitalPropertiesDto } from "../../../api/models";
+import type { CreateHospitalPropertiesDto } from "@models";
 
 export const CreateHospitalPage = () => {
   const { isPending, handleCreate, handleCancel } = useCreateHospital();

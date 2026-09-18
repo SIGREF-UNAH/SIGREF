@@ -2,7 +2,7 @@
 // ! Cuando se quite el wrapper se eliminara el .data
 
 import { useNavigate } from "react-router";
-import { useGetHospitalPropertiesDetails } from "../../../api/hospital-properties/hospital-properties";
+import { useGetHospitalPropertiesDetails } from "@endpoints/hospital-properties/hospital-properties";
 
 export default function useHospitalDetails() {
   const navigate = useNavigate();

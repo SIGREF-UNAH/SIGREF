@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { getHealtcareList } from "../../../api/healthcares/healthcares";
+import { getHealtcareList } from "@endpoints/healthcare-services/healthcare-services";
 
 interface HealthcareOption {
   label: string;

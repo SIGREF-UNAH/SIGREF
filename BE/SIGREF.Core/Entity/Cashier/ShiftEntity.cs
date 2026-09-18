@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using SIGREF.Core.Entity.common;
+﻿using SIGREF.Core.Entity.common;
 
 namespace SIGREF.Core.Entity.Cashier;
 // crearTurno
@@ -15,7 +13,6 @@ public class ShiftEntity : BaseEntity
     // ======================================
 
     public string LocationId { get; set; }
- 
 
 
     // ======================================
@@ -27,6 +24,6 @@ public class ShiftEntity : BaseEntity
     public TimeOnly StartTime { get; set; }
 
     public TimeOnly EndTime { get; set; }
-    
-    public DateTimeOffset CorrectionClosure { get; set; }
+
+    public DateTime CorrectionClosure { get; set; }
 }

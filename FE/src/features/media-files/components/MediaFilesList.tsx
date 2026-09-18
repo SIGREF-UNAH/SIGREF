@@ -1,5 +1,6 @@
 import React from "react";
-import type { MediaFileDto, MediaFileType } from "../../../api/models";
+import type { MediaFileDto } from "@models";
+import type { MediaFileType } from "@types/media-files";
 import { formatFileSize, getMediaUrl } from "../utils";
 import {
   Card,

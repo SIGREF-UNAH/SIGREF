@@ -4,12 +4,12 @@ import { useUrlFilters } from "../../../shared/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMessage } from "../../../shared/hooks";
 import type { TablePaginationConfig } from "antd";
-import type { ShiftDto } from "../../../api/models";
+import type { ShiftDto } from "@models";
 import {
   getGetShiftListQueryKey,
   useDeleteShiftById,
   useGetShiftList,
-} from "../../../api/shifts/shifts";
+} from "@endpoints/shifts/shifts";
 
 export function useShiftsList() {
   const navigate = useNavigate();

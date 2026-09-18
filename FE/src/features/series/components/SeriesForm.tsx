@@ -1,6 +1,6 @@
 import { ProForm, ProFormText, ProFormDigit } from "@ant-design/pro-components";
 import { Alert, Space, Divider } from "antd";
-import type { CreateSeriesDto, SerieDto, UpdateSeriesDto } from "../../../api/models";
+import type { CreateSeriesDto, SerieDto, UpdateSeriesDto } from "@models";
 
 interface Props {
   mode: "create" | "edit";

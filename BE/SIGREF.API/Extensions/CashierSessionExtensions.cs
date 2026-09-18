@@ -22,10 +22,11 @@ public static class CashierSessionExtensions
 
             IsOpen = e.IsOpen,
             IsClosedCorrectly = e.Difference == 0 || e.Difference == null,
-                
+
             Notes = e.Notes
         };
     }
+
     public static CashierSessionMinimalDto ToMinimalDto(this CashierSessionEntity e)
     {
         return new CashierSessionMinimalDto
@@ -34,5 +35,4 @@ public static class CashierSessionExtensions
             OpenAt = e.OpenAt
         };
     }
-
 }

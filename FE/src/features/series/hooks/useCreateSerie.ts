@@ -4,8 +4,8 @@ import { useMessage } from "../../../shared/hooks";
 import {
   getGetSerieListQueryKey,
   useCreateSerie as useCreateSerieMutation,
-} from "../../../api/series/series";
-import type { CreateSeriesDto } from "../../../api/models";
+} from "@endpoints/series/series";
+import type { CreateSeriesDto } from "@models";
 
 /**
  * Hook personalizado para crear una serie

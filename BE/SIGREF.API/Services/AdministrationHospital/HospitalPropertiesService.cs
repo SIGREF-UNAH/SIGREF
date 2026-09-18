@@ -1,4 +1,5 @@
 ﻿#nullable enable
+using Hl7.Fhir.Rest;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using SIGREF.API.Dtos.Administration;
@@ -8,19 +9,17 @@ using SIGREF.Common.Exceptions;
 using SIGREF.Core.Entity.Administration;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
 using SIGREF.Infrastructure.Persistence;
-using Hl7.Fhir.Rest;
 
 namespace SIGREF.API.Services.AdministrationHospital;
 
 public class HospitalPropertiesService : IHospitalPropertiesService
 {
-    private readonly SIGREFContext _context;
-    private readonly IMemoryCache _cache;
-    private readonly IUserContextService _userContext;
-
     // Cache key constante para evitar magic strings
     private const string CACHE_KEY_HOSPITAL = "hospital_singleton";
     private static readonly TimeSpan CACHE_DURATION = TimeSpan.FromMinutes(5);
+    private readonly IMemoryCache _cache;
+    private readonly SIGREFContext _context;
+    private readonly IUserContextService _userContext;
 
     public HospitalPropertiesService(
         SIGREFContext context,
@@ -100,6 +99,10 @@ public class HospitalPropertiesService : IHospitalPropertiesService
         {
             throw FhirExceptionMapper.Map(fhirEx, null, nameof(GetAllDetailsAsync));
         }
+        catch (AppException)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             throw new ExternalServiceException("INTERNAL_HOSPITAL_ERROR", 500, new Dictionary<string, object>
@@ -141,7 +144,7 @@ public class HospitalPropertiesService : IHospitalPropertiesService
                     }
 
                     var userId = _userContext.GetUserId();
-                    var now = DateTimeOffset.UtcNow;
+                    var now = DateTime.UtcNow;
 
                     var entity = new HospitalPropertiesEntity
                     {
@@ -219,7 +222,7 @@ public class HospitalPropertiesService : IHospitalPropertiesService
             // Optimización: ExecuteUpdateAsync evita cargar la entidad completa en memoria
             // Solo actualiza las columnas necesarias directamente en la BD
             var userId = _userContext.GetUserId();
-            var now = DateTimeOffset.UtcNow;
+            var now = DateTime.UtcNow;
 
             var affectedRows = await _context.HospitalProperties
                 .Where(x => x.IsSingleton)
@@ -293,8 +296,8 @@ public class HospitalPropertiesService : IHospitalPropertiesService
     // ============================================================
 
     /// <summary>
-    /// Obtiene el hospital singleton desde cache o BD.
-    /// Cachea por 5 minutos para reducir queries repetitivas.
+    ///     Obtiene el hospital singleton desde cache o BD.
+    ///     Cachea por 5 minutos para reducir queries repetitivas.
     /// </summary>
     private async Task<HospitalPropertiesEntity> GetCachedHospitalAsync()
     {
@@ -319,8 +322,8 @@ public class HospitalPropertiesService : IHospitalPropertiesService
     }
 
     /// <summary>
-    /// Invalida la cache del hospital singleton.
-    /// Debe llamarse después de cualquier operación de escritura.
+    ///     Invalida la cache del hospital singleton.
+    ///     Debe llamarse después de cualquier operación de escritura.
     /// </summary>
     private void InvalidateCache()
     {

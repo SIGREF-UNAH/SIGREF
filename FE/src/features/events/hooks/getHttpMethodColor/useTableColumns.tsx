@@ -2,7 +2,7 @@ import { Button, Tag, Typography } from "antd";
 import { EyeOutlined } from "@ant-design/icons";
 import type { ProColumns } from "@ant-design/pro-components";
 import dayjs from "dayjs";
-import type { AuditLog } from "../../../../api/models/auditLog";
+import type { AuditLog } from "@models/audit/auditLog";
 import { TraceIdCell, UserCell, ActionCell, ResourceCell, ResultCell } from "../../components";
 const { Text } = Typography;
 
@@ -12,6 +12,7 @@ interface Params {
   getHttpMethodColor: (method: string) => string;
   onViewDetails: (record: AuditLog) => void;
 }
+
 
 export const useTableColumns = ({
   getActionColor,

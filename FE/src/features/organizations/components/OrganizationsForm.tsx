@@ -11,7 +11,7 @@ import {
   CloseOutlined,
   PhoneOutlined,
 } from "@ant-design/icons";
-import { OrganizationTypeEnum } from "../../../api/models";
+import { OrganizationTypeEnum } from "../types";
 import type { ProFormInstance } from "@ant-design/pro-components";
 import { Button, Form } from "antd";
 import { useRef, useState } from "react";

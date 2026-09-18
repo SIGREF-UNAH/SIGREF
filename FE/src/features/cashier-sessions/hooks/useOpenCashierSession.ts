@@ -2,9 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useKeycloak } from "@react-keycloak/web";
 import { useCashierSessionStore } from "../store";
-import { useGetLocationList } from "../../../api/locations/locations";
-import { useGetShiftList } from "../../../api/shifts/shifts";
-import { useCreateSessionOpen } from "../../../api/cashier-sessions/cashier-sessions";
+import { useGetLocationList } from "@endpoints/locations/locations";
+import { useGetShiftList } from "@endpoints/shifts/shifts";
+import { useCreateSessionOpen } from "@endpoints/cashier-sessions/cashier-sessions";
+import type { CashierSessionMinimalDto } from "@models/cashier-sessions";
+import type { LocationDto } from "@models/locations";
+import type { ShiftDto } from "@models/shifts";
+import type { ProblemDetails } from "@models/shared";
+import type { ErrorType } from "../../../api/mutator/customInstance";
 import { useMessage } from "../../../shared/hooks";
 import { useAbility } from "../../../config";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -39,14 +44,10 @@ export default function useOpenCashierSession() {
   const { mutate: openSession, isPending: isOpeningSession } =
     useCreateSessionOpen({
       mutation: {
-        onSuccess: (response: any) => {
-          if (response?.data) {
-            const selectedShift = shifts.find(
-              (s: any) => s.id === selectedShiftId
-            );
-            const selectedLocation = locations.find(
-              (l: any) => l.id === selectedLocationId
-            );
+        onSuccess: (response: CashierSessionMinimalDto) => {
+          if (response.id && response.openAt) {
+            const selectedShift = shifts.find((s) => s.id === selectedShiftId);
+            const selectedLocation = locations.find((l) => l.id === selectedLocationId);
 
             const userId = keycloak.tokenParsed?.sub;
             if (!userId) {
@@ -55,8 +56,8 @@ export default function useOpenCashierSession() {
             }
 
             setSessionForUser(userId, {
-              id: response.data.id,
-              openAt: response.data.openAt,
+              id: response.id,
+              openAt: response.openAt,
               shiftName: selectedShift?.name || "N/A",
               locationName: selectedLocation?.name || "N/A",
               shiftId: selectedShiftId || undefined,
@@ -65,10 +66,8 @@ export default function useOpenCashierSession() {
             message.success("Turno iniciado correctamente");
           }
         },
-        onError: (error: any) => {
-          message.error(
-            error?.response?.data?.message || "Error al abrir el turno"
-          );
+        onError: (error: ErrorType<ProblemDetails>) => {
+          message.error(error.response?.data?.detail || "Error al abrir el turno");
         },
       },
     });
@@ -95,8 +94,8 @@ export default function useOpenCashierSession() {
     });
   };
 
-  const locations = locationsData?.items || [];
-  const shifts = ((shiftsData as any)?.data?.items || []).filter((shift: any) => shift.isActive === true);
+  const locations: LocationDto[] = locationsData?.items ?? [];
+  const shifts: ShiftDto[] = (shiftsData?.items ?? []).filter((shift) => shift.isActive === true);
 
   // Calcular duración de la sesión activa
   const sessionDuration = session ? dayjs(session.openAt).fromNow(true) : "";

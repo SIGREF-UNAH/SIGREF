@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useGetSerieList } from "../../../api/series/series";
-import type { SerieDto } from "../../../api/models";
+import { useGetSerieList } from "@endpoints/series/series";
+import type { SerieDto } from "@models";
 
 export function useInvoiceSeriesManager() {
   const {

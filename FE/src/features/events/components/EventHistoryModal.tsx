@@ -5,7 +5,8 @@ import {
   InfoCircleOutlined,
 } from "@ant-design/icons";
 import { Alert, Button, Divider, Modal, Descriptions, Space } from "antd";
-import type { AuditLog } from "../../../api/models/auditLog";
+import type { AuditLog } from "@models/audit/auditLog";
+import type { Dayjs } from "dayjs";
 import { EventStatusAlert } from "./eventHistoryModal/EventStatusAlert";
 import { UserInfoSection } from "./eventHistoryModal/UserInfoSection";
 import { TechnicalInfoSection } from "./eventHistoryModal/TechnicalInfoSection";
@@ -17,7 +18,7 @@ interface Props {
   modalOpen: boolean;
   selectedRecord: AuditLog | null | undefined;
   setModalOpen: (open: boolean) => void;
-  dayjs: (date: string | Date) => any;
+  dayjs: (date: string | Date) => Dayjs;
 }
 
 export const EventHistoryModal = ({

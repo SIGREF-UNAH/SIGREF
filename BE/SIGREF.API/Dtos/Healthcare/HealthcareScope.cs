@@ -3,5 +3,5 @@
 public enum HealthcareScope
 {
     INTERNAL,
-    EXTERNAL,
+    EXTERNAL
 }

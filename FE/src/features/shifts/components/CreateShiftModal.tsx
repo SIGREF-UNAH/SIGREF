@@ -1,7 +1,7 @@
 import { Modal, Form, Input, TimePicker, Select, message } from "antd";
 import { useQueryClient } from "@tanstack/react-query";
-import type { LocationDto } from "../../../api/models";
-import { getGetShiftListQueryKey, useCreateShift } from "../../../api/shifts/shifts";
+import type { LocationDto } from "@models";
+import { getGetShiftListQueryKey, useCreateShift } from "@endpoints/shifts/shifts";
 
 interface CreateShiftModalProps {
   open: boolean;

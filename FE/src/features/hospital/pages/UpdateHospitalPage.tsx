@@ -1,7 +1,7 @@
 import { HospitalForm } from "../components/HospitalForm";
 import { Button, Result, Spin } from "antd";
 import useUpdateHospital from "../hooks/useUpdateHospital";
-import type { UpdateHospitalPropertiesDto } from "../../../api/models";
+import type { UpdateHospitalPropertiesDto } from "@models";
 
 export const UpdateHospitalPage = () => {
   const {

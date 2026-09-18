@@ -23,9 +23,10 @@ public static class FhirExceptionMapper
             HttpStatusCode.Forbidden => new ForbiddenException(MessageCodes.Forbidden, extraData),
             HttpStatusCode.Conflict => new ConflictException(MessageCodes.DbConcurrencyConflict, extraData),
             HttpStatusCode.BadRequest => new ValidationException(MessageCodes.ValidationError, extraData),
-            HttpStatusCode.UnprocessableEntity => new BusinessRuleException(MessageCodes.BusinessRuleViolation, extraData),
+            HttpStatusCode.UnprocessableEntity => new BusinessRuleException(MessageCodes.BusinessRuleViolation,
+                extraData),
             HttpStatusCode.Unauthorized => new SessionExpiredException(MessageCodes.Unauthorized, extraData),
-            
+
             // Cubrimos errores de infraestructura de red/FHIR
             HttpStatusCode.BadGateway => new ExternalServiceException(MessageCodes.BadGateway, 502, extraData),
             HttpStatusCode.GatewayTimeout => new ExternalServiceException(MessageCodes.BadGateway, 504, extraData),
@@ -34,8 +35,8 @@ public static class FhirExceptionMapper
             // Cualquier otro error de FHIR que no hayamos mapeado específicamente
             // Usamos el status que nos da FHIR en lugar de inventar uno
             _ => new ExternalServiceException(
-                MessageCodes.InternalServerError, 
-                (int)ex.Status, 
+                MessageCodes.InternalServerError,
+                (int)ex.Status,
                 extraData)
         };
     }

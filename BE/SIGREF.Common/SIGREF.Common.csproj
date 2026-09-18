@@ -7,10 +7,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Hl7.Fhir.R4" Version="5.12.2" />
-      <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.2" />
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.2" />
-      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.2" />
+        <PackageReference Include="Hl7.Fhir.R4" Version="5.12.2"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.2"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.2"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.2"/>
     </ItemGroup>
 
 </Project>

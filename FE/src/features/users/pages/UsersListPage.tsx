@@ -17,9 +17,9 @@ import { useState } from "react";
 import { PageHeaderTabs } from "../../../shared/components";
 import { useAbility } from "../../../config";
 import { useQueryClient } from "@tanstack/react-query";
-import { useUpdateUserToggleStatus } from "../../../api/users/users";
-import { useGetUserList } from "../../../api/users/users";
-import { getGetUserListQueryKey } from "../../../api/users/users";
+import { useUpdateUserToggleStatus } from "@endpoints/users/users";
+import { useGetUserList } from "@endpoints/users/users";
+import { getGetUserListQueryKey } from "@endpoints/users/users";
 import UserDetailDrawer from "../components/UserDetailDrawer";
 
 export const UsersListPage = () => {

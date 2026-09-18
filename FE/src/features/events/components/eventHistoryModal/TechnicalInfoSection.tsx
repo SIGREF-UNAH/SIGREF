@@ -2,13 +2,14 @@
 import { ClockCircleOutlined, CodeOutlined, LinkOutlined } from "@ant-design/icons";
 import { ProDescriptions } from "@ant-design/pro-components";
 import { Divider, Space, Tag } from "antd";
-import type { AuditLog } from "../../../../api/models/auditLog";
+import type { Dayjs } from "dayjs";
+import type { AuditLog } from "@models/audit/auditLog";
 import { HTTP_METHOD_COLOR_MAP } from "../../constants";
 
 interface Props {
   record: AuditLog;
   httpMethodUpper: string;
-  dayjs: (date: string | Date) => any;
+  dayjs: (date: string | Date) => Dayjs;
 }
 
 export const TechnicalInfoSection = ({ record, httpMethodUpper, dayjs }: Props) => (

@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SIGREF.Core.Entity.Billing;
-using SIGREF.Core.Entity.Cashier;
 
 namespace SIGREF.Infrastructure.Persistence.Configurations;
 
@@ -12,9 +11,10 @@ public class InvoiceEntityConfiguration : BaseEntityConfiguration<InvoiceEntity>
         base.Configure(builder);
         builder.ToTable(
             "invoices",
-            t => t.HasComment("Tabla principal de facturación: contiene facturas normales, emergencias, exentas y notas de crédito/débito.")
+            t => t.HasComment(
+                "Tabla principal de facturación: contiene facturas normales, emergencias, exentas y notas de crédito/débito.")
         );
-        
+
         // ============================
         //        PATIENT DATA
         // ============================
@@ -38,7 +38,7 @@ public class InvoiceEntityConfiguration : BaseEntityConfiguration<InvoiceEntity>
             .HasMaxLength(50)
             .HasComment("Valor del documento de identidad (DNI/Pasaporte).");
 
-        
+
         // ============================
         //         ENUMERATIONS
         // ============================
@@ -62,7 +62,7 @@ public class InvoiceEntityConfiguration : BaseEntityConfiguration<InvoiceEntity>
             .HasMaxLength(20)
             .HasColumnName("payment_method")
             .HasComment("Método de pago: Cash, Card, Transfer, Mixed.");
-        
+
         // ============================
         //     FINANCIAL TOTALS
         // ============================
@@ -110,7 +110,7 @@ public class InvoiceEntityConfiguration : BaseEntityConfiguration<InvoiceEntity>
             .HasForeignKey(i => i.InvoiceId)
             .HasConstraintName("fk_invoice_items_id")
             .OnDelete(DeleteBehavior.Cascade);
-        
+
         // ============================
         // RELACIÓN: Serie
         // ============================
@@ -133,7 +133,7 @@ public class InvoiceEntityConfiguration : BaseEntityConfiguration<InvoiceEntity>
             .HasForeignKey(i => i.ParentInvoiceId)
             .HasConstraintName("fk_parent_invoice_id")
             .OnDelete(DeleteBehavior.Restrict);
-        
+
         builder.Property(i => i.ParentInvoiceId)
             .HasColumnName("parent_invoice_id");
         // ============================
@@ -145,11 +145,11 @@ public class InvoiceEntityConfiguration : BaseEntityConfiguration<InvoiceEntity>
             .HasForeignKey(i => i.CashierSessionId)
             .HasConstraintName("fk_cashier_session_id")
             .OnDelete(DeleteBehavior.Restrict);
-        
+
         builder.Property(i => i.CashierSessionId)
             .IsRequired()
             .HasColumnName("cashier_session_id");
-        
+
         // ============================
         // INDEXES 
         // ============================
@@ -182,23 +182,23 @@ public class InvoiceEntityConfiguration : BaseEntityConfiguration<InvoiceEntity>
         // Index para listar por estado (Created, Paid…)
         builder.HasIndex(i => i.Status)
             .HasDatabaseName("idx_invoice_status");
-        
+
         builder.HasIndex(i => new { i.CreatedDate, i.Status, i.InvoiceType })
             .HasDatabaseName("idx_invoice_created_status_type");
 
         // Index para filtros por fecha 
         builder.HasIndex(i => i.CreatedDate)
             .HasDatabaseName("idx_invoice_created_date");
-        
-        
+
+
         // Metadata adicional
         builder.Property(i => i.ServiceGroupFhirId)
             .HasMaxLength(64)
             .HasColumnName("service_group_fhir_id");
-        
+
         builder.Property(i => i.SingleServiceId)
             .HasColumnName("single_service_id");
-        
+
         builder.Property(i => i.Number)
             .IsRequired()
             .HasColumnName("number");

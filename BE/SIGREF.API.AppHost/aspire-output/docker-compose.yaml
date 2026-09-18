@@ -1,4 +1,12 @@
 # ============================================================================
+# CAMBIOS APLICADOS (Codex, 2026-09-17)
+# - La API conserva un unico puerto interno (8080) y la asignacion al host es
+#   configurable mediante SIGREF_API_PORT.
+# - Se incorporan limites de recursos y prevencion de escalamiento de privilegios.
+# - Las credenciales se reciben por variables; vea .env.example, no las agregue aqui.
+# ============================================================================
+#
+# ============================================================================
 # MÓDULO: Orquestación de Servicios SIGREF
 # PROYECTO: SIGREF (Aspire Orchestration)
 # ----------------------------------------------------------------------------
@@ -33,7 +41,7 @@ services:
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
       POSTGRES_DB: "postgres"
     healthcheck: # OPTIMIZACIÓN: Permite que otros servicios esperen a que la DB esté lista de verdad
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USERNAME} -d postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USERNAME} -d postgres" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -64,7 +72,7 @@ services:
   # IDENTITY SERVER: Keycloak (Usa la imagen optimizada que creamos)
   keycloak:
     image: "${KEYCLOAK_IMAGE}"
-    command: ["start", "--optimized", "--import-realm"]
+    command: [ "start", "--optimized", "--import-realm" ]
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: "${KEYCLOAK_USER}"
       KC_BOOTSTRAP_ADMIN_PASSWORD: "${KEYCLOAK_PASS}"
@@ -100,7 +108,8 @@ services:
     image: "${SIGREF_API_IMAGE}"
     environment:
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
-      HTTP_PORTS: "${SIGREF_API_PORT}"
+      # El contenedor siempre escucha en 8080; solo el puerto del host varia.
+      HTTP_PORTS: "8080"
       # Inyección de Connection Strings para .NET
       ConnectionStrings__sigref: "Host=postgres;Database=sigref;Username=${POSTGRES_USERNAME};Password=${POSTGRES_PASSWORD}"
       ConnectionStrings__sigref-logs: "mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@mongo-sigref-logs:27017/sigref-logs?authSource=admin"
@@ -110,7 +119,7 @@ services:
       KEYCLOAK_HTTP: "http://keycloak:8080"
       HAPIFHIR_HTTP: "http://hapifhir:8080"
     ports:
-      - "${SIGREF_API_PORT}:${SIGREF_API_PORT}"
+      - "${SIGREF_API_PORT}:8080"
     depends_on:
       postgres: { condition: "service_healthy" }
       mongo-sigref-logs: { condition: "service_started" }
@@ -118,6 +127,16 @@ services:
       keycloak: { condition: "service_started" }
     networks:
       - "aspire"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 1G
 
   # FRONTEND: Aplicación de usuario final
   frontend:

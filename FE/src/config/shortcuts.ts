@@ -1,5 +1,10 @@
 import type { NavigateFunction } from "react-router";
+import type { Actions } from "../auth/abilities";
 import type { Subjects } from "../auth";
+
+type ShortcutAbility = {
+  can: (action: Exclude<Actions, "manage">, subject: Subjects) => boolean;
+};
 
 export interface ShortcutConfig {
   keys: string;
@@ -28,7 +33,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "ctrl+f",
     description: "Listar Ingresos",
-    action: (navigate) => navigate("/incomes/list"),
+    action: (navigate) => { void navigate("/incomes/list"); },
     title: "Gestión de Fondos",
     category: "incomes",
     requiredAction: "read",
@@ -37,7 +42,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "ctrl+shift+f",
     description: "Generar ingreso",
-    action: (navigate) => navigate("/incomes/create"),
+    action: (navigate) => { void navigate("/incomes/create"); },
     title: "Gestión de Fondos",
     category: "incomes",
     requiredAction: "create",
@@ -46,7 +51,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "ctrl+f+c",
     description: "Cierre de caja",
-    action: (navigate) => navigate("/incomes/close"),
+    action: (navigate) => { void navigate("/incomes/close"); },
     title: "Gestión de Fondos",
     category: "incomes",
     requiredAction: "update",
@@ -55,7 +60,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "ctrl+f+h",
     description: "Historial de cierres",
-    action: (navigate) => navigate("/incomes/history"),
+    action: (navigate) => { void navigate("/incomes/history"); },
     title: "Gestión de Fondos",
     category: "incomes",
     requiredAction: "read",
@@ -66,7 +71,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "ctrl+s",
     description: "Listar servicios",
-    action: (navigate) => navigate("/healthcares/list"),
+    action: (navigate) => { void navigate("/healthcares/list"); },
     title: "Gestión de Servicios",
     category: "healthcares",
     requiredAction: "read",
@@ -75,7 +80,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "ctrl+shift+s",
     description: "Crear servicio",
-    action: (navigate) => navigate("/healthcares/create"),
+    action: (navigate) => { void navigate("/healthcares/create"); },
     title: "Gestión de Servicios",
     category: "healthcares",
     requiredAction: "create",
@@ -84,7 +89,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "alt+s",
     description: "Listar paquetes",
-    action: (navigate) => navigate("/service-groups/list"),
+    action: (navigate) => { void navigate("/service-groups/list"); },
     title: "Gestión de Servicios",
     category: "healthcares",
     requiredAction: "read",
@@ -93,7 +98,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "alt+shift+s",
     description: "Crear paquete",
-    action: (navigate) => navigate("/service-groups/create"),
+    action: (navigate) => { void navigate("/service-groups/create"); },
     title: "Gestión de Servicios",
     category: "healthcares",
     requiredAction: "create",
@@ -104,7 +109,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "ctrl+p",
     description: "Listar pacientes",
-    action: (navigate) => navigate("/patients/list"),
+    action: (navigate) => { void navigate("/patients/list"); },
     title: "Gestión de Pacientes",
     category: "patients",
     requiredAction: "read",
@@ -113,7 +118,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "ctrl+shift+p",
     description: "Crear paciente",
-    action: (navigate) => navigate("/patients/create"),
+    action: (navigate) => { void navigate("/patients/create"); },
     title: "Gestión de Pacientes",
     category: "patients",
     requiredAction: "create",
@@ -124,7 +129,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "ctrl+e",
     description: "Listar empleados",
-    action: (navigate) => navigate("/practitioners/list"),
+    action: (navigate) => { void navigate("/practitioners/list"); },
     title: "Gestión de Empleados",
     category: "practitioners",
     requiredAction: "read",
@@ -133,7 +138,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "ctrl+shift+e",
     description: "Crear empleado",
-    action: (navigate) => navigate("/practitioners/create"),
+    action: (navigate) => { void navigate("/practitioners/create"); },
     title: "Gestión de Empleados",
     category: "practitioners",
     requiredAction: "create",
@@ -144,7 +149,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "ctrl+u",
     description: "Listar usuarios",
-    action: (navigate) => navigate("/users/list"),
+    action: (navigate) => { void navigate("/users/list"); },
     title: "Gestión de Usuarios",
     category: "users",
     requiredAction: "read",
@@ -153,7 +158,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "ctrl+shift+u",
     description: "Crear usuario",
-    action: (navigate) => navigate("/users/create"),
+    action: (navigate) => { void navigate("/users/create"); },
     title: "Gestión de Usuarios",
     category: "users",
     requiredAction: "create",
@@ -164,7 +169,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "ctrl+t",
     description: "Listar Turnos",
-    action: (navigate) => navigate("/shifts/list"),
+    action: (navigate) => { void navigate("/shifts/list"); },
     title: "Gestión de Turnos",
     category: "shifts",
     requiredAction: "read",
@@ -173,7 +178,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "alt+t",
     description: "Iniciar Turno",
-    action: (navigate) => navigate("/cashier/open-session"),
+    action: (navigate) => { void navigate("/cashier/open-session"); },
     title: "Gestión de Turnos",
     category: "shifts",
     requiredAction: "create",
@@ -184,7 +189,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "ctrl+a",
     description: "Listar ubicaciones",
-    action: (navigate) => navigate("/locations/list"),
+    action: (navigate) => { void navigate("/locations/list"); },
     title: "Gestión de Ubicaciones",
     category: "locations",
     requiredAction: "read",
@@ -193,7 +198,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "ctrl+shift+a",
     description: "Crear ubicación",
-    action: (navigate) => navigate("/locations/create"),
+    action: (navigate) => { void navigate("/locations/create"); },
     title: "Gestión de Ubicaciones",
     category: "locations",
     requiredAction: "create",
@@ -204,7 +209,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "ctrl+o",
     description: "Listar organizaciones",
-    action: (navigate) => navigate("/organizations/list"),
+    action: (navigate) => { void navigate("/organizations/list"); },
     title: "Gestión de Organizaciones",
     category: "organizations",
     requiredAction: "read",
@@ -213,7 +218,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "ctrl+shift+o",
     description: "Crear organización",
-    action: (navigate) => navigate("/organizations/create"),
+    action: (navigate) => { void navigate("/organizations/create"); },
     title: "Gestión de Organizaciones",
     category: "organizations",
     requiredAction: "create",
@@ -224,7 +229,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "ctrl+r",
     description: "Control de reportes",
-    action: (navigate) => navigate("/reports/list"),
+    action: (navigate) => { void navigate("/reports/list"); },
     title: "Gestión de Reportes",
     category: "reports",
     requiredAction: "read",
@@ -233,7 +238,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "ctrl+shift+r",
     description: "Generar reporte",
-    action: (navigate) => navigate("/reports/create"),
+    action: (navigate) => { void navigate("/reports/create"); },
     title: "Gestión de Reportes",
     category: "reports",
     requiredAction: "create",
@@ -242,7 +247,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "ctrl+r+h",
     description: "Historial de reportes",
-    action: (navigate) => navigate("/reports/history"),
+    action: (navigate) => { void navigate("/reports/history"); },
     title: "Gestión de Reportes",
     category: "reports",
     requiredAction: "read",
@@ -253,7 +258,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "ctrl+b",
     description: "Listar series",
-    action: (navigate) => navigate("/series/list"),
+    action: (navigate) => { void navigate("/series/list"); },
     title: "Gestión de Series",
     category: "series",
     requiredAction: "read",
@@ -262,7 +267,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "ctrl+shift+b",
     description: "Crear serie",
-    action: (navigate) => navigate("/series/create"),
+    action: (navigate) => { void navigate("/series/create"); },
     title: "Gestión de Series",
     category: "series",
     requiredAction: "create",
@@ -273,7 +278,7 @@ export const appShortcuts: ShortcutConfig[] = [
   {
     keys: "ctrl+l",
     description: "Control de eventos/logs",
-    action: (navigate) => navigate("/events/list"),
+    action: (navigate) => { void navigate("/events/list"); },
     title: "Gestión de Eventos/Logs",
     category: "events",
     requiredAction: "read",
@@ -282,14 +287,14 @@ export const appShortcuts: ShortcutConfig[] = [
 ];
 
 // Función para filtrar shortcuts según abilities
-export const filterShortcutsByAbility = (shortcuts: ShortcutConfig[], ability: any): ShortcutConfig[] => {
+export const filterShortcutsByAbility = (shortcuts: ShortcutConfig[], ability: ShortcutAbility): ShortcutConfig[] => {
   return shortcuts.filter(shortcut => 
     ability.can(shortcut.requiredAction, shortcut.requiredSubject)
   );
 };
 
 // Función para crear secciones filtradas
-export const getFilteredShortcutSections = (ability: any): ShortcutSection[] => {
+export const getFilteredShortcutSections = (ability: ShortcutAbility): ShortcutSection[] => {
   const filteredShortcuts = filterShortcutsByAbility(appShortcuts, ability);
   
   const sectionsMap = new Map<string, ShortcutSection>();

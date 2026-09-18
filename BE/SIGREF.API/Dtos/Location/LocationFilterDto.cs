@@ -3,27 +3,24 @@ using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using SIGREF.Common.Dtos;
 
-namespace SIGREF.API.Dtos.Location
+namespace SIGREF.API.Dtos.Location;
+
+public class LocationFilterDto : PagedFilterBase
 {
-    public class LocationFilterDto : PagedFilterBase
-    {
-        public string? Name { get; set; }
-        /// <summary>
-        /// Estado de la ubicación (active, suspended, inactive).
-        /// </summary>
-        public LocationFilterStatus? Status { get; set; }
-    }
+    public string? Name { get; set; }
 
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public enum LocationFilterStatus
-    {
-        [EnumMember(Value = "active")]
-        Active,
+    /// <summary>
+    ///     Estado de la ubicación (active, suspended, inactive).
+    /// </summary>
+    public LocationFilterStatus? Status { get; set; }
+}
 
-        [EnumMember(Value = "suspended")]
-        Suspended,
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum LocationFilterStatus
+{
+    [EnumMember(Value = "active")] Active,
 
-        [EnumMember(Value = "inactive")]
-        Inactive
-    }
+    [EnumMember(Value = "suspended")] Suspended,
+
+    [EnumMember(Value = "inactive")] Inactive
 }

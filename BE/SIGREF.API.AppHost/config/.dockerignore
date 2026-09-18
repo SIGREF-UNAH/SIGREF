@@ -1,0 +1,21 @@
+# ============================================================================
+# CAMBIOS APLICADOS (Codex, 2026-09-17)
+# Contexto exclusivo para Keycloak: solo se envian el realm y los temas usados
+# por Keycloak.Dockerfile. Las credenciales llegan por variables en runtime.
+# ============================================================================
+
+# Configuracion de otros contenedores que Keycloak no necesita.
+hapi.application.yaml
+init-db.sql
+
+# Secretos, metadatos y archivos locales.
+.env
+.env.*
+*.pem
+*.key
+*.pfx
+*.p12
+.git/
+.DS_Store
+*.log
+*.md

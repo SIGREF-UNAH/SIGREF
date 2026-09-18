@@ -2,12 +2,28 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMessage } from "../../../shared/hooks";
-import type { UpdateHospitalPropertiesDto } from "../../../api/models";
+import type { UpdateHospitalPropertiesDto } from "@models/hospital-properties/updateHospitalPropertiesDto";
 import {
   getGetHospitalPropertiesDetailsQueryKey,
   useGetHospitalPropertiesDetails,
   useUpdateHospitalProperties,
-} from "../../../api/hospital-properties/hospital-properties";
+} from "@endpoints/hospital-properties/hospital-properties";
+
+function getErrorMessage(error: unknown): string {
+  if (typeof error !== "object" || error === null) {
+    return "Error al actualizar la información del hospital";
+  }
+
+  const response = (error as {
+    response?: { data?: { detail?: unknown; title?: unknown } };
+  }).response;
+  const detail = response?.data?.detail;
+  const title = response?.data?.title;
+
+  if (typeof detail === "string") return detail;
+  if (typeof title === "string") return title;
+  return "Error al actualizar la información del hospital";
+}
 
 export default function useUpdateHospital() {
   const navigate = useNavigate();
@@ -26,21 +42,16 @@ export default function useUpdateHospital() {
     mutation: {
       onSuccess: () => {
         // Invalidar la query de detalles para que se recargue
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: getGetHospitalPropertiesDetailsQueryKey(),
         });
         
         msg.success("Información del hospital actualizada exitosamente");
-        navigate("/hospital/details");
+        void navigate("/hospital/details");
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         // Extraer mensaje según ProblemDetails (RFC 7807)
-        const errorMessage =
-          error?.response?.data?.detail ||
-          error?.response?.data?.title ||
-          "Error al actualizar la información del hospital";
-
-        msg.error(errorMessage);
+        msg.error(getErrorMessage(error));
       },
     },
   });
@@ -49,7 +60,7 @@ export default function useUpdateHospital() {
   useEffect(() => {
     if (isError || (!isLoading && !hospital)) {
       msg.warning("No hay información del hospital para actualizar");
-      navigate("/hospital/details");
+      void navigate("/hospital/details");
     }
   }, [isError, isLoading, hospital, navigate, msg]);
 
@@ -60,7 +71,7 @@ export default function useUpdateHospital() {
 
   // Manejar cancelación
   const handleCancel = () => {
-    navigate("/hospital/details");
+    void navigate("/hospital/details");
   };
 
   return {

@@ -24,7 +24,7 @@ namespace SIGREF.API.Controllers.Auth;
 [Authorize(AuthenticationSchemes = "Bearer")]
 [Produces(MediaTypeNames.Application.Json)]
 [Consumes(MediaTypeNames.Application.Json)]
-[Tags("Usuarios - Gestión en Keycloak")]
+[Tags("Users")]
 public class UsersController : ControllerBase
 {
     private readonly IKeycloakAdminService _kcAdmin;
@@ -52,7 +52,7 @@ public class UsersController : ControllerBase
     [EndpointName("CreateUser")]
     [EndpointSummary("Crear un nuevo usuario en Keycloak")]
     [EndpointDescription("Crea un nuevo usuario en Keycloak vinculado a un Practitioner FHIR. Valida permisos del creador, existencia del Practitioner en FHIR y que dicho Practitioner no esté ya vinculado a otro usuario.")]
-    [Tags("HÍBRIDO - Usuarios Keycloak / Practitioner FHIR")]
+    [Tags("Users", "FHIR")]
     [ProducesResponseType(typeof(KeycloakUserDto),  StatusCodes.Status201Created)]
     public async Task<IActionResult> CreateUser(
         [FromBody] UserCreateDto dto,
@@ -86,7 +86,7 @@ public class UsersController : ControllerBase
     [EndpointName("GetUserById")]
     [EndpointSummary("Obtener usuario por ID")]
     [EndpointDescription("Obtiene un usuario específico utilizando su UUID de Keycloak.")]
-    [Tags("HÍBRIDO - Usuarios Keycloak / Practitioner FHIR")]
+    [Tags("Users", "FHIR")]
     [ProducesResponseType(typeof(KeycloakUserDto),  StatusCodes.Status200OK)]
     public async Task<ActionResult<KeycloakUserDto>> GetUserById(
         string id,
@@ -114,7 +114,7 @@ public class UsersController : ControllerBase
     [EndpointName("GetUserListByIds")]
     [EndpointSummary("Obtener múltiples usuarios por sus IDs")]
     [EndpointDescription("Obtiene en una sola petición varios usuarios a partir de una lista de IDs. Usa la sintaxis nativa id:uuid1 uuid2 … de Keycloak 26.3+. Los IDs no encontrados son ignorados silenciosamente.")]
-    [Tags("HÍBRIDO - Usuarios Keycloak / Practitioner FHIR")]
+    [Tags("Users", "FHIR")]
     [ProducesResponseType(typeof(List<KeycloakUserDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<KeycloakUserDto>>> GetUsersByIds(
         [FromQuery, Required] List<string> ids,
@@ -138,7 +138,7 @@ public class UsersController : ControllerBase
     [EndpointName("GetUserByPractitionerId")]
     [EndpointSummary("Obtener usuario por Practitioner ID")]
     [EndpointDescription("Busca el usuario de Keycloak que se encuentra vinculado a un Practitioner FHIR específico.")]
-    [Tags("HÍBRIDO - Usuarios Keycloak / Practitioner FHIR")]
+    [Tags("Users", "FHIR")]
     [ProducesResponseType(typeof(KeycloakUserDto),  StatusCodes.Status200OK)]
 
     public async Task<ActionResult<KeycloakUserDto>> GetUserByPractitionerId(
@@ -163,7 +163,7 @@ public class UsersController : ControllerBase
     [EndpointName("GetUserPractitionerHasUser")]
     [EndpointSummary("Verificar vinculación de un Practitioner")]
     [EndpointDescription("Verifica si un Practitioner FHIR ya está vinculado a algún usuario existente en Keycloak.")]
-    [Tags("HÍBRIDO - Usuarios Keycloak / Practitioner FHIR")]
+    [Tags("Users", "FHIR")]
     [ProducesResponseType(typeof(bool),           StatusCodes.Status200OK)]
     public async Task<ActionResult<bool>> PractitionerHasUser(
         string practitionerId,
@@ -192,7 +192,7 @@ public class UsersController : ControllerBase
     [EndpointName("GetUserVerifyUsernames")]
     [EndpointSummary("Verificar disponibilidad de Username")]
     [EndpointDescription("Verifica si un username ya está en uso y retorna usernames similares. La búsqueda interna de Keycloak es amplia (nombre, email, username). La propiedad ExistName indica únicamente coincidencia exacta.")]
-    [Tags("HÍBRIDO - Usuarios Keycloak / Practitioner FHIR")]
+    [Tags("Users", "FHIR")]
     [ProducesResponseType(typeof(KeycloakUsernameDto), StatusCodes.Status200OK)]
     public async Task<ActionResult<KeycloakUsernameDto>> ExistUsername(
         [FromQuery, Required] string username,
@@ -221,7 +221,7 @@ public class UsersController : ControllerBase
     [EndpointName("GetUserList")]
     [EndpointSummary("Obtener usuarios paginados")]
     [EndpointDescription("Obtiene una lista paginada de usuarios con filtro opcional por username o término de búsqueda.")]
-    [Tags("HÍBRIDO - Usuarios Keycloak / Practitioner FHIR")]
+    [Tags("Users", "FHIR")]
     [ProducesResponseType(typeof(PagedResultDto<KeycloakUserDto>), StatusCodes.Status200OK)]
 
     public async Task<ActionResult<PagedResultDto<KeycloakUserDto>>> GetUsersList(
@@ -250,7 +250,7 @@ public class UsersController : ControllerBase
     [EndpointName("UpdateUserToggleStatus")]
     [EndpointSummary("Activar o desactivar usuario")]
     [EndpointDescription("Alterna el estado activo/inactivo de un usuario. Un usuario no puede cambiar su propio estado. Requiere rol 'ti' o 'admin'.")]
-    [Tags("HÍBRIDO - Usuarios Keycloak / Practitioner FHIR")]
+    [Tags("Users", "FHIR")]
     [ProducesResponseType(typeof(bool),           StatusCodes.Status200OK)]
     public async Task<ActionResult<bool>> ToggleUserStatus(
         string id,

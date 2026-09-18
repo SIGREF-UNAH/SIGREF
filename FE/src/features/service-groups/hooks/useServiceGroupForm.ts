@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { useGetHealtcareList } from "../../../api/healthcares/healthcares";
-import { useGetLocationList } from "../../../api/locations/locations";
+import { useGetHealtcareList } from "@endpoints/healthcare-services/healthcare-services";
+import { useGetLocationList } from "@endpoints/locations/locations";
 
 export function useServiceGroupForm() {
   const navigate = useNavigate();

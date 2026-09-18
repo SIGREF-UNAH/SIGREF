@@ -19,7 +19,7 @@ public static class LocationExtensions
             Status = location.Status?.ToString() ?? "active",
             Mode = location.Mode?.ToString() ?? "instance",
             Type = location.Type.ToString(),
-            LastUpdated = location.Meta?.LastUpdated?.DateTime,
+            LastUpdated = location.Meta?.LastUpdated?.UtcDateTime,
             Address = location.Address?.ToDto(),
             Telecom = location.Telecom?.Select(t => t.ToDto()).ToList() ?? new List<ContactPointDto>(),
             PartOf = location.PartOf?.ToReferenceDto(),
@@ -46,7 +46,7 @@ public static class LocationExtensions
             ManagingOrganization = createDto.ManagingOrganization?.ToFhirReference(),
             Meta = new Meta
             {
-                LastUpdated = DateTimeOffset.Now,
+                LastUpdated = DateTime.UtcNow,
                 VersionId = "1"
             }
         };
@@ -55,54 +55,41 @@ public static class LocationExtensions
     // Extension method para aplicar UpdateLocationDto a FHIR Location existente
     public static Location ApplyUpdate(this Location existingLocation, UpdateLocationDto updateDto)
     {
-        if (!string.IsNullOrEmpty(updateDto.Name))
+        if (updateDto.WasSpecified(nameof(updateDto.Name)))
             existingLocation.Name = updateDto.Name;
 
-        if (updateDto.Description != null)
+        if (updateDto.WasSpecified(nameof(updateDto.Description)))
             existingLocation.Description = updateDto.Description;
 
-        if (updateDto.Status != null)
+        if (updateDto.WasSpecified(nameof(updateDto.Status)) && updateDto.Status.HasValue)
             existingLocation.Status = updateDto.Status.Value.ToFhir();
 
-        existingLocation.Mode = updateDto.Mode;
+        if (updateDto.WasSpecified(nameof(updateDto.Mode)) && updateDto.Mode.HasValue)
+            existingLocation.Mode = updateDto.Mode.Value;
 
-        if (updateDto.Alias != null)
-        {
-            existingLocation.Alias = updateDto.Alias?.ToList();
-        }
+        if (updateDto.WasSpecified(nameof(updateDto.Alias)))
+            existingLocation.Alias = updateDto.Alias?.ToList() ?? [];
 
-        if (updateDto.Type != null)
+        if (updateDto.WasSpecified(nameof(updateDto.Type)))
             existingLocation.Type = CreateCodeableConceptList(updateDto.Type);
 
-        if (updateDto.Address != null)
-            existingLocation.Address = updateDto.Address.ToFhirAddress();
+        if (updateDto.WasSpecified(nameof(updateDto.Address)))
+            existingLocation.Address = updateDto.Address?.ToFhirAddress();
 
-        if (updateDto.Telecom != null)
-            existingLocation.Telecom = updateDto.Telecom.Select(t => t.ToFhirContactPoint()).ToList();
+        if (updateDto.WasSpecified(nameof(updateDto.Telecom)))
+            existingLocation.Telecom = updateDto.Telecom?.Select(t => t.ToFhirContactPoint()).ToList() ?? [];
 
-        if (updateDto.PartOf != null)
-        {
-            existingLocation.PartOf = updateDto.PartOf.ToFhirReference();
-        }
-        else if (updateDto.PartOf == null && updateDto.GetType().GetProperty(nameof(updateDto.PartOf))?.GetValue(updateDto) != null)
-        {
-            existingLocation.PartOf = null;
-        }
+        if (updateDto.WasSpecified(nameof(updateDto.PartOf)))
+            existingLocation.PartOf = updateDto.PartOf?.ToFhirReference();
 
-        if (updateDto.ManagingOrganization != null)
-        {
-            existingLocation.ManagingOrganization = updateDto.ManagingOrganization.ToFhirReference();
-        }
-        else if (updateDto.ManagingOrganization == null && updateDto.GetType().GetProperty(nameof(updateDto.ManagingOrganization))?.GetValue(updateDto) != null)
-        {
-            existingLocation.ManagingOrganization = null;
-        }
+        if (updateDto.WasSpecified(nameof(updateDto.ManagingOrganization)))
+            existingLocation.ManagingOrganization = updateDto.ManagingOrganization?.ToFhirReference();
 
         // Actualizar metadatos
         if (existingLocation.Meta == null)
             existingLocation.Meta = new Meta();
 
-        existingLocation.Meta.LastUpdated = DateTimeOffset.Now;
+        existingLocation.Meta.LastUpdated = DateTime.UtcNow;
 
 
         // Incrementar versión

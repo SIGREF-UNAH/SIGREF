@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Form } from "antd";
-import type { Dayjs } from "dayjs";
 import type { EventHistoryFormValues, EventHistoryFilters } from "../types";
 import { DEFAULT_FILTERS } from "../constants";
 

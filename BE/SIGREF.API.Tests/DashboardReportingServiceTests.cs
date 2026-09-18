@@ -17,8 +17,8 @@ public sealed class DashboardReportingServiceTests
 
         var filter = new DashboardFilterDto
         {
-            StartDate = new DateTimeOffset(2026, 8, 10, 0, 0, 0, TimeSpan.Zero),
-            EndDate = new DateTimeOffset(2026, 8, 16, 23, 59, 59, TimeSpan.Zero)
+            StartDate = new DateTime(2026, 8, 10),
+            EndDate = new DateTime(2026, 8, 16, 23, 59, 59)
         };
 
         var result = method!.Invoke(
@@ -26,12 +26,12 @@ public sealed class DashboardReportingServiceTests
             new object[] { filter });
 
         Assert.NotNull(result);
-        var start = (DateTimeOffset)result!.GetType().GetField("Item1")!.GetValue(result)!;
-        var endExclusive = (DateTimeOffset)result.GetType().GetField("Item2")!.GetValue(result)!;
+        var start = (DateTime)result!.GetType().GetField("Item1")!.GetValue(result)!;
+        var endExclusive = (DateTime)result.GetType().GetField("Item2")!.GetValue(result)!;
 
-        Assert.Equal(TimeSpan.Zero, start.Offset);
-        Assert.Equal(TimeSpan.Zero, endExclusive.Offset);
-        Assert.Equal(new DateTimeOffset(2026, 8, 10, 6, 0, 0, TimeSpan.Zero), start);
-        Assert.Equal(new DateTimeOffset(2026, 8, 17, 6, 0, 0, TimeSpan.Zero), endExclusive);
+        Assert.Equal(DateTimeKind.Utc, start.Kind);
+        Assert.Equal(DateTimeKind.Utc, endExclusive.Kind);
+        Assert.Equal(new DateTime(2026, 8, 10, 6, 0, 0, DateTimeKind.Utc), start);
+        Assert.Equal(new DateTime(2026, 8, 17, 6, 0, 0, DateTimeKind.Utc), endExclusive);
     }
 }

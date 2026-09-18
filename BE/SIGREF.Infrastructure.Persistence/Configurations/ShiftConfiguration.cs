@@ -52,7 +52,7 @@ public class ShiftConfiguration : BaseEntityConfiguration<ShiftEntity>
 
         builder.Property(x => x.CorrectionClosure)
             .HasColumnName("correction_closure");
-        
+
         // ============================
         //          ÍNDICES
         // ============================
@@ -65,6 +65,5 @@ public class ShiftConfiguration : BaseEntityConfiguration<ShiftEntity>
 
         builder.HasIndex(x => new { x.Name, x.LocationId })
             .HasDatabaseName("idx_shifts_name_location");
-        
     }
 }

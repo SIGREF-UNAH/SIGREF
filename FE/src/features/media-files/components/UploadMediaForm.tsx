@@ -19,7 +19,7 @@ import {
   MedicineBoxOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
-import { MediaFileType } from "../../../api/models";
+import { MediaFileType } from "@types/media-files";
 import type { UseMutationResult } from "@tanstack/react-query";
 
 const { TextArea } = Input;

@@ -1,10 +1,10 @@
 import {
   useCreatePatient,
   getGetPatientListQueryKey,
-} from "../../../api/patients/patients";
+} from "@endpoints/patients/patients";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { CreatePatientDto } from "../../../api/models";
+import type { CreatePatientDto } from "@models";
 import { useNavigate } from "react-router";
 import { PatientExtensionsUrls } from "../../../shared/constants";
 import { useMessage } from "../../../shared/hooks";

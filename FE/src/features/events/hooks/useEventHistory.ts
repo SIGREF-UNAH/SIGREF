@@ -1,12 +1,10 @@
 // useEventHistory.ts
 import { useState, useCallback } from "react";
-import type { DatabaseAction } from "../../../api/models/databaseAction";
 import { Form } from "antd";
 import type { Dayjs } from "dayjs";
-import type { AuditLog } from "../../../api/models/auditLog";
-import type { AuditLogPagedResultDto } from "../../../api/models/auditLogPagedResultDto";
-import { useGetAuditLogs } from "../../../api/audit/audit";
-import type { GetAuditLogsParams } from "../../../api/models/getAuditLogsParams";
+import type { AuditLog, PagedResultDtoOfAuditLog as AuditLogPagedResultDto } from "@models/audit";
+import { useGetAuditLogs } from "@endpoints/audit/audit";
+import type { GetAuditLogsParams } from "@models/audit";
 
 interface FormValues {
   userName?: string;
@@ -51,8 +49,7 @@ export const useEventHistory = (initialFilters?: Partial<GetAuditLogsParams>) =>
 
     if (formValues.userName?.trim()) params.UserName = formValues.userName.trim();
     if (formValues.userId?.trim()) params.UserId = formValues.userId.trim();
-    // Action debe ser del tipo DatabaseAction, no string
-    if (formValues.action) params.Action = formValues.action as DatabaseAction;
+    if (formValues.action) params.Action = formValues.action;
     if (formValues.httpMethod) params.HttpMethod = formValues.httpMethod;
     if (formValues.resourceType?.trim()) params.ResourceType = formValues.resourceType.trim();
     if (formValues.traceId?.trim()) params.TraceId = formValues.traceId.trim();

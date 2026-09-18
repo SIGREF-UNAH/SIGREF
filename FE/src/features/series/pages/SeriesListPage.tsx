@@ -23,7 +23,7 @@ import {
   BarChartOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import type { SerieDto, UpdateSeriesDto } from "../../../api/models";
+import type { SerieDto, UpdateSeriesDto } from "@models";
 import { useSeriesList } from "../hooks/useSeriesList";
 import { useToggleSerieActive } from "../hooks/useToggleSerieActive";
 import { useState } from "react";

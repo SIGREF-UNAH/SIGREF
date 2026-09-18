@@ -15,8 +15,8 @@ public class CashierSessionEntity : BaseEntity
     // ======================================
     //        DATOS PRINCIPALES
     // ======================================
-    public DateTimeOffset OpenAt { get; set; } =  DateTimeOffset.UtcNow;
-    public DateTimeOffset? ClosedAt { get; set; }
+    public DateTime OpenAt { get; set; } = DateTime.UtcNow;
+    public DateTime? ClosedAt { get; set; }
 
 
     // ======================================
@@ -31,7 +31,7 @@ public class CashierSessionEntity : BaseEntity
     // ======================================
     public bool IsOpen { get; set; } = true;
     public bool RequiresCorrection { get; set; }
-    public DateTimeOffset? CorrectionDate { get; set; }
+    public DateTime? CorrectionDate { get; set; }
     // ======================================
     //               NOTAS
     // ======================================

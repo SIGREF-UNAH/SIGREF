@@ -16,27 +16,33 @@ public static class InvoiceQueryExtensions
         return field switch
         {
             InvoiceSortField.Number =>
-                desc ? query.OrderByDescending(i => i.Number)
+                desc
+                    ? query.OrderByDescending(i => i.Number)
                     : query.OrderBy(i => i.Number),
 
             InvoiceSortField.PatientDisplay =>
-                desc ? query.OrderByDescending(i => i.PatientDisplay)
+                desc
+                    ? query.OrderByDescending(i => i.PatientDisplay)
                     : query.OrderBy(i => i.PatientDisplay),
 
             InvoiceSortField.FinalTotal =>
-                desc ? query.OrderByDescending(i => i.FinalTotal)
+                desc
+                    ? query.OrderByDescending(i => i.FinalTotal)
                     : query.OrderBy(i => i.FinalTotal),
 
             InvoiceSortField.Status =>
-                desc ? query.OrderByDescending(i => i.Status)
+                desc
+                    ? query.OrderByDescending(i => i.Status)
                     : query.OrderBy(i => i.Status),
 
             InvoiceSortField.InvoiceType =>
-                desc ? query.OrderByDescending(i => i.InvoiceType)
+                desc
+                    ? query.OrderByDescending(i => i.InvoiceType)
                     : query.OrderBy(i => i.InvoiceType),
 
             _ => // DEFAULT CreatedDate
-                desc ? query.OrderByDescending(i => i.CreatedDate).ThenByDescending(i => i.Number)
+                desc
+                    ? query.OrderByDescending(i => i.CreatedDate).ThenByDescending(i => i.Number)
                     : query.OrderBy(i => i.CreatedDate).ThenBy(i => i.Number)
         };
     }

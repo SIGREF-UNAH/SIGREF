@@ -1,18 +1,18 @@
 #nullable enable
-using System;
 using Hl7.Fhir.Model;
 using SIGREF.Common.Dtos;
 
-namespace SIGREF.API.Dtos.Patient
+namespace SIGREF.API.Dtos.Patient;
+
+public class PatientFilterDto : PagedFilterBase
 {
-    public class PatientFilterDto : PagedFilterBase
-    {
-        public string? Name { get; set; }
-        public AdministrativeGender? Gender { get; set; }
-        public string? IdentifierType { get; set; }     
-        public string? IdentifierValue { get; set; }
-        // public string? Nationality { get; set; }        
-        public bool? Active { get; set; }
-        public DateTime? BirthDate { get; set; }        
-    }
+    public string? Name { get; set; }
+    public AdministrativeGender? Gender { get; set; }
+    public string? IdentifierType { get; set; }
+
+    public string? IdentifierValue { get; set; }
+
+    // public string? Nationality { get; set; }        
+    public bool? Active { get; set; }
+    public DateTime? BirthDate { get; set; }
 }

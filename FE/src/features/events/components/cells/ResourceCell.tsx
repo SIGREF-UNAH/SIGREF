@@ -4,8 +4,8 @@ import { ApiOutlined } from "@ant-design/icons";
 const { Text } = Typography;
 
 interface Props {
-  resourceType?: string;
-  resourceId?: string;
+  resourceType?: string | null;
+  resourceId?: string | null;
 }
 
 export const ResourceCell = ({ resourceType, resourceId }: Props) => (

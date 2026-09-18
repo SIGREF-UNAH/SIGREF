@@ -1,11 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useMessage } from "../../../shared/hooks";
-import type { CreateHospitalPropertiesDto } from "../../../api/models";
+import type { CreateHospitalPropertiesDto } from "@models/hospital-properties/createHospitalPropertiesDto";
 import {
   getGetHospitalPropertiesDetailsQueryKey,
   useCreateHospitalProperties,
-} from "../../../api/hospital-properties/hospital-properties";
+} from "@endpoints/hospital-properties/hospital-properties";
 
 export default function useCreateHospital() {
   const navigate = useNavigate();

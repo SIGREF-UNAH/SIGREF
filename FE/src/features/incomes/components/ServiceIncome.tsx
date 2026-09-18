@@ -2,7 +2,7 @@ import { ProList } from "@ant-design/pro-components";
 import { Space, Tag, Typography, Spin, Input } from "antd";
 import { SearchOutlined, MedicineBoxOutlined } from "@ant-design/icons";
 import { useState } from "react";
-import type { HealthcareDto } from "../../../api/models";
+import type { HealthcareDto } from "@models";
 
 interface ServiceIncomeProps {
   serviciosData: HealthcareDto[];

@@ -1,3 +1,11 @@
+# syntax=docker/dockerfile:1.7
+# ============================================================================
+# CAMBIOS APLICADOS (Codex, 2026-09-17)
+# - Contexto reducido mediante config/.dockerignore para no enviar archivos ajenos.
+# - Ejecucion explicita como usuario no root y permisos de los artefactos ajustados.
+# - Puertos HTTP y de administracion documentados; credenciales solo en runtime.
+# ============================================================================
+#
 # ============================================================================
 # MÓDULO: Infraestructura de Autenticación (Keycloak)
 # PROYECTO: SIGREF
@@ -38,10 +46,14 @@ RUN /opt/keycloak/bin/kc.sh build
 # ----------------------------------------------------------------------------
 # 2. ETAPA FINAL (Runtime)
 # ----------------------------------------------------------------------------
-FROM quay.io/keycloak/keycloak:${KEYCLOAK_VERSION}
+FROM quay.io/keycloak/keycloak:${KEYCLOAK_VERSION} AS final
 
-# Copiamos solo el resultado de la optimización desde la etapa anterior.
-COPY --from=builder /opt/keycloak/ /opt/keycloak/
+# Keycloak escucha internamente en HTTP y expone administracion solo en la red Docker.
+EXPOSE 8080
+EXPOSE 9000
+
+# Copiamos solo el resultado optimizado y lo asignamos al usuario no privilegiado.
+COPY --chown=1000:0 --from=builder /opt/keycloak/ /opt/keycloak/
 
 # ----------------------------------------------------------------------------
 # IMPORTACIÓN DEL REALM PERSONALIZADO (SIGREF)
@@ -51,12 +63,14 @@ COPY --from=builder /opt/keycloak/ /opt/keycloak/
 # no existe aún en la base de datos. Es una operación idempotente y segura:
 # si el realm ya existe (reinicios normales), no lo sobreescribe ni lo duplica.
 # ----------------------------------------------------------------------------
-COPY ./realm-full-export.json /opt/keycloak/data/import/sigref-realm.json
+COPY --chown=1000:0 ./realm-full-export.json /opt/keycloak/data/import/sigref-realm.json
 
 # NOTA: KC_IMPORT como variable de entorno está deprecada desde Keycloak 20+.
 # El mecanismo correcto es --import-realm en el CMD, que ya está abajo.
 # No se define KC_IMPORT aquí intencionalmente.
 
+# La imagen oficial reserva UID 1000 para Keycloak; no se ejecuta como root.
+USER 1000
 ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
 
 # COMANDO DE INICIO OPTIMIZADO:

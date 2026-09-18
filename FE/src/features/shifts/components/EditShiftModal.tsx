@@ -11,8 +11,8 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import React from "react";
-import type { LocationDto, ShiftDto } from "../../../api/models";
-import { getGetShiftListQueryKey, useUpdateShiftById } from "../../../api/shifts/shifts";
+import type { LocationDto, ShiftDto } from "@models";
+import { getGetShiftListQueryKey, useUpdateShiftById } from "@endpoints/shifts/shifts";
 
 interface EditShiftModalProps {
   open: boolean;

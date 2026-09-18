@@ -3,9 +3,9 @@ import {
   useDeletePatientById,
   useGetPatientList,
   useGetPatientById,
-} from "../../../api/patients/patients";
+} from "@endpoints/patients/patients";
 import type { TablePaginationConfig } from "antd";
-import type { PatientDto } from "../../../api/models";
+import type { PatientDto } from "@models";
 import { useMemo, useState } from "react";
 import { useMessage, useUrlFilters } from "../../../shared/hooks";
 import { PatientExtensionsUrls } from "../../../shared/constants";

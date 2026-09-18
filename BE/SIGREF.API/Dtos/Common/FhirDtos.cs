@@ -13,7 +13,6 @@ namespace SIGREF.API.Dtos.Common
 
     public class IdentifierDto
     {
-        [JsonConverter(typeof(JsonStringEnumConverter))]
         public Identifier.IdentifierUse? Use { get; set; }
         public CodeableConceptDto? Type { get; set; } //"DNI", "Pasaporte", etc.
         public string? System { get; set; } // URI del sistema emisor
@@ -40,7 +39,6 @@ namespace SIGREF.API.Dtos.Common
 
     public class HumanNameDto
     {
-        [JsonConverter(typeof(JsonStringEnumConverter))]
         public HumanName.NameUse? Use { get; set; } // "official", "maiden", etc.
         public string? Text { get; set; } // Nombre completo para mostrar
         public string? Family { get; set; } // Apellido
@@ -79,10 +77,8 @@ namespace SIGREF.API.Dtos.Common
 
     public class AddressDto // Para direcciones
     {
-        [JsonConverter(typeof(JsonStringEnumConverter))]
         public Address.AddressUse? Use { get; set; }
 
-        [JsonConverter(typeof(JsonStringEnumConverter))]
         public Address.AddressType? Type { get; set; }
         public string? Text { get; set; }
         public List<string> Line { get; set; } = new();
@@ -105,10 +101,8 @@ namespace SIGREF.API.Dtos.Common
 
     public class ContactPointDto // Para puntos de contacto como teléfono, email, etc.
     {
-        [JsonConverter(typeof(JsonStringEnumConverter))]
         public ContactPoint.ContactPointSystem? System { get; set; } // phone, email, fax, etc.
         public string? Value { get; set; }
-        [JsonConverter(typeof(JsonStringEnumConverter))]
         public ContactPoint.ContactPointUse? Use { get; set; } // home, work, mobile, etc.
         [Range(1, int.MaxValue, ErrorMessage = "Rank debe ser un número entero mayor o igual a 1.")]
         public int? Rank { get; set; }

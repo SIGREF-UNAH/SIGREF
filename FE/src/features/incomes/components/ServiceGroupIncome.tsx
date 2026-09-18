@@ -2,7 +2,7 @@ import { ProList } from "@ant-design/pro-components";
 import { Space, Tag, Typography, Spin, Input, Badge } from "antd";
 import { SearchOutlined, AppstoreOutlined } from "@ant-design/icons";
 import { useState } from "react";
-import type { ServiceGroupDto } from "../../../api/models";
+import type { ServiceGroupDto } from "@models";
 
 interface ServiceGroupIncomeProps {
   serviceGroupsData: ServiceGroupDto[];

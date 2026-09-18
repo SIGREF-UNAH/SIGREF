@@ -87,13 +87,13 @@ public class MediaFileService : IMediaFileService
             _context.MediaFiles.Add(entity);
             await _context.SaveChangesAsync(); // genera ID
 
-            var timestamp = DateTimeOffset.UtcNow.ToString("yyyyMMddHHmmss");
+            var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
             var finalFileName = $"{entity.Id}{timestamp}{dto.Type}{ext}";
 
             var basePath = Path.Combine(_env.ContentRootPath, "media", systemFolder);
             if (!Directory.Exists(basePath))
                 Directory.CreateDirectory(basePath);
-            
+
             // Aseguramos que solo se tome el nombre del archivo, previniendo Path Traversal
             var safeFinalFileName = Path.GetFileName(finalFileName);
             var finalPhysicalPath = Path.Combine(basePath, safeFinalFileName);
@@ -237,7 +237,7 @@ public class MediaFileService : IMediaFileService
 
             if (hospital != null)
             {
-                bool changed = false;
+                var changed = false;
 
                 if (hospital.LogoMediaId == id)
                 {
@@ -346,7 +346,7 @@ public class MediaFileService : IMediaFileService
                 throw new NotFoundException("HOSPITAL_CONFIG_NOT_FOUND");
 
             // Actualizar segun tipo
-            string publicUrl = media.RelativePath;
+            var publicUrl = media.RelativePath;
 
             if (type == MediaFileType.AppHospital)
             {

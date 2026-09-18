@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { AuditLog } from "../../../api/models/auditLog";
+import type { AuditLog } from "@models/audit/auditLog";
 
 export const useEventHistoryModal = () => {
   const [selectedRecord, setSelectedRecord] = useState<AuditLog | null>(null);

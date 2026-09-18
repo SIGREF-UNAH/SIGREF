@@ -18,7 +18,6 @@ public class ReportHistoryEntityConfiguration : BaseEntityConfiguration<ReportHi
                 t.HasComment(
                     "Historial de reportes ejecutados en SIGREF. Guarda SQL generado, tipo de reporte, usuario ejecutor, formato y snapshot del hospital.");
             });
-        
 
 
         // ===============================
@@ -31,7 +30,7 @@ public class ReportHistoryEntityConfiguration : BaseEntityConfiguration<ReportHi
             .HasColumnName("report_type");
         builder.Property(x => x.HangfireJobId)
             .HasMaxLength(100);
-        
+
         builder.Property(x => x.Status)
             .IsRequired()
             .HasConversion<string>()
@@ -60,28 +59,27 @@ public class ReportHistoryEntityConfiguration : BaseEntityConfiguration<ReportHi
         builder.Property(x => x.ErrorMessage)
             .HasColumnType("text")
             .HasColumnName("error_message");
-        
+
 
         builder.Property(x => x.FilterJson)
             .HasColumnName("filter_json")
             .HasColumnType("jsonb")
             .HasColumnName("filter")
             .HasComment("JSON Filter del reporte del hospital.");
-        
-        
+
+
         // OTRHERS
         // TODO : Verificar si es de Tipo Required
         builder.Property(e => e.RequestedByUserId)
             .HasColumnName("requested_by_user_id");
-        
+
         builder.Property(e => e.HangfireJobId)
             .HasMaxLength(50)
             .HasColumnName("hangfire_job_id");
-        
+
         builder.Property(e => e.Progress)
             .HasMaxLength(3)
             .HasColumnName("progress");
-        
 
 
         // ===============================

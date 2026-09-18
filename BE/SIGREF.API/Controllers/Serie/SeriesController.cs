@@ -1,9 +1,6 @@
-using Microsoft.AspNetCore.Routing;
-using Microsoft.AspNetCore.Http;
 using System.Net.Mime;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Series;
 using SIGREF.API.Services.Serie;
 using SIGREF.Common.Constants;
@@ -18,7 +15,7 @@ namespace SIGREF.API.Controllers.Serie;
 [Authorize(AuthenticationSchemes = "Bearer")]
 [Produces(MediaTypeNames.Application.Json)]
 [Consumes(MediaTypeNames.Application.Json)]
-[Tags("Series Facturacion - Gestión de Series")]
+[Tags("Series")]
 public class SeriesController : ControllerBase
 {
     private readonly ISerieService _serieService;
@@ -35,9 +32,9 @@ public class SeriesController : ControllerBase
     [EndpointName("CreateSerie")]
     [EndpointSummary("Crear una serie de facturación")]
     [EndpointDescription("Registra una nueva serie para la numeración de documentos de facturación.")]
-    [Tags("SIGREF - Series de facturación")]
+    [Tags("Series")]
     [Authorize(Roles = $"{RolesConstants.admin}")]
-    [ProducesResponseType(typeof(SerieDto) , StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(SerieDto), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create([FromBody] CreateSeriesDto dto)
     {
         var result = await _serieService.CreateSerieAsync(dto);
@@ -51,9 +48,9 @@ public class SeriesController : ControllerBase
     [EndpointName("UpdateSerieById")]
     [EndpointSummary("Actualizar una serie de facturación")]
     [EndpointDescription("Actualiza los datos de una serie de facturación existente.")]
-    [Tags("SIGREF - Series de facturación")]
+    [Tags("Series")]
     [Authorize(Roles = $"{RolesConstants.admin}")]
-    [ProducesResponseType(typeof(SerieDto) , StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(SerieDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateSeriesDto dto)
     {
         var result = await _serieService.UpdateSerieAsync(dto, id);
@@ -67,7 +64,7 @@ public class SeriesController : ControllerBase
     [EndpointName("GetSerieList")]
     [EndpointSummary("Listar series de facturación")]
     [EndpointDescription("Obtiene series paginadas aplicando los filtros proporcionados.")]
-    [Tags("SIGREF - Series de facturación")]
+    [Tags("Series")]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor} ")]
     [ProducesResponseType(typeof(PagedResultDto<SerieDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSeries([FromQuery] FilterSerieDto filter)
@@ -83,9 +80,9 @@ public class SeriesController : ControllerBase
     [EndpointName("GetSerieById")]
     [EndpointSummary("Obtener una serie por ID")]
     [EndpointDescription("Recupera una serie de facturación mediante su identificador.")]
-    [Tags("SIGREF - Series de facturación")]
+    [Tags("Series")]
     [Authorize(Roles = $"{RolesConstants.cashier} ,  {RolesConstants.admin} , {RolesConstants.auditor}")]
-    [ProducesResponseType(typeof(SerieDto) , StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(SerieDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById(Guid id)
     {
         var result = await _serieService.GetSerieById(id);
@@ -99,9 +96,9 @@ public class SeriesController : ControllerBase
     [EndpointName("DeleteSerieById")]
     [EndpointSummary("Desactivar una serie")]
     [EndpointDescription("Desactiva una serie mediante borrado lógico, conservando su historial.")]
-    [Tags("SIGREF - Series de facturación")]
+    [Tags("Series")]
     [Authorize(Roles = $"{RolesConstants.admin}")]
-    [ProducesResponseType(typeof(SerieDto) , StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(SerieDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> SoftDelete(Guid id)
     {
         var result = await _serieService.SoftDeleteSerieAsync(id);

@@ -25,7 +25,7 @@ namespace SIGREF.API.Controllers.Audit;
 //[Authorize(AuthenticationSchemes = "Bearer")]
 [Produces(MediaTypeNames.Application.Json)]
 [Consumes(MediaTypeNames.Application.Json)]
-[Tags("Auditoría - Consulta y recuperación de logs de auditoría del sistema")]
+[Tags("Audit")]
 public class AuditController : ControllerBase
 {
     private readonly IAuditLogService _auditLogService;
@@ -39,7 +39,7 @@ public class AuditController : ControllerBase
     [EndpointName("GetAuditLogs")]
     [EndpointSummary("Obtener logs de auditoría paginados")]
     [EndpointDescription("Recupera una lista paginada de logs de auditoría con filtros avanzados para trazabilidad FHIR")]
-    [Tags("SIGREF - Auditoría")]
+    [Tags("Audit")]
     [ProducesResponseType(typeof(PagedResultDto<AuditLog>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAuditLogs(
         [FromQuery]
@@ -64,7 +64,7 @@ public class AuditController : ControllerBase
     [EndpointName("GetAuditLogById")]
     [EndpointSummary("Obtener log de auditoría por ID")]
     [EndpointDescription("Recupera un log de auditoría específico por su identificador único de MongoDB")]
-    [Tags("SIGREF - Auditoría")]
+    [Tags("Audit")]
     [ProducesResponseType(typeof(AuditLog), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAuditLogById(
         [FromRoute, System.ComponentModel.Description("ID del log de auditoría (ObjectId MongoDB de 24 caracteres hexadecimales)")]

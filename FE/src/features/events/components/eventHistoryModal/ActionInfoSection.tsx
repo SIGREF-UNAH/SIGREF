@@ -2,7 +2,7 @@
 import { ApiOutlined } from "@ant-design/icons";
 import { ProDescriptions } from "@ant-design/pro-components";
 import { Divider, Tag } from "antd";
-import type { AuditLog } from "../../../../api/models/auditLog";
+import type { AuditLog } from "@models/audit/auditLog";
 import { ACTION_COLOR_MAP, HTTP_METHOD_COLOR_MAP, STATUS_COLOR_MAP } from "../../constants";
 
 interface Props {

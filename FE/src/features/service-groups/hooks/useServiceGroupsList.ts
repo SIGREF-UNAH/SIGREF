@@ -8,7 +8,7 @@ import {
   getGetServiceGroupListQueryKey,
   useDeleteServiceGroupById,
   useGetServiceGroupList,
-} from "../../../api/service-group/service-group";
+} from "@endpoints/service-groups/service-groups";
 
 export function useServiceGroupsList() {
   const navigate = useNavigate();

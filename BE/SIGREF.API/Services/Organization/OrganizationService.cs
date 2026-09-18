@@ -34,7 +34,7 @@ public class OrganizationService : BaseFhirService, IOrganizationService
         {
             // Transformación a Entidad FHIR y Metadatos
             var organization = dto.ToFhirResource();
-            ApplyMeta(organization, isCreate: true);
+            ApplyMeta(organization, true);
             var result = await _fhirClient.CreateAsync(organization);
 
             return result.ToDto();
@@ -83,7 +83,7 @@ public class OrganizationService : BaseFhirService, IOrganizationService
 
             // Aplicar actualizaciones y metadatos
             var updated = dto.UpdateFhirResource(existing);
-            ApplyMeta(updated, isCreate: false);
+            ApplyMeta(updated, false);
 
             // Enviar actualización al servidor FHIR
             var result = await _fhirClient.UpdateAsync(updated);
@@ -123,13 +123,11 @@ public class OrganizationService : BaseFhirService, IOrganizationService
         {
             // 1. Validación de seguridad (Fail Fast)
             if (filter.PageSize > 500)
-            {
                 throw new ValidationException(MessageCodes.ValidationError, new Dictionary<string, object>
                 {
                     { "Field", "PageSize" },
                     { "MaxAllowed", 500 }
                 });
-            }
 
             // 2. Normalizar paginación y preparar búsqueda
             var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
@@ -143,12 +141,8 @@ public class OrganizationService : BaseFhirService, IOrganizationService
                 searchParams.Add("active", filter.Active.Value.ToString().ToLowerInvariant());
 
             if (filter.Type != null && filter.Type.Any())
-            {
                 foreach (var typeValue in filter.Type.Select(t => GetEnumMemberValue(t)))
-                {
                     searchParams.Add("type", typeValue);
-                }
-            }
 
             if (!string.IsNullOrWhiteSpace(filter.PartOf))
                 searchParams.Add("partof", filter.PartOf.Trim());
@@ -180,7 +174,7 @@ public class OrganizationService : BaseFhirService, IOrganizationService
             throw FhirExceptionMapper.Map(ex, "SEARCH_FILTERED", "ORGANIZATION_LIST");
         }
     }
-    
+
     // Auxiliar para obtener el valor de EnumMember
     private static string GetEnumMemberValue(Enum enumValue)
     {

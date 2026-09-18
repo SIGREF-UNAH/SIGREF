@@ -2,9 +2,9 @@ import { List, Tag, Space } from "antd";
 import { useMessage } from "../../../shared/hooks/useMessage";
 import { useEffect, useRef, useState } from "react";
 import { PageHeaderTabs } from "../../../shared/components";
-import { useGetPractitionerList } from "../../../api/practitioner/practitioner";
+import { useGetPractitionerList } from "@endpoints/practitioners/practitioners";
 import { ROLE_OPTIONS } from "../../../shared/constants/RolesConstants";
-import { useGetLocationList } from "../../../api/locations/locations";
+import { useGetLocationList } from "@endpoints/locations/locations";
 import { USER_ROLE_OPTIONS } from "../../../shared/constants/UserRolesConstants";
 import { FaCheck } from "react-icons/fa";
 import { useAbility } from "../../../config";
@@ -16,7 +16,7 @@ import {
   ProFormSelect,
   type ProFormInstance,
 } from "@ant-design/pro-components";
-import { useGetUserList, useCreateUser } from "../../../api/users/users";
+import { useGetUserList, useCreateUser } from "@endpoints/users/users";
 
 type Practitioner = {
   id: number;

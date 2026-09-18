@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using SIGREF.API.Database;
+﻿using System.Data;
+using Microsoft.EntityFrameworkCore;
 using SIGREF.API.Dtos.Series;
 using SIGREF.Common.Constants;
 using SIGREF.Common.Dtos;
@@ -27,25 +27,21 @@ public class SerieService : ISerieService
 
         // Validación StartNumber <= EndNumber
         if (dto.StartNumber > dto.EndNumber)
-        {
             throw new ValidationException("START_NUMBER_GREATER_THAN_END_NUMBER", new Dictionary<string, object>
             {
                 { "startNumber", dto.StartNumber },
                 { "endNumber", dto.EndNumber }
             });
-        }
 
         // No permitir nombres duplicados
         var nameExists = await _context.InvoiceSeries
             .AnyAsync(x => x.Name.ToLower() == dto.Name.ToLower());
 
         if (nameExists)
-        {
             throw new ConflictException("SERIE_NAME_ALREADY_EXISTS", new Dictionary<string, object>
             {
                 { "name", dto.Name }
             });
-        }
 
         // Crear entidad
         var entity = new InvoiceSerieEntity
@@ -72,7 +68,7 @@ public class SerieService : ISerieService
             EndNumber = entity.EndNumber,
             CurrentNumber = entity.CurrentNumber,
             CreatedDate = entity.CreatedDate,
-            IsActive = entity.IsActive,
+            IsActive = entity.IsActive
         };
     }
 
@@ -85,29 +81,25 @@ public class SerieService : ISerieService
         return await strategy.ExecuteAsync(async () =>
         {
             await using var tx = await _context.Database
-                .BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
+                .BeginTransactionAsync(IsolationLevel.Serializable);
 
             var entity = await _context.InvoiceSeries
                 .FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity == null)
-            {
                 throw new NotFoundException("SERIE_NOT_FOUND", new Dictionary<string, object>
                 {
                     { "serieId", id }
                 });
-            }
 
             // Validación parcial: StartNumber <= EndNumber si ambos vienen
             if (dto.StartNumber.HasValue && dto.EndNumber.HasValue &&
                 dto.StartNumber.Value > dto.EndNumber.Value)
-            {
                 throw new ValidationException("START_NUMBER_GREATER_THAN_END_NUMBER", new Dictionary<string, object>
                 {
                     { "startNumber", dto.StartNumber.Value },
                     { "endNumber", dto.EndNumber.Value }
                 });
-            }
 
             // Validar nombre duplicado
             if (!string.IsNullOrWhiteSpace(dto.Name))
@@ -118,53 +110,45 @@ public class SerieService : ISerieService
                     .AnyAsync(x => x.Id != id && x.Name.ToLower() == nameNormalized);
 
                 if (exists)
-                {
                     throw new ConflictException("SERIE_NAME_ALREADY_EXISTS", new Dictionary<string, object>
                     {
                         { "name", dto.Name }
                     });
-                }
             }
 
             // Determinar valores efectivos
-            long newStart = dto.StartNumber ?? entity.StartNumber;
-            long newEnd = dto.EndNumber ?? entity.EndNumber;
-            bool startChanging = dto.StartNumber.HasValue && dto.StartNumber.Value != entity.StartNumber;
-            bool endChanging = dto.EndNumber.HasValue && dto.EndNumber.Value != entity.EndNumber;
+            var newStart = dto.StartNumber ?? entity.StartNumber;
+            var newEnd = dto.EndNumber ?? entity.EndNumber;
+            var startChanging = dto.StartNumber.HasValue && dto.StartNumber.Value != entity.StartNumber;
+            var endChanging = dto.EndNumber.HasValue && dto.EndNumber.Value != entity.EndNumber;
 
             // Regla: StartNumber no puede ser mayor que EndNumber (Rango Coherente)
             if (newStart > newEnd)
-            {
                 throw new ValidationException("START_NUMBER_GREATER_THAN_END_NUMBER", new Dictionary<string, object>
                 {
                     { "startNumber", newStart },
                     { "endNumber", newEnd }
                 });
-            }
 
             // Regla: No permitir modificar el inicio si la serie ya tuvo movimiento
             if (startChanging && entity.CurrentNumber != entity.StartNumber)
-            {
                 throw new BusinessRuleException("CANNOT_CHANGE_START_WHEN_SERIE_IN_USE", new Dictionary<string, object>
                 {
                     { "serieId", id },
                     { "currentNumber", entity.CurrentNumber },
                     { "startNumber", entity.StartNumber }
                 });
-            }
 
             // Regla: El nuevo número final no puede ser menor al progreso actual de la serie
-            long effectiveCurrent = startChanging ? newStart : entity.CurrentNumber;
+            var effectiveCurrent = startChanging ? newStart : entity.CurrentNumber;
 
             if (newEnd < effectiveCurrent)
-            {
                 throw new BusinessRuleException("END_NUMBER_LESS_THAN_CURRENT", new Dictionary<string, object>
                 {
                     { "serieId", id },
                     { "newEnd", newEnd },
                     { "effectiveCurrent", effectiveCurrent }
                 });
-            }
 
             // Aplicar cambios a la entidad
             if (startChanging)
@@ -173,10 +157,7 @@ public class SerieService : ISerieService
                 entity.CurrentNumber = newStart;
             }
 
-            if (endChanging)
-            {
-                entity.EndNumber = newEnd;
-            }
+            if (endChanging) entity.EndNumber = newEnd;
 
             if (!string.IsNullOrWhiteSpace(dto.Name))
                 entity.Name = dto.Name.Trim();
@@ -212,8 +193,8 @@ public class SerieService : ISerieService
     {
         var userRole = _userContextService.GetUserRoles();
 
-        int page = dto.PageNumber <= 0 ? 1 : dto.PageNumber;
-        int size = dto.PageSize <= 0 ? 10 : dto.PageSize;
+        var page = dto.PageNumber <= 0 ? 1 : dto.PageNumber;
+        var size = dto.PageSize <= 0 ? 10 : dto.PageSize;
         if (size > 50) size = 50;
 
         var query = _context.InvoiceSeries.AsQueryable().AsNoTracking();
@@ -239,8 +220,8 @@ public class SerieService : ISerieService
             query = query.Where(x => x.IsActive);
 
         // Paginación
-        int totalItems = await query.CountAsync();
-        int totalPages = (int)Math.Ceiling(totalItems / (double)size);
+        var totalItems = await query.CountAsync();
+        var totalPages = (int)Math.Ceiling(totalItems / (double)size);
 
         var dtoList = await query
             .OrderByDescending(x => x.CreatedDate)
@@ -295,12 +276,10 @@ public class SerieService : ISerieService
             .FirstOrDefaultAsync();
 
         if (dto == null)
-        {
             throw new NotFoundException("SERIE_NOT_FOUND", new Dictionary<string, object>
             {
                 { "serieId", id }
             });
-        }
 
         return dto;
     }
@@ -319,15 +298,12 @@ public class SerieService : ISerieService
                 .FirstOrDefaultAsync(x => x.Id == id);
 
             if (entity == null)
-            {
                 throw new NotFoundException("SERIE_NOT_FOUND", new Dictionary<string, object>
                 {
                     { "serieId", id }
                 });
-            }
 
             if (!entity.IsActive)
-            {
                 // Idempotente: ya estaba desactivada, devolvemos sin error
                 return new SerieDto
                 {
@@ -341,7 +317,6 @@ public class SerieService : ISerieService
                     ModifiedDate = entity.UpdatedDate,
                     IsActive = entity.IsActive
                 };
-            }
 
             entity.IsActive = false;
             entity.UpdatedById = userId;

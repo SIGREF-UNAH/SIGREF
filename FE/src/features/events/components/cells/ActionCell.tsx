@@ -1,10 +1,10 @@
 import { Tag, Tooltip } from "antd";
 
 interface Props {
-  action?: string;
-  resourceType?: string;
-  endpoint?: string;
-  httpMethod?: string;
+  action?: string | null;
+  resourceType?: string | null;
+  endpoint?: string | null;
+  httpMethod?: string | null;
   getActionColor: (action: string) => string;
 }
 

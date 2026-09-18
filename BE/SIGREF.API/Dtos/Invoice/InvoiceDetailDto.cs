@@ -48,7 +48,7 @@ public class InvoiceDetailDto
     // ============================
     // AUDITORÍA
     // ============================
-    public DateTimeOffset CreatedDate { get; set; }
+    public DateTime CreatedDate { get; set; }
     public Guid CreatedById { get; set; }
 
     // ============================
@@ -97,7 +97,7 @@ public class InvoiceChildDto
     public InvoiceType InvoiceType { get; set; }
     public InvoiceStatus Status { get; set; }
     public decimal FinalTotal { get; set; }
-    public DateTimeOffset CreatedDate { get; set; }
+    public DateTime CreatedDate { get; set; }
 
     public long Number { get; set; }
     public Guid SerieId { get; set; }

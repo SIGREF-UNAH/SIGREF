@@ -13,7 +13,7 @@ import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import useLocationForm from "../hooks/useLocationForm";
-import { LocationMode, LocationStatus } from "../../../api/models";
+import { LocationMode, NullableOfLocationStatus as LocationStatus } from "@types/locations";
 
 interface Contact {
   id: string;

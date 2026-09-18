@@ -39,7 +39,7 @@ public abstract class BaseFhirService
     protected void ApplyMeta<T>(T resource, bool isCreate = true) where T : Resource
     {
         resource.Meta ??= new Meta();
-        resource.Meta.LastUpdated = DateTimeOffset.UtcNow;
+        resource.Meta.LastUpdated = DateTime.UtcNow;
  
         if (isCreate)
             resource.Meta.VersionId = "1";
@@ -60,4 +60,3 @@ public abstract class BaseFhirService
             resource.Meta.Tag.Add(new Coding(_ns.AuditSystem, correlationId));
     }
 }
- 

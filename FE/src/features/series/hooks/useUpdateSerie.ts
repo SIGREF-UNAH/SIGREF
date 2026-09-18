@@ -3,8 +3,8 @@ import { useMessage } from "../../../shared/hooks";
 import {
   getGetSerieListQueryKey,
   useUpdateSerieById,
-} from "../../../api/series/series";
-import type { UpdateSeriesDto } from "../../../api/models";
+} from "@endpoints/series/series";
+import type { UpdateSeriesDto } from "@models";
 
 /**
  * Hook personalizado para actualizar una serie

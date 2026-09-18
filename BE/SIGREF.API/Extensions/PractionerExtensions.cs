@@ -8,6 +8,8 @@ public static class PractionerExtensions
 {
     public static PractitionerDto ToDto(this Practitioner practitioner)
     {
+        ArgumentNullException.ThrowIfNull(practitioner);
+
         return new PractitionerDto
         {
             Id = practitioner.Id,
@@ -17,11 +19,13 @@ public static class PractionerExtensions
             BirthDate = practitioner.BirthDateElement?.ToDateTime(),
             Telecom = practitioner.Telecom?.Select(t => t.ToDto()).ToList(),
             Identifier = practitioner.Identifier?.Select(i => i.ToDto()).ToList(),
-            LastUpdated = practitioner.Meta?.LastUpdated?.DateTime
+            LastUpdated = practitioner.Meta?.LastUpdated?.UtcDateTime
         };
     }
     public static Practitioner ToFhirPractitioner(this CreatePractitionerDto dto)
     {
+        ArgumentNullException.ThrowIfNull(dto);
+
         return new Practitioner
         {
             Active = dto.Active,
@@ -32,7 +36,7 @@ public static class PractionerExtensions
             Identifier = dto.Identifier?.Select(i => i.ToFhirIdentifier()).ToList() ?? [],
             Meta = new Meta
             {
-                LastUpdated = DateTimeOffset.Now,
+                LastUpdated = DateTime.UtcNow,
                 VersionId = "1"
             }
         };
@@ -40,28 +44,30 @@ public static class PractionerExtensions
 
     public static Practitioner ApplyUpdate(this Practitioner existing, UpdatePractitionerDto update)
     {
-        if (update.Active.HasValue)
+        ArgumentNullException.ThrowIfNull(existing);
+        ArgumentNullException.ThrowIfNull(update);
+
+        if (update.WasSpecified(nameof(update.Active)) && update.Active.HasValue)
             existing.Active = update.Active.Value;
 
-        if (update.Name != null)
-            existing.Name = update.Name.Select(n => n.ToFhirHumanName()).ToList();
+        if (update.WasSpecified(nameof(update.Name)))
+            existing.Name = update.Name?.Select(n => n.ToFhirHumanName()).ToList() ?? [];
 
-        if (!string.IsNullOrEmpty(update.Gender?.ToString()))
+        if (update.WasSpecified(nameof(update.Gender)) && update.Gender.HasValue)
             existing.Gender = update.Gender;
 
-        if (update.BirthDate.HasValue)
+        if (update.WasSpecified(nameof(update.BirthDate)))
             existing.BirthDateElement = update.BirthDate.ToFhirDate();
 
-        if (update.Telecom != null)
-            existing.Telecom = update.Telecom.Select(t => t.ToFhirContactPoint()).ToList();
+        if (update.WasSpecified(nameof(update.Telecom)))
+            existing.Telecom = update.Telecom?.Select(t => t.ToFhirContactPoint()).ToList() ?? [];
 
-        if (update.Identifier != null)
-            existing.Identifier = update.Identifier.Select(i => i.ToFhirIdentifier()).ToList();
+        if (update.WasSpecified(nameof(update.Identifier)))
+            existing.Identifier = update.Identifier?.Select(i => i.ToFhirIdentifier()).ToList() ?? [];
         existing.Meta ??= new Meta();
-        existing.Meta.LastUpdated = DateTimeOffset.Now;
+        existing.Meta.LastUpdated = DateTime.UtcNow;
         existing.Meta.VersionId = FhirInfrastructureExtensions.IncrementVersion(existing.Meta.VersionId);
 
         return existing;
     }
 }
-

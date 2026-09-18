@@ -1,74 +1,48 @@
+# syntax=docker/dockerfile:1.7
 # ============================================================================
-# MÓDULO: Worker de Tareas en Segundo Plano (Hangfire)
-# PROYECTO: SIGREF (.NET 9)
-# ----------------------------------------------------------------------------
-# AUTOR (GitHub): 
-#   - @TETvega (Héctor Rene Martínez Vega) -> Arquitectura y lógica de procesos
-# CO-AUTOR DE OPTIMIZACIÓN: 
-#   - Gemini 3 Flash (Google AI) -> Estrategia de compilación ReadyToRun
-# ----------------------------------------------------------------------------
-# PROPÓSITO: Servicio de alta eficiencia para procesamiento asíncrono, 
-#            optimizado para bajo consumo de recursos y seguridad Alpine.
+# CAMBIOS APLICADOS (Codex, 2026-09-17)
+# - El Worker usa la imagen .NET runtime, no ASP.NET Core, y no expone puertos.
+# - Restore cacheable con todas las referencias transitivas y ejecucion no root.
+# - Solo se instala la dependencia nativa necesaria antes de crear la imagen final.
 # ============================================================================
 
-# 1. IMAGEN DE EJECUCIÓN (Runtime)
-# Usamos 'runtime-alpine' para reducir el peso al mínimo absoluto al no 
-# requerir las librerías de servidor web (ASP.NET Core).
-# 1. IMAGEN BASE DE RUNTIME
-FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS base
+# El Worker no hospeda HTTP; runtime reduce tamano y superficie de ataque.
+FROM mcr.microsoft.com/dotnet/runtime:9.0-alpine AS base
 WORKDIR /app
-EXPOSE 8080
-# 2. SDK DE COMPILACIÓN (Alpine)
+
+# QuestPDF y autenticacion integrada pueden requerir estas bibliotecas en Alpine.
+RUN apk add --no-cache krb5-libs
+ENV DOTNET_EnableDiagnostics=0 \
+    DOTNET_RUNNING_IN_CONTAINER=true
+
 FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
+ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
-# 3. OPTIMIZACIÓN DE CACHÉ (Restore)
-# Copiamos archivos de proyecto de forma aislada para aprovechar la caché de Docker.
-# 3. RESTORE AISLADO — solo .csproj para máximo cache de capas
-COPY ["SIGREF.Hangfire.Worker/SIGREF.Hangfire.Worker.csproj",                         "SIGREF.Hangfire.Worker/"]
-COPY ["SIGREF.API.ServiceDefaults/SIGREF.API.ServiceDefaults.csproj",                 "SIGREF.API.ServiceDefaults/"]
-COPY ["SIGREF.Infrastructure.Reporting/SIGREF.Infrastructure.Reporting.csproj",       "SIGREF.Infrastructure.Reporting/"]
-COPY ["SIGREF.Infrastructure.Persistence/SIGREF.Infrastructure.Persistence.csproj",   "SIGREF.Infrastructure.Persistence/"]
-COPY ["SIGREF.Common/SIGREF.Common.csproj",                                           "SIGREF.Common/"]
-# Uso de montajes de caché para NuGet para acelerar builds repetitivos.
+# Referencias directas y transitivas para que restore sea valido y cacheable.
+COPY ["SIGREF.Hangfire.Worker/SIGREF.Hangfire.Worker.csproj", "SIGREF.Hangfire.Worker/"]
+COPY ["SIGREF.API.ServiceDefaults/SIGREF.API.ServiceDefaults.csproj", "SIGREF.API.ServiceDefaults/"]
+COPY ["SIGREF.Common/SIGREF.Common.csproj", "SIGREF.Common/"]
+COPY ["SIGREF.Core/SIGREF.Core.csproj", "SIGREF.Core/"]
+COPY ["SIGREF.Infrastructure.Keycloak/SIGREF.Infrastructure.Keycloak.csproj", "SIGREF.Infrastructure.Keycloak/"]
+COPY ["SIGREF.Infrastructure.Persistence/SIGREF.Infrastructure.Persistence.csproj", "SIGREF.Infrastructure.Persistence/"]
+COPY ["SIGREF.Infrastructure.Reporting/SIGREF.Infrastructure.Reporting.csproj", "SIGREF.Infrastructure.Reporting/"]
 
 RUN --mount=type=cache,id=nuget-worker,target=/root/.nuget/packages \
     dotnet restore "SIGREF.Hangfire.Worker/SIGREF.Hangfire.Worker.csproj"
 
-# 4. COPIAR SOLO LOS PROYECTOS NECESARIOS (no todo el repo)
-COPY SIGREF.Hangfire.Worker/            SIGREF.Hangfire.Worker/
-COPY SIGREF.API.ServiceDefaults/        SIGREF.API.ServiceDefaults/
-COPY SIGREF.Infrastructure.Reporting/  SIGREF.Infrastructure.Reporting/
-COPY SIGREF.Infrastructure.Persistence/ SIGREF.Infrastructure.Persistence/
-COPY SIGREF.Common/                     SIGREF.Common/
-
-# 4. COMPILACIÓN DEL CÓDIGO
 COPY . .
-WORKDIR "/src/SIGREF.Hangfire.Worker"
-
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
+WORKDIR /src/SIGREF.Hangfire.Worker
+RUN --mount=type=cache,id=nuget-worker,target=/root/.nuget/packages \
     dotnet publish "SIGREF.Hangfire.Worker.csproj" \
-    -c Release \
-    -o /app/publish \
-    --no-restore \
-    /p:UseAppHost=false \
-    /p:PublishReadyToRun=true
+      --configuration "$BUILD_CONFIGURATION" \
+      --output /app/publish \
+      --no-restore \
+      /p:UseAppHost=false
 
-# 6. IMAGEN FINAL (Ultra liviana)
 FROM base AS final
 WORKDIR /app
-RUN apk add --no-cache krb5-libs
-COPY --from=build /app/publish .
-
-
-# SEGURIDAD: Uso de usuario no root (definido en imágenes .NET por defecto como $APP_UID)
-# para prevenir escalamiento de privilegios en el contenedor.
+COPY --chown=$APP_UID:$APP_UID --from=build /app/publish .
 USER $APP_UID
-ENTRYPOINT ["dotnet", "SIGREF.Hangfire.Worker.dll"]
 
-# ----------------------------------------------------------------------------
-# REFERENCIAS TÉCNICAS:
-# - .NET Runtime vs ASP.NET Core: https://learn.microsoft.com/en-us/dotnet/core/docker/build-container
-# - ReadyToRun Compilation: https://learn.microsoft.com/en-us/dotnet/core/deploying/ready-to-run
-# - Alpine Security Hardening: https://wiki.alpinelinux.org/wiki/Security
-# ----------------------------------------------------------------------------
+ENTRYPOINT ["dotnet", "SIGREF.Hangfire.Worker.dll"]

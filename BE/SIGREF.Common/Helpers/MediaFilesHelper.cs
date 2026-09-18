@@ -13,10 +13,12 @@ public static class MediaHelper
 public static class MediaPathHelper
 {
     public static string GetFolder(MediaFileType type)
-        => type switch
+    {
+        return type switch
         {
             MediaFileType.AppHospital => "logo_hospital",
             MediaFileType.HealthGuilt => "health_guilt",
             _ => throw new Exception("Tipo de archivo inválido")
         };
+    }
 }

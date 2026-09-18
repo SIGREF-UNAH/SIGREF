@@ -12,30 +12,34 @@ using SIGREF.Common.Exceptions;
 using SIGREF.Infrastructure.Keycloak.Interfaces;
 using FhirLocation = Hl7.Fhir.Model.Location;
 using Task = System.Threading.Tasks.Task;
+
 namespace SIGREF.API.Services.Location;
 
 public class LocationService : BaseFhirService, ILocationService
 {
+    private const string ResourceType = "Location";
     private readonly FhirClient _fhirClient;
 
-    public LocationService(FhirService fhirService,  IUserContextService userContext,       
-        IFhirNamespaceService ns)             
-        : base(userContext, ns)    
+    public LocationService(FhirService fhirService, IUserContextService userContext,
+        IFhirNamespaceService ns)
+        : base(userContext, ns)
     {
         _fhirClient = fhirService.GetFhirClient();
     }
 
-    private const string ResourceType = "Location";
     /// <summary>
-    /// Obtiene un recurso <see cref="FhirLocation"/> por su identificador único.
+    ///     Obtiene un recurso <see cref="FhirLocation" /> por su identificador único.
     /// </summary>
     /// <param name="id">Identificador único del recurso Location. No debe ser nulo ni vacío.</param>
-    /// <returns>Una tarea que representa la operación asíncrona. El resultado es el recurso <see cref="FhirLocation"/> solicitado.</returns>
-    /// <exception cref="ArgumentNullException">Se lanza si <paramref name="id"/> es <c>null</c>.</exception>
-    /// <exception cref="ArgumentException">Se lanza si <paramref name="id"/> es una cadena vacía o solo espacios en blanco.</exception>
+    /// <returns>
+    ///     Una tarea que representa la operación asíncrona. El resultado es el recurso <see cref="FhirLocation" />
+    ///     solicitado.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Se lanza si <paramref name="id" /> es <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">Se lanza si <paramref name="id" /> es una cadena vacía o solo espacios en blanco.</exception>
     /// <exception cref="FhirOperationException">Se lanza si el recurso no se encuentra o el servidor FHIR devuelve un error.</exception>
     /// <example>
-    /// <code>
+    ///     <code>
     /// var location = await locationService.GetLocationByIdAsync("loc-123");
     /// Console.WriteLine(location.Name);
     /// </code>
@@ -60,17 +64,21 @@ public class LocationService : BaseFhirService, ILocationService
             throw FhirExceptionMapper.Map(ex, id, "GET_LOCATION_BY_ID");
         }
     }
+
     /// <summary>
-    /// Crea un nuevo recurso <see cref="FhirLocation"/> en el servidor FHIR.
-    /// Si el recurso no tiene un ID asignado, se genera uno automáticamente.
-    /// También establece metadatos iniciales: fecha de última actualización y versión 1.
+    ///     Crea un nuevo recurso <see cref="FhirLocation" /> en el servidor FHIR.
+    ///     Si el recurso no tiene un ID asignado, se genera uno automáticamente.
+    ///     También establece metadatos iniciales: fecha de última actualización y versión 1.
     /// </summary>
-    /// <param name="location">El recurso <see cref="FhirLocation"/> a crear. No debe ser nulo.</param>
-    /// <returns>Una tarea que representa la operación asíncrona. El resultado es el recurso creado, con metadatos actualizados.</returns>
-    /// <exception cref="ArgumentNullException">Se lanza si <paramref name="location"/> es <c>null</c>.</exception>
+    /// <param name="location">El recurso <see cref="FhirLocation" /> a crear. No debe ser nulo.</param>
+    /// <returns>
+    ///     Una tarea que representa la operación asíncrona. El resultado es el recurso creado, con metadatos
+    ///     actualizados.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Se lanza si <paramref name="location" /> es <c>null</c>.</exception>
     /// <exception cref="FhirOperationException">Se lanza si el servidor FHIR rechaza la creación (por ejemplo, ID duplicado).</exception>
     /// <example>
-    /// <code>
+    ///     <code>
     /// var newLocation = new Location { Name = "Hospital Central" };
     /// var createdLocation = await locationService.CreateLocationAsync(newLocation);
     /// Console.WriteLine($"Creado con ID: {createdLocation.Id}");
@@ -81,7 +89,7 @@ public class LocationService : BaseFhirService, ILocationService
         try
         {
             var locationFhir = dto.ToFhirLocation();
-            ApplyMeta(locationFhir, isCreate: true);
+            ApplyMeta(locationFhir, true);
 
             // Intento de Creación en el Servidor FHIR
             // IMPORTANTE: Capturamos la respuesta del servidor (created)
@@ -96,18 +104,22 @@ public class LocationService : BaseFhirService, ILocationService
             throw FhirExceptionMapper.Map(ex, "NEW_LOCATION", "CREATE_LOCATION");
         }
     }
+
     /// <summary>
-    /// Actualiza un recurso <see cref="FhirLocation"/> existente en el servidor FHIR.
-    /// Actualiza automáticamente la fecha de última modificación e incrementa el número de versión.
-    /// Si el recurso no tiene metadatos, se inicializan.
+    ///     Actualiza un recurso <see cref="FhirLocation" /> existente en el servidor FHIR.
+    ///     Actualiza automáticamente la fecha de última modificación e incrementa el número de versión.
+    ///     Si el recurso no tiene metadatos, se inicializan.
     /// </summary>
-    /// <param name="location">El recurso <see cref="FhirLocation"/> a actualizar. Debe tener un ID y no ser nulo.</param>
-    /// <returns>Una tarea que representa la operación asíncrona. El resultado es el recurso actualizado con metadatos renovados.</returns>
-    /// <exception cref="ArgumentNullException">Se lanza si <paramref name="location"/> es <c>null</c>.</exception>
-    /// <exception cref="ArgumentException">Se lanza si <paramref name="location"/> no tiene un ID asignado.</exception>
+    /// <param name="location">El recurso <see cref="FhirLocation" /> a actualizar. Debe tener un ID y no ser nulo.</param>
+    /// <returns>
+    ///     Una tarea que representa la operación asíncrona. El resultado es el recurso actualizado con metadatos
+    ///     renovados.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Se lanza si <paramref name="location" /> es <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">Se lanza si <paramref name="location" /> no tiene un ID asignado.</exception>
     /// <exception cref="FhirOperationException">Se lanza si el recurso no existe o el servidor FHIR rechaza la actualización.</exception>
     /// <example>
-    /// <code>
+    ///     <code>
     /// var location = await locationService.GetLocationByIdAsync("loc-123");
     /// location.Name = "Nuevo Nombre";
     /// var updatedLocation = await locationService.UpdateLocationAsync(location);
@@ -120,15 +132,15 @@ public class LocationService : BaseFhirService, ILocationService
         {
             // Leer recurso existente (Fail Fast)
             var existing = await _fhirClient.ReadAsync<FhirLocation>($"{ResourceType}/{id}")
-                           ?? throw new NotFoundException(MessageCodes.NotFound, new Dictionary<string, object> 
-                           { 
+                           ?? throw new NotFoundException(MessageCodes.NotFound, new Dictionary<string, object>
+                           {
                                { "ResourceId", id },
                                { "ResourceType", "Location" }
                            });
 
             // Aplicar actualizaciones y metadatos
             existing.ApplyUpdate(dto);
-            ApplyMeta(existing, isCreate: false);
+            ApplyMeta(existing, false);
 
             // Enviar actualización al servidor médico
             var result = await _fhirClient.UpdateAsync(existing);
@@ -143,15 +155,15 @@ public class LocationService : BaseFhirService, ILocationService
     }
 
     /// <summary>
-    /// Elimina un recurso <see cref="FhirLocation"/> del servidor FHIR por su identificador.
+    ///     Elimina un recurso <see cref="FhirLocation" /> del servidor FHIR por su identificador.
     /// </summary>
     /// <param name="id">Identificador único del recurso Location a eliminar. No debe ser nulo ni vacío.</param>
     /// <returns>Una tarea que representa la operación asíncrona.</returns>
-    /// <exception cref="ArgumentNullException">Se lanza si <paramref name="id"/> es <c>null</c>.</exception>
-    /// <exception cref="ArgumentException">Se lanza si <paramref name="id"/> es una cadena vacía o solo espacios en blanco.</exception>
+    /// <exception cref="ArgumentNullException">Se lanza si <paramref name="id" /> es <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">Se lanza si <paramref name="id" /> es una cadena vacía o solo espacios en blanco.</exception>
     /// <exception cref="FhirOperationException">Se lanza si el recurso no existe o no se puede eliminar.</exception>
     /// <example>
-    /// <code>
+    ///     <code>
     /// await locationService.DeleteLocationAsync("loc-123");
     /// </code>
     /// </example>
@@ -183,13 +195,11 @@ public class LocationService : BaseFhirService, ILocationService
         {
             // Validación de seguridad (Fail Fast)
             if (filter.PageSize > 500)
-            {
                 throw new ValidationException(MessageCodes.ValidationError, new Dictionary<string, object>
                 {
                     { "Field", "PageSize" },
                     { "MaxAllowed", 500 }
                 });
-            }
 
             // Normalizar paginación usando el helper
             var (pageNumber, pageSize, offset) = FhirPaginationHelper.Normalize(filter.PageNumber, filter.PageSize);
@@ -235,8 +245,8 @@ public class LocationService : BaseFhirService, ILocationService
         var type = enumValue.GetType();
         var info = type.GetField(enumValue.ToString());
         var attr = info?.GetCustomAttributes(typeof(EnumMemberAttribute), false)
-                        .Cast<EnumMemberAttribute>()
-                        .FirstOrDefault();
+            .Cast<EnumMemberAttribute>()
+            .FirstOrDefault();
 
         return attr?.Value ?? enumValue.ToString().ToLowerInvariant();
     }

@@ -1,5 +1,6 @@
 ﻿#nullable enable
 using Hl7.Fhir.Model;
+using System.Globalization;
 
 namespace SIGREF.API.Extensions.Common
 {
@@ -39,6 +40,22 @@ namespace SIGREF.API.Extensions.Common
         {
             if (!dateTime.HasValue) return null;
             return new Date(dateTime.Value.ToString("yyyy-MM-dd"));
+        }
+
+        /// <summary>
+        /// Convierte una fecha/hora FHIR en un DateTime UTC.
+        /// </summary>
+        public static DateTime? ToUtcDateTime(this FhirDateTime? value)
+        {
+            if (value == null || string.IsNullOrWhiteSpace(value.Value)) return null;
+
+            return DateTime.TryParse(
+                value.Value,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+                out var parsed)
+                ? parsed
+                : null;
         }
     }
 }

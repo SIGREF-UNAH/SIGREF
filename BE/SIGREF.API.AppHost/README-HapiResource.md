@@ -5,11 +5,14 @@ Este archivo contiene la implementación de un recurso personalizado de HAPI FHI
 ## Componentes
 
 ### `HapiResource`
+
 Clase que representa un servidor HAPI FHIR como un recurso de contenedor en Aspire. Implementa:
+
 - `ContainerResource`: Base para recursos basados en contenedores Docker
 - `IResourceWithConnectionString`: Proporciona una cadena de conexión para acceder al servidor FHIR
 
 ### `HapiResourceExtensions`
+
 Métodos de extensión para configurar HAPI FHIR en tu aplicación Aspire.
 
 ## Uso
@@ -55,22 +58,29 @@ var hapi = builder
 ## Métodos de Extensión Disponibles
 
 ### `AddHapiFhir(name, port?, image?, tag?)`
+
 Agrega un servidor HAPI FHIR a la aplicación.
+
 - **name**: Nombre del recurso
 - **port**: Puerto HTTP (opcional)
 - **image**: Imagen Docker (default: "hapiproject/hapi")
 - **tag**: Tag de la imagen (default: "latest")
 
 ### `WithPostgresDatabase(postgresServer, database, username, password)`
-Configura la conexión a PostgreSQL para HAPI FHIR y establece la dependencia directa con el contenedor de Postgres para garantizar que ambos servicios compartan red y orden de arranque.
+
+Configura la conexión a PostgreSQL para HAPI FHIR y establece la dependencia directa con el contenedor de Postgres para
+garantizar que ambos servicios compartan red y orden de arranque.
 
 ### `WithConfigurationFile(configPath)`
+
 Monta un archivo de configuración YAML en `/app/config/application.yaml`.
 
 ### `WithCorsEnabled(allowedOrigins?)`
+
 Habilita CORS con los orígenes permitidos especificados.
 
 ### `WithLogLevel(logLevel?)`
+
 Configura el nivel de log de Spring Boot (default: "INFO").
 
 ## Beneficios
@@ -103,6 +113,7 @@ yarp.AddRoute("/hapi/{**catch-all}", hapi);
 ## Comparación con Keycloak
 
 Este recurso sigue el mismo patrón que el recurso de Keycloak de Aspire:
+
 - `AddKeycloak()` → `AddHapiFhir()`
 - `IResourceBuilder<ContainerResource>` → `IResourceBuilder<HapiResource>`
 - Métodos de extensión específicos para el servicio

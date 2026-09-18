@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from "react";
-import { getValueSetListByType } from "../../../api/value-set/value-set";
-import type { CatalogType } from "../../../api/models/catalogType";
+import { getValueSetListByType } from "@endpoints/value-sets/value-sets";
+type CatalogType = "roles" | "ubicaciones";
 
 const PAGE_SIZE = 20;
 const ROLE_CATALOG_TYPE: CatalogType = "roles"; 

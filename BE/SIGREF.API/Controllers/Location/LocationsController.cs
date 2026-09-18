@@ -19,7 +19,7 @@ namespace SIGREF.API.Controllers.Location;
 [Authorize(AuthenticationSchemes = "Bearer")]
 [Produces(MediaTypeNames.Application.Json)]
 [Consumes(MediaTypeNames.Application.Json)]
-[Tags("Espacios Fisicos - GestiÃ³n de Espacios Fisicos")]
+[Tags("Locations")]
 public class LocationsController(ILocationService locationService) : ControllerBase
 {
     // GET: api/locations
@@ -33,7 +33,7 @@ public class LocationsController(ILocationService locationService) : ControllerB
     [EndpointName("GetLocationList")]
     [EndpointSummary("Listar ubicaciones físicas")]
     [EndpointDescription("Obtiene una lista paginada de recursos Location filtrada por los criterios solicitados.")]
-    [Tags("FHIR - Location")]
+    [Tags("Locations", "FHIR")]
     [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor}")]
     [ProducesResponseType( typeof(PagedResultDto<LocationDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResultDto<LocationDto>>> Get([FromQuery] LocationFilterDto filter)
@@ -58,7 +58,7 @@ public class LocationsController(ILocationService locationService) : ControllerB
     [EndpointName("GetLocationById")]
     [EndpointSummary("Obtener una ubicación por ID")]
     [EndpointDescription("Recupera el recurso Location identificado por su ID lógico en FHIR.")]
-    [Tags("FHIR - Location")]
+    [Tags("Locations", "FHIR")]
     [Authorize(Roles = $"{RolesConstants.cashier},{RolesConstants.admin},{RolesConstants.auditor}")]
     [ProducesResponseType(typeof(LocationDto), StatusCodes.Status200OK)]
     public async Task<ActionResult<LocationDto>> GetById(string id)
@@ -82,7 +82,7 @@ public class LocationsController(ILocationService locationService) : ControllerB
     [EndpointName("CreateLocation")]
     [EndpointSummary("Crear una ubicación")]
     [EndpointDescription("Crea un nuevo recurso Location con los datos físicos y administrativos proporcionados.")]
-    [Tags("FHIR - Location")]
+    [Tags("Locations", "FHIR")]
     [Authorize(Roles = RolesConstants.admin)]
     [ProducesResponseType(typeof(LocationDto), StatusCodes.Status201Created)]
     public async Task<ActionResult<LocationDto>> CreateLocation([FromBody] CreateLocationDto dto)
@@ -103,7 +103,7 @@ public class LocationsController(ILocationService locationService) : ControllerB
     [EndpointName("UpdateLocationById")]
     [EndpointSummary("Actualizar una ubicación")]
     [EndpointDescription("Actualiza el recurso Location indicado por su ID lógico.")]
-    [Tags("FHIR - Location")]
+    [Tags("Locations", "FHIR")]
     [Authorize(Roles = RolesConstants.admin)]
     [ProducesResponseType(typeof(LocationDto), StatusCodes.Status200OK)]
     public async Task<ActionResult<LocationDto>> UpdateLocation(string id, [FromBody] UpdateLocationDto dto)
@@ -124,7 +124,7 @@ public class LocationsController(ILocationService locationService) : ControllerB
     [EndpointName("DeleteLocationById")]
     [EndpointSummary("Eliminar una ubicación")]
     [EndpointDescription("Elimina el recurso Location indicado por su ID lógico.")]
-    [Tags("FHIR - Location")]
+    [Tags("Locations", "FHIR")]
     [Authorize(Roles = RolesConstants.admin)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DeleteLocation(string id)

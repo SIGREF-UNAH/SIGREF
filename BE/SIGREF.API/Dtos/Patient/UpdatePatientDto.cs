@@ -4,17 +4,16 @@ using System.Text.Json.Serialization;
 using Hl7.Fhir.Model;
 using SIGREF.API.Dtos.Common;
 using SIGREF.API.Dtos.Common.ValidationAtributes;
+using SIGREF.Common.Dtos;
 
 namespace SIGREF.API.Dtos.Patient;
-public class UpdatePatientDto
+
+public class UpdatePatientDto : UpdateRequestDto
 {
     public bool? Active { get; set; }
 
-    [AtLeastOneNameRequired]
-    public List<HumanNameDto>? Name { get; set; }
+    [AtLeastOneNameRequired] public List<HumanNameDto>? Name { get; set; }
 
-    [Required(ErrorMessage = "El género es obligatorio.")]
-    [JsonConverter(typeof(JsonStringEnumConverter))]
     public AdministrativeGender? Gender { get; set; }
 
     public DateTime? BirthDate { get; set; }

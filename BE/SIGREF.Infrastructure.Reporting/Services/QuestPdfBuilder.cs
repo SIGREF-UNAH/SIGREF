@@ -7,22 +7,20 @@ namespace SIGREF.Infrastructure.Reporting.Services;
 
 public class QuestPdfBuilder : IReportPdfBuilder
 {
-    public async Task<Stream> BuildAsync(IAsyncEnumerable<ReportLineDto> data, string hospitalSnapshot, ReportMetaDto meta, CancellationToken ct)
+    public async Task<Stream> BuildAsync(IAsyncEnumerable<ReportLineDto> data, string hospitalSnapshot,
+        ReportMetaDto meta, CancellationToken ct)
     {
         var allLines = new List<ReportLineDto>();
-        
+
         // Consumimos el stream que el DataCollector preparó
-        await foreach (var line in data.WithCancellation(ct))
-        {
-            allLines.Add(line);
-        }
+        await foreach (var line in data.WithCancellation(ct)) allLines.Add(line);
         // --- 1. DESERIALIZACIÓN SEGURA ---
         HospitalSnapshotDto hospitalInfo;
         try
         {
-            hospitalInfo = JsonSerializer.Deserialize<HospitalSnapshotDto>(hospitalSnapshot) 
+            hospitalInfo = JsonSerializer.Deserialize<HospitalSnapshotDto>(hospitalSnapshot)
                            ?? new HospitalSnapshotDto();
-            
+
             // Si el JSON era "{}" o no traía nombre, aseguramos los datos del hospital
             if (string.IsNullOrWhiteSpace(hospitalInfo.Name))
             {
@@ -40,13 +38,14 @@ public class QuestPdfBuilder : IReportPdfBuilder
                 Address = "Santa Rosa de Copán"
             };
         }
-        var document = new InvoiceReportDocument(allLines, hospitalInfo, meta );
-        
+
+        var document = new InvoiceReportDocument(allLines, hospitalInfo, meta);
+
         // Generamos el PDF en un MemoryStream
         var ms = new MemoryStream();
         document.GeneratePdf(ms);
         ms.Position = 0;
-        
+
         return ms;
     }
 }
@@ -56,5 +55,5 @@ public class HospitalSnapshotDto
     public string Name { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
-    public string Director { get; set; } =  string.Empty;
+    public string Director { get; set; } = string.Empty;
 }

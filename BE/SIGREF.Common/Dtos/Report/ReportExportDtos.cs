@@ -1,10 +1,9 @@
-﻿
-using SIGREF.Common.Types;
+﻿using SIGREF.Common.Types;
 
 namespace SIGREF.Common.Dtos.Report;
 
 /// <summary>
-/// Respuesta inmediata al crear el job (no devuelve el archivo).
+///     Respuesta inmediata al crear el job (no devuelve el archivo).
 /// </summary>
 public class CreateReportExportResponseDto
 {
@@ -14,7 +13,7 @@ public class CreateReportExportResponseDto
 }
 
 /// <summary>
-/// Request para solicitar una exportación (crea un job).
+///     Request para solicitar una exportación (crea un job).
 /// </summary>
 public class CreateReportExportRequestDto
 {
@@ -22,7 +21,7 @@ public class CreateReportExportRequestDto
     public ReportExportFormat Format { get; set; }
 
     /// <summary>
-    /// Rango de fechas obligatorio para evitar reportes gigantes sin control.
+    ///     Rango de fechas obligatorio para evitar reportes gigantes sin control.
     /// </summary>
     public DateTime DateFrom { get; set; }
 
@@ -36,7 +35,7 @@ public class CreateReportExportRequestDto
 }
 
 /// <summary>
-/// Respuesta para consultar el estado del job.
+///     Respuesta para consultar el estado del job.
 /// </summary>
 public class ReportExportStatusResponseDto
 {
@@ -44,12 +43,12 @@ public class ReportExportStatusResponseDto
     public ReportStatus Status { get; set; }
 
     /// <summary>
-    /// Progreso estimado 0..100 (opcional, pero útil).
+    ///     Progreso estimado 0..100 (opcional, pero útil).
     /// </summary>
     public int ProgressPercent { get; set; }
 
     /// <summary>
-    /// Si falló, aquí va el error amigable.
+    ///     Si falló, aquí va el error amigable.
     /// </summary>
     public string? ErrorMessage { get; set; }
 
@@ -58,14 +57,14 @@ public class ReportExportStatusResponseDto
     public DateTime? CompletedAt { get; set; }
 
     /// <summary>
-    /// Metadata del archivo cuando está Completed.
-    /// La descarga real se hace por endpoint de file.
+    ///     Metadata del archivo cuando está Completed.
+    ///     La descarga real se hace por endpoint de file.
     /// </summary>
     public ReportExportFileDto? File { get; set; }
 }
 
 /// <summary>
-/// Información del archivo exportado (cuando está listo).
+///     Información del archivo exportado (cuando está listo).
 /// </summary>
 public class ReportExportFileDto
 {
@@ -74,8 +73,8 @@ public class ReportExportFileDto
     public long RowCount { get; set; }
 
     /// <summary>
-    /// Si usas storage con URL firmada puedes devolverla aquí.
-    /// Si no, omítelo y usa un endpoint /file.
+    ///     Si usas storage con URL firmada puedes devolverla aquí.
+    ///     Si no, omítelo y usa un endpoint /file.
     /// </summary>
     public string? DownloadUrl { get; set; }
 }

@@ -2,8 +2,8 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { useAbility } from "../../../config";
 import { useUrlFilters } from "../../../shared/hooks";
-import { useGetSerieList } from "../../../api/series/series";
-import type { SerieDto, GetSerieListParams } from "../../../api/models";
+import { useGetSerieList } from "@endpoints/series/series";
+import type { SerieDto, GetSerieListParams } from "@models";
 import type { TablePaginationConfig } from "antd";
 
 export type SeriesStatusFilter = "all" | "active" | "inactive";

@@ -16,7 +16,13 @@ public class AuditQueue : IAuditQueue
         _channel = Channel.CreateBounded<AuditLog>(options);
     }
 
-    public async ValueTask WriteLogAsync(AuditLog log) => await _channel.Writer.WriteAsync(log);
+    public async ValueTask WriteLogAsync(AuditLog log)
+    {
+        await _channel.Writer.WriteAsync(log);
+    }
 
-    public IAsyncEnumerable<AuditLog> ReadAllAsync(CancellationToken ct) => _channel.Reader.ReadAllAsync(ct);
+    public IAsyncEnumerable<AuditLog> ReadAllAsync(CancellationToken ct)
+    {
+        return _channel.Reader.ReadAllAsync(ct);
+    }
 }

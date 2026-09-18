@@ -5,7 +5,7 @@ import { FormTitle } from "../components/FormTitle";
 import { PageHeaderTabs } from "../../../shared/components/ui";
 import { Spin } from "antd";
 import { useAbility } from "../../../config";
-import type { HealthcareDto } from "../../../api/models";
+import type { HealthcareDto } from "@models/healthcare-services/healthcareDto";
 
 export const UpdateHealthcarePage = () => {
   const { id } = useParams<{ id: string }>();

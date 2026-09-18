@@ -1,5 +1,5 @@
-﻿
-namespace SIGREF.Core.Entity.Dashboard;
+﻿namespace SIGREF.Core.Entity.Dashboard;
+
 public class DashboardFact
 {
     // ===============================
@@ -11,7 +11,7 @@ public class DashboardFact
     // ===============================
     // DIMENSIÓN DE TIEMPO
     // ===============================
-    public DateTimeOffset CreatedDate { get; set; }
+    public DateTime CreatedDate { get; set; }
 
     // ===============================
     // INGRESOS Y MONTO REAL (OPTIMIZADO)
@@ -19,8 +19,8 @@ public class DashboardFact
     public decimal FinalTotal { get; set; }
 
     /// <summary>
-    /// Monto real considerando notas de crédito/débito
-    /// (FinalTotal positivo o negativo según el tipo).
+    ///     Monto real considerando notas de crédito/débito
+    ///     (FinalTotal positivo o negativo según el tipo).
     /// </summary>
     public decimal RealIncome { get; set; }
 
@@ -47,7 +47,9 @@ public class DashboardFact
     // DIMENSIÓN DE SERVICIOS/PAQUETES
     // ===============================
     public Guid? ServiceId { get; set; }
+
     public string FhirServiceId { get; set; }
+
     //public string? ServiceName { get; set; }
     public string? PackageId { get; set; }
     //public string? PackageName { get; set; }
@@ -68,4 +70,3 @@ public class DashboardFact
     public Guid? CashierSessionId { get; set; }
     //public string? CashierUserName { get; set; }
 }
-
