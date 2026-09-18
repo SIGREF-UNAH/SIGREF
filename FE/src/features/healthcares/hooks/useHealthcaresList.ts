@@ -2,12 +2,13 @@ import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMessage } from "../../../shared/hooks";
+import { createTablePagination } from "../../../shared/components/ui";
 import { useAbility } from "../../../config";
 import type {
   HealthcareDto,
   GetHealtcareListParams,
 } from "@models";
-import type { HealthcareScope } from "@types/healthcare-services";
+import type { HealthcareScope } from "../../../api/generated/schemas/types/healthcare-services/healthcareScope";
 import {
   getGetHealtcareListQueryKey,
   useGetHealtcareList,
@@ -92,12 +93,11 @@ export function useHealthcaresList() {
 
   // Configuración de paginación para Ant Design Table
   const paginationConfig = useMemo(
-    () => ({
+    () => createTablePagination({
       current: paginationData?.currentPage || pagination.current,
       pageSize: paginationData?.pageSize || pagination.pageSize,
       total: paginationData?.totalItems || 0,
       showTotal: (total: number) => `Total ${total} servicios`,
-      showSizeChanger: true,
       pageSizeOptions: ["10", "20", "50", "100"],
       onChange: (page: number, pageSize: number) => {
         setPagination({ current: page, pageSize });

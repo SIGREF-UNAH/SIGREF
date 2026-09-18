@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useUrlFilters } from "../../../shared/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMessage } from "../../../shared/hooks";
-import type { TablePaginationConfig } from "antd";
+import { createTablePagination } from "../../../shared/components/ui";
 import type { ShiftDto } from "@models";
 import {
   getGetShiftListQueryKey,
@@ -112,20 +112,18 @@ export function useShiftsList() {
     setFilter("search", undefined);
   };
 
-  const paginationConfig: TablePaginationConfig = {
+  const paginationConfig = createTablePagination({
     current: pagination?.currentPage || 1,
     pageSize: pagination?.pageSize || 10,
     total: pagination?.totalItems || 0,
-    showSizeChanger: true,
     pageSizeOptions: ["10", "20", "50", "100"],
-    showTotal: (total, range) => `${range[0]}-${range[1]} de ${total}`,
     onChange: (page, pageSize) => {
       setFilters({
         pageNumber: page,
         pageSize: pageSize || 10,
       });
     },
-  };
+  });
 
   return {
     filters,

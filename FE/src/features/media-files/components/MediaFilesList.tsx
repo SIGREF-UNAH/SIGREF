@@ -1,39 +1,36 @@
-import React from "react";
-import type { MediaFileDto } from "@models";
-import type { MediaFileType } from "@types/media-files";
-import { formatFileSize, getMediaUrl } from "../utils";
-import {
-  Card,
-  Image,
-  Button,
-  Spin,
-  Empty,
-  Pagination,
-  Popconfirm,
-  Tooltip,
-  Typography,
-} from "antd";
-import {
-  DeleteOutlined,
-  CheckOutlined,
-  FileImageOutlined,
-} from "@ant-design/icons";
+import React from 'react'
+import type { MediaFileDto } from '@models'
+import type { MediaFileType } from '../../../api/generated/schemas/types/media-files/mediaFileType'
+import { formatFileSize, getMediaUrl } from '../utils'
+import { Card, Image, Button, Spin, Empty, Popconfirm, Tooltip, Typography } from 'antd'
+import { Pagination } from '../../../shared/components/ui'
+import { DeleteOutlined, CheckOutlined, FileImageOutlined } from '@ant-design/icons'
 
-const { Text } = Typography;
+const { Text } = Typography
 
 interface MediaFilesListProps {
-  mediaFiles: MediaFileDto[];
-  pagination: any;
-  logoType: MediaFileType;
-  isLoading: boolean;
-  currentPage: number;
-  pageSize: number;
-  handleDelete: (id: string) => void;
-  handleAssign: (mediaId: string, type: MediaFileType) => void;
-  handlePageChange: (page: number, size?: number) => void;
-  onAssignSuccess: () => void;
-  deleteMutation: any;
-  assignMutation: any;
+  mediaFiles: MediaFileDto[]
+  pagination?: MediaFilesPagination
+  logoType: MediaFileType
+  isLoading: boolean
+  currentPage: number
+  pageSize: number
+  handleDelete: (id: string) => void
+  handleAssign: (mediaId: string, type: MediaFileType) => void
+  handlePageChange: (page: number, size?: number) => void
+  onAssignSuccess: () => void
+  deleteMutation: MutationStatus
+  assignMutation: MutationStatus
+}
+
+interface MediaFilesPagination {
+  currentPage?: number
+  pageSize?: number
+  totalItems?: number
+}
+
+interface MutationStatus {
+  isPending: boolean
 }
 
 export const MediaFilesList: React.FC<MediaFilesListProps> = ({
@@ -51,16 +48,16 @@ export const MediaFilesList: React.FC<MediaFilesListProps> = ({
   assignMutation,
 }) => {
   const handleAssignClick = (mediaId: string) => {
-    handleAssign(mediaId, logoType);
-    onAssignSuccess();
-  };
+    handleAssign(mediaId, logoType)
+    onAssignSuccess()
+  }
 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-20">
         <Spin size="large" tip="Cargando imágenes..." />
       </div>
-    );
+    )
   }
 
   if (!mediaFiles || mediaFiles.length === 0) {
@@ -70,7 +67,7 @@ export const MediaFilesList: React.FC<MediaFilesListProps> = ({
         description="No hay imágenes disponibles"
         className="py-10"
       />
-    );
+    )
   }
 
   return (
@@ -79,7 +76,7 @@ export const MediaFilesList: React.FC<MediaFilesListProps> = ({
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {mediaFiles.map((file) => {
           // Construir URL completa - priorizar file.url sobre relativePath
-          const imageUrl = getMediaUrl(file.relativePath);
+          const imageUrl = getMediaUrl(file.relativePath)
 
           return (
             <Card
@@ -90,10 +87,10 @@ export const MediaFilesList: React.FC<MediaFilesListProps> = ({
                   {imageUrl ? (
                     <Image
                       src={imageUrl}
-                      alt={file.fileName || "Imagen"}
+                      alt={file.fileName || 'Imagen'}
                       className="object-cover w-full h-full"
                       preview={{
-                        mask: "Vista previa",
+                        mask: 'Vista previa',
                       }}
                       fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
                     />
@@ -103,7 +100,7 @@ export const MediaFilesList: React.FC<MediaFilesListProps> = ({
                 </div>
               }
               actions={[
-                <Tooltip title="Asignar como logotipo">
+                <Tooltip key="assign" title="Asignar como logotipo">
                   <Button
                     type="text"
                     icon={<CheckOutlined />}
@@ -115,6 +112,7 @@ export const MediaFilesList: React.FC<MediaFilesListProps> = ({
                   </Button>
                 </Tooltip>,
                 <Popconfirm
+                  key="delete"
                   title="¿Eliminar imagen?"
                   description="Esta acción no se puede deshacer"
                   onConfirm={() => handleDelete(file.id!)}
@@ -139,7 +137,7 @@ export const MediaFilesList: React.FC<MediaFilesListProps> = ({
                 title={
                   <Tooltip title={file.fileName}>
                     <div className="truncate text-sm font-medium">
-                      {file.fileName || "Sin nombre"}
+                      {file.fileName || 'Sin nombre'}
                     </div>
                   </Tooltip>
                 }
@@ -150,14 +148,12 @@ export const MediaFilesList: React.FC<MediaFilesListProps> = ({
                         {file.description}
                       </Text>
                     )}
-                    <Text className="text-xs text-gray-400">
-                      {formatFileSize(file.sizeBytes)}
-                    </Text>
+                    <Text className="text-xs text-gray-400">{formatFileSize(file.sizeBytes)}</Text>
                   </div>
                 }
               />
             </Card>
-          );
+          )
         })}
       </div>
 
@@ -170,9 +166,9 @@ export const MediaFilesList: React.FC<MediaFilesListProps> = ({
           onChange={handlePageChange}
           showSizeChanger
           showTotal={(total) => `Total ${total} imágenes`}
-          pageSizeOptions={["12", "24", "48"]}
+          pageSizeOptions={['12', '24', '48']}
         />
       </div>
     </div>
-  );
-};
+  )
+}

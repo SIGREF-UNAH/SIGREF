@@ -20,8 +20,8 @@ import type { ColumnsType } from "antd/es/table";
 import type {
   HealthcareDto,
 } from "@models";
-import type { HealthcareScope as HealthcareScopeType } from "@types/healthcare-services";
-import { HealthcareScope } from "@types/healthcare-services";
+import type { HealthcareScope as HealthcareScopeType } from "../../../api/generated/schemas/types/healthcare-services/healthcareScope";
+import { HealthcareScope } from "../../../api/generated/schemas/types/healthcare-services/healthcareScope";
 import { useHealthcaresList } from "../hooks/useHealthcaresList";
 import { PageHeaderTabs } from "../../../shared/components/ui";
 import { HealthcareDetailsModal } from "../components";

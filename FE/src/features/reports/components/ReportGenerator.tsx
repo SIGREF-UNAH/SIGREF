@@ -1,15 +1,5 @@
-import { useMemo } from "react";
-import {
-  Button,
-  Select,
-  DatePicker,
-  Table,
-  Space,
-  Typography,
-  Alert,
-  Pagination,
-  Spin,
-} from "antd";
+import { useMemo } from 'react'
+import { Button, Select, DatePicker, Table, Space, Typography, Alert, Spin } from 'antd'
 import {
   FileTextOutlined,
   FilePdfOutlined,
@@ -20,186 +10,209 @@ import {
   DownloadOutlined,
   CheckOutlined,
   ReloadOutlined,
-} from "@ant-design/icons";
-import dayjs from "dayjs";
-import type { ReportLineDto } from "@models";
-import type { ColumnsType } from "antd/es/table";
-import { useReportData, useReportFilters } from "../hooks";
-import useMediaFiles from "../../media-files/hooks/useMediaFiles";
+} from '@ant-design/icons'
+import dayjs from 'dayjs'
+import type { ReportLineDto } from '@models'
+import type { ColumnsType } from 'antd/es/table'
+import { useReportData, useReportFilters } from '../hooks'
+import useMediaFiles from '../../media-files/hooks/useMediaFiles'
+import { Pagination } from '../../../shared/components/ui'
 
-const { RangePicker } = DatePicker;
-const { Title, Text } = Typography;
+const { RangePicker } = DatePicker
+const { Title, Text } = Typography
 
+const getErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) return error.message
+
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const message = error.message
+    return typeof message === 'string' ? message : 'Error desconocido'
+  }
+
+  return 'Error desconocido'
+}
+
+type ReportTableRow = ReportLineDto & {
+  seriesName?: string
+  serviceId?: string
+}
 
 const isAdult = (birthDate?: string | null): boolean => {
-  if (!birthDate) return false;
-  return dayjs().diff(dayjs(birthDate), "year") >= 18;
-};
- 
-const buildColumns = (): ColumnsType<ReportLineDto> => [
+  if (!birthDate) return false
+  return dayjs().diff(dayjs(birthDate), 'year') >= 18
+}
+
+const renderText = (value: unknown): string | number => {
+  return typeof value === 'string' || typeof value === 'number' ? value : '—'
+}
+
+const renderDate = (value: unknown): string => {
+  return typeof value === 'string' && value ? dayjs(value).format('DD/MM/YYYY') : '—'
+}
+
+const renderAdultStatus = (value: unknown): React.ReactNode => {
+  if (typeof value !== 'string' || !value) return '—'
+
+  return isAdult(value) ? (
+    <span className="text-green-600 font-semibold">✓</span>
+  ) : (
+    <span className="text-red-500 font-semibold">✗</span>
+  )
+}
+
+const buildColumns = (): ColumnsType<ReportTableRow> => [
   {
-    title: "N°",
-    key: "index",
+    title: 'N°',
+    key: 'index',
     width: 52,
-    align: "center",
-    onHeaderCell: () => ({ style: { backgroundColor: "#bdd7ee", fontWeight: 700 } }),
+    align: 'center',
+    onHeaderCell: () => ({ style: { backgroundColor: '#bdd7ee', fontWeight: 700 } }),
     render: (_v, _r, index) => index + 1,
   },
   {
-    title: "Fecha Emisión",
-    dataIndex: "transactionDate",
-    key: "transactionDate",
+    title: 'Fecha Emisión',
+    dataIndex: 'transactionDate',
+    key: 'transactionDate',
     width: 100,
-    align: "center",
-    onHeaderCell: () => ({ style: { backgroundColor: "#bdd7ee", fontWeight: 700 } }),
-    render: (v) => (v ? dayjs(v).format("DD/MM/YYYY") : "—"),
+    align: 'center',
+    onHeaderCell: () => ({ style: { backgroundColor: '#bdd7ee', fontWeight: 700 } }),
+    render: (v: unknown) => renderDate(v),
   },
   {
-    title: "Recibo",
-    dataIndex: "receiptNumber",
-    key: "receiptNumber",
+    title: 'Recibo',
+    dataIndex: 'receiptNumber',
+    key: 'receiptNumber',
     width: 90,
-    align: "center",
-    onHeaderCell: () => ({ style: { backgroundColor: "#bdd7ee", fontWeight: 700 } }),
-    render: (v) => v ?? "—",
+    align: 'center',
+    onHeaderCell: () => ({ style: { backgroundColor: '#bdd7ee', fontWeight: 700 } }),
+    render: (v: unknown) => renderText(v),
   },
   {
-    title: "Serie",
-    dataIndex: "seriesName",
-    key: "seriesName",
+    title: 'Serie',
+    dataIndex: 'seriesName',
+    key: 'seriesName',
     width: 90,
-    align: "center",
-    onHeaderCell: () => ({ style: { backgroundColor: "#bdd7ee", fontWeight: 700 } }),
-    render: (v) => v ?? "—",
+    align: 'center',
+    onHeaderCell: () => ({ style: { backgroundColor: '#bdd7ee', fontWeight: 700 } }),
+    render: (v: unknown) => renderText(v),
   },
-  // Datos de Vigilante Receptoría 
+  // Datos de Vigilante Receptoría
   {
-    title: "Datos de Vigilante Receptoría",
-    key: "cashierGroup",
+    title: 'Datos de Vigilante Receptoría',
+    key: 'cashierGroup',
     onHeaderCell: () => ({
       style: {
-        backgroundColor: "#bdd7ee",
+        backgroundColor: '#bdd7ee',
         fontWeight: 700,
-        textAlign: "center",
+        textAlign: 'center',
       },
     }),
     children: [
       {
-        title: "Identificador",
-        dataIndex: "cashierIdentity",
-        key: "cashierIdentity",
+        title: 'Identificador',
+        dataIndex: 'cashierIdentity',
+        key: 'cashierIdentity',
         width: 120,
-        align: "center",
-        onHeaderCell: () => ({ style: { backgroundColor: "#ddeeff", fontWeight: 600 } }),
-        render: (v) => <span className="text-xs break-all">{v ?? "—"}</span>,
+        align: 'center',
+        onHeaderCell: () => ({ style: { backgroundColor: '#ddeeff', fontWeight: 600 } }),
+        render: (v: unknown) => <span className="text-xs break-all">{renderText(v)}</span>,
       },
       {
-        title: "Nombre",
-        dataIndex: "cashierName",
-        key: "cashierName",
+        title: 'Nombre',
+        dataIndex: 'cashierName',
+        key: 'cashierName',
         width: 180,
-        align: "center",
-        onHeaderCell: () => ({ style: { backgroundColor: "#ddeeff", fontWeight: 600 } }),
-        render: (v) => v ?? "—",
+        align: 'center',
+        onHeaderCell: () => ({ style: { backgroundColor: '#ddeeff', fontWeight: 600 } }),
+        render: (v: unknown) => renderText(v),
       },
     ],
   },
-  // Datos del Paciente 
+  // Datos del Paciente
   {
-    title: "Datos del Paciente",
-    key: "patientGroup",
+    title: 'Datos del Paciente',
+    key: 'patientGroup',
     onHeaderCell: () => ({
       style: {
-        backgroundColor: "#bdd7ee",
+        backgroundColor: '#bdd7ee',
         fontWeight: 700,
-        textAlign: "center",
+        textAlign: 'center',
       },
     }),
     children: [
       {
-        title: "Identificador",
-        dataIndex: "patientIdentity",
-        key: "patientIdentity",
+        title: 'Identificador',
+        dataIndex: 'patientIdentity',
+        key: 'patientIdentity',
         width: 80,
-        align: "center",
-        onHeaderCell: () => ({ style: { backgroundColor: "#ddeeff", fontWeight: 600 } }),
-        render: (v) => v ?? "—",
+        align: 'center',
+        onHeaderCell: () => ({ style: { backgroundColor: '#ddeeff', fontWeight: 600 } }),
+        render: (v: unknown) => renderText(v),
       },
       {
-        title: "Nombre",
-        dataIndex: "patientName",
-        key: "patientName",
+        title: 'Nombre',
+        dataIndex: 'patientName',
+        key: 'patientName',
         width: 180,
-        align: "center",
-        onHeaderCell: () => ({ style: { backgroundColor: "#ddeeff", fontWeight: 600 } }),
-        render: (v) => v ?? "—",
+        align: 'center',
+        onHeaderCell: () => ({ style: { backgroundColor: '#ddeeff', fontWeight: 600 } }),
+        render: (v: unknown) => renderText(v),
       },
       {
-        title: "Mayor de Edad",
-        dataIndex: "patientBirthDate",
-        key: "mayorEdad",
+        title: 'Mayor de Edad',
+        dataIndex: 'patientBirthDate',
+        key: 'mayorEdad',
         width: 80,
-        align: "center",
-        onHeaderCell: () => ({ style: { backgroundColor: "#ddeeff", fontWeight: 600 } }),
-        render: (v) =>
-          v ? (
-            isAdult(v) ? (
-              <span className="text-green-600 font-semibold">✓</span>
-            ) : (
-              <span className="text-red-500 font-semibold">✗</span>
-            )
-          ) : (
-            "—"
-          ),
+        align: 'center',
+        onHeaderCell: () => ({ style: { backgroundColor: '#ddeeff', fontWeight: 600 } }),
+        render: (v: unknown) => renderAdultStatus(v),
       },
     ],
   },
-  // Servicio 
+  // Servicio
   {
-    title: "Servicio",
-    key: "serviceGroup",
+    title: 'Servicio',
+    key: 'serviceGroup',
     onHeaderCell: () => ({
       style: {
-        backgroundColor: "#bdd7ee",
+        backgroundColor: '#bdd7ee',
         fontWeight: 700,
-        textAlign: "center",
+        textAlign: 'center',
       },
     }),
     children: [
       {
-        title: "ID",
-        dataIndex: "serviceId",
-        key: "serviceId",
+        title: 'ID',
+        dataIndex: 'serviceId',
+        key: 'serviceId',
         width: 90,
-        align: "center",
-        onHeaderCell: () => ({ style: { backgroundColor: "#ddeeff", fontWeight: 600 } }),
-        render: (v) => v ?? "—",
+        align: 'center',
+        onHeaderCell: () => ({ style: { backgroundColor: '#ddeeff', fontWeight: 600 } }),
+        render: (v: unknown) => renderText(v),
       },
       {
-        title: "Nombre",
-        dataIndex: "serviceName",
-        key: "serviceName",
+        title: 'Nombre',
+        dataIndex: 'serviceName',
+        key: 'serviceName',
         width: 120,
-        align: "center",
-        onHeaderCell: () => ({ style: { backgroundColor: "#ddeeff", fontWeight: 600 } }),
-        render: (v) => v ?? "—",
+        align: 'center',
+        onHeaderCell: () => ({ style: { backgroundColor: '#ddeeff', fontWeight: 600 } }),
+        render: (v: unknown) => renderText(v),
       },
     ],
   },
   // Monto
   {
-    title: "Monto",
-    dataIndex: "amountPaid",
-    key: "amountPaid",
+    title: 'Monto',
+    dataIndex: 'amountPaid',
+    key: 'amountPaid',
     width: 80,
-    align: "center",
-    onHeaderCell: () => ({ style: { backgroundColor: "#bdd7ee", fontWeight: 700 } }),
-    render: (v) =>
-      typeof v === "number"
-        ? v.toLocaleString("es-HN", { minimumFractionDigits: 2 })
-        : "—",
+    align: 'center',
+    onHeaderCell: () => ({ style: { backgroundColor: '#bdd7ee', fontWeight: 700 } }),
+    render: (v: unknown) =>
+      typeof v === 'number' ? v.toLocaleString('es-HN', { minimumFractionDigits: 2 }) : '—',
   },
-];
+]
 
 // TODO: Implementar useExport
 // TODO: filtros para series, usuarios y ubicaciones
@@ -214,7 +227,7 @@ export const ReportGenerator = () => {
     updatePage,
     clearFilters,
     toQueryParams,
-  } = useReportFilters();
+  } = useReportFilters()
 
   const {
     isLoading,
@@ -231,61 +244,57 @@ export const ReportGenerator = () => {
     resetReport,
     summaryQuery,
     detailQuery,
-  } = useReportData();
+  } = useReportData()
 
-  const columns = useMemo(() => buildColumns(), []);
+  const columns = useMemo(() => buildColumns(), [])
 
   const handleGenerate = () => {
-    generateReport(toQueryParams());
-  };
+    generateReport(toQueryParams())
+  }
 
   const handleClear = () => {
-    clearFilters();
-    resetReport();
-  };
+    clearFilters()
+    resetReport()
+  }
 
   const handlePageChange = (page: number, pageSize?: number) => {
-    updatePage(page, pageSize);
-    changePage(page, pageSize ?? filters.pageSize);
-  };
+    updatePage(page, pageSize)
+    changePage(page, pageSize ?? filters.pageSize)
+  }
 
   // Valores controlados
-  const executedSeriesLabel = summaryStats?.executedSeries?.join(", ") ?? "N/A";
+  const executedSeriesLabel = summaryStats?.executedSeries?.join(', ') ?? 'N/A'
 
   const doctorLabel = hospitalInfo
-    ? `${hospitalInfo.directorName ?? "—"} | Tel: ${hospitalInfo.contact?.phoneNumber ?? "—"}`
-    : "—";
+    ? `${hospitalInfo.directorName ?? '—'} | Tel: ${hospitalInfo.contact?.phoneNumber ?? '—'}`
+    : '—'
 
-  const hospitalName = hospitalInfo?.hospitalName ?? "Hospital";
+  const hospitalName = hospitalInfo?.hospitalName ?? 'Hospital'
 
   const generatedAt = metadata?.generatedAt
-    ? dayjs(metadata.generatedAt).format("DD/MM/YYYY, HH:mm")
-    : dayjs().format("DD/MM/YYYY, HH:mm");
+    ? dayjs(metadata.generatedAt).format('DD/MM/YYYY, HH:mm')
+    : dayjs().format('DD/MM/YYYY, HH:mm')
 
   const generatedByUser = metadata?.generatedByUserName
-    ? "Usuario | " + metadata.generatedByUserName
-    : "Usuario | Desconocido";
+    ? 'Usuario | ' + metadata.generatedByUserName
+    : 'Usuario | Desconocido'
   const generatedByRole = metadata?.generatedByRoleName
-    ? " | " + metadata.generatedByRoleName
-    : " | Rol desconocido";
+    ? ' | ' + metadata.generatedByRoleName.join(', ')
+    : ' | Rol desconocido'
 
   // Mensaje de estado
-  const errorMessages: string[] = [];
+  const errorMessages: string[] = []
   if (summaryQuery.error) {
-    errorMessages.push(
-      `${(summaryQuery.error as any)?.message ?? "Error al obtener resumen"}`,
-    );
+    errorMessages.push(getErrorMessage(summaryQuery.error))
   }
   if (detailQuery.error) {
-    errorMessages.push(
-      `${(detailQuery.error as any)?.message ?? "Error al obtener detalles"}`,
-    );
+    errorMessages.push(getErrorMessage(detailQuery.error))
   }
- const { getMediaUrl } = useMediaFiles();
+  const { getMediaUrl } = useMediaFiles()
 
-  console.log("Filters:", items);
-  console.log(hospitalInfo?.urlLogo);
-  console.log(hospitalInfo?.urlLogoHealth);
+  console.log('Filters:', items)
+  console.log(hospitalInfo?.urlLogo)
+  console.log(hospitalInfo?.urlLogoHealth)
   return (
     <div className="flex flex-col gap-4">
       {isError && errorMessages.length > 0 && (
@@ -301,11 +310,7 @@ export const ReportGenerator = () => {
             </ul>
           }
           action={
-            <Button
-              size="small"
-              icon={<ReloadOutlined />}
-              onClick={handleGenerate}
-            >
+            <Button size="small" icon={<ReloadOutlined />} onClick={handleGenerate}>
               Reintentar
             </Button>
           }
@@ -363,8 +368,12 @@ export const ReportGenerator = () => {
               <Text className="block mb-2">Rango de fechas</Text>
               <RangePicker
                 className="w-full"
-                value={filters.dateRange as any}
-                onChange={updateDateRange as any}
+                value={filters.dateRange}
+                onChange={(dates) => {
+                  if (dates?.[0] && dates[1]) {
+                    updateDateRange([dates[0], dates[1]])
+                  }
+                }}
                 format="DD/MM/YYYY"
                 allowClear={false}
               />
@@ -439,8 +448,8 @@ export const ReportGenerator = () => {
                 <div>
                   <img
                     src={
-                     getMediaUrl(hospitalInfo?.urlLogoHealth) ??
-                      "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Logo_de_SESAL.svg/1200px-Logo_de_SESAL.svg.png"
+                      getMediaUrl(hospitalInfo?.urlLogoHealth) ??
+                      'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Logo_de_SESAL.svg/1200px-Logo_de_SESAL.svg.png'
                     }
                     alt="Gobierno de Honduras"
                     className="h-12 object-contain"
@@ -450,9 +459,9 @@ export const ReportGenerator = () => {
                   <img
                     src={
                       getMediaUrl(hospitalInfo?.urlLogo) ??
-                      "https://krti.cl/wp-content/uploads/2021/04/Logo-Hospital-Final.png"
+                      'https://krti.cl/wp-content/uploads/2021/04/Logo-Hospital-Final.png'
                     }
-                    alt={hospitalName ?? "Hospital"}
+                    alt={hospitalName ?? 'Hospital'}
                     className="h-12 object-contain"
                   />
                 </div>
@@ -467,10 +476,10 @@ export const ReportGenerator = () => {
                     <Text strong>Encargado:</Text> {doctorLabel}
                   </div>
                   <div>
-                    <Text strong>Rango de fechas:</Text>{" "}
+                    <Text strong>Rango de fechas:</Text>{' '}
                     <Text className="ml-2">
-                      {filters.dateRange[0]?.format("DD-MM-YYYY")} a{" "}
-                      {filters.dateRange[1]?.format("DD-MM-YYYY")}
+                      {filters.dateRange[0]?.format('DD-MM-YYYY')} a{' '}
+                      {filters.dateRange[1]?.format('DD-MM-YYYY')}
                     </Text>
                   </div>
                 </div>
@@ -484,20 +493,18 @@ export const ReportGenerator = () => {
               </Title>
               {!isGenerated && !isLoading ? (
                 <div className="text-center py-10 text-gray-400">
-                  Configure los filtros y haga clic en{" "}
-                  <strong>Generar Reporte</strong> para visualizar los datos.
+                  Configure los filtros y haga clic en <strong>Generar Reporte</strong> para
+                  visualizar los datos.
                 </div>
               ) : (
-                <Table<ReportLineDto>
+                <Table<ReportTableRow>
                   columns={columns}
-                  dataSource={items as ReportLineDto[]}
-                  rowKey={(r) =>
-                    `${r.transactionDate}-${r.receiptNumber}-${r.cashierIdentity}`
-                  }
+                  dataSource={items}
+                  rowKey={(r) => `${r.transactionDate}-${r.receiptNumber}-${r.cashierIdentity}`}
                   pagination={false}
                   size="small"
                   bordered
-                  scroll={{ x: "max-content" }}
+                  scroll={{ x: 'max-content' }}
                 />
               )}
             </div>
@@ -505,14 +512,12 @@ export const ReportGenerator = () => {
             {hasData && pagination && (
               <div className="flex justify-end mb-4">
                 <Pagination
-                  current={pagination.currentPage}
-                  pageSize={pagination.pageSize}
+                  current={pagination.currentPage ?? 1}
+                  pageSize={pagination.pageSize ?? 10}
                   total={pagination.totalItems ?? 0}
                   showSizeChanger
-                  pageSizeOptions={["10", "20", "50", "100"]}
-                  showTotal={(total, range) =>
-                    `${range[0]}-${range[1]} de ${total} registros`
-                  }
+                  pageSizeOptions={['10', '20', '50', '100']}
+                  showTotal={(total, range) => `${range[0]}-${range[1]} de ${total} registros`}
                   onChange={handlePageChange}
                   disabled={isLoading}
                 />
@@ -523,26 +528,25 @@ export const ReportGenerator = () => {
             <div className="flex items-center justify-evenly py-2 border-t border-gray-200 mt-2">
               <div>
                 <div>
-                  <Text strong>Total de Transacciones:</Text>{" "}
-                  {summaryStats?.totalTransactions ?? "—"}
+                  <Text strong>Total de Transacciones:</Text>{' '}
+                  {summaryStats?.totalTransactions ?? '—'}
                 </div>
                 <div>
-                  <Text strong>Total de Ingresos:</Text>{" "}
-                  {typeof summaryStats?.totalCollected === "number"
-                    ? `L ${summaryStats.totalCollected.toLocaleString("es-HN", {
+                  <Text strong>Total de Ingresos:</Text>{' '}
+                  {typeof summaryStats?.totalCollected === 'number'
+                    ? `L ${summaryStats.totalCollected.toLocaleString('es-HN', {
                         minimumFractionDigits: 2,
                       })}`
-                    : "—"}
+                    : '—'}
                 </div>
               </div>
               <div>
                 <div>
-                  <Text strong>Servicios Exonerados:</Text>{" "}
-                  {summaryStats?.exoneratedServicesCount ?? "—"}
+                  <Text strong>Servicios Exonerados:</Text>{' '}
+                  {summaryStats?.exoneratedServicesCount ?? '—'}
                 </div>
                 <div>
-                  <Text strong>Servicios Pagados:</Text>{" "}
-                  {summaryStats?.paidServicesCount ?? "—"}
+                  <Text strong>Servicios Pagados:</Text> {summaryStats?.paidServicesCount ?? '—'}
                 </div>
               </div>
               <div>
@@ -550,8 +554,8 @@ export const ReportGenerator = () => {
                   <Text strong>Series Ejecutadas:</Text> {executedSeriesLabel}
                 </div>
                 <div>
-                  <Text strong>Recibos Cancelados:</Text>{" "}
-                  {summaryStats?.canceledServicesCount ?? "—"}
+                  <Text strong>Recibos Cancelados:</Text>{' '}
+                  {summaryStats?.canceledServicesCount ?? '—'}
                 </div>
               </div>
             </div>
@@ -561,9 +565,7 @@ export const ReportGenerator = () => {
               <div className="text-center mb-1 text-gray-600 text-sm">
                 Este reporte fue generado el {generatedAt}
               </div>
-              <div className="text-center text-sm text-gray-600">
-                {hospitalName} - SIGREF
-              </div>
+              <div className="text-center text-sm text-gray-600">{hospitalName} - SIGREF</div>
               <div className="text-center text-xs text-gray-500">
                 Usuario | {generatedByUser} | {generatedByRole}
               </div>
@@ -571,10 +573,9 @@ export const ReportGenerator = () => {
               {/* Debug info — remove before production */}
               {hasData && pagination && (
                 <div className="text-center text-xs text-gray-400 mt-2">
-                  Página {pagination.currentPage} de {pagination.totalPages}{" "}
-                  &nbsp;|&nbsp;
-                  {pagination.hasPrevious ? "← Anterior" : ""}{" "}
-                  {pagination.hasNext ? "Siguiente →" : ""}
+                  Página {pagination.currentPage} de {pagination.totalPages} &nbsp;|&nbsp;
+                  {pagination.hasPrevious ? '← Anterior' : ''}{' '}
+                  {pagination.hasNext ? 'Siguiente →' : ''}
                 </div>
               )}
             </div>
@@ -582,5 +583,5 @@ export const ReportGenerator = () => {
         </Spin>
       </div>
     </div>
-  );
-};
+  )
+}

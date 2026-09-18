@@ -1,59 +1,60 @@
-import { useState, useMemo } from "react";
-import { useNavigate } from "react-router";
-import { useUrlFilters, useMessage } from "../../../shared/hooks";
-import { useQueryClient } from "@tanstack/react-query";
-import type { TablePaginationConfig } from "antd";
-import type { OrganizationDto } from "@models";
+import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router'
+import { useUrlFilters, useMessage } from '../../../shared/hooks'
+import { useQueryClient } from '@tanstack/react-query'
+import { createTablePagination } from '../../../shared/components/ui'
+import type { GetOrganizationListParams, OrganizationDto } from '@models'
+import type { GetOrganizationListTypeItem } from '../../../api/generated/schemas/types/organizations/getOrganizationListTypeItem'
 import {
   getGetOrganizationListQueryKey,
   useGetOrganizationList,
   useDeleteOrganizationById,
-} from "@endpoints/organizations/organizations";
+} from '@endpoints/organizations/organizations'
 
 export function useOrganizationsList() {
-  const [selectedOrganization, setSelectedOrganization] = useState<OrganizationDto | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const queryClient = useQueryClient();
-  const msg = useMessage();
-  const navigate = useNavigate();
+  const [selectedOrganization, setSelectedOrganization] = useState<OrganizationDto | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const queryClient = useQueryClient()
+  const msg = useMessage()
+  const navigate = useNavigate()
 
   // Estado para búsqueda local
-  const [searchInput, setSearchInput] = useState("");
+  const [searchInput, setSearchInput] = useState('')
 
   // Filtros desde URL
   const { filters, setFilter, setFilters } = useUrlFilters({
     defaultValues: {
-      search: "",
+      search: '',
       pageNumber: 1,
       pageSize: 10,
       status: undefined as string | undefined,
       type: undefined as string | undefined,
     },
-  });
+  })
 
   // Parámetros para el backend
   const queryParams = useMemo(() => {
-    const params: any = {
-      pageNumber: filters.pageNumber,
-      pageSize: filters.pageSize,
-    };
+    const params: GetOrganizationListParams = {
+      PageNumber: filters.pageNumber,
+      PageSize: filters.pageSize,
+    }
 
-    if (filters.search) params.name = filters.search;
+    if (filters.search) params.Name = filters.search
 
     // Filtro por estado
-    if (filters.status === "active") {
-      params.active = true;
-    } else if (filters.status === "inactive") {
-      params.active = false;
+    if (filters.status === 'active') {
+      params.Active = true
+    } else if (filters.status === 'inactive') {
+      params.Active = false
     }
 
     // Filtro por tipo de organización
     if (filters.type) {
-      params.type = filters.type; 
+      params.Type = [filters.type as GetOrganizationListTypeItem]
     }
 
-    return params;
-  }, [filters]);
+    return params
+  }, [filters])
 
   // Obtener organizaciones
   const {
@@ -63,58 +64,56 @@ export function useOrganizationsList() {
     isError,
   } = useGetOrganizationList(queryParams, {
     query: { placeholderData: (prev) => prev },
-  });
+  })
 
   // Datos
-  const organizations = response?.items || [];
-  const pagination = response?.pagination;
+  const organizations = response?.items || []
+  const pagination = response?.pagination
 
   // Eliminar organización
   const { mutate: deleteOrganization } = useDeleteOrganizationById({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: getGetOrganizationListQueryKey(),
-        });
-        msg.success("Organización eliminada correctamente");
+        })
+        msg.success('Organización eliminada correctamente')
       },
-      onError: () => msg.error("Error al eliminar la organización"),
+      onError: () => msg.error('Error al eliminar la organización'),
     },
-  });
+  })
 
   // Ver detalles
   const handleViewDetails = (organization: OrganizationDto) => {
-    setSelectedOrganization(organization);
-    setIsModalOpen(true);
-  };
+    setSelectedOrganization(organization)
+    setIsModalOpen(true)
+  }
 
   // Editar
-  const handleEdit = (id: string) => navigate(`/organizations/update/${id}`);
+  const handleEdit = (id: string) => navigate(`/organizations/update/${id}`)
 
   // Eliminar
-  const handleDelete = (id: string) => deleteOrganization({ id });
+  const handleDelete = (id: string) => deleteOrganization({ id })
 
   // Búsqueda
-  const handleSearchInputChange = (value: string) => setSearchInput(value);
-  const handleSearch = () => setFilter("search", searchInput);
+  const handleSearchInputChange = (value: string) => setSearchInput(value)
+  const handleSearch = () => setFilter('search', searchInput)
   const handleClearSearch = () => {
-    setSearchInput("");
-    setFilter("search", "");
-  };
-  const handleTypeChange = (value: string) => setFilter("type", value);
+    setSearchInput('')
+    setFilter('search', '')
+  }
+  const handleTypeChange = (value: string) => setFilter('type', value)
 
   // Manejo de filtro estado
-  const handleStatusChange = (value: string) => setFilter("status", value);
+  const handleStatusChange = (value: string) => setFilter('status', value)
 
   // Paginación
-  const paginationConfig: TablePaginationConfig = {
+  const paginationConfig = createTablePagination({
     current: pagination?.currentPage || 1,
     pageSize: pagination?.pageSize || 10,
-    showSizeChanger: true,
     total: pagination?.totalItems || 0,
     onChange: (page, pageSize) => setFilters({ pageNumber: page, pageSize }),
-    showTotal: (total, range) => `${range[0]}-${range[1]} de ${total}`,
-  };
+  })
 
   return {
     filters,
@@ -135,5 +134,5 @@ export function useOrganizationsList() {
     handleClearSearch,
     handleTypeChange,
     handleStatusChange,
-  };
+  }
 }

@@ -1,12 +1,12 @@
 # SIGREF — Reporte de calidad
 
-Generado: 2026-09-18T16:31:19.006Z
+Generado: 2026-09-18T17:54:52.639Z
 
 ## Resumen
 
-- Errores totales: 1199
-- Advertencias totales: 202
-- Diagnósticos totales: 1401
+- Errores totales: 1116
+- Advertencias totales: 184
+- Diagnósticos totales: 1300
 
 ## Tipos de errores y advertencias
 
@@ -15,41 +15,40 @@ Generado: 2026-09-18T16:31:19.006Z
 | TS18046 | TypeScript | 6 |
 | TS2307 | TypeScript | 2 |
 | TS2322 | TypeScript | 6 |
-| TS2339 | TypeScript | 11 |
+| TS2339 | TypeScript | 10 |
 | TS2344 | TypeScript | 1 |
 | TS2345 | TypeScript | 8 |
 | TS2366 | TypeScript | 1 |
-| TS2367 | TypeScript | 28 |
+| TS2367 | TypeScript | 6 |
 | TS2769 | TypeScript | 2 |
 | TS6133 | TypeScript | 4 |
-| TS6137 | TypeScript | 17 |
-| TS7006 | TypeScript | 5 |
+| TS6137 | TypeScript | 13 |
+| TS7006 | TypeScript | 4 |
 | TS7016 | TypeScript | 1 |
 | TS7031 | TypeScript | 1 |
 | @typescript-eslint/await-thenable | ESLint | 1 |
 | @typescript-eslint/no-base-to-string | ESLint | 2 |
-| @typescript-eslint/no-explicit-any | ESLint | 154 |
-| @typescript-eslint/no-floating-promises | ESLint | 74 |
+| @typescript-eslint/no-explicit-any | ESLint | 139 |
+| @typescript-eslint/no-floating-promises | ESLint | 70 |
 | @typescript-eslint/no-misused-promises | ESLint | 27 |
 | @typescript-eslint/no-redundant-type-constituents | ESLint | 3 |
-| @typescript-eslint/no-unnecessary-type-assertion | ESLint | 38 |
-| @typescript-eslint/no-unsafe-argument | ESLint | 73 |
-| @typescript-eslint/no-unsafe-assignment | ESLint | 303 |
-| @typescript-eslint/no-unsafe-call | ESLint | 73 |
-| @typescript-eslint/no-unsafe-member-access | ESLint | 480 |
-| @typescript-eslint/no-unsafe-return | ESLint | 36 |
+| @typescript-eslint/no-unnecessary-type-assertion | ESLint | 36 |
+| @typescript-eslint/no-unsafe-argument | ESLint | 69 |
+| @typescript-eslint/no-unsafe-assignment | ESLint | 291 |
+| @typescript-eslint/no-unsafe-call | ESLint | 72 |
+| @typescript-eslint/no-unsafe-member-access | ESLint | 459 |
+| @typescript-eslint/no-unsafe-return | ESLint | 26 |
 | @typescript-eslint/no-unused-vars | ESLint | 13 |
 | @typescript-eslint/prefer-promise-reject-errors | ESLint | 1 |
 | @typescript-eslint/require-await | ESLint | 1 |
-| @typescript-eslint/restrict-plus-operands | ESLint | 1 |
 | @typescript-eslint/restrict-template-expressions | ESLint | 4 |
 | jsx-a11y/click-events-have-key-events | ESLint | 3 |
 | jsx-a11y/label-has-associated-control | ESLint | 4 |
 | jsx-a11y/no-static-element-interactions | ESLint | 3 |
-| react-hooks/exhaustive-deps | ESLint | 9 |
+| react-hooks/exhaustive-deps | ESLint | 8 |
 | react-hooks/rules-of-hooks | ESLint | 1 |
 | react-refresh/only-export-components | ESLint | 1 |
-| react/jsx-key | ESLint | 3 |
+| react/jsx-key | ESLint | 1 |
 
 ## Archivos con diagnósticos
 
@@ -63,19 +62,17 @@ Generado: 2026-09-18T16:31:19.006Z
 | src/features/healthcares/components/HealthcareForm.tsx | 9 | 2 |
 | src/features/healthcares/hooks/useCreateHealthcare.ts | 6 | 1 |
 | src/features/healthcares/hooks/useHealthcareForm.ts | 1 | 0 |
-| src/features/healthcares/hooks/useHealthcaresList.ts | 8 | 2 |
+| src/features/healthcares/hooks/useHealthcaresList.ts | 7 | 2 |
 | src/features/healthcares/hooks/useUpdateHealthcare.ts | 7 | 1 |
-| src/features/healthcares/pages/HealthcaresListPage.tsx | 12 | 1 |
+| src/features/healthcares/pages/HealthcaresListPage.tsx | 10 | 1 |
 | src/features/healthcares/pages/UpdateHealthcarePage.tsx | 0 | 1 |
 | src/features/hospital/components/HospitalForm.tsx | 17 | 6 |
 | src/features/hospital/hooks/useCreateHospital.ts | 7 | 1 |
 | src/features/hospital/hooks/useHospitalForm.ts | 46 | 1 |
 | src/features/hospital/pages/HospitalDetailsPage.tsx | 4 | 1 |
 | src/features/incomes/components/IncomeSummary.tsx | 27 | 3 |
-| src/features/incomes/components/ListPatient.tsx | 74 | 4 |
+| src/features/incomes/components/ListPatient.tsx | 76 | 4 |
 | src/features/incomes/components/modals/EditIncomeModal.tsx | 27 | 2 |
-| src/features/incomes/components/ServiceGroupIncome.tsx | 0 | 2 |
-| src/features/incomes/components/ServiceIncome.tsx | 0 | 2 |
 | src/features/incomes/hooks/useCashClosing.ts | 7 | 1 |
 | src/features/incomes/hooks/useCreateIncome.ts | 21 | 3 |
 | src/features/incomes/hooks/useInvoiceSeriesManager.ts | 0 | 1 |
@@ -88,22 +85,19 @@ Generado: 2026-09-18T16:31:19.006Z
 | src/features/locations/hooks/useLocationForm.ts | 10 | 0 |
 | src/features/locations/pages/LocationDetailsPage.tsx | 5 | 0 |
 | src/features/media-files/components/LogoSelectorModal.tsx | 2 | 2 |
-| src/features/media-files/components/MediaFilesList.tsx | 13 | 3 |
 | src/features/media-files/components/UploadMediaForm.tsx | 1 | 0 |
 | src/features/media-files/hooks/useMediaFiles.ts | 12 | 1 |
 | src/features/organizations/components/OrganizationsDetailsModal.tsx | 2 | 0 |
 | src/features/organizations/components/OrganizationsForm.tsx | 11 | 0 |
 | src/features/organizations/components/OrganizationsList.tsx | 8 | 2 |
 | src/features/organizations/hooks/useCreateOrganizations.ts | 7 | 1 |
-| src/features/organizations/hooks/useListOrganizations.ts | 8 | 1 |
 | src/features/organizations/hooks/useUpdateOrganizations.ts | 7 | 2 |
 | src/features/organizations/pages/CreateOrganizationsPage.tsx | 2 | 2 |
 | src/features/patients/components/PatientForm.tsx | 7 | 3 |
-| src/features/patients/components/PatientsInformation.tsx | 18 | 3 |
+| src/features/patients/components/PatientsInformation.tsx | 16 | 3 |
 | src/features/patients/hooks/useCreatePatient.ts | 68 | 5 |
 | src/features/patients/hooks/useEditPatient.ts | 72 | 6 |
 | src/features/patients/hooks/usePatientForm.ts | 18 | 5 |
-| src/features/patients/hooks/usePatientsInformation.ts | 45 | 4 |
 | src/features/patients/pages/UpdatePatientPage.tsx | 1 | 1 |
 | src/features/practitioners/components/PractitionerForm.tsx | 7 | 0 |
 | src/features/practitioners/components/PractitionerRoleForm.tsx | 4 | 1 |
@@ -114,7 +108,6 @@ Generado: 2026-09-18T16:31:19.006Z
 | src/features/practitioners/pages/PractitionerDetailsPage.tsx | 4 | 0 |
 | src/features/reports/components/ControlReport.tsx | 20 | 0 |
 | src/features/reports/components/DashboardSkeleton.tsx | 5 | 0 |
-| src/features/reports/components/ReportGenerator.tsx | 14 | 6 |
 | src/features/reports/hooks/useDashboardData.ts | 14 | 1 |
 | src/features/series/components/SeriesForm.tsx | 8 | 0 |
 | src/features/series/hooks/useCreateSerie.ts | 7 | 1 |
@@ -156,9 +149,6 @@ Generado: 2026-09-18T16:31:19.006Z
 
 ## Errores de TypeScript
 
-- src/features/healthcares/hooks/useHealthcaresList.ts:10:38 — TS6137: Cannot import type declaration files. Consider importing 'healthcare-services' instead of '@types/healthcare-services'.
-- src/features/healthcares/pages/HealthcaresListPage.tsx:23:61 — TS6137: Cannot import type declaration files. Consider importing 'healthcare-services' instead of '@types/healthcare-services'.
-- src/features/healthcares/pages/HealthcaresListPage.tsx:24:33 — TS6137: Cannot import type declaration files. Consider importing 'healthcare-services' instead of '@types/healthcare-services'.
 - src/features/hospital/pages/HospitalDetailsPage.tsx:17:45 — TS6133: 'Result' is declared but its value is never read.
 - src/features/incomes/hooks/useCreateIncome.ts:7:48 — TS6137: Cannot import type declaration files. Consider importing 'invoices' instead of '@types/invoices'.
 - src/features/incomes/hooks/useCreateIncome.ts:91:11 — TS6133: 'totalAmount' is declared but its value is never read.
@@ -185,37 +175,12 @@ Generado: 2026-09-18T16:31:19.006Z
 - src/features/locations/pages/LocationDetailsPage.tsx:28:29 — TS2344: Type 'string | null' does not satisfy the constraint 'string | number | symbol'.
 - src/features/media-files/components/LogoSelectorModal.tsx:4:36 — TS6137: Cannot import type declaration files. Consider importing 'media-files' instead of '@types/media-files'.
 - src/features/media-files/components/LogoSelectorModal.tsx:153:7 — TS2322: Type 'UseMutationResult<MediaFileDto, ErrorType<ProblemDetails>, CreateMediaFileUploadMutationVariables, unknown>' is not assignable to type 'UseMutationResult<unknown, Error, { data: FormData; }, unknown>'.
-- src/features/media-files/components/MediaFilesList.tsx:3:36 — TS6137: Cannot import type declaration files. Consider importing 'media-files' instead of '@types/media-files'.
 - src/features/media-files/components/UploadMediaForm.tsx:22:31 — TS6137: Cannot import type declaration files. Consider importing 'media-files' instead of '@types/media-files'.
 - src/features/media-files/hooks/useMediaFiles.ts:4:31 — TS6137: Cannot import type declaration files. Consider importing 'media-files' instead of '@types/media-files'.
 - src/features/organizations/hooks/useCreateOrganizations.ts:6:114 — TS6137: Cannot import type declaration files. Consider importing 'shared' instead of '@types/shared'.
 - src/features/organizations/hooks/useCreateOrganizations.ts:7:90 — TS6137: Cannot import type declaration files. Consider importing 'shared' instead of '@types/shared'.
 - src/features/organizations/hooks/useUpdateOrganizations.ts:8:114 — TS6137: Cannot import type declaration files. Consider importing 'shared' instead of '@types/shared'.
-- src/features/patients/components/PatientsInformation.tsx:61:5 — TS2339: Property 'contextHolder' does not exist on type '{ selectedPatientId: string; data: PatientDto | undefined; error: any; selectedPatient: { id: string; nombre: string; apellidos: string; tipo: NullableOfNameUse | undefined; ... 9 more ...; direcciones: { ...; }[]; }; ... 11 more ...; getIdentificadorColor: (tipo: string) => "blue" | ... 2 more ... | "default"; }'.
 - src/features/patients/hooks/useCreatePatient.ts:94:11 — TS2322: Type 'number' is not assignable to type 'NullableOfIdentifierUse | undefined'.
-- src/features/patients/hooks/usePatientsInformation.ts:146:25 — TS7006: Parameter 'prev' implicitly has an 'any' type.
-- src/features/patients/hooks/usePatientsInformation.ts:179:9 — TS2367: This comparison appears to be unintentional because the types 'string | null | undefined' and 'number' have no overlap.
-- src/features/patients/hooks/usePatientsInformation.ts:181:13 — TS2367: This comparison appears to be unintentional because the types 'string | null | undefined' and 'number' have no overlap.
-- src/features/patients/hooks/usePatientsInformation.ts:183:15 — TS2367: This comparison appears to be unintentional because the types 'string | null | undefined' and 'number' have no overlap.
-- src/features/patients/hooks/usePatientsInformation.ts:219:17 — TS2367: This comparison appears to be unintentional because the types '"url" | "phone" | "fax" | "email" | "pager" | "sms" | "other"' and '"Phone"' have no overlap.
-- src/features/patients/hooks/usePatientsInformation.ts:221:19 — TS2367: This comparison appears to be unintentional because the types '"url" | "phone" | "fax" | "email" | "pager" | "sms" | "other"' and '"Email"' have no overlap.
-- src/features/patients/hooks/usePatientsInformation.ts:225:23 — TS2367: This comparison appears to be unintentional because the types '"phone" | "fax" | "email" | "pager" | "sms" | "other"' and '"Pager"' have no overlap.
-- src/features/patients/hooks/usePatientsInformation.ts:227:25 — TS2367: This comparison appears to be unintentional because the types '"phone" | "fax" | "email" | "pager" | "sms" | "other"' and '"Fax"' have no overlap.
-- src/features/patients/hooks/usePatientsInformation.ts:229:27 — TS2367: This comparison appears to be unintentional because the types '"phone" | "fax" | "email" | "pager" | "sms" | "other"' and '"SMS"' have no overlap.
-- src/features/patients/hooks/usePatientsInformation.ts:231:29 — TS2367: This comparison appears to be unintentional because the types '"phone" | "fax" | "email" | "pager" | "sms" | "other"' and '"Other"' have no overlap.
-- src/features/patients/hooks/usePatientsInformation.ts:233:31 — TS2367: This comparison appears to be unintentional because the types '"phone" | "fax" | "email" | "pager" | "sms" | "other"' and '"Old"' have no overlap.
-- src/features/patients/hooks/usePatientsInformation.ts:239:17 — TS2367: This comparison appears to be unintentional because the types '"temp" | "old" | "home" | "work" | "mobile"' and '"Mobile"' have no overlap.
-- src/features/patients/hooks/usePatientsInformation.ts:241:19 — TS2367: This comparison appears to be unintentional because the types '"temp" | "old" | "home" | "work" | "mobile"' and '"Home"' have no overlap.
-- src/features/patients/hooks/usePatientsInformation.ts:243:21 — TS2367: This comparison appears to be unintentional because the types '"temp" | "old" | "home" | "work" | "mobile"' and '"Work"' have no overlap.
-- src/features/patients/hooks/usePatientsInformation.ts:245:23 — TS2367: This comparison appears to be unintentional because the types '"temp" | "old" | "home" | "work" | "mobile"' and '"Temp"' have no overlap.
-- src/features/patients/hooks/usePatientsInformation.ts:247:25 — TS2367: This comparison appears to be unintentional because the types '"temp" | "old" | "home" | "work" | "mobile"' and '"Old"' have no overlap.
-- src/features/patients/hooks/usePatientsInformation.ts:257:17 — TS2367: This comparison appears to be unintentional because the types '"temp" | "old" | "home" | "work" | "billing"' and '"Home"' have no overlap.
-- src/features/patients/hooks/usePatientsInformation.ts:259:19 — TS2367: This comparison appears to be unintentional because the types '"temp" | "old" | "home" | "work" | "billing"' and '"Work"' have no overlap.
-- src/features/patients/hooks/usePatientsInformation.ts:261:21 — TS2367: This comparison appears to be unintentional because the types '"temp" | "old" | "home" | "work" | "billing"' and '"Temp"' have no overlap.
-- src/features/patients/hooks/usePatientsInformation.ts:263:23 — TS2367: This comparison appears to be unintentional because the types '"temp" | "old" | "home" | "work" | "billing"' and '"Old"' have no overlap.
-- src/features/patients/hooks/usePatientsInformation.ts:299:9 — TS2367: This comparison appears to be unintentional because the types 'string | null | undefined' and 'number' have no overlap.
-- src/features/patients/hooks/usePatientsInformation.ts:301:13 — TS2367: This comparison appears to be unintentional because the types 'string | null | undefined' and 'number' have no overlap.
-- src/features/patients/hooks/usePatientsInformation.ts:303:15 — TS2367: This comparison appears to be unintentional because the types 'string | null | undefined' and 'number' have no overlap.
 - src/features/practitioners/components/PractitionerForm.tsx:1:10 — TS6133: 'FaUserPlus' is declared but its value is never read.
 - src/features/practitioners/components/PractitionerForm.tsx:1:22 — TS6133: 'FaUserEdit' is declared but its value is never read.
 - src/features/practitioners/components/PractitionersListForm.tsx:41:77 — TS6137: Cannot import type declaration files. Consider importing 'shared' instead of '@types/shared'.
@@ -452,88 +417,86 @@ Generado: 2026-09-18T16:31:19.006Z
 - src/features/incomes/components/IncomeSummary.tsx:309:47 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .code on an `any` value.
 - src/features/incomes/components/IncomeSummary.tsx:355:18 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
 - src/features/incomes/components/IncomeSummary.tsx:355:30 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .toFixed on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:23:4 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
-- src/features/incomes/components/ListPatient.tsx:25:9 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/incomes/components/ListPatient.tsx:25:30 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
-- src/features/incomes/components/ListPatient.tsx:25:52 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .filter on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:25:70 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
-- src/features/incomes/components/ListPatient.tsx:26:11 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/incomes/components/ListPatient.tsx:26:24 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
-- src/features/incomes/components/ListPatient.tsx:26:40 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .searchPaciente on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:28:11 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/incomes/components/ListPatient.tsx:28:25 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
-- src/features/incomes/components/ListPatient.tsx:28:25 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
-- src/features/incomes/components/ListPatient.tsx:28:34 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .nombre on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:28:56 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .includes on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:31:23 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .genero on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:32:16 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .genero on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:32:43 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .genero on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:33:24 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .genero on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:33:51 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .genero on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:24:4 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
+- src/features/incomes/components/ListPatient.tsx:26:9 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
+- src/features/incomes/components/ListPatient.tsx:26:30 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
+- src/features/incomes/components/ListPatient.tsx:26:52 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .filter on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:26:70 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
+- src/features/incomes/components/ListPatient.tsx:27:11 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
+- src/features/incomes/components/ListPatient.tsx:27:24 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
+- src/features/incomes/components/ListPatient.tsx:27:40 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .searchPaciente on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:29:11 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
+- src/features/incomes/components/ListPatient.tsx:29:25 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
+- src/features/incomes/components/ListPatient.tsx:29:25 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
+- src/features/incomes/components/ListPatient.tsx:29:34 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .nombre on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:29:56 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .includes on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:32:23 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .genero on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:33:16 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .genero on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:33:43 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .genero on an `any` value.
 - src/features/incomes/components/ListPatient.tsx:34:24 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .genero on an `any` value.
 - src/features/incomes/components/ListPatient.tsx:34:51 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .genero on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:37:23 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .nacionalidad on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:38:16 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .nacionalidad on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:38:49 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .nacionalidad on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:40:11 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/incomes/components/ListPatient.tsx:41:24 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .identificador on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:42:7 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
-- src/features/incomes/components/ListPatient.tsx:42:7 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
-- src/features/incomes/components/ListPatient.tsx:42:16 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .identificador on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:44:10 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .includes on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:44:19 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
-- src/features/incomes/components/ListPatient.tsx:44:35 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .identificador on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:46:5 — Error @typescript-eslint/no-unsafe-return: Unsafe return of a value of type `any`.
-- src/features/incomes/components/ListPatient.tsx:58:20 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/incomes/components/ListPatient.tsx:58:36 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .tipoIdentificador on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:59:34 — Error @typescript-eslint/no-unsafe-return: Unsafe return of a value of type `any`.
-- src/features/incomes/components/ListPatient.tsx:59:34 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
-- src/features/incomes/components/ListPatient.tsx:70:20 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/incomes/components/ListPatient.tsx:70:36 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .genero on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:71:34 — Error @typescript-eslint/no-unsafe-return: Unsafe return of a value of type `any`.
-- src/features/incomes/components/ListPatient.tsx:71:34 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
-- src/features/incomes/components/ListPatient.tsx:83:20 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/incomes/components/ListPatient.tsx:83:36 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .nacionalidad on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:84:34 — Error @typescript-eslint/no-unsafe-return: Unsafe return of a value of type `any`.
-- src/features/incomes/components/ListPatient.tsx:84:34 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
-- src/features/incomes/components/ListPatient.tsx:96:20 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/incomes/components/ListPatient.tsx:96:36 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .identificador on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:97:30 — Error @typescript-eslint/no-unsafe-return: Unsafe return of a value of type `any`.
-- src/features/incomes/components/ListPatient.tsx:97:30 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
-- src/features/incomes/components/ListPatient.tsx:110:18 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
-- src/features/incomes/components/ListPatient.tsx:115:23 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/incomes/components/ListPatient.tsx:117:13 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/incomes/components/ListPatient.tsx:117:38 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .pagePaciente on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:35:24 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .genero on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:35:51 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .genero on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:38:23 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .nacionalidad on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:39:16 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .nacionalidad on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:39:49 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .nacionalidad on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:41:11 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
+- src/features/incomes/components/ListPatient.tsx:42:24 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .identificador on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:43:7 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
+- src/features/incomes/components/ListPatient.tsx:43:7 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
+- src/features/incomes/components/ListPatient.tsx:43:16 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .identificador on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:45:10 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .includes on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:45:19 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
+- src/features/incomes/components/ListPatient.tsx:45:35 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .identificador on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:47:5 — Error @typescript-eslint/no-unsafe-return: Unsafe return of a value of type `any`.
+- src/features/incomes/components/ListPatient.tsx:59:20 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
+- src/features/incomes/components/ListPatient.tsx:59:36 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .tipoIdentificador on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:60:34 — Error @typescript-eslint/no-unsafe-return: Unsafe return of a value of type `any`.
+- src/features/incomes/components/ListPatient.tsx:60:34 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
+- src/features/incomes/components/ListPatient.tsx:71:20 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
+- src/features/incomes/components/ListPatient.tsx:71:36 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .genero on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:72:34 — Error @typescript-eslint/no-unsafe-return: Unsafe return of a value of type `any`.
+- src/features/incomes/components/ListPatient.tsx:72:34 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
+- src/features/incomes/components/ListPatient.tsx:84:20 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
+- src/features/incomes/components/ListPatient.tsx:84:36 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .nacionalidad on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:85:34 — Error @typescript-eslint/no-unsafe-return: Unsafe return of a value of type `any`.
+- src/features/incomes/components/ListPatient.tsx:85:34 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
+- src/features/incomes/components/ListPatient.tsx:97:20 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
+- src/features/incomes/components/ListPatient.tsx:97:36 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .identificador on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:98:30 — Error @typescript-eslint/no-unsafe-return: Unsafe return of a value of type `any`.
+- src/features/incomes/components/ListPatient.tsx:98:30 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
+- src/features/incomes/components/ListPatient.tsx:111:18 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
+- src/features/incomes/components/ListPatient.tsx:116:23 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
 - src/features/incomes/components/ListPatient.tsx:118:13 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/incomes/components/ListPatient.tsx:118:39 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .pageSizePaciente on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:120:15 — Error @typescript-eslint/no-unsafe-return: Unsafe return of a value of type `any`.
-- src/features/incomes/components/ListPatient.tsx:120:15 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
-- src/features/incomes/components/ListPatient.tsx:132:28 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .genero on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:134:32 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .genero on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:142:30 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .genero on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:144:34 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .genero on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:164:29 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .identificadorTipo on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:164:57 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .identificador on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:167:29 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .nacionalidad on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:167:65 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .nacimiento on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:169:27 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .contacto on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:169:46 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .contacto on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:171:41 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .contacto on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:179:36 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .estadoVital on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:180:27 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .estadoVital on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:185:28 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
-- src/features/incomes/components/ListPatient.tsx:186:28 — Error @typescript-eslint/no-unsafe-return: Unsafe return of a value of type `any`.
-- src/features/incomes/components/ListPatient.tsx:186:28 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
-- src/features/incomes/components/ListPatient.tsx:190:35 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .id on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:190:49 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .id on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:198:35 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .id on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:198:49 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .id on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:200:35 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .id on an `any` value.
-- src/features/incomes/components/ListPatient.tsx:200:49 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .id on an `any` value.
-- src/features/incomes/components/ServiceGroupIncome.tsx:14:108 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
-- src/features/incomes/components/ServiceGroupIncome.tsx:15:37 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
-- src/features/incomes/components/ServiceIncome.tsx:14:92 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
-- src/features/incomes/components/ServiceIncome.tsx:15:33 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
+- src/features/incomes/components/ListPatient.tsx:118:38 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .pagePaciente on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:119:13 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
+- src/features/incomes/components/ListPatient.tsx:119:39 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .pageSizePaciente on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:120:13 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
+- src/features/incomes/components/ListPatient.tsx:120:39 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .length on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:122:15 — Error @typescript-eslint/no-unsafe-return: Unsafe return of a value of type `any`.
+- src/features/incomes/components/ListPatient.tsx:122:15 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
+- src/features/incomes/components/ListPatient.tsx:133:28 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .genero on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:135:32 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .genero on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:143:30 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .genero on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:145:34 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .genero on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:165:29 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .identificadorTipo on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:165:57 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .identificador on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:168:29 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .nacionalidad on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:168:65 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .nacimiento on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:170:27 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .contacto on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:170:46 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .contacto on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:172:41 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .contacto on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:180:36 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .estadoVital on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:181:27 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .estadoVital on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:186:28 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
+- src/features/incomes/components/ListPatient.tsx:187:28 — Error @typescript-eslint/no-unsafe-return: Unsafe return of a value of type `any`.
+- src/features/incomes/components/ListPatient.tsx:187:28 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
+- src/features/incomes/components/ListPatient.tsx:191:35 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .id on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:191:49 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .id on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:199:35 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .id on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:199:49 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .id on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:201:35 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .id on an `any` value.
+- src/features/incomes/components/ListPatient.tsx:201:49 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .id on an `any` value.
 - src/features/incomes/components/modals/EditIncomeModal.tsx:26:4 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
 - src/features/incomes/components/modals/EditIncomeModal.tsx:29:10 — Error @typescript-eslint/no-unsafe-assignment: Unsafe array destructuring of a tuple element with an `any` value.
 - src/features/incomes/components/modals/EditIncomeModal.tsx:29:48 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
@@ -708,21 +671,6 @@ Generado: 2026-09-18T16:31:19.006Z
 - src/features/locations/pages/LocationDetailsPage.tsx:360:29 — Error @typescript-eslint/no-misused-promises: Promise-returning function provided to attribute where a void return was expected.
 - src/features/media-files/components/LogoSelectorModal.tsx:30:16 — Advertencia @typescript-eslint/no-unnecessary-type-assertion: This assertion is unnecessary since the receiver accepts the original type of the expression.
 - src/features/media-files/components/LogoSelectorModal.tsx:39:16 — Advertencia @typescript-eslint/no-unnecessary-type-assertion: This assertion is unnecessary since the receiver accepts the original type of the expression.
-- src/features/media-files/components/MediaFilesList.tsx:26:15 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
-- src/features/media-files/components/MediaFilesList.tsx:35:19 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
-- src/features/media-files/components/MediaFilesList.tsx:36:19 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
-- src/features/media-files/components/MediaFilesList.tsx:106:17 — Error react/jsx-key: Missing "key" prop for element in array
-- src/features/media-files/components/MediaFilesList.tsx:111:30 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/media-files/components/MediaFilesList.tsx:111:45 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .isPending on an `any` value.
-- src/features/media-files/components/MediaFilesList.tsx:117:17 — Error react/jsx-key: Missing "key" prop for element in array
-- src/features/media-files/components/MediaFilesList.tsx:130:32 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/media-files/components/MediaFilesList.tsx:130:47 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .isPending on an `any` value.
-- src/features/media-files/components/MediaFilesList.tsx:167:20 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/media-files/components/MediaFilesList.tsx:167:32 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .currentPage on an `any` value.
-- src/features/media-files/components/MediaFilesList.tsx:168:21 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/media-files/components/MediaFilesList.tsx:168:33 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .pageSize on an `any` value.
-- src/features/media-files/components/MediaFilesList.tsx:169:18 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/media-files/components/MediaFilesList.tsx:169:30 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .totalItems on an `any` value.
 - src/features/media-files/hooks/useMediaFiles.ts:31:9 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
 - src/features/media-files/hooks/useMediaFiles.ts:31:36 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
 - src/features/media-files/hooks/useMediaFiles.ts:32:9 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
@@ -764,15 +712,6 @@ Generado: 2026-09-18T16:31:19.006Z
 - src/features/organizations/hooks/useCreateOrganizations.ts:44:13 — Error @typescript-eslint/no-unsafe-argument: Unsafe argument of type `any` assigned to a parameter of type `ReactNode`.
 - src/features/organizations/hooks/useCreateOrganizations.ts:44:20 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .response on an `any` value.
 - src/features/organizations/hooks/useCreateOrganizations.ts:188:11 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/organizations/hooks/useListOrganizations.ts:35:9 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/organizations/hooks/useListOrganizations.ts:36:19 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
-- src/features/organizations/hooks/useListOrganizations.ts:41:32 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .name on an `any` value.
-- src/features/organizations/hooks/useListOrganizations.ts:45:14 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .active on an `any` value.
-- src/features/organizations/hooks/useListOrganizations.ts:47:14 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .active on an `any` value.
-- src/features/organizations/hooks/useListOrganizations.ts:52:14 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .type on an `any` value.
-- src/features/organizations/hooks/useListOrganizations.ts:55:5 — Error @typescript-eslint/no-unsafe-return: Unsafe return of a value of type `any`.
-- src/features/organizations/hooks/useListOrganizations.ts:64:30 — Error @typescript-eslint/no-unsafe-argument: Unsafe argument of type `any` assigned to a parameter of type `GetOrganizationListParams | undefined`.
-- src/features/organizations/hooks/useListOrganizations.ts:76:9 — Error @typescript-eslint/no-floating-promises: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.
 - src/features/organizations/hooks/useUpdateOrganizations.ts:154:11 — Error @typescript-eslint/no-floating-promises: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.
 - src/features/organizations/hooks/useUpdateOrganizations.ts:158:11 — Error @typescript-eslint/no-floating-promises: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.
 - src/features/organizations/hooks/useUpdateOrganizations.ts:160:26 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
@@ -795,7 +734,6 @@ Generado: 2026-09-18T16:31:19.006Z
 - src/features/patients/components/PatientForm.tsx:345:41 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .address on an `any` value.
 - src/features/patients/components/PatientForm.tsx:503:53 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
 - src/features/patients/components/PatientForm.tsx:505:22 — Error @typescript-eslint/no-unused-vars: '_' is defined but never used.
-- src/features/patients/components/PatientsInformation.tsx:56:5 — Error @typescript-eslint/no-unsafe-assignment: Unsafe object destructuring of a property with an `any` value.
 - src/features/patients/components/PatientsInformation.tsx:84:25 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
 - src/features/patients/components/PatientsInformation.tsx:111:51 — Error @typescript-eslint/no-unsafe-argument: Unsafe argument of type `any` assigned to a parameter of type `string | number | null`.
 - src/features/patients/components/PatientsInformation.tsx:111:59 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
@@ -988,32 +926,6 @@ Generado: 2026-09-18T16:31:19.006Z
 - src/features/patients/hooks/usePatientForm.ts:151:48 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .system on an `any` value.
 - src/features/patients/hooks/usePatientForm.ts:159:35 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
 - src/features/patients/hooks/usePatientForm.ts:160:11 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
-- src/features/patients/hooks/usePatientsInformation.ts:47:5 — Error @typescript-eslint/no-unsafe-assignment: Unsafe object destructuring of a property with an `any` value.
-- src/features/patients/hooks/usePatientsInformation.ts:55:13 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
-- src/features/patients/hooks/usePatientsInformation.ts:64:9 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/patients/hooks/usePatientsInformation.ts:65:19 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
-- src/features/patients/hooks/usePatientsInformation.ts:72:14 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .name on an `any` value.
-- src/features/patients/hooks/usePatientsInformation.ts:77:14 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .gender on an `any` value.
-- src/features/patients/hooks/usePatientsInformation.ts:91:14 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .active on an `any` value.
-- src/features/patients/hooks/usePatientsInformation.ts:101:14 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .IdentifierType on an `any` value.
-- src/features/patients/hooks/usePatientsInformation.ts:106:14 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .IdentifierValue on an `any` value.
-- src/features/patients/hooks/usePatientsInformation.ts:129:14 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .BirthDate on an `any` value.
-- src/features/patients/hooks/usePatientsInformation.ts:133:14 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .search on an `any` value.
-- src/features/patients/hooks/usePatientsInformation.ts:136:5 — Error @typescript-eslint/no-unsafe-return: Unsafe return of a value of type `any`.
-- src/features/patients/hooks/usePatientsInformation.ts:144:43 — Error @typescript-eslint/no-unsafe-argument: Unsafe argument of type `any` assigned to a parameter of type `GetPatientListParams | undefined`.
-- src/features/patients/hooks/usePatientsInformation.ts:146:34 — Error @typescript-eslint/no-unsafe-return: Unsafe return of a value of type `any`.
-- src/features/patients/hooks/usePatientsInformation.ts:150:9 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/patients/hooks/usePatientsInformation.ts:152:29 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
-- src/features/patients/hooks/usePatientsInformation.ts:153:13 — Error @typescript-eslint/no-unsafe-call: Unsafe call of an `any` typed value.
-- src/features/patients/hooks/usePatientsInformation.ts:153:15 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .line on an `any` value.
-- src/features/patients/hooks/usePatientsInformation.ts:153:35 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .city on an `any` value.
-- src/features/patients/hooks/usePatientsInformation.ts:153:43 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .state on an `any` value.
-- src/features/patients/hooks/usePatientsInformation.ts:153:52 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .country on an `any` value.
-- src/features/patients/hooks/usePatientsInformation.ts:270:6 — Advertencia react-hooks/exhaustive-deps: React Hook useMemo has missing dependencies: 'patient?.active', 'patient?.address', 'patient.birthDate', 'patient?.extension', 'patient?.gender', 'patient?.id', 'patient?.identifier', 'patient?.maritalStatus?.coding', 'patient?.maritalStatus?.text', 'patient?.name', and 'patient?.telecom'. Either include them or remove the dependency array.
-- src/features/patients/hooks/usePatientsInformation.ts:327:9 — Error @typescript-eslint/no-floating-promises: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.
-- src/features/patients/hooks/usePatientsInformation.ts:332:9 — Error @typescript-eslint/no-floating-promises: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.
-- src/features/patients/hooks/usePatientsInformation.ts:366:5 — Error @typescript-eslint/no-floating-promises: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.
-- src/features/patients/hooks/usePatientsInformation.ts:401:5 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
 - src/features/patients/pages/UpdatePatientPage.tsx:34:21 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
 - src/features/patients/pages/UpdatePatientPage.tsx:34:37 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
 - src/features/practitioners/components/PractitionerForm.tsx:1:10 — Error @typescript-eslint/no-unused-vars: 'FaUserPlus' is defined but never used.
@@ -1181,26 +1093,6 @@ Generado: 2026-09-18T16:31:19.006Z
 - src/features/reports/components/DashboardSkeleton.tsx:37:17 — Error @typescript-eslint/no-unsafe-assignment: Unsafe spread of an `any` value in an array.
 - src/features/reports/components/DashboardSkeleton.tsx:48:11 — Error @typescript-eslint/no-unsafe-assignment: Unsafe spread of an `any` value in an array.
 - src/features/reports/components/DashboardSkeleton.tsx:69:11 — Error @typescript-eslint/no-unsafe-assignment: Unsafe spread of an `any` value in an array.
-- src/features/reports/components/ReportGenerator.tsx:55:31 — Error @typescript-eslint/no-unsafe-argument: Unsafe argument of type `any` assigned to a parameter of type `string | number | Dayjs | Date | null | undefined`.
-- src/features/reports/components/ReportGenerator.tsx:64:20 — Error @typescript-eslint/no-unsafe-return: Unsafe return of a value of type `any`.
-- src/features/reports/components/ReportGenerator.tsx:73:20 — Error @typescript-eslint/no-unsafe-return: Unsafe return of a value of type `any`.
-- src/features/reports/components/ReportGenerator.tsx:103:24 — Error @typescript-eslint/no-unsafe-return: Unsafe return of a value of type `any`.
-- src/features/reports/components/ReportGenerator.tsx:126:24 — Error @typescript-eslint/no-unsafe-return: Unsafe return of a value of type `any`.
-- src/features/reports/components/ReportGenerator.tsx:135:24 — Error @typescript-eslint/no-unsafe-return: Unsafe return of a value of type `any`.
-- src/features/reports/components/ReportGenerator.tsx:146:21 — Error @typescript-eslint/no-unsafe-argument: Unsafe argument of type `any` assigned to a parameter of type `string | null | undefined`.
-- src/features/reports/components/ReportGenerator.tsx:176:24 — Error @typescript-eslint/no-unsafe-return: Unsafe return of a value of type `any`.
-- src/features/reports/components/ReportGenerator.tsx:185:24 — Error @typescript-eslint/no-unsafe-return: Unsafe return of a value of type `any`.
-- src/features/reports/components/ReportGenerator.tsx:269:15 — Error @typescript-eslint/restrict-plus-operands: Invalid operand for a '+' operation. Operands must each be a number or string, allowing a string + any of: `any`, `boolean`, `null`, `RegExp`, `undefined`. Got `string[]`.
-- src/features/reports/components/ReportGenerator.tsx:276:33 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
-- src/features/reports/components/ReportGenerator.tsx:276:39 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .message on an `any` value.
-- src/features/reports/components/ReportGenerator.tsx:281:32 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
-- src/features/reports/components/ReportGenerator.tsx:281:38 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .message on an `any` value.
-- src/features/reports/components/ReportGenerator.tsx:366:24 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/reports/components/ReportGenerator.tsx:366:24 — Advertencia @typescript-eslint/no-unnecessary-type-assertion: This assertion is unnecessary since the receiver accepts the original type of the expression.
-- src/features/reports/components/ReportGenerator.tsx:366:45 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
-- src/features/reports/components/ReportGenerator.tsx:367:27 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/reports/components/ReportGenerator.tsx:367:46 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
-- src/features/reports/components/ReportGenerator.tsx:493:31 — Advertencia @typescript-eslint/no-unnecessary-type-assertion: This assertion is unnecessary since it does not change the type of the expression.
 - src/features/reports/hooks/useDashboardData.ts:92:11 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an error typed value.
 - src/features/reports/hooks/useDashboardData.ts:93:11 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an error typed value.
 - src/features/reports/hooks/useDashboardData.ts:94:11 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an error typed value.
@@ -1263,18 +1155,18 @@ Generado: 2026-09-18T16:31:19.006Z
 - src/features/series/pages/SeriesListPage.tsx:163:22 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
 - src/features/series/pages/SeriesListPage.tsx:167:22 — Error @typescript-eslint/no-misused-promises: Promise-returning function provided to attribute where a void return was expected.
 - src/features/series/pages/SeriesListPage.tsx:375:22 — Error @typescript-eslint/no-misused-promises: Promise-returning function provided to attribute where a void return was expected.
-- src/features/service-groups/components/ServiceGroupForm.tsx:161:39 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
-- src/features/service-groups/components/ServiceGroupForm.tsx:163:7 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/service-groups/components/ServiceGroupForm.tsx:163:21 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .title on an `any` value.
+- src/features/service-groups/components/ServiceGroupForm.tsx:162:39 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
 - src/features/service-groups/components/ServiceGroupForm.tsx:164:7 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/service-groups/components/ServiceGroupForm.tsx:164:22 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .status on an `any` value.
-- src/features/service-groups/components/ServiceGroupForm.tsx:168:13 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/service-groups/components/ServiceGroupForm.tsx:168:26 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .abbreviation on an `any` value.
+- src/features/service-groups/components/ServiceGroupForm.tsx:164:21 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .title on an `any` value.
+- src/features/service-groups/components/ServiceGroupForm.tsx:165:7 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
+- src/features/service-groups/components/ServiceGroupForm.tsx:165:22 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .status on an `any` value.
 - src/features/service-groups/components/ServiceGroupForm.tsx:169:13 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/service-groups/components/ServiceGroupForm.tsx:169:29 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .title on an `any` value.
-- src/features/service-groups/components/ServiceGroupForm.tsx:175:7 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/service-groups/components/ServiceGroupForm.tsx:175:27 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .description on an `any` value.
-- src/features/service-groups/components/ServiceGroupForm.tsx:220:18 — Error @typescript-eslint/no-unused-vars: '_' is defined but never used.
+- src/features/service-groups/components/ServiceGroupForm.tsx:169:26 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .abbreviation on an `any` value.
+- src/features/service-groups/components/ServiceGroupForm.tsx:170:13 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
+- src/features/service-groups/components/ServiceGroupForm.tsx:170:29 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .title on an `any` value.
+- src/features/service-groups/components/ServiceGroupForm.tsx:176:7 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
+- src/features/service-groups/components/ServiceGroupForm.tsx:176:27 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .description on an `any` value.
+- src/features/service-groups/components/ServiceGroupForm.tsx:221:18 — Error @typescript-eslint/no-unused-vars: '_' is defined but never used.
 - src/features/service-groups/hooks/useCreateServiceGroup.ts:21:9 — Error @typescript-eslint/no-floating-promises: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.
 - src/features/service-groups/hooks/useCreateServiceGroup.ts:25:9 — Error @typescript-eslint/no-floating-promises: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.
 - src/features/service-groups/hooks/useCreateServiceGroup.ts:27:24 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.

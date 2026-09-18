@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useUrlFilters } from "../../../shared/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMessage } from "../../../shared/hooks";
-import type { TablePaginationConfig } from "antd";
+import { createTablePagination } from "../../../shared/components/ui";
 import {
   getGetServiceGroupListQueryKey,
   useDeleteServiceGroupById,
@@ -107,17 +107,15 @@ export function useServiceGroupsList() {
     setFilter("search", "");
   };
 
-  const paginationConfig: TablePaginationConfig = {
+  const paginationConfig = createTablePagination({
     current: pagination?.currentPage || 1,
     pageSize: pagination?.pageSize || 10,
-    showSizeChanger: true,
     pageSizeOptions: ["10", "20", "50", "100"],
     total: pagination?.totalItems || 0,
     onChange: (page, pageSize) => {
       setFilters({ pageNumber: page, pageSize });
     },
-    showTotal: (total, range) => `${range[0]}-${range[1]} de ${total}`,
-  };
+  });
 
   return {
     filters,

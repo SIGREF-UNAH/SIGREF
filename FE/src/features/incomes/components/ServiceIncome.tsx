@@ -1,22 +1,28 @@
 import { ProList } from "@ant-design/pro-components";
+import { createPaginationConfig } from "../../../shared/components/ui";
 import { Space, Tag, Typography, Spin, Input } from "antd";
 import { SearchOutlined, MedicineBoxOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import type { HealthcareDto } from "@models";
 
-interface ServiceIncomeProps {
+interface ServiceIncomeFilters {
+  searchServicios: string;
+  pageServicio: number;
+  pageSizeServicio: number;
+}
+
+type ServiceIncomeProps = {
   serviciosData: HealthcareDto[];
-  servicioFilters: {
-    searchServicios: string;
-    pageServicio: number;
-    pageSizeServicio: number;
-  };
-  setServicioFilter: (key: "searchServicios" | "pageServicio" | "pageSizeServicio", value: any) => void;
-  setServicioFilters: (filters: any) => void;
+  servicioFilters: ServiceIncomeFilters;
+  setServicioFilter: <K extends keyof ServiceIncomeFilters>(
+    key: K,
+    value: ServiceIncomeFilters[K],
+  ) => void;
+  setServicioFilters: (filters: Partial<ServiceIncomeFilters>) => void;
   handleSelectServicio: (servicio: HealthcareDto) => void;
   selectedServicio: HealthcareDto | null;
   isLoading: boolean;
-}
+};
 
 export const ServiceIncome = ({
   serviciosData,
@@ -76,7 +82,7 @@ export const ServiceIncome = ({
         <ProList<HealthcareDto>
           rowKey="id"
           dataSource={serviciosFiltrados}
-          pagination={{
+          pagination={createPaginationConfig({
             current: servicioFilters.pageServicio || 1,
             pageSize: servicioFilters.pageSizeServicio || 10,
             total: serviciosFiltrados.length,
@@ -86,10 +92,9 @@ export const ServiceIncome = ({
                 pageServicio: page,
                 pageSizeServicio: pageSize || 10,
               }),
-            showSizeChanger: true,
             pageSizeOptions: ["10", "20", "50"],
             showTotal: (total) => `Total: ${total} servicios`,
-          }}
+          })}
           metas={{
             title: {
               render: (_, record) => (
