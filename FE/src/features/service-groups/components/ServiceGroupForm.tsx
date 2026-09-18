@@ -22,6 +22,7 @@ import {
 } from "@ant-design/icons";
 import { ListStatus, getListStatusOptions } from "../../../shared/utils";
 import { SelectionTable } from "../../../shared/components/SelectionTable";
+import { createTablePagination } from "../../../shared/components/ui";
 
 const { Text } = Typography;
 
@@ -355,19 +356,15 @@ export const ServiceGroupForm = ({
               disabled={isPending}
               pagination={
                 healthcarePagination
-                  ? {
+                  ? createTablePagination({
                       current: healthcarePagination.currentPage || 1,
                       pageSize: healthcarePagination.pageSize || 15,
                       total: healthcarePagination.totalItems || 0,
-                      showSizeChanger: true,
-                      showTotal: (total, range) =>
-                        `${range[0]}-${range[1]} de ${total}`,
                       onChange: (page, pageSize) => {
                         onHealthcarePageChange?.(page, pageSize);
                       },
                       pageSizeOptions: ["10", "15", "20", "30"],
-                      size: "small",
-                    }
+                    })
                   : false
               }
               emptyText="No hay servicios disponibles"
@@ -414,19 +411,15 @@ export const ServiceGroupForm = ({
               disabled={isPending}
               pagination={
                 locationPagination
-                  ? {
+                  ? createTablePagination({
                       current: locationPagination.currentPage || 1,
                       pageSize: locationPagination.pageSize || 15,
                       total: locationPagination.totalItems || 0,
-                      showSizeChanger: true,
-                      showTotal: (total, range) =>
-                        `${range[0]}-${range[1]} de ${total}`,
                       onChange: (page, pageSize) => {
                         onLocationPageChange?.(page, pageSize);
                       },
                       pageSizeOptions: ["10", "15", "20", "30"],
-                      size: "small",
-                    }
+                    })
                   : false
               }
               emptyText="No hay ubicaciones disponibles"

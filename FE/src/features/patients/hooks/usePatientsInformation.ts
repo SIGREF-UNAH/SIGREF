@@ -3,27 +3,29 @@ import {
   useDeletePatientById,
   useGetPatientList,
   useGetPatientById,
-} from "@endpoints/patients/patients";
-import type { TablePaginationConfig } from "antd";
-import type { PatientDto } from "@models";
-import { useMemo, useState } from "react";
-import { useMessage, useUrlFilters } from "../../../shared/hooks";
-import { PatientExtensionsUrls } from "../../../shared/constants";
-import { useQueryClient } from "@tanstack/react-query";
+} from '@endpoints/patients/patients'
+import type { TablePaginationConfig } from 'antd'
+import { message } from 'antd'
+import { createTablePagination } from '../../../shared/components/ui'
+import type { AddressDto2, GetPatientListParams, PatientDto } from '@models'
+import { useMemo, useState } from 'react'
+import { useMessage, useUrlFilters } from '../../../shared/hooks'
+import { PatientExtensionsUrls } from '../../../shared/constants'
+import { useQueryClient } from '@tanstack/react-query'
 
 export type PaginationDto = {
-  currentPage: number;
-  pageSize: number;
-  totalItems: number;
-};
+  currentPage: number
+  pageSize: number
+  totalItems: number
+}
 
 type PatientsResponse = {
-  items: PatientDto[];
-  pagination: PaginationDto;
-};
+  items?: PatientDto[]
+  pagination?: PaginationDto
+}
 
 const defaultFilters = {
-  search: "",
+  search: '',
   pageNumber: 1,
   pageSize: 10,
   nombreCompleto: null as string | null,
@@ -32,13 +34,14 @@ const defaultFilters = {
   tipoIdentificador: null as string | null,
   identificador: null as string | null,
   fechaNacimiento: null as string | null,
-};
+}
 
 export function usePatientsInformation() {
-  const queryClient = useQueryClient();
-  const msg = useMessage();
+  const queryClient = useQueryClient()
+  const msg = useMessage()
+  const [, contextHolder] = message.useMessage()
   // Estado local para el ID del paciente seleccionado
-  const [selectedPatientId, setSelectedPatientId] = useState<string>("");
+  const [selectedPatientId, setSelectedPatientId] = useState<string>('')
 
   // Detalle del paciente
   const {
@@ -49,92 +52,82 @@ export function usePatientsInformation() {
     query: {
       enabled: !!selectedPatientId, // Solo hacer la petición si hay un ID
     },
-  }) as {
-    data?: PatientDto;
-    isLoading: boolean;
-    error?: any;
-  };
+  })
 
   // Filtros y paginación
   const { filters, setFilters, setFilter } = useUrlFilters({
     defaultValues: defaultFilters,
-  });
+  })
 
   // Construcción de queryParams con filtros que el backend soporta
   const queryParams = useMemo(() => {
-    const params: any = {
-      pageNumber: filters.pageNumber,
-      pageSize: filters.pageSize,
-    };
+    const params: GetPatientListParams = {
+      PageNumber: filters.pageNumber,
+      PageSize: filters.pageSize,
+    }
 
     // Nombre
     if (filters.nombreCompleto && filters.nombreCompleto.trim()) {
-      params.name = filters.nombreCompleto.trim();
+      params.Name = filters.nombreCompleto.trim()
     }
 
     // Género
     if (filters.genero) {
-      params.gender =
-        filters.genero === "Masculino"
-          ? 1
-          : filters.genero === "Femenino"
-            ? 2
-            : filters.genero === "Otro"
-              ? 3
-              : filters.genero === "Desconocido"
-                ? 0
-                : undefined;
+      params.Gender =
+        filters.genero === 'Masculino'
+          ? 'male'
+          : filters.genero === 'Femenino'
+            ? 'female'
+            : filters.genero === 'Otro'
+              ? 'other'
+              : filters.genero === 'Desconocido'
+                ? 'unknown'
+                : undefined
     }
 
     // Estado vital
     if (filters.estadoVital) {
-      params.active =
-        filters.estadoVital === "Vivo"
+      params.Active =
+        filters.estadoVital === 'Vivo'
           ? true
-          : filters.estadoVital === "Fallecido"
+          : filters.estadoVital === 'Fallecido'
             ? false
-            : undefined;
+            : undefined
     }
 
     // Tipo de identificador
     if (filters.tipoIdentificador) {
-      params.IdentifierType = filters.tipoIdentificador;
+      params.IdentifierType = filters.tipoIdentificador
     }
 
     // Identificador
     if (filters.identificador && filters.identificador.trim()) {
-      params.IdentifierValue = filters.identificador.trim();
+      params.IdentifierValue = filters.identificador.trim()
     }
 
     // Fecha de nacimiento
     if (filters.fechaNacimiento) {
-      let dateString = filters.fechaNacimiento;
+      let dateString = filters.fechaNacimiento
 
       // Si es string en formato DD/MM/YYYY, convertir a YYYY-MM-DD
-      if (
-        typeof dateString === "string" &&
-        /^\d{2}\/\d{2}\/\d{4}$/.test(dateString)
-      ) {
-        const [day, month, year] = dateString.split("/");
-        dateString = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+      if (typeof dateString === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+        const [day, month, year] = dateString.split('/')
+        dateString = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
       }
       // Si ya está en formato YYYY-MM-DD, usar directamente
-      else if (
-        typeof dateString === "string" &&
-        /^\d{4}-\d{2}-\d{2}$/.test(dateString)
-      ) {
+      else if (typeof dateString === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
         // No hacer nada, ya está en el formato correcto
       }
 
-      params.BirthDate = dateString;
+      params.BirthDate = dateString
     }
 
     if (filters.search && filters.search.trim()) {
-      params.search = filters.search.trim();
+      params.Name = filters.search.trim()
     }
 
-    return params;
-  }, [filters]);
+    return params
+  }, [filters])
 
   // Lista de pacientes con paginación
   const {
@@ -143,203 +136,191 @@ export function usePatientsInformation() {
     refetch,
   } = useGetPatientList<PatientsResponse>(queryParams, {
     query: {
-      placeholderData: (prev) => prev,
+      placeholderData: (prev: PatientsResponse | undefined) => prev,
     },
-  });
+  })
 
-  const patient: PatientDto | undefined = Array.isArray(data) ? data[0] : data;
+  const patient = data
 
-  function formatAddress(a: any) {
-    return [a.line?.join(", "), a.city, a.state, a.country]
-      .filter(Boolean)
-      .join(", ");
+  function formatAddress(a: AddressDto2) {
+    return [a.line?.join(', '), a.city, a.state, a.country].filter(Boolean).join(', ')
   }
 
   // Datos del paciente seleccionado
   const selectedPatient = useMemo(() => {
     return {
-      id: patient?.id ?? "",
-      nombre: patient?.name?.[0]?.given?.join(" ") ?? "Desconocido",
-      apellidos: patient?.name?.[0]?.family ?? "Desconocido",
+      id: patient?.id ?? '',
+      nombre: patient?.name?.[0]?.given?.join(' ') ?? 'Desconocido',
+      apellidos: patient?.name?.[0]?.family ?? 'Desconocido',
       tipo: patient?.name?.[0]?.use,
       fechaNacimiento: patient?.birthDate
-        ? new Date(patient.birthDate).toLocaleDateString("es-HN", {
-            day: "2-digit",
-            month: "long",
-            year: "numeric",
+        ? new Date(patient.birthDate).toLocaleDateString('es-HN', {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric',
           })
-        : "No especificada",
+        : 'No especificada',
       edad: patient?.birthDate
         ? `${Math.floor(
-            (Date.now() - new Date(patient.birthDate).getTime()) /
-              (365.25 * 24 * 60 * 60 * 1000),
+            (Date.now() - new Date(patient.birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000),
           )} años`
-        : "No especificada",
+        : 'No especificada',
       genero:
-        patient?.gender === 1
-          ? "Masculino"
-          : patient?.gender === 2
-            ? "Femenino"
-            : patient?.gender === 3
-              ? "Otro"
-              : "Desconocido",
+        patient?.gender === 'male'
+          ? 'Masculino'
+          : patient?.gender === 'female'
+            ? 'Femenino'
+            : patient?.gender === 'other'
+              ? 'Otro'
+              : 'Desconocido',
       estadoCivil:
-        typeof patient?.maritalStatus?.text === "string"
-          ? patient?.maritalStatus?.text === "U"
-            ? "Soltero/a"
-            : patient?.maritalStatus?.text === "M"
-              ? "Casado/a"
-              : patient?.maritalStatus?.text === "D"
-                ? "Divorciado/a"
-                : patient?.maritalStatus?.text === "W"
-                  ? "Viudo/a"
-                  : patient?.maritalStatus?.text === "T"
-                    ? "Unión de hechos"
-                    : patient?.maritalStatus?.text === "UNK"
-                      ? "Desconocido"
+        typeof patient?.maritalStatus?.text === 'string'
+          ? patient?.maritalStatus?.text === 'U'
+            ? 'Soltero/a'
+            : patient?.maritalStatus?.text === 'M'
+              ? 'Casado/a'
+              : patient?.maritalStatus?.text === 'D'
+                ? 'Divorciado/a'
+                : patient?.maritalStatus?.text === 'W'
+                  ? 'Viudo/a'
+                  : patient?.maritalStatus?.text === 'T'
+                    ? 'Unión de hechos'
+                    : patient?.maritalStatus?.text === 'UNK'
+                      ? 'Desconocido'
                       : patient?.maritalStatus?.text
-          : patient?.maritalStatus?.coding?.[0]?.display || "Desconocido",
+          : patient?.maritalStatus?.coding?.[0]?.display || 'Desconocido',
       nacionalidad:
-        patient?.extension?.find(
-          (ext) => ext.url === PatientExtensionsUrls.nationality,
-        )?.valueString || "Desconocido",
-      estadoVital: patient?.active ? "Vivo" : "Fallecido",
-      idMaestro: patient?.id || "Desconocido",
+        patient?.extension?.find((ext) => ext.url === PatientExtensionsUrls.nationality)
+          ?.valueString || 'Desconocido',
+      estadoVital: patient?.active ? 'Vivo' : 'Fallecido',
+      idMaestro: patient?.id || 'Desconocido',
       identificadores:
         patient?.identifier?.map((id) => ({
-          tipo: id.type?.coding?.[0]?.display || id.type?.text || "Desconocido",
-          codigo: id.type?.coding?.[0]?.code || id.type?.text || "Desconocido",
-          valor: id.value || "Desconocido",
+          tipo: id.type?.coding?.[0]?.display || id.type?.text || 'Desconocido',
+          codigo: id.type?.coding?.[0]?.code || id.type?.text || 'Desconocido',
+          valor: id.value || 'Desconocido',
           emisor: id.system || null,
         })) || [],
       contactos:
         patient?.telecom?.map((t) => ({
           tipo:
-            typeof t.system === "string"
-              ? t.system === "Phone"
-                ? "Teléfono"
-                : t.system === "Email"
-                  ? "Correo electrónico"
-                  : t.system === "url"
-                    ? "Dirección web"
-                    : t.system === "Pager"
-                      ? "Pager"
-                      : t.system === "Fax"
-                        ? "Fax"
-                        : t.system === "SMS"
-                          ? "Mensaje de texto"
-                          : t.system === "Other"
-                            ? "Otro"
-                            : t.system === "Old"
-                              ? "Antiguo"
-                              : t.system
-              : t.system || "Desconocido",
+            typeof t.system === 'string'
+              ? t.system === 'phone'
+                ? 'Teléfono'
+                : t.system === 'email'
+                  ? 'Correo electrónico'
+                  : t.system === 'url'
+                    ? 'Dirección web'
+                    : t.system === 'pager'
+                      ? 'Pager'
+                      : t.system === 'fax'
+                        ? 'Fax'
+                        : t.system === 'sms'
+                          ? 'Mensaje de texto'
+                          : t.system === 'other'
+                            ? 'Otro'
+                            : t.system
+              : t.system || 'Desconocido',
           uso:
-            typeof t.use === "string"
-              ? t.use === "Mobile"
-                ? "Personal"
-                : t.use === "Home"
-                  ? "Hogar"
-                  : t.use === "Work"
-                    ? "Trabajo"
-                    : t.use === "Temp"
-                      ? "Temporal"
-                      : t.use === "Old"
-                        ? "Antiguo"
+            typeof t.use === 'string'
+              ? t.use === 'mobile'
+                ? 'Personal'
+                : t.use === 'home'
+                  ? 'Hogar'
+                  : t.use === 'work'
+                    ? 'Trabajo'
+                    : t.use === 'temp'
+                      ? 'Temporal'
+                      : t.use === 'old'
+                        ? 'Antiguo'
                         : t.use
-              : t.use || "Desconocido",
+              : t.use || 'Desconocido',
           valor: t.value,
         })) || [],
       direcciones:
         patient?.address?.map((a) => ({
           tipo:
-            typeof a.use === "string"
-              ? a.use === "Home"
-                ? "Hogar"
-                : a.use === "Work"
-                  ? "Trabajo"
-                  : a.use === "Temp"
-                    ? "Temporal"
-                    : a.use === "Old"
-                      ? "Antiguo"
+            typeof a.use === 'string'
+              ? a.use === 'home'
+                ? 'Hogar'
+                : a.use === 'work'
+                  ? 'Trabajo'
+                  : a.use === 'temp'
+                    ? 'Temporal'
+                    : a.use === 'old'
+                      ? 'Antiguo'
                       : a.use
-              : a.use || "Desconocido",
+              : a.use || 'Desconocido',
           valor: formatAddress(a),
         })) || [],
-    };
-  }, [data]);
+    }
+  }, [patient])
 
   // Mapeo de pacientes para tabla
   const patients = useMemo(() => {
-    const items = Array.isArray(response) ? response : response?.items || [];
-    return items.map((p: PatientDto, index: number) => ({
+    const items = response?.items ?? []
+    return items.map((p, index) => ({
       id: p.id || String(index),
       key: p.id || String(index),
       nombre:
-        `${p?.name?.[0]?.given?.join(" ") || ""} ${p?.name?.[0]?.family || ""}`.trim() ||
-        "Desconocido",
+        `${p?.name?.[0]?.given?.join(' ') || ''} ${p?.name?.[0]?.family || ''}`.trim() ||
+        'Desconocido',
       identificadorTipo: (() => {
-        const code =
-          p.identifier?.[0]?.type?.coding?.[0]?.code?.toUpperCase() ?? "";
-        if (code === "DNI") return "DNI";
-        if (code === "PPN") return "PPN";
-        if (code === "NI") return "ID";
-        return "DSC";
+        const code = p.identifier?.[0]?.type?.coding?.[0]?.code?.toUpperCase() ?? ''
+        if (code === 'DNI') return 'DNI'
+        if (code === 'PPN') return 'PPN'
+        if (code === 'NI') return 'ID'
+        return 'DSC'
       })(),
-      identificador: p.identifier?.[0]?.value || "Desconocido",
-      contacto: p.telecom?.[0]?.value || "-",
-      nacimiento: p.birthDate
-        ? new Date(p.birthDate).toLocaleDateString()
-        : "-",
+      identificador: p.identifier?.[0]?.value || 'Desconocido',
+      contacto: p.telecom?.[0]?.value || '-',
+      nacimiento: p.birthDate ? new Date(p.birthDate).toLocaleDateString() : '-',
       nacionalidad:
-        p?.extension?.find(
-          (ext) => ext.url === PatientExtensionsUrls.nationality,
-        )?.valueString || "-",
+        p?.extension?.find((ext) => ext.url === PatientExtensionsUrls.nationality)?.valueString ||
+        '-',
       genero:
-        p.gender === 1
-          ? "Masculino"
-          : p.gender === 2
-            ? "Femenino"
-            : p.gender === 3
-              ? "Otro"
-              : "Desconocido",
-      estadoVital: p.active ? "Vivo" : "Fallecido",
-    }));
-  }, [response]);
+        p.gender === 'male'
+          ? 'Masculino'
+          : p.gender === 'female'
+            ? 'Femenino'
+            : p.gender === 'other'
+              ? 'Otro'
+              : 'Desconocido',
+      estadoVital: p.active ? 'Vivo' : 'Fallecido',
+    }))
+  }, [response])
 
   // Configuración de paginación
-  const paginationConfig: TablePaginationConfig = {
+  const paginationConfig: TablePaginationConfig = createTablePagination({
     current: response?.pagination?.currentPage || filters.pageNumber || 1,
     pageSize: response?.pagination?.pageSize || filters.pageSize || 10,
     total: response?.pagination?.totalItems || 0,
-    showSizeChanger: true,
-    pageSizeOptions: ["10", "20", "50"],
+    pageSizeOptions: ['10', '20', '50'],
     onChange: (page, pageSize) => {
-      setFilters({ pageNumber: page, pageSize });
+      setFilters({ pageNumber: page, pageSize })
     },
-    showTotal: (total, range) => `${range[0]}-${range[1]} de ${total}`,
-  };
+  })
 
   // Eliminar paciente
   const { mutate: deletePatient } = useDeletePatientById({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: getGetPatientListQueryKey(),
-        });
-        msg.success("Paciente eliminado correctamente");
-        setSelectedPatientId("");
-        refetch();
+        })
+        msg.success('Paciente eliminado correctamente')
+        setSelectedPatientId('')
+        void refetch()
       },
-      onError: () => msg.error("Error al eliminar el paciente"),
+      onError: () => msg.error('Error al eliminar el paciente'),
     },
-  });
+  })
 
   // Copiar datos del paciente
   const handleCopyData = () => {
     if (!selectedPatient || !selectedPatient.id) {
-      msg.warning("No hay datos del paciente para copiar.");
-      return;
+      msg.warning('No hay datos del paciente para copiar.')
+      return
     }
 
     const info = `
@@ -352,25 +333,19 @@ Género: ${selectedPatient.genero}
 Nacionalidad: ${selectedPatient.nacionalidad}
 Estado Civil: ${selectedPatient.estadoCivil}
 Estado Vital: ${selectedPatient.estadoVital}
-${selectedPatient.identificadores
-  .map((id) => `${id.tipo}: ${id.valor} (${id.emisor})`)
-  .join("\n")}
-${selectedPatient.contactos
-  .map((c) => `${c.tipo}(${c.uso}): ${c.valor}`)
-  .join("\n")}
-${selectedPatient.direcciones
-  .map((d) => `Dirección(${d.tipo}): ${d.valor}`)
-  .join("\n")}
-`.trim();
+${selectedPatient.identificadores.map((id) => `${id.tipo}: ${id.valor} (${id.emisor})`).join('\n')}
+${selectedPatient.contactos.map((c) => `${c.tipo}(${c.uso}): ${c.valor}`).join('\n')}
+${selectedPatient.direcciones.map((d) => `Dirección(${d.tipo}): ${d.valor}`).join('\n')}
+`.trim()
 
-    navigator.clipboard.writeText(info);
-    msg.success("Datos del paciente copiados al portapapeles.");
-  };
+    void navigator.clipboard.writeText(info)
+    msg.success('Datos del paciente copiados al portapapeles.')
+  }
 
   // Función para seleccionar un paciente
   const handleSelectPatient = (patientId: string) => {
-    setSelectedPatientId(patientId);
-  };
+    setSelectedPatientId(patientId)
+  }
 
   // Función para limpiar todos los filtros
   const clearAllFilters = () => {
@@ -378,25 +353,26 @@ ${selectedPatient.direcciones
       ...defaultFilters,
       pageNumber: 1,
       pageSize: filters.pageSize, // Mantener el tamaño de página actual
-    });
-  };
+    })
+  }
 
   // Color para tipo de identificador
   const getIdentificadorColor = (tipo: string) => {
     switch (tipo) {
-      case "DNI":
-        return "blue";
-      case "PPN":
-        return "purple";
-      case "ID":
-        return "red";
+      case 'DNI':
+        return 'blue'
+      case 'PPN':
+        return 'purple'
+      case 'ID':
+        return 'red'
       default:
-        return "default";
+        return 'default'
     }
-  };
+  }
 
   return {
     selectedPatientId,
+    contextHolder,
     data,
     error,
     selectedPatient,
@@ -412,5 +388,5 @@ ${selectedPatient.direcciones
     handleSelectPatient,
     deletePatient,
     getIdentificadorColor,
-  };
+  }
 }

@@ -11,6 +11,7 @@ import {
 } from "antd";
 import { ManOutlined, WomanOutlined, UserOutlined } from "@ant-design/icons";
 import { ProList } from "@ant-design/pro-components";
+import { createPaginationConfig } from "../../../shared/components/ui";
 
 export const ListPatient = ({
   pacientesData,
@@ -113,17 +114,17 @@ export const ListPatient = ({
             <Typography.Title level={5}>Datos del paciente</Typography.Title>
           }
           dataSource={pacientesFiltrados}
-          pagination={{
+          pagination={createPaginationConfig({
             current: pacienteFilters.pagePaciente,
             pageSize: pacienteFilters.pageSizePaciente,
+            total: pacientesFiltrados.length,
             onChange: (page, pageSize) =>
               setPacienteFilters({
                 pagePaciente: page,
                 pageSizePaciente: pageSize,
               }),
-            showSizeChanger: true,
             pageSizeOptions: ["5", "10", "20"],
-          }}
+          })}
           metas={{
             avatar: {
               render: (_, record) => (

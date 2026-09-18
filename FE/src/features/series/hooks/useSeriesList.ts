@@ -4,7 +4,7 @@ import { useAbility } from "../../../config";
 import { useUrlFilters } from "../../../shared/hooks";
 import { useGetSerieList } from "@endpoints/series/series";
 import type { SerieDto, GetSerieListParams } from "@models";
-import type { TablePaginationConfig } from "antd";
+import { createTablePagination } from "../../../shared/components/ui";
 
 export type SeriesStatusFilter = "all" | "active" | "inactive";
 
@@ -92,15 +92,13 @@ export function useSeriesList() {
     setFilters({ pageNumber: 1 }); // Reset a página 1 al cambiar filtro
   };
 
-  const paginationConfig: TablePaginationConfig = {
+  const paginationConfig = createTablePagination({
     current: pagination?.currentPage || filters.pageNumber || 1,
     pageSize: pagination?.pageSize || filters.pageSize || 10,
     total: pagination?.totalItems || 0, 
-    showSizeChanger: true,
     pageSizeOptions: ["10", "20", "50", "100"],
     onChange: (page, pageSize) => setFilters({ pageNumber: page, pageSize }),
-    showTotal: (total, range) => `${range[0]}-${range[1]} de ${total}`,
-  };
+  });
 
   return {
     // Estados
