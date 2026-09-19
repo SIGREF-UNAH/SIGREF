@@ -4,14 +4,29 @@ import {
   type InvoiceCreateDto,
   type InvoiceItemCreateDto,
 } from "@models";
-import { InvoiceType, PaymentMethodType } from "@types/invoices";
+import {
+  InvoiceType,
+  PaymentMethodType,
+} from "../../../api/generated/schemas/types/invoices";
 
 interface SelectedService {
   id: string;
   nombre: string;
   precio: number;
   tipo: string;
-  items?: any[];
+  items?: PackageItem[];
+}
+
+interface PackageItem {
+  id?: string | null;
+  serviceId?: string | null;
+  name?: string | null;
+  nameService?: string | null;
+  nombre?: string | null;
+  unitPrice?: number | null;
+  precio?: number | null;
+  price?: number | null;
+  quantity?: number | null;
 }
 
 interface SelectedPatient {
@@ -25,6 +40,79 @@ interface UseCreateIncomeProps {
   onError?: (error: unknown) => void;
 }
 
+type ApiErrorData = {
+  detail?: unknown;
+  title?: unknown;
+};
+
+type ApiError = {
+  response?: {
+    data?: ApiErrorData;
+  };
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const getErrorMessage = (error: unknown): string => {
+  if (!isRecord(error)) {
+    return "Error al crear el ingreso. Verifique los datos e intente nuevamente.";
+  }
+
+  const response = isRecord(error.response) ? error.response : undefined;
+  const data = response && isRecord(response.data) ? response.data : undefined;
+  const detail = data?.detail;
+  const title = data?.title;
+
+  if (typeof detail === "string" && detail.trim()) {
+    return detail;
+  }
+
+  if (typeof title === "string" && title.trim()) {
+    return title;
+  }
+
+  return "Error al crear el ingreso. Verifique los datos e intente nuevamente.";
+};
+
+/**
+ * * Convierte la selección del usuario en el formato que espera la API.
+ * La función es pura para mantener la construcción de la factura aislada de
+ * los efectos secundarios del hook y facilitar su verificación con tests.
+ */
+export const buildInvoiceItems = (
+  selectedServicio: SelectedService,
+): InvoiceItemCreateDto[] => {
+  if (selectedServicio.tipo === "servicio") {
+    return [
+      {
+        serviceId: selectedServicio.id,
+        nameService: selectedServicio.nombre,
+        quantity: 1,
+        unitPrice: selectedServicio.precio,
+      },
+    ];
+  }
+
+  if (selectedServicio.tipo !== "paquete" || !selectedServicio.items) {
+    return [
+      {
+        serviceId: selectedServicio.id,
+        nameService: selectedServicio.nombre,
+        quantity: 1,
+        unitPrice: selectedServicio.precio,
+      },
+    ];
+  }
+
+  return selectedServicio.items.map((item) => ({
+    serviceId: item.id ?? item.serviceId,
+    nameService: item.name ?? item.nameService ?? item.nombre,
+    quantity: item.quantity ?? 1,
+    unitPrice: item.unitPrice ?? item.precio ?? item.price ?? 0,
+  }));
+};
+
 export const useCreateIncome = ({
   onSuccess,
   onError,
@@ -37,13 +125,8 @@ export const useCreateIncome = ({
         msg.success("Ingreso creado exitosamente");
         onSuccess?.();
       },
-      onError: (error: any) => {
-        const errorMessage =
-          error?.response?.data?.detail ||
-          error?.response?.data?.title ||
-          "Error al crear el ingreso. Verifique los datos e intente nuevamente.";
-
-        msg.error(errorMessage);
+      onError: (error: ApiError) => {
+        msg.error(getErrorMessage(error));
         onError?.(error);
       },
     },
@@ -66,7 +149,9 @@ export const useCreateIncome = ({
     tramiteEmergencia: boolean;
     serieId: string;
   }) => {
-    // Validaciones
+    // * Estas validaciones evitan enviar una factura incompleta a la API.
+    // La página también controla estos valores, pero el hook debe proteger su
+    // propio contrato porque puede reutilizarse desde otra vista.
     if (!selectedPaciente) {
       msg.warning("Por favor selecciona un paciente");
       return;
@@ -84,46 +169,12 @@ export const useCreateIncome = ({
       return;
     }
 
-    const precioOriginal = selectedServicio.precio;
+    // * Los items se normalizan antes de construir el DTO para que servicios
+    // individuales y paquetes sigan exactamente el mismo contrato.
+    const items = buildInvoiceItems(selectedServicio);
 
-    // Calcular descuento: 100% si está exonerado O si es trámite de emergencia
-    const discount = exonerado || tramiteEmergencia ? precioOriginal : 0;
-    const totalAmount = precioOriginal - discount;
-
-    // Crear items del invoice
-    const items: InvoiceItemCreateDto[] = [];
-
-    if (selectedServicio.tipo === "servicio") {
-      items.push({
-        serviceId: selectedServicio.id,
-        nameService: selectedServicio.nombre,
-        quantity: 1,
-        unitPrice: precioOriginal,
-      });
-    } else if (selectedServicio.tipo === "paquete") {
-      if (selectedServicio.items && Array.isArray(selectedServicio.items)) {
-        selectedServicio.items.forEach((item: any) => {
-          const itemUnitPrice = item.unitPrice || item.precio || 0;
-          const itemQuantity = item.quantity || 1;
-
-          items.push({
-            serviceId: item.id || item.serviceId,
-            nameService: item.name || item.nameService || item.nombre,
-            quantity: itemQuantity,
-            unitPrice: itemUnitPrice,
-          });
-        });
-      } else {
-        items.push({
-          serviceId: selectedServicio.id,
-          nameService: selectedServicio.nombre,
-          quantity: 1,
-          unitPrice: precioOriginal,
-        });
-      }
-    }
-
-    // Determinar tipo de factura
+    // * La emergencia tiene precedencia sobre la exoneración para conservar la
+    // clasificación específica del trámite en los reportes de ingresos.
     const invoiceType = tramiteEmergencia
       ? InvoiceType.emergency
       : exonerado
@@ -155,7 +206,7 @@ export const useCreateIncome = ({
       invoice_type: invoiceType,
       payment_type: paymentType,
       serieId,
-      serieNumber: parseInt(numeroRecibo) || 0,
+      serieNumber: Number.parseInt(numeroRecibo, 10) || 0,
       initialPayment: exonerado || tramiteEmergencia ? 0 : aPagarEfectivo,
       parentInvoiceId: null,
     };

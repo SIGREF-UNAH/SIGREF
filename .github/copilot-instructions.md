@@ -1,18 +1,9 @@
-# GitHub Copilot Code Review Custom Instructions
+# Instrucciones para GitHub Copilot
 
-## 🛑 MANDATORY BYPASS RULES
-1. **Bot Exclusion Pattern**: 
-   - IF the author of the Pull Request or commit has a username ending in "-bot" (e.g., GeneriDocs-bot, PushDocs-bot) or "-got" (e.g., Enque-got), DO NOT perform any review.
-   - This also applies to system bots containing "[bot]" (e.g., github-actions[bot]).
-   - Terminate the review process immediately without leaving any comments.
+Copilot se usa como asistencia manual de desarrollo. No habilites la revisión automática de Copilot en este repositorio: CodeRabbit es el único revisor automático de Pull Requests para evitar duplicar comentarios y consumo.
 
-2. **Manual Keyword Exclusion**:
-   - IF the Pull Request title, description, or any commit message contains the tag "[IGNORE-BOT]", STOP the review immediately.
-   - Do not provide suggestions, security alerts, or code improvements if this tag is present.
-
-3. **Branch Protection (main)**:
-   - DO NOT review or comment on any direct changes or merges to the "main" branch if the commit message includes "[IGNORE-BOT]" or if the author is one of the recognized bots.
-
-## 🤖 EXECUTION LOGIC
-- Before analyzing any code or diff, check the author's name and the presence of "[IGNORE-BOT]".
-- If a bypass condition is met, your only response should be: "Review bypassed per repository instructions." and then exit.
+- Revisa primero el contexto cercano y conserva el estilo ya usado por el proyecto.
+- Prioriza bugs reales, regresiones, seguridad, tipos, concurrencia/estado y pruebas relevantes.
+- No propongas refactors ajenos al cambio, renombres subjetivos ni comentarios de formato que cubran ESLint, Prettier o `dotnet format`.
+- Omite código generado, `node_modules`, `dist`, `build`, `coverage`, `bin`, `obj` y lockfiles salvo incidencias de seguridad o integridad.
+- No recomiendes saltarse autenticación, autorización, validación, tests o controles de seguridad.

@@ -1,0 +1,109 @@
+name: Coverage
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize, ready_for_review]
+    paths:
+      - 'BE/**'
+      - 'FE/**'
+      - '!FE/docs/**'
+      - '!FE/documentation/**'
+      - '.github/workflows/coverage.yml'
+      - 'codecov.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'BE/**'
+      - 'FE/**'
+      - '!FE/docs/**'
+      - '!FE/documentation/**'
+      - '.github/workflows/coverage.yml'
+      - 'codecov.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: coverage-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'BE/**'
+              - '.github/workflows/coverage.yml'
+              - 'codecov.yml'
+            frontend:
+              - 'FE/**'
+              - '!FE/docs/**'
+              - '!FE/documentation/**'
+              - '.github/workflows/coverage.yml'
+              - 'codecov.yml'
+
+  frontend:
+    if: needs.changes.outputs.frontend == 'true' && secrets.CODECOV_TOKEN != ''
+    needs: changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: FE/package-lock.json
+      - name: Install dependencies
+        working-directory: FE
+        run: npm ci
+      - name: Collect coverage
+        working-directory: FE
+        run: npm run test:run -- --coverage
+      - name: Upload frontend coverage
+        uses: codecov/codecov-action@v5
+        with:
+          files: FE/coverage/lcov.info
+          flags: frontend
+          fail_ci_if_error: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  backend:
+    if: needs.changes.outputs.backend == 'true' && secrets.CODECOV_TOKEN != ''
+    needs: changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+          cache: true
+          cache-dependency-path: |
+            BE/**/*.csproj
+            BE/**/*.sln
+      - name: Collect coverage
+        run: >
+          dotnet test BE/SIGREF.API.sln --configuration Release
+          --collect:"XPlat Code Coverage"
+          --results-directory TestResults
+      - name: Upload backend coverage
+        uses: codecov/codecov-action@v5
+        with:
+          files: TestResults/**/coverage.cobertura.xml
+          flags: backend
+          fail_ci_if_error: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

@@ -1,0 +1,67 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "timezone": "America/Tegucigalpa",
+  "schedule": ["before 5am on Monday"],
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "separateMajorMinor": true,
+  "dependencyDashboard": true,
+  "vulnerabilityAlerts": {
+    "enabled": false
+  },
+  "packageRules": [
+    {
+      "description": "Group safe frontend development updates.",
+      "matchManagers": ["npm"],
+      "matchFileNames": ["FE/package.json"],
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "frontend development dependencies",
+      "automerge": false
+    },
+    {
+      "description": "Keep .NET minor and patch updates separate from the frontend.",
+      "matchManagers": ["nuget"],
+      "matchFileNames": ["BE/**/*.csproj"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "backend .NET dependencies",
+      "automerge": false
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["eslint", "@eslint/**", "typescript-eslint", "@typescript-eslint/**", "eslint-*"] ,
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "ESLint ecosystem"
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["typescript", "@types/**"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "TypeScript ecosystem"
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["vitest", "@vitest/**", "@testing-library/**", "jsdom"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "testing ecosystem"
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["vite", "@vitejs/**", "rollup", "orval"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "build tooling"
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["react", "react-dom", "@types/react", "@types/react-dom", "@tanstack/react-query", "react-router", "react-router-dom"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "React ecosystem"
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "groupName": null
+    }
+  ]
+}

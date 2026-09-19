@@ -1,387 +1,189 @@
-# 🏥 SIGREF - Sistema de Gestión de la Receptoría de Fondos
+# SIGREF
 
-<div align="center">
+Sistema de gestión administrativa para centralizar operaciones de pacientes, servicios, caja, ingresos, facturación, reportes y auditoría en organizaciones de salud.
 
-![React](https://img.shields.io/badge/React-19.1.1-61DAFB?style=flat-square&logo=react&logoColor=black)
-![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?style=flat-square&logo=dotnet&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-3178C6?style=flat-square&logo=typescript&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?style=flat-square&logo=postgresql&logoColor=white)
-![MongoDB](https://img.shields.io/badge/MongoDB-3.5.0-13AA52?style=flat-square&logo=mongodb&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)
-![HL7-FHIR](https://img.shields.io/badge/HL7%20FHIR-R4/R5-FF6600?style=flat-square&logo=healthcare&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+SIGREF combina una aplicación web, una API y servicios de soporte para reducir tareas manuales, ordenar la información operativa y ofrecer trazabilidad sobre las operaciones del sistema.
 
-**Plataforma integral de gestión de ingresos y facturación para instituciones de salud**
+> **Software propietario:** este repositorio no es un proyecto de código abierto. El código, la arquitectura y la documentación están protegidos por la [licencia propietaria](./LICENSE). También se incluye una [versión en español](./LICENSE_ES.md).
 
-[Características](#-características-principales) • [Instalación](#-instalación-rápida) • [Tecnologías](#-tecnologías-utilizadas) • [Documentación](#-documentación-completa) • [Contribuir](#-contribución)
+## Qué resuelve
 
-</div>
+SIGREF ayuda a organizar en un solo sistema:
 
----
+- Registro y consulta de pacientes y profesionales.
+- Catálogos de servicios, ubicaciones, organizaciones y valores.
+- Apertura, operación y cierre de sesiones de caja.
+- Series, facturas, pagos e ingresos administrativos.
+- Dashboards y reportes operativos y financieros.
+- Auditoría de eventos y trazabilidad de cambios.
+- Gestión de usuarios, roles y permisos.
+- Integración de información clínica de referencia mediante HL7 FHIR.
+- Procesamiento de tareas y generación de reportes en segundo plano.
 
-## 📋 Descripción General
+El sistema está orientado a apoyar la operación administrativa. La instalación, configuración, seguridad de los datos y cumplimiento normativo deben ser evaluados por cada organización antes de utilizarlo en producción.
 
-**SIGREF** es una solución empresarial moderna diseñada para optimizar la gestión de ingresos, facturación y operaciones administrativas en instituciones de salud. El sistema implementa estándares internacionales de interoperabilidad en salud **(HL7 FHIR R4 y parcialmente R5)**, garantizando compatibilidad con sistemas de información sanitaria global.
+## Cómo ayuda
 
-### 🎯 ¿Qué hace SIGREF?
+- Centraliza información que normalmente se gestiona en herramientas separadas.
+- Reduce duplicidad de registros y facilita el seguimiento de cada operación.
+- Mejora la visibilidad de ingresos, caja, servicios y actividad del sistema.
+- Separa interfaz, API, persistencia, autenticación y tareas de fondo.
+- Facilita la integración con servicios externos mediante API REST y modelos interoperables.
+- Proporciona una base técnica para despliegues reproducibles con contenedores.
 
-SIGREF automatiza y centraliza:
+## Funcionalidades principales
 
-- ✅ **Gestión de Pacientes** - Registro conforme a estándares FHIR
-- ✅ **Facturación y Control de Ingresos** - Facturas automáticas y seguimiento de pagos
-- ✅ **Control de Caja** - Sesiones de pago y cuadraturas diarias
-- ✅ **Reportes Financieros** - Dashboards en tiempo real con KPIs
-- ✅ **Auditoría Completa** - Trazabilidad de todas las operaciones
-- ✅ **Gestión Hospitalaria** - Servicios, profesionales, ubicaciones y organizaciones
-- ✅ **Control de Acceso** - Autenticación segura con Keycloak (OIDC)
+| Área | Capacidades |
+| --- | --- |
+| Pacientes y profesionales | Consulta, registro y relación con recursos FHIR. |
+| Servicios y catálogos | Servicios de salud, grupos, ubicaciones, organizaciones y valores. |
+| Caja | Sesiones, turnos, movimientos y conciliación operativa. |
+| Ingresos | Facturas, series, pagos y consultas por filtros. |
+| Reportes | Dashboards, métricas, exportaciones y trabajos en segundo plano. |
+| Auditoría | Historial de eventos y trazabilidad de operaciones. |
+| Administración | Usuarios, roles, permisos, archivos y configuración. |
 
----
+## Arquitectura resumida
 
-## ⭐ Características Principales
-
-### 🏥 Módulo de Pacientes
-- Registro FHIR-compliant de pacientes
-- Búsqueda avanzada por identificación nacional
-- Integración con servidores FHIR externos
-- Historial de paciente centralizado
-
-### 💳 Módulo de Facturación
-- Generación automática de facturas con series correlativas
-- Múltiples métodos de pago (efectivo)
-- Reportes de ingresos por período y método de pago
-- Documentos imprimibles: Facturas y recibos de caja. 
-> [!WARNING]
-> **Aviso Legal:** El módulo de facturación actual es de uso administrativo interno. No cumple con los estándares del régimen de facturación de la SAR y no es válido para deducción de impuestos.
-
-### 💰 Módulo de Caja
-- Apertura y cierre de sesiones de caja
-- Registro de movimientos financieros
-- Cuadratura automática de caja
-- Validación de cambios y diferencias
-
-### 📊 Módulo de Reportes
-- Dashboard ejecutivo con KPIs en tiempo real
-- Ingresos por servicio, período y profesional
-- Análisis de facturación y cobranza
-- Exportación a Excel y PDF
-- Gráficos interactivos y comparativos
-
-### 🔐 Seguridad y Control
-- Autenticación OIDC con Keycloak
-- Control de acceso basado en roles (RBAC)
-- Auditoría inmutable de operaciones
-- Gestión de usuarios y permisos
-- Encriptación en tránsito y validación de entrada
-
-### 🏢 Administración
-- Catálogo de servicios médicos
-- Gestión de profesionales sanitarios (Practitioners)
-- Configuración de ubicaciones y departamentos
-- Información de organizaciones y sucursales
-- Propiedades hospitalarias configurables
-
----
-
-## 🚀 Tecnologías Utilizadas
-
-### 🎨 Frontend
-**React 19.1.1** • TypeScript 5.8.3 • Vite 7.1.2 • Tailwind CSS 4.1.13 • Ant Design 5.27.4
-
-**Herramientas:** TanStack Query • Zustand • Formik + Yup • Orval • Keycloak.js • ReCharts
-
-### ⚙️ Backend
-**.NET 9.0** • ASP.NET Core • Entity Framework Core 9.0.9 • HAPI FHIR R4 5.12.2
-
-**Características:** Aspire • Keycloak Auth • Swagger/OpenAPI • PostgreSQL 17 • MongoDB 5.0+
-
-### 🏗️ Infraestructura
-**Docker Compose** • Nginx (Reverse Proxy) • Keycloak (IAM) • Seq (Log Aggregation) • OpenTelemetry
-
-### 🔐 Autenticación
-**OIDC** • **JWT Bearer Tokens** • **Keycloak** • **Role-Based Access Control (RBAC)**
-
----
-
-## 💾 Instalación Rápida
-
-### 📋 Prerrequisitos
-
-- Docker Desktop (con Docker Compose)
-- Git
-- Node.js 20+ (para desarrollo frontend)
-- .NET 9.0 SDK (para desarrollo backend)
-
-### 🐳 Despliegue con Docker (Recomendado)
-
-```bash
-# 1. Clonar repositorio
-git clone https://github.com/SIGREF-UNAH/SIGREF.git
-cd SIGREF
-
-# 2. Copiar y configurar variables de entorno
-cp .env.production .env
-
-# 3. IMPORTANTE: Editar .env con tus valores
-# Ver: docs/VARIABLES-DE-ENTORNO.md para detalles
-nano .env  # o tu editor favorito
-
-# 4. Levantar servicios
-docker-compose up -d
-
-# 5. Acceder a la aplicación
-# Frontend: http://localhost
-# API Docs: http://localhost:5000/swagger
-# Logs: http://localhost:5341
-# Monitoreo: http://localhost:18888
+```text
+Frontend React/TypeScript
+        │ REST / OpenAPI
+        ▼
+ASP.NET Core API ─── Keycloak (OIDC/JWT/RBAC)
+        │
+        ├── PostgreSQL + Entity Framework Core
+        ├── MongoDB para auditoría y datos documentales
+        ├── Servidor HL7 FHIR
+        └── Hangfire Worker para tareas y reportes
 ```
 
-**Servicios que se inician automáticamente:**
-- ✅ Frontend (React/Nginx) - Puerto 80
-- ✅ Backend API (.NET) - Puerto 5000
-- ✅ PostgreSQL - Puerto 5432
-- ✅ MongoDB - Puerto 27017
-- ✅ Keycloak - Puerto 8080
-- ✅ HAPI FHIR - Puerto 8081
-- ✅ Seq (Logs) - Puerto 5341
-- ✅ Aspire Dashboard - Puerto 18888
+## Tecnologías utilizadas
 
-### 💻 Desarrollo Local
+### Frontend
 
-**Backend:**
-```bash
-cd BE/SIGREF.API.AppHost
-dotnet run
+- React 19 y TypeScript.
+- Vite como herramienta de desarrollo y construcción.
+- Ant Design y Tailwind CSS para la interfaz.
+- TanStack Query y Axios para acceso y caché de datos.
+- Zustand para estado local.
+- Formik y Yup para formularios y validación.
+- React Router para navegación.
+- Orval para generar el cliente TypeScript desde OpenAPI.
+- Vitest, ESLint y Prettier para pruebas y calidad del código.
+
+### Backend
+
+- .NET 9 y ASP.NET Core Web API.
+- Entity Framework Core con PostgreSQL.
+- MongoDB para auditoría y almacenamiento documental.
+- .NET Aspire para composición de servicios y configuración compartida.
+- Hangfire y un worker dedicado para procesamiento asíncrono.
+- Keycloak para identidad, autenticación y autorización.
+- OpenAPI para documentar y consumir la API.
+- HL7 FHIR R4 mediante la librería `Hl7.Fhir.R4`.
+- OpenTelemetry para métricas, trazas y telemetría.
+
+### Infraestructura
+
+- Docker y Docker Compose.
+- Nginx como proxy y servidor del frontend.
+- PostgreSQL, MongoDB, Keycloak, HAPI FHIR y Seq.
+- OpenTelemetry Collector para observabilidad.
+
+## Estándares y prácticas
+
+- API REST con contratos OpenAPI.
+- HL7 FHIR R4 para interoperabilidad de información clínica.
+- OpenID Connect y JWT Bearer para autenticación.
+- RBAC para autorización basada en roles.
+- Entity Framework Core para acceso tipado a datos relacionales.
+- Validación de entradas, separación por capas y DTOs para contratos de API.
+- Pruebas automatizadas en frontend y backend.
+- ESLint, Prettier y convenciones de .NET para calidad y consistencia.
+- Docker Compose para entornos reproducibles.
+- OpenTelemetry para observabilidad.
+
+## Estructura del repositorio
+
+```text
+SIGREF/
+├── BE/                  # Solución .NET, API, dominio, persistencia y worker
+├── FE/                  # Aplicación React/TypeScript
+├── config/              # Configuración de bases de datos y servicios
+├── nginx/               # Configuración del proxy/frontend
+├── licenses/            # Información sobre dependencias y software de terceros
+├── docker-compose.yml   # Orquestación local de servicios
+├── LICENSE              # Licencia propietaria en inglés
+├── LICENSE_ES.md        # Licencia propietaria en español
+└── README.MD            # Este documento
 ```
 
-**Frontend (otra terminal):**
+## Requisitos
+
+- Git.
+- Docker Desktop con Docker Compose para el entorno completo.
+- Node.js 22 para el frontend.
+- .NET 9 SDK para el backend.
+
+## Desarrollo local
+
+### Frontend
+
 ```bash
 cd FE
-npm install
-npm run dev  # Acceso en http://localhost:5173
+npm ci
+npm run dev
 ```
 
----
+Comandos disponibles:
 
-## 📂 Estructura del Proyecto
-
-```
-SIGREF/
-├── BE/                              # Backend (.NET 9)
-│   ├── SIGREF.API/                 # API Principal
-│   │   ├── Controllers/            # REST Endpoints
-│   │   ├── Services/               # Lógica de Negocio
-│   │   ├── Database/               # Entity Framework & Migrations
-│   │   ├── Dtos/                   # Data Transfer Objects
-│   │   ├── Audit/                  # Sistema de Auditoría
-│   │   └── ...
-│   ├── SIGREF.API.AppHost/        # .NET Aspire Host
-│   └── SIGREF.API.ServiceDefaults/ # Extensiones compartidas
-│
-├── FE/                              # Frontend (React + TypeScript)
-│   ├── src/
-│   │   ├── features/              # Páginas por módulo
-│   │   ├── shared/                # Componentes reutilizables
-│   │   ├── routers/               # Rutas de la app
-│   │   ├── config/                # Configuración
-│   │   └── api/                   # Cliente generado por Orval
-│   └── ...
-│
-├── docs/                            # 📚 DOCUMENTACIÓN TÉCNICA
-│   ├── README.md                   # Índice de documentación
-│   ├── VARIABLES-DE-ENTORNO.md     # Configuración detallada
-│   ├── ARQUITECTURA.md             # Diseño técnico
-│   └── BASES-DE-DATOS.md           # Schema de BD
-│
-├── config/                          # Configuraciones globales
-├── nginx/                           # Configuración Nginx
-├── docker-compose.yml              # Orquestación de servicios
-└── README.md                       # Este archivo
-```
-
----
-
-## 📖 Documentación Completa
-
-**Documentación técnica detallada disponible en [`/docs`](./docs/):**
-
-- 🔧 **[Configuración de Variables](./docs/VARIABLES-DE-ENTORNO.md)** - Guía completa de `.env`, ejemplos por ambiente
-- 🏗️ **[Arquitectura del Sistema](./docs/ARQUITECTURA.md)** - Capas, componentes, flujos de datos
-- 🗄️ **[Bases de Datos](./docs/BASES-DE-DATOS.md)** - Schema PostgreSQL y MongoDB completo
-
-**Documentación adicional en raíz:**
-- **[MANUAL-DE-USUARIO.md](./MANUAL-DE-USUARIO.md)** - Guía para usuarios finales
-- **[MANUAL-TECNICO.md](./MANUAL-TECNICO.md)** - Documentación de desarrollo
-- **[README-DEPLOYMENT.md](./README-DEPLOYMENT.md)** - Guía de despliegue en producción
-
----
-
-## 🔒 Seguridad
-
-### ✅ Medidas Implementadas
-
-**Autenticación**
-- OIDC con Keycloak (estándar OpenID Connect)
-- JWT Bearer tokens con validación de firma
-- Renovación automática de tokens
-
-**Autorización**
-- RBAC (Role-Based Access Control)
-- Validación de permisos por endpoint
-- Aislamiento de datos por usuario
-
-**Datos Sensibles**
-- Encriptación en tránsito (HTTPS/TLS)
-- Hashing seguro de contraseñas (bcrypt)
-- Validación de entrada en todos los formularios
-- Protección contra inyección SQL (EF Core)
-
-**Auditoría**
-- Registro inmutable de operaciones en MongoDB
-- Trazabilidad de cambios (quién, qué, cuándo)
-- Almacenamiento centralizado de logs
-- TTL automático para datos antiguos
-
-**Infraestructura**
-- Containerización aislada (Docker)
-- Redes privadas entre servicios
-- Secrets management con variables de entorno
-- Sin credenciales en código fuente
-
----
-
-## 📊 Funcionalidades por Rol
-
-| Rol | Funciones |
-|-----|-----------|
-| **Cajero** | Registrar pacientes, crear facturas, procesar pagos, cuadrar caja, imprimir recibos |
-| **Administrador** | Todas las de Cajero + gestionar usuarios, servicios, series, auditoría, reportes avanzados |
-| **Auditor** | Consultar auditoría, generar reportes de trazabilidad, analizar logs |
-| **Técnico TI** | Acceso a dashboards de monitoreo, logs centralizados, telemetría |
-
----
-
-## 🐛 Troubleshooting
-
-### "Connection refused" en PostgreSQL
 ```bash
-# Verificar que PostgreSQL esté levantado
-docker-compose ps postgres
-
-# Ver logs de PostgreSQL
-docker-compose logs postgres
+npm run lint
+npm run typecheck
+npm run test:run
+npm run build
 ```
 
-### Frontend no carga
+### Backend
+
 ```bash
-# Limpiar cache y reinstalar
-cd FE && npm cache clean --force && npm install && npm run dev
+dotnet restore BE/SIGREF.API.sln
+dotnet build BE/SIGREF.API.sln
+dotnet test BE/SIGREF.API.sln
 ```
 
-### Keycloak no autentica
-```bash
-# Acceder a panel de Keycloak
-# URL: http://localhost:8080
-# Usuario: sigref
-# Contraseña: sigref (cambiar en PRODUCCIÓN)
-```
+Para levantar el entorno completo, utiliza la configuración de Docker Compose del repositorio y las variables de entorno definidas para cada instalación.
 
-### Logs no aparecen en Seq
-```bash
-# Verificar Seq está corriendo: http://localhost:5341
-# Verificar API key en .env sea correcta
-docker-compose logs seq
-```
+## Documentación
 
----
+- [Documentación general](./docs/).
+- [Documentación del frontend](./FE/documentation/).
+- [Licencias y software de terceros](./licenses/THIRD_PARTY.md).
 
-## 🤝 Contribución
+## Autores
 
-Las contribuciones son bienvenidas. Por favor:
+El desarrollo registrado del proyecto incluye a:
 
-1. **Fork** el repositorio
-2. Crea una **rama** para tu feature (`git checkout -b feature/AmazingFeature`)
-3. **Commit** tus cambios (`git commit -m 'feat: Add AmazingFeature'`)
-4. **Push** a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un **Pull Request**
+- [Anthony Edward Miranda Fuentes](https://github.com/AnthonyEMF)
+- [Carlos Ovidio Dubon Pineda](https://github.com/Pineda04)
+- [Danilo Isaac Vides Chicas](https://github.com/IsaacV04)
+- [Erick Marley Arita](https://github.com/erickArita)
+- [Ever Josue Garcia Leonor](https://github.com/everjosue56)
+- [Hector Rene Martinez Vega](https://github.com/TETvega)
+- [Josue David Diaz Rodriguez](https://github.com/JDDR200530)
+- [Michael Andrey Galdamez Martinez](https://github.com/MichaelGald)
 
-### Estándares de Código
+## Uso de terceros
 
-- **Backend**: Convenciones .NET (PascalCase clases, camelCase variables)
-- **Frontend**: ESLint + Prettier (formato automático)
-- **Commits**: Mensajes descriptivos en inglés
-- **Tests**: Incluir tests para nuevas funciones
-- **Docs**: Actualizar README y comentarios
+SIGREF utiliza frameworks, librerías, herramientas, imágenes y servicios de terceros. Sus respectivas marcas, avisos y licencias pertenecen a sus titulares y no quedan sustituidos por la licencia propietaria de SIGREF.
 
----
+Antes de redistribuir una instalación, imagen o producto que incluya componentes externos, revisa sus condiciones y conserva los avisos legales correspondientes. Consulta el inventario y las reglas en [licenses/THIRD_PARTY.md](./licenses/THIRD_PARTY.md).
 
-## 📄 Licencia
+## Licencia
 
-Este proyecto está licenciado bajo la licencia **MIT** - Ver [LICENSE.MD](./LICENSE.MD)
+El código propio de SIGREF se distribuye bajo una licencia propietaria y restrictiva:
 
----
+- [English license](./LICENSE)
+- [Licencia en español](./LICENSE_ES.md)
 
-## 👥 Equipo de Desarrollo
-
-**SIGREF** es un proyecto desarrollado por el equipo de **Sistemas de Información en Salud** de la **Universidad Nacional Autónoma de Honduras (UNAH)**.
-
-**Desarrolladores:**
-- Carlos Ovidio Dubón Pineda - Full Stack
-- Michael Andrey Galdamez Martinez - Frontend
-- Ever Josue Garcia Leonor - Frontend
-- Danilo Isaac Vides Chicas - Frontend
-- Anthony Edward Miranda Fuentes - Full Stack
-- Hector Rene Martinez Vega - Full Stack - Coordinador de Proyecto
-- Erick Marley Arita - Full Stack
-- Josue David Diaz Rodriguez - Full Stack
-
----
-
-## 📞 Soporte y Contacto
-
-Para reportar bugs, sugerencias o preguntas técnicas:
-
-- 📧 **Email:** sigref@unah.hn
-- 🐛 **Issues:** [GitHub Issues](https://github.com/SIGREF-UNAH/SIGREF/issues)
-- 💬 **Discussions:** [GitHub Discussions](https://github.com/SIGREF-UNAH/SIGREF/discussions)
-- 📚 **Documentación:** Ver [`/docs`](./docs/)
-
----
-
-## 🎯 Roadmap
-
-### ✅ v1.0 (Actual)
-- Gestión de pacientes FHIR-compliant
-- Facturación y control de cobros
-- Sesiones de caja y cuadratura
-- Reportes administrativos
-- Auditoría inmutable
-- Autenticación OIDC
-
----
-
-## ✨ Features Destacados
-
-🎯 **Interoperabilidad Global** - Cumple FHIR, compatible con sistemas internacionales
-
-💡 **Fácil de Usar** - Interfaz intuitiva, responsive, accesible (WCAG 2.1)
-
-⚡ **Alto Rendimiento** - Queries optimizadas, caching, lazy loading, CDN ready
-
-🔐 **Seguridad Enterprise** - ISO 27001-like, auditoría inmutable, encriptación
-
-🌍 **Escalable** - Cloud-native, Kubernetes ready, bases de datos replicables
-
----
-
-## 🙏 Agradecimientos
-
-- **HL7 International** - Estándares FHIR
-- **Microsoft** - .NET y ASP.NET Core
-- **Facebook** - React
-- **Comunidad Open Source** - Librerías utilizadas
-
----
-
-**Última actualización:** 31 de enero de 2026
-
-Hecho con ❤️ por el equipo de SIGREF
+No se concede permiso para copiar, distribuir, modificar, crear forks, reutilizar la arquitectura o crear productos derivados sin autorización escrita de los titulares de los derechos.
