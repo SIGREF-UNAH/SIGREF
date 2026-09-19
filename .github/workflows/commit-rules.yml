@@ -1,0 +1,58 @@
+name: Validar reglas de commits
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: commit-rules-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Commits y espacios finales
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Obtener historial del pull request
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Validar mensajes y espacios finales
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          commits=$(git rev-list "${BASE_SHA}..${HEAD_SHA}")
+          if [ -z "${commits}" ]; then
+            echo "No hay commits nuevos que validar."
+          else
+            while IFS= read -r commit; do
+              subject=$(git log -1 --format=%s "${commit}")
+              message=$(git log -1 --format=%B "${commit}")
+
+              if [ "${#subject}" -ge 200 ]; then
+                echo "::error::El título del commit ${commit} debe tener menos de 200 caracteres."
+                exit 1
+              fi
+
+              if printf '%s\n' "${message}" | grep -nE '[[:blank:]]+$'; then
+                echo "::error::El commit ${commit} contiene espacios al final."
+                exit 1
+              fi
+            done <<< "${commits}"
+          fi
+
+          if ! git diff --check "${BASE_SHA}" "${HEAD_SHA}"; then
+            echo "::error::Los cambios contienen espacios al final."
+            exit 1
+          fi

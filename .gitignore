@@ -6,6 +6,8 @@
 # Data directories
 **/data/
 **/.mongodb
+# Internal planning artifacts
+docs/superpowers/
 docs/
 
 # IDE

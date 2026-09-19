@@ -1,0 +1,48 @@
+name: Backend CI
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize, ready_for_review]
+    paths:
+      - 'BE/**'
+  push:
+    branches: [main]
+    paths:
+      - 'BE/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    name: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+          cache: true
+          cache-dependency-path: |
+            BE/**/*.csproj
+            BE/**/*.sln
+
+      - name: Restore
+        run: dotnet restore BE/SIGREF.API.sln
+
+      - name: Build
+        run: dotnet build BE/SIGREF.API.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test BE/SIGREF.API.sln --configuration Release --no-build

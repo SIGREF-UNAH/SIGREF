@@ -1,0 +1,60 @@
+# PROPRIETARY AND RESTRICTIVE LICENSE
+
+**Copyright © 2024-2026. All rights reserved by the copyright holders of this project.**
+
+## 1. Nature of the software
+
+This repository contains proprietary and closed-source software. Publishing the repository on a public platform does not make the software open source, free software, public-domain software, or grant any open, free, public, or implied license.
+
+This license does not authorize any person, organization, or entity to use, copy, download for purposes other than platform-authorized inspection, reproduce, modify, adapt, translate, distribute, publish, sell, sublicense, lease, transfer, make available, deploy, execute, offer as a service, reverse engineer, decompile, disassemble, or create derivative works of the software.
+
+It is also prohibited to copy, reconstruct, extract, or reuse the architecture, design, structure, module organization, workflows, models, schemas, interfaces, logic, algorithms, configurations, documentation, processes, patterns, components, or technical decisions of the project to create another system or product.
+
+## 2. No grant of rights
+
+Except for prior express written authorization from the copyright holders, no intellectual-property right, license to use, exploitation permission, operational access right, or authorization to create forks, mirrors, or derivative repositories is granted.
+
+Visual access to the content through the hosting provider does not constitute authorization to use it outside the functions permitted by that provider. Any technical permission granted by the platform is limited strictly to what is necessary for providing its services and does not constitute a software license.
+
+## 3. Specific prohibitions
+
+Without written authorization, the following are prohibited:
+
+- copying or redistributing source code, binaries, documentation, or any part of the repository;
+- creating forks, mirrors, shared private copies, or derivative repositories;
+- incorporating all or part of the software into another project;
+- reusing the architecture or technical elements to develop an equivalent or competing product;
+- removing, altering, or concealing intellectual-property notices;
+- granting third parties access, publishing technical material intended to facilitate reconstruction, or sharing extracted components;
+- using the software for commercial, academic, educational, consulting, model-training, automated-analysis, or service-provision purposes;
+- registering or claiming the software, any part of it, its designs, or derivative works as one's own.
+
+## 4. Exceptional authorizations
+
+Any exception must be documented in writing and signed by the copyright holders. Authorization for a specific person, version, purpose, or period does not extend to other persons, versions, purposes, or periods.
+
+Silence, failure to respond, publication of the repository, public visibility, the technical ability to download it, or acceptance of a contribution does not constitute authorization.
+
+## 5. Contributions
+
+No contribution, issue, pull request, comment, or communication by itself grants rights to the software or authorizes its use. Contributions may only be incorporated through express authorization and will be subject to the terms determined by the copyright holders.
+
+## 6. Breach and termination
+
+This license terminates automatically upon any breach. Upon termination, the breaching party must immediately cease all use, delete unauthorized copies, and stop any distribution, publication, service, product, or derivative work based on the software.
+
+Termination does not limit any right, claim, injunction, damages, or other remedy available to the copyright holders under applicable law.
+
+## 7. Disclaimer of warranties
+
+The software is provided **"as is"** and **"as available"**, without express, implied, or statutory warranties of any kind, including warranties of operation, accuracy, security, availability, merchantability, fitness for a particular purpose, or non-infringement.
+
+To the maximum extent permitted by applicable law, the copyright holders shall not be liable for direct, indirect, incidental, special, consequential, data-loss, business-interruption, lost-profit, or third-party-claim damages arising from access to or unauthorized use of the software.
+
+## 8. Interpretation
+
+If any provision is held invalid or unenforceable, the remaining provisions will remain in effect. Partial invalidity of a provision does not authorize any use prohibited by this license.
+
+This license constitutes the entire permission granted regarding the software and may only be amended by written authorization from the copyright holders.
+
+**No license is granted other than the limited permissions expressly stated in this document.**
