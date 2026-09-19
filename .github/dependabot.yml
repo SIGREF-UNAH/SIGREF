@@ -1,0 +1,58 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /FE
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 0
+
+  - package-ecosystem: nuget
+    directory: /BE/SIGREF.API.AppHost
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 0
+  - package-ecosystem: nuget
+    directory: /BE/SIGREF.API.ServiceDefaults
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 0
+  - package-ecosystem: nuget
+    directory: /BE/SIGREF.API.Tests
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 0
+  - package-ecosystem: nuget
+    directory: /BE/SIGREF.API
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 0
+  - package-ecosystem: nuget
+    directory: /BE/SIGREF.Common
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 0
+  - package-ecosystem: nuget
+    directory: /BE/SIGREF.Core
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 0
+  - package-ecosystem: nuget
+    directory: /BE/SIGREF.Hangfire.Worker
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 0
+  - package-ecosystem: nuget
+    directory: /BE/SIGREF.Infrastructure.Keycloak
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 0
+  - package-ecosystem: nuget
+    directory: /BE/SIGREF.Infrastructure.Persistence
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 0
+  - package-ecosystem: nuget
+    directory: /BE/SIGREF.Infrastructure.Reporting
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 0

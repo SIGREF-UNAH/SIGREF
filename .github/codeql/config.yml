@@ -1,0 +1,21 @@
+name: SIGREF CodeQL
+
+paths:
+  - BE
+  - FE
+
+paths-ignore:
+  - BE/**/bin/**
+  - BE/**/obj/**
+  - BE/SIGREF.Infrastructure.Persistence/Migrations/**
+  - BE/SIGREF.API/Resources/SharedResources.Designer.cs
+  - BE/**/*.g.cs
+  - FE/docs/**
+  - FE/documentation/**
+  - FE/node_modules/**
+  - FE/dist/**
+  - FE/build/**
+  - FE/coverage/**
+  - FE/src/api/generated/**
+  - '**/*.min.js'
+  - '**/*.min.css'

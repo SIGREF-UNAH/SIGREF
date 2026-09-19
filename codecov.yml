@@ -1,0 +1,30 @@
+coverage:
+  status:
+    project: off
+    patch:
+      default:
+        target: auto
+        threshold: 1%
+        informational: true
+
+comment:
+  behavior: default
+  require_changes: true
+  layout: reach, diff, flags, files
+
+ignore:
+  - 'BE/**/bin/**'
+  - 'BE/**/obj/**'
+  - 'BE/SIGREF.Infrastructure.Persistence/Migrations/**'
+  - 'BE/SIGREF.API/Resources/SharedResources.Designer.cs'
+  - 'BE/**/*.g.cs'
+  - 'FE/docs/**'
+  - 'FE/documentation/**'
+  - 'FE/node_modules/**'
+  - 'FE/dist/**'
+  - 'FE/build/**'
+  - 'FE/coverage/**'
+  - 'FE/src/api/generated/**'
+  - '**/*.min.js'
+  - '**/*.min.css'
+  - '**/package-lock.json'

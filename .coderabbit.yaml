@@ -1,0 +1,52 @@
+language: es-ES
+early_access: false
+
+reviews:
+  profile: assertive
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: true
+  path_filters:
+    - 'BE/**'
+    - 'FE/**'
+    - '.github/**'
+    - '!BE/**/bin/**'
+    - '!BE/**/obj/**'
+    - '!BE/SIGREF.Infrastructure.Persistence/Migrations/**'
+    - '!BE/SIGREF.API/Resources/SharedResources.Designer.cs'
+    - '!BE/**/*.g.cs'
+    - '!FE/docs/**'
+    - '!FE/documentation/**'
+    - '!FE/node_modules/**'
+    - '!FE/dist/**'
+    - '!FE/build/**'
+    - '!FE/coverage/**'
+    - '!FE/src/api/generated/**'
+    - '!**/*.lock'
+    - '!**/*.min.js'
+    - '!**/*.min.css'
+  path_instructions:
+    - path: 'BE/**'
+      instructions: >-
+        Revisa correctness, seguridad, validación de datos, manejo de errores,
+        contratos públicos y concurrencia. Ignora migraciones y código generado.
+    - path: 'FE/**'
+      instructions: >-
+        Revisa errores de lógica, tipos, estado, accesibilidad que afecte al
+        comportamiento, seguridad en el navegador y regresiones de rendimiento.
+        No comentes formato ni archivos generados por Orval.
+    - path: '.github/**'
+      instructions: >-
+        Revisa permisos mínimos, secretos, filtros de rutas, concurrencia y
+        comandos que puedan ejecutar código no confiable desde un Pull Request.
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+    base_branches:
+      - main
+
+chat:
+  auto_reply: true

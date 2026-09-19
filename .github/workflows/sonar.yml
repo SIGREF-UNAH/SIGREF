@@ -1,0 +1,108 @@
+name: SonarQube Cloud
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize, ready_for_review]
+    paths:
+      - 'BE/**'
+      - 'FE/**'
+      - '!FE/docs/**'
+      - '!FE/documentation/**'
+      - '.github/workflows/sonar.yml'
+      - 'BE/sonar-project.properties'
+      - 'FE/sonar-project.properties'
+  push:
+    branches: [main]
+    paths:
+      - 'BE/**'
+      - 'FE/**'
+      - '!FE/docs/**'
+      - '!FE/documentation/**'
+      - '.github/workflows/sonar.yml'
+      - 'BE/sonar-project.properties'
+      - 'FE/sonar-project.properties'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sonar-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'BE/**'
+              - '.github/workflows/sonar.yml'
+            frontend:
+              - 'FE/**'
+              - '!FE/docs/**'
+              - '!FE/documentation/**'
+              - '.github/workflows/sonar.yml'
+
+  frontend:
+    if: needs.changes.outputs.frontend == 'true' && secrets.SONAR_TOKEN != ''
+    needs: changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan frontend
+        uses: SonarSource/sonarqube-scan-action@v6
+        with:
+          projectBaseDir: FE
+          args: >
+            -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
+            -Dsonar.projectKey=${{ vars.SONAR_FRONTEND_PROJECT_KEY }}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+
+  backend:
+    if: needs.changes.outputs.backend == 'true' && secrets.SONAR_TOKEN != ''
+    needs: changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+          cache: true
+          cache-dependency-path: |
+            BE/**/*.csproj
+            BE/**/*.sln
+      - name: Install SonarScanner for .NET
+        run: |
+          dotnet tool install --global dotnet-sonarscanner
+          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+      - name: Begin analysis
+        run: >
+          dotnet-sonarscanner begin
+          /o:"${{ vars.SONAR_ORGANIZATION }}"
+          /k:"${{ vars.SONAR_BACKEND_PROJECT_KEY }}"
+          /s:"BE/sonar-project.properties"
+          /d:sonar.host.url="https://sonarcloud.io"
+          /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+          /d:sonar.cs.opencover.reportsPaths="TestResults/**/coverage.opencover.xml"
+      - name: Build for analysis
+        run: dotnet build BE/SIGREF.API.sln --configuration Release
+      - name: End analysis
+        run: dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
