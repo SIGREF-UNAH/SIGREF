@@ -1,18 +1,19 @@
 # SIGREF — Reporte de calidad
 
-Generado: 2026-09-18T17:54:52.639Z
+Generado: 2026-09-20T18:35:42.767Z
 
 ## Resumen
 
-- Errores totales: 1116
-- Advertencias totales: 184
-- Diagnósticos totales: 1300
+- Errores totales: 1097
+- Advertencias totales: 181
+- Diagnósticos totales: 1278
 
 ## Tipos de errores y advertencias
 
 | Tipo | Origen | Cantidad |
 | --- | --- | --- |
 | TS18046 | TypeScript | 6 |
+| TS18048 | TypeScript | 2 |
 | TS2307 | TypeScript | 2 |
 | TS2322 | TypeScript | 6 |
 | TS2339 | TypeScript | 10 |
@@ -21,24 +22,24 @@ Generado: 2026-09-18T17:54:52.639Z
 | TS2366 | TypeScript | 1 |
 | TS2367 | TypeScript | 6 |
 | TS2769 | TypeScript | 2 |
-| TS6133 | TypeScript | 4 |
-| TS6137 | TypeScript | 13 |
+| TS6133 | TypeScript | 3 |
+| TS6137 | TypeScript | 12 |
 | TS7006 | TypeScript | 4 |
 | TS7016 | TypeScript | 1 |
 | TS7031 | TypeScript | 1 |
 | @typescript-eslint/await-thenable | ESLint | 1 |
 | @typescript-eslint/no-base-to-string | ESLint | 2 |
-| @typescript-eslint/no-explicit-any | ESLint | 139 |
+| @typescript-eslint/no-explicit-any | ESLint | 136 |
 | @typescript-eslint/no-floating-promises | ESLint | 70 |
 | @typescript-eslint/no-misused-promises | ESLint | 27 |
 | @typescript-eslint/no-redundant-type-constituents | ESLint | 3 |
 | @typescript-eslint/no-unnecessary-type-assertion | ESLint | 36 |
-| @typescript-eslint/no-unsafe-argument | ESLint | 69 |
-| @typescript-eslint/no-unsafe-assignment | ESLint | 291 |
+| @typescript-eslint/no-unsafe-argument | ESLint | 68 |
+| @typescript-eslint/no-unsafe-assignment | ESLint | 284 |
 | @typescript-eslint/no-unsafe-call | ESLint | 72 |
-| @typescript-eslint/no-unsafe-member-access | ESLint | 459 |
+| @typescript-eslint/no-unsafe-member-access | ESLint | 449 |
 | @typescript-eslint/no-unsafe-return | ESLint | 26 |
-| @typescript-eslint/no-unused-vars | ESLint | 13 |
+| @typescript-eslint/no-unused-vars | ESLint | 12 |
 | @typescript-eslint/prefer-promise-reject-errors | ESLint | 1 |
 | @typescript-eslint/require-await | ESLint | 1 |
 | @typescript-eslint/restrict-template-expressions | ESLint | 4 |
@@ -74,7 +75,7 @@ Generado: 2026-09-18T17:54:52.639Z
 | src/features/incomes/components/ListPatient.tsx | 76 | 4 |
 | src/features/incomes/components/modals/EditIncomeModal.tsx | 27 | 2 |
 | src/features/incomes/hooks/useCashClosing.ts | 7 | 1 |
-| src/features/incomes/hooks/useCreateIncome.ts | 21 | 3 |
+| src/features/incomes/hooks/useCreateIncome.ts | 2 | 0 |
 | src/features/incomes/hooks/useInvoiceSeriesManager.ts | 0 | 1 |
 | src/features/incomes/pages/CashClosingPage.tsx | 2 | 0 |
 | src/features/incomes/pages/CreateIncomePage.tsx | 71 | 8 |
@@ -150,8 +151,7 @@ Generado: 2026-09-18T17:54:52.639Z
 ## Errores de TypeScript
 
 - src/features/hospital/pages/HospitalDetailsPage.tsx:17:45 — TS6133: 'Result' is declared but its value is never read.
-- src/features/incomes/hooks/useCreateIncome.ts:7:48 — TS6137: Cannot import type declaration files. Consider importing 'invoices' instead of '@types/invoices'.
-- src/features/incomes/hooks/useCreateIncome.ts:91:11 — TS6133: 'totalAmount' is declared but its value is never read.
+- src/features/incomes/hooks/useCreateIncome.ts:86:79 — TS18048: 'item.quantity' is possibly 'undefined'.
 - src/features/incomes/pages/CreateIncomePage.tsx:50:5 — TS2339: Property 'contextHolder' does not exist on type '{ createIncome: ({ selectedPaciente, selectedServicio, numeroRecibo, aPagarEfectivo, exonerado, tramiteEmergencia, serieId, }: { selectedPaciente: SelectedPatient; selectedServicio: SelectedService; numeroRecibo: string; aPagarEfectivo: number; exonerado: boolean; tramiteEmergencia: boolean; serieId: string; }) => P...'.
 - src/features/incomes/pages/CreateIncomePage.tsx:300:25 — TS2345: Argument of type '"search"' is not assignable to parameter of type 'keyof FiltersState'.
 - src/features/incomes/pages/CreateIncomePage.tsx:301:25 — TS2345: Argument of type '"pageNumber"' is not assignable to parameter of type 'keyof FiltersState'.
@@ -210,6 +210,7 @@ Generado: 2026-09-18T17:54:52.639Z
 - src/features/users/pages/CreateUsersPage.tsx:129:8 — TS7006: Parameter 't' implicitly has an 'any' type.
 - src/features/users/pages/CreateUsersPage.tsx:131:28 — TS2339: Property 'raw' does not exist on type 'Practitioner'.
 - src/features/users/pages/CreateUsersPage.tsx:132:8 — TS7006: Parameter 't' implicitly has an 'any' type.
+- src/features/incomes/hooks/useCreateIncome.ts:86:79 — TS18048: 'item.quantity' is possibly 'undefined'.
 - tests/docker-container.security.test.ts:1:30 — TS2307: Cannot find module 'node:fs' or its corresponding type declarations.
 - tests/docker-container.security.test.ts:2:25 — TS2307: Cannot find module 'node:path' or its corresponding type declarations.
 - tests/docker-container.security.test.ts:5:34 — TS2339: Property 'dirname' does not exist on type 'ImportMeta'.
@@ -534,28 +535,6 @@ Generado: 2026-09-18T17:54:52.639Z
 - src/features/incomes/hooks/useCashClosing.ts:82:9 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
 - src/features/incomes/hooks/useCashClosing.ts:123:5 — Error @typescript-eslint/no-floating-promises: Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.
 - src/features/incomes/hooks/useCashClosing.ts:149:5 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/incomes/hooks/useCreateIncome.ts:14:11 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
-- src/features/incomes/hooks/useCreateIncome.ts:40:24 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
-- src/features/incomes/hooks/useCreateIncome.ts:41:15 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/incomes/hooks/useCreateIncome.ts:42:18 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .response on an `any` value.
-- src/features/incomes/hooks/useCreateIncome.ts:43:18 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .response on an `any` value.
-- src/features/incomes/hooks/useCreateIncome.ts:46:19 — Error @typescript-eslint/no-unsafe-argument: Unsafe argument of type `any` assigned to a parameter of type `ReactNode`.
-- src/features/incomes/hooks/useCreateIncome.ts:91:11 — Error @typescript-eslint/no-unused-vars: 'totalAmount' is assigned a value but never used.
-- src/features/incomes/hooks/useCreateIncome.ts:105:47 — Advertencia @typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.
-- src/features/incomes/hooks/useCreateIncome.ts:106:17 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/incomes/hooks/useCreateIncome.ts:106:38 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .unitPrice on an `any` value.
-- src/features/incomes/hooks/useCreateIncome.ts:106:56 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .precio on an `any` value.
-- src/features/incomes/hooks/useCreateIncome.ts:107:17 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/incomes/hooks/useCreateIncome.ts:107:37 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .quantity on an `any` value.
-- src/features/incomes/hooks/useCreateIncome.ts:110:13 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/incomes/hooks/useCreateIncome.ts:110:29 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .id on an `any` value.
-- src/features/incomes/hooks/useCreateIncome.ts:110:40 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .serviceId on an `any` value.
-- src/features/incomes/hooks/useCreateIncome.ts:111:13 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/incomes/hooks/useCreateIncome.ts:111:31 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .name on an `any` value.
-- src/features/incomes/hooks/useCreateIncome.ts:111:44 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .nameService on an `any` value.
-- src/features/incomes/hooks/useCreateIncome.ts:111:64 — Error @typescript-eslint/no-unsafe-member-access: Unsafe member access .nombre on an `any` value.
-- src/features/incomes/hooks/useCreateIncome.ts:112:13 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
-- src/features/incomes/hooks/useCreateIncome.ts:113:13 — Error @typescript-eslint/no-unsafe-assignment: Unsafe assignment of an `any` value.
 - src/features/incomes/hooks/useInvoiceSeriesManager.ts:67:6 — Advertencia react-hooks/exhaustive-deps: React Hook useEffect has a missing dependency: 'selectSerie'. Either include it or remove the dependency array.
 - src/features/incomes/pages/CashClosingPage.tsx:34:5 — Error @typescript-eslint/no-unsafe-assignment: Unsafe object destructuring of a property with an `any` value.
 - src/features/incomes/pages/CashClosingPage.tsx:340:31 — Error @typescript-eslint/no-misused-promises: Promise-returning function provided to attribute where a void return was expected.
