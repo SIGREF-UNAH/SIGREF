@@ -38,6 +38,8 @@ jobs:
       frontend: ${{ steps.filter.outputs.frontend }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -54,12 +56,16 @@ jobs:
               - 'codecov.yml'
 
   frontend:
-    if: needs.changes.outputs.frontend == 'true' && secrets.CODECOV_TOKEN != ''
+    if: needs.changes.outputs.frontend == 'true'
     needs: changes
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      HAS_CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -72,6 +78,7 @@ jobs:
         working-directory: FE
         run: npm run test:run -- --coverage
       - name: Upload frontend coverage
+        if: env.HAS_CODECOV_TOKEN == 'true'
         uses: codecov/codecov-action@v5
         with:
           files: FE/coverage/lcov.info
@@ -81,12 +88,16 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   backend:
-    if: needs.changes.outputs.backend == 'true' && secrets.CODECOV_TOKEN != ''
+    if: needs.changes.outputs.backend == 'true'
     needs: changes
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    env:
+      HAS_CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
@@ -100,6 +111,7 @@ jobs:
           --collect:"XPlat Code Coverage"
           --results-directory TestResults
       - name: Upload backend coverage
+        if: env.HAS_CODECOV_TOKEN == 'true'
         uses: codecov/codecov-action@v5
         with:
           files: TestResults/**/coverage.cobertura.xml

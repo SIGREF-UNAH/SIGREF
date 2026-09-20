@@ -40,6 +40,8 @@ jobs:
       frontend: ${{ steps.filter.outputs.frontend }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -54,15 +56,19 @@ jobs:
               - '.github/workflows/sonar.yml'
 
   frontend:
-    if: needs.changes.outputs.frontend == 'true' && secrets.SONAR_TOKEN != ''
+    if: needs.changes.outputs.frontend == 'true'
     needs: changes
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           fetch-depth: 0
       - name: Scan frontend
+        if: env.SONAR_TOKEN != ''
         uses: SonarSource/sonarqube-scan-action@v6
         with:
           projectBaseDir: FE
@@ -74,13 +80,16 @@ jobs:
           SONAR_HOST_URL: https://sonarcloud.io
 
   backend:
-    if: needs.changes.outputs.backend == 'true' && secrets.SONAR_TOKEN != ''
+    if: needs.changes.outputs.backend == 'true'
     needs: changes
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           fetch-depth: 0
       - uses: actions/setup-dotnet@v4
         with:
@@ -94,6 +103,7 @@ jobs:
           dotnet tool install --global dotnet-sonarscanner
           echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
       - name: Begin analysis
+        if: env.SONAR_TOKEN != ''
         run: >
           dotnet-sonarscanner begin
           /o:"${{ vars.SONAR_ORGANIZATION }}"
@@ -103,6 +113,15 @@ jobs:
           /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
           /d:sonar.cs.opencover.reportsPaths="TestResults/**/coverage.opencover.xml"
       - name: Build for analysis
+        if: env.SONAR_TOKEN != ''
         run: dotnet build BE/SIGREF.API.sln --configuration Release
+      - name: Test with OpenCover coverage
+        if: env.SONAR_TOKEN != ''
+        run: >
+          dotnet test BE/SIGREF.API.sln --configuration Release
+          --collect:"XPlat Code Coverage"
+          --results-directory TestResults
+          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
       - name: End analysis
+        if: env.SONAR_TOKEN != ''
         run: dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
