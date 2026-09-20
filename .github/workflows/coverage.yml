@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      HAS_CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -78,7 +78,7 @@ jobs:
         working-directory: FE
         run: npm run test:run -- --coverage
       - name: Upload frontend coverage
-        if: env.CODECOV_TOKEN != ''
+        if: env.HAS_CODECOV_TOKEN == 'true'
         uses: codecov/codecov-action@v5
         with:
           files: FE/coverage/lcov.info
@@ -93,7 +93,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      HAS_CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -111,7 +111,7 @@ jobs:
           --collect:"XPlat Code Coverage"
           --results-directory TestResults
       - name: Upload backend coverage
-        if: env.CODECOV_TOKEN != ''
+        if: env.HAS_CODECOV_TOKEN == 'true'
         uses: codecov/codecov-action@v5
         with:
           files: TestResults/**/coverage.cobertura.xml

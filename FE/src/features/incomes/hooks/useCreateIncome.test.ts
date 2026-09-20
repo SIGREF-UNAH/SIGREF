@@ -1,5 +1,22 @@
 import { describe, expect, it } from 'vitest'
-import { buildInvoiceItems } from './useCreateIncome'
+import { buildInvoiceItems, parseReceiptNumber } from './useCreateIncome'
+
+describe('parseReceiptNumber', () => {
+  it.each([
+    ['0', 0],
+    ['-12', -12],
+    [' 42 ', 42],
+  ])('acepta el entero seguro %s', (value, expected) => {
+    expect(parseReceiptNumber(value)).toBe(expected)
+  })
+
+  it.each(['1.5', '12abc', 'abc12', '9007199254740992'])(
+    'rechaza el valor no entero o inseguro %s',
+    (value) => {
+      expect(parseReceiptNumber(value)).toBeNull()
+    },
+  )
+})
 
 describe('buildInvoiceItems', () => {
   it('normaliza un servicio individual', () => {

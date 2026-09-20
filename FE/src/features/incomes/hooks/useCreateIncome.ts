@@ -69,6 +69,18 @@ const getErrorMessage = (error: unknown): string => {
   return 'Error al crear el ingreso. Verifique los datos e intente nuevamente.'
 }
 
+/** Convierte un número de recibo textual en un entero seguro, o devuelve null. */
+export const parseReceiptNumber = (value: string): number | null => {
+  const trimmedValue = value.trim()
+
+  if (!/^-?\d+$/.test(trimmedValue)) {
+    return null
+  }
+
+  const parsedValue = Number(trimmedValue)
+  return Number.isSafeInteger(parsedValue) ? parsedValue : null
+}
+
 /**
  * * Convierte la selección del usuario en el formato que espera la API.
  * La función es pura para mantener la construcción de la factura aislada de
@@ -128,6 +140,17 @@ export const buildInvoiceItems = (selectedServicio: SelectedService): InvoiceIte
   })
 }
 
+/**
+ * Crea ingresos a partir de un paciente, servicio o paquete seleccionados.
+ *
+ * @param options.onSuccess Callback ejecutado después de crear la factura.
+ * @param options.onError Callback ejecutado cuando la mutación de factura falla.
+ * @returns La función `createIncome` y el estado `isLoading` de la mutación.
+ *
+ * El flujo valida los datos requeridos, normaliza los items, construye el DTO
+ * y ejecuta la mutación. La invalidación o actualización de datos posteriores
+ * queda a cargo de las callbacks y de la configuración de la mutación.
+ */
 export const useCreateIncome = ({ onSuccess, onError }: UseCreateIncomeProps = {}) => {
   const msg = useMessage()
 
@@ -181,6 +204,12 @@ export const useCreateIncome = ({ onSuccess, onError }: UseCreateIncomeProps = {
       return
     }
 
+    const serieNumber = parseReceiptNumber(numeroRecibo)
+    if (serieNumber === null) {
+      msg.warning('Por favor ingresa un número de recibo válido')
+      return
+    }
+
     // * Los items se normalizan antes de construir el DTO para que servicios
     // individuales y paquetes sigan exactamente el mismo contrato.
     const items = buildInvoiceItems(selectedServicio)
@@ -216,7 +245,7 @@ export const useCreateIncome = ({ onSuccess, onError }: UseCreateIncomeProps = {
       invoice_type: invoiceType,
       payment_type: paymentType,
       serieId,
-      serieNumber: Number.parseInt(numeroRecibo, 10) || 0,
+      serieNumber,
       initialPayment: exonerado || tramiteEmergencia ? 0 : aPagarEfectivo,
       parentInvoiceId: null,
     }
