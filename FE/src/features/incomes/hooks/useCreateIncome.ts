@@ -81,6 +81,10 @@ export const parseReceiptNumber = (value: string): number | null => {
   return Number.isSafeInteger(parsedValue) ? parsedValue : null
 }
 
+/** Determina si una factura contiene únicamente cantidades positivas y finitas. */
+export const areInvoiceItemQuantitiesValid = (items: InvoiceItemCreateDto[]): boolean =>
+  items.length > 0 && items.every((item) => Number.isFinite(item.quantity) && item.quantity > 0)
+
 /**
  * * Convierte la selección del usuario en el formato que espera la API.
  * La función es pura para mantener la construcción de la factura aislada de
@@ -213,6 +217,10 @@ export const useCreateIncome = ({ onSuccess, onError }: UseCreateIncomeProps = {
     // * Los items se normalizan antes de construir el DTO para que servicios
     // individuales y paquetes sigan exactamente el mismo contrato.
     const items = buildInvoiceItems(selectedServicio)
+    if (!areInvoiceItemQuantitiesValid(items)) {
+      msg.warning('Por favor verifica las cantidades de los items')
+      return
+    }
 
     // * La emergencia tiene precedencia sobre la exoneración para conservar la
     // clasificación específica del trámite en los reportes de ingresos.

@@ -1,5 +1,40 @@
 import { describe, expect, it } from 'vitest'
-import { buildInvoiceItems, parseReceiptNumber } from './useCreateIncome'
+import {
+  areInvoiceItemQuantitiesValid,
+  buildInvoiceItems,
+  parseReceiptNumber,
+} from './useCreateIncome'
+
+describe('areInvoiceItemQuantitiesValid', () => {
+  it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])(
+    'rechaza la cantidad inválida %s',
+    (quantity) => {
+      expect(
+        areInvoiceItemQuantitiesValid([
+          {
+            serviceId: 'service-1',
+            nameService: 'Consulta',
+            quantity,
+            unitPrice: 10,
+          },
+        ]),
+      ).toBe(false)
+    },
+  )
+
+  it('acepta cantidades positivas y finitas', () => {
+    expect(
+      areInvoiceItemQuantitiesValid([
+        {
+          serviceId: 'service-1',
+          nameService: 'Consulta',
+          quantity: 1,
+          unitPrice: 10,
+        },
+      ]),
+    ).toBe(true)
+  })
+})
 
 describe('parseReceiptNumber', () => {
   it.each([
