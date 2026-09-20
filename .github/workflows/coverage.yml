@@ -54,10 +54,12 @@ jobs:
               - 'codecov.yml'
 
   frontend:
-    if: needs.changes.outputs.frontend == 'true' && secrets.CODECOV_TOKEN != ''
+    if: needs.changes.outputs.frontend == 'true'
     needs: changes
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -72,6 +74,7 @@ jobs:
         working-directory: FE
         run: npm run test:run -- --coverage
       - name: Upload frontend coverage
+        if: env.CODECOV_TOKEN != ''
         uses: codecov/codecov-action@v5
         with:
           files: FE/coverage/lcov.info
@@ -81,10 +84,12 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   backend:
-    if: needs.changes.outputs.backend == 'true' && secrets.CODECOV_TOKEN != ''
+    if: needs.changes.outputs.backend == 'true'
     needs: changes
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -100,6 +105,7 @@ jobs:
           --collect:"XPlat Code Coverage"
           --results-directory TestResults
       - name: Upload backend coverage
+        if: env.CODECOV_TOKEN != ''
         uses: codecov/codecov-action@v5
         with:
           files: TestResults/**/coverage.cobertura.xml

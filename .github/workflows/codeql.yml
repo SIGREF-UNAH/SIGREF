@@ -26,7 +26,6 @@ on:
 permissions:
   actions: read
   contents: read
-  security-events: write
 
 concurrency:
   group: codeql-${{ github.event.pull_request.number || github.ref }}
@@ -62,6 +61,10 @@ jobs:
     needs: changes
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
     steps:
       - uses: actions/checkout@v4
       - name: Initialize CodeQL for C#
@@ -80,6 +83,10 @@ jobs:
     needs: changes
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
     steps:
       - uses: actions/checkout@v4
       - name: Initialize CodeQL for JavaScript and TypeScript
